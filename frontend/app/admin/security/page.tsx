@@ -53,12 +53,14 @@ export default function SecurityPage() {
       </header>
 
       {/* メインコンテンツ */}
-      <main className="flex-1 p-4 md:p-6 space-y-4 md:space-y-6">
-        {/* 統計カード */}
-        <SecurityStats events={mockSecurityEvents} />
-        
-        {/* セキュリティイベントテーブル */}
-        <SecurityEventsTable events={mockSecurityEvents} />
+      <main className="flex-1 p-4 md:p-6">
+        <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
+          {/* 統計カード */}
+          <SecurityStats events={mockSecurityEvents} />
+          
+          {/* セキュリティイベントテーブル */}
+          <SecurityEventsTable events={mockSecurityEvents} />
+        </div>
       </main>
     </div>
   );

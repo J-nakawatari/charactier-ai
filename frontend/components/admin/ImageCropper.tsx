@@ -13,7 +13,7 @@ interface Area {
 
 interface ImageCropperProps {
   imageSrc: string;
-  onCropComplete: (croppedAreaPixels: Area) => void;
+  onCropComplete: (croppedArea: Area, croppedAreaPixels: Area) => void;
   onCancel: () => void;
   onSave: () => void;
 }
@@ -30,7 +30,7 @@ export default function ImageCropper({
 
   const onCropCompleteHandler = useCallback(
     (croppedArea: Area, croppedAreaPixels: Area) => {
-      onCropComplete(croppedAreaPixels);
+      onCropComplete(croppedArea, croppedAreaPixels);
     },
     [onCropComplete]
   );

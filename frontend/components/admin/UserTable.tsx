@@ -10,6 +10,7 @@ interface UserTableProps {
 
 export default function UserTable({ users }: UserTableProps) {
   const { success, error } = useToast();
+  
   const getStatusBadge = (status: string) => {
     const styles = {
       active: 'bg-green-100 text-green-800',
@@ -42,7 +43,6 @@ export default function UserTable({ users }: UserTableProps) {
     window.location.href = `/admin/users/${user.id}`;
   };
 
-
   const handleBanUser = (user: UserData) => {
     if (user.status === 'suspended') {
       success('アカウント復活', `${user.name}のアカウントを復活させました`);
@@ -57,42 +57,118 @@ export default function UserTable({ users }: UserTableProps) {
         <h3 className="text-lg font-semibold text-gray-900">ユーザー一覧</h3>
         <p className="text-sm text-gray-500 mt-1">登録ユーザーの詳細情報表示</p>
       </div>
-      
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-full"
-               style={{ minWidth: '800px' }}>
+
+      {/* モバイル用カードビュー */}
+      <div className="block lg:hidden p-4 space-y-4">
+        {users.map((user) => (
+          <div key={user.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1">
+                <div className="flex items-center mb-1">
+                  <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                  {user.isTrialUser && (
+                    <span className="ml-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                      トライアル
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm text-gray-500 mb-2">{user.email}</div>
+                {getStatusBadge(user.status)}
+              </div>
+              <div className="flex items-center space-x-3">
+                <button 
+                  onClick={() => handleViewUser(user)}
+                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <Eye className="w-5 h-5" />
+                </button>
+                {user.status === 'suspended' ? (
+                  <button 
+                    onClick={() => handleBanUser(user)}
+                    className="p-2 text-gray-400 hover:text-green-600 transition-colors"
+                  >
+                    <Unlock className="w-5 h-5" />
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => handleBanUser(user)}
+                    className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                  >
+                    <Ban className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 mb-3">
+              <div>
+                <div className="text-xs text-gray-500">トークン残高</div>
+                <div className="text-sm font-medium text-gray-900">{formatNumber(user.tokenBalance)}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">総支払額</div>
+                <div className="text-sm font-medium text-gray-900">¥{formatNumber(user.totalSpent)}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">チャット数</div>
+                <div className="text-sm font-medium text-gray-900">{formatNumber(user.chatCount)}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">平均親密度</div>
+                <div className="flex items-center">
+                  <div className="text-sm font-medium text-gray-900 mr-2">{user.avgIntimacy.toFixed(1)}</div>
+                  <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-purple-600 h-2 rounded-full" 
+                      style={{ width: `${user.avgIntimacy}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-xs text-gray-500">
+              最終ログイン: {formatDate(user.lastLogin)}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* デスクトップ用テーブルビュー */}
+      <div className="hidden lg:block overflow-x-auto">
+        <table className="w-full min-w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 ユーザー
               </th>
-              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 ステータス
               </th>
-              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 トークン残高
               </th>
-              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 総支払額
               </th>
-              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 チャット数
               </th>
-              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 平均親密度
               </th>
-              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 最終ログイン
               </th>
-              <th className="px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 操作
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50">
-                <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+              <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div>
                     <div className="text-sm font-medium text-gray-900">
                       {user.name}
@@ -105,22 +181,22 @@ export default function UserTable({ users }: UserTableProps) {
                     <div className="text-sm text-gray-500">{user.email}</div>
                   </div>
                 </td>
-                <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap">
                   {getStatusBadge(user.status)}
                 </td>
-                <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {formatNumber(user.tokenBalance)}
                 </td>
-                <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   ¥{formatNumber(user.totalSpent)}
                 </td>
-                <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {formatNumber(user.chatCount)}
                 </td>
-                <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className="text-sm text-gray-900">{user.avgIntimacy.toFixed(1)}</div>
-                    <div className="ml-2 w-12 md:w-16 bg-gray-200 rounded-full h-2">
+                    <div className="text-sm text-gray-900 mr-2">{user.avgIntimacy.toFixed(1)}</div>
+                    <div className="w-16 bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-purple-600 h-2 rounded-full" 
                         style={{ width: `${user.avgIntimacy}%` }}
@@ -128,28 +204,28 @@ export default function UserTable({ users }: UserTableProps) {
                     </div>
                   </div>
                 </td>
-                <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatDate(user.lastLogin)}
                 </td>
-                <td className="px-3 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end space-x-2">
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex items-center justify-end space-x-3">
                     <button 
                       onClick={() => handleViewUser(user)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     {user.status === 'suspended' ? (
                       <button 
                         onClick={() => handleBanUser(user)}
-                        className="text-gray-400 hover:text-green-600"
+                        className="text-gray-400 hover:text-green-600 transition-colors"
                       >
                         <Unlock className="w-4 h-4" />
                       </button>
                     ) : (
                       <button 
                         onClick={() => handleBanUser(user)}
-                        className="text-gray-400 hover:text-red-600"
+                        className="text-gray-400 hover:text-red-600 transition-colors"
                       >
                         <Ban className="w-4 h-4" />
                       </button>

@@ -64,32 +64,34 @@ export default function AdminDashboard() {
 
         {/* ダッシュボードコンテンツ */}
         <main className="flex-1 p-4 md:p-6">
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 md:gap-6">
-            {/* 左エリア - メインコンテンツ */}
-            <div className="xl:col-span-3 space-y-4 md:space-y-6">
-              {/* 統計カード */}
-              <StatsCards stats={mockDashboardStats} />
-              
-              {/* チャートエリア */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                <UserChart data={mockUserStats} />
-                <TokenChart data={mockTokenUsage} />
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 md:gap-6">
+              {/* 左エリア - メインコンテンツ */}
+              <div className="xl:col-span-3 space-y-4 md:space-y-6">
+                {/* 統計カード */}
+                <StatsCards stats={mockDashboardStats} />
+                
+                {/* チャートエリア */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                  <UserChart data={mockUserStats} />
+                  <TokenChart data={mockTokenUsage} />
+                </div>
+                
+                {/* キャラクターテーブル */}
+                <CharacterTable characters={mockCharacters} />
               </div>
               
-              {/* キャラクターテーブル */}
-              <CharacterTable characters={mockCharacters} />
-            </div>
-            
-            {/* 右エリア - サイドウィジェット */}
-            <div className="xl:col-span-1 space-y-4 md:space-y-6">
-              {/* セキュリティアラート */}
-              <SecurityAlerts events={mockSecurityEvents} />
-              
-              {/* 通知リスト */}
-              <NotificationList notifications={mockNotifications} />
-              
-              {/* クイック統計 */}
-              <QuickStats />
+              {/* 右エリア - サイドウィジェット */}
+              <div className="xl:col-span-1 space-y-4 md:space-y-6">
+                {/* セキュリティアラート */}
+                <SecurityAlerts events={mockSecurityEvents} />
+                
+                {/* 通知リスト */}
+                <NotificationList notifications={mockNotifications} />
+                
+                {/* クイック統計 */}
+                <QuickStats />
+              </div>
             </div>
           </div>
         </main>

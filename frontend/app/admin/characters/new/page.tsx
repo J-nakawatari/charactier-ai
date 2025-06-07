@@ -183,46 +183,54 @@ export default function CharacterNewPage() {
 
   const handleCropSave = async () => {
     try {
-      if (cropperImageSrc && croppedAreaPixels && currentImageType) {
-        const croppedImage = await getCroppedImg(
-          cropperImageSrc,
-          croppedAreaPixels
-        );
-        
-        const croppedFile = new File([croppedImage], `${currentImageType}.jpg`, {
-          type: 'image/jpeg',
-        });
-        
-        if (currentImageType === 'gallery' && currentGalleryIndex >= 0) {
-          // ギャラリー画像の場合
-          const newGalleryImages = [...formData.galleryImages];
-          if (newGalleryImages[currentGalleryIndex]) {
-            newGalleryImages[currentGalleryIndex].file = croppedFile;
-          } else {
-            newGalleryImages[currentGalleryIndex] = {
-              file: croppedFile,
-              unlockLevel: (currentGalleryIndex + 1) * 10,
-              title: '',
-              description: ''
-            };
-          }
-          setFormData({ ...formData, galleryImages: newGalleryImages });
-        } else {
-          // その他の画像の場合
-          setFormData({ 
-            ...formData, 
-            [currentImageType]: croppedFile 
-          });
-        }
-        
-        setShowCropper(false);
-        setCurrentImageType('');
-        setCurrentGalleryIndex(-1);
-        success('画像トリミング', '画像のトリミングが完了しました');
+      console.log('handleCropSave called');
+      console.log('cropperImageSrc:', !!cropperImageSrc);
+      console.log('croppedAreaPixels:', croppedAreaPixels);
+      console.log('currentImageType:', currentImageType);
+      
+      if (!cropperImageSrc || !croppedAreaPixels || !currentImageType) {
+        console.error('Missing required data for cropping');
+        return;
       }
-    } catch (error) {
-      console.error('Crop failed:', error);
-      error('トリミングエラー', '画像の処理に失敗しました');
+      
+      const croppedImage = await getCroppedImg(
+        cropperImageSrc,
+        croppedAreaPixels
+      );
+      
+      const croppedFile = new File([croppedImage], `${currentImageType}.jpg`, {
+        type: 'image/jpeg',
+      });
+      
+      if (currentImageType === 'gallery' && currentGalleryIndex >= 0) {
+        // ギャラリー画像の場合
+        const newGalleryImages = [...formData.galleryImages];
+        if (newGalleryImages[currentGalleryIndex]) {
+          newGalleryImages[currentGalleryIndex].file = croppedFile;
+        } else {
+          newGalleryImages[currentGalleryIndex] = {
+            file: croppedFile,
+            unlockLevel: (currentGalleryIndex + 1) * 10,
+            title: '',
+            description: ''
+          };
+        }
+        setFormData({ ...formData, galleryImages: newGalleryImages });
+      } else {
+        // その他の画像の場合
+        setFormData({ 
+          ...formData, 
+          [currentImageType]: croppedFile 
+        });
+      }
+      
+      setShowCropper(false);
+      setCurrentImageType('');
+      setCurrentGalleryIndex(-1);
+      success('画像トリミング', '画像のトリミングが完了しました');
+    } catch (err) {
+      console.error('Crop failed:', err);
+      alert('画像の処理に失敗しました: ' + (err as Error).message);
     }
   };
 
@@ -276,7 +284,7 @@ export default function CharacterNewPage() {
 
       {/* メインコンテンツ */}
       <main className="flex-1 p-4 md:p-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <form onSubmit={handleSubmit} className="space-y-8">
             
             {/* キャラクター画像設定 */}

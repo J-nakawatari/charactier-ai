@@ -58,12 +58,14 @@ export default function CharactersPage() {
       </header>
 
       {/* メインコンテンツ */}
-      <main className="flex-1 p-4 md:p-6 space-y-4 md:space-y-6">
-        {/* 統計カード */}
-        <CharacterStats characters={mockCharacters} />
-        
-        {/* キャラクター管理テーブル */}
-        <CharacterManagementTable characters={mockCharacters} />
+      <main className="flex-1 p-4 md:p-6">
+        <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
+          {/* 統計カード */}
+          <CharacterStats characters={mockCharacters} />
+          
+          {/* キャラクター管理テーブル */}
+          <CharacterManagementTable characters={mockCharacters} />
+        </div>
       </main>
     </div>
   );

@@ -392,19 +392,6 @@ export default function CharacterDetailPage() {
                   </div>
                 </div>
                 
-                <div className="flex items-start space-x-3">
-                  <Settings className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500">テーマカラー</p>
-                    <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-4 h-4 rounded-full border border-gray-300"
-                        style={{ backgroundColor: character.themeColor || '#8b5cf6' }}
-                      ></div>
-                      <span className="text-gray-900 font-medium">{character.themeColor || '#8b5cf6'}</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
