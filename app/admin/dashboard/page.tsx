@@ -76,6 +76,16 @@ export default function AdminDashboard() {
               
               {/* キャラクターテーブル */}
               <CharacterTable characters={mockCharacters} />
+              
+              {/* スクロールテスト用の追加コンテンツ */}
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">スクロールテスト用コンテンツ</h3>
+                {[...Array(20)].map((_, i) => (
+                  <div key={i} className="py-2 border-b border-gray-100 last:border-b-0">
+                    <p className="text-gray-600">テストコンテンツ {i + 1} - サイドバーが固定されているかスクロールして確認してください</p>
+                  </div>
+                ))}
+              </div>
             </div>
             
             {/* 右エリア - サイドウィジェット */}
