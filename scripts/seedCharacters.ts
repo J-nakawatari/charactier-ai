@@ -2,6 +2,7 @@
 
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+dotenv.config({ path: './backend/.env' });
 import Character from '../backend/models/Character';
 
 dotenv.config();

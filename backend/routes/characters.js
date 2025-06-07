@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../../data/ai-character-feature-simplify-terms-privacy-pages/backend/middleware/auth');
-const Character = require('../../data/ai-character-feature-simplify-terms-privacy-pages/backend/models/Character');
+const auth = require('../middleware/auth');
+const { mockCharacters } = require('../mockData');
+
+// モックモード判定
+const USE_MOCK = process.env.USE_MOCK === 'true' || !process.env.MONGO_URI || process.env.MONGO_URI.includes('localhost:27017');
 
 // GET /api/characters - キャラ一覧API（検索・ソート・ロケール対応）
 router.get('/', auth, async (req, res) => {
@@ -13,61 +16,101 @@ router.get('/', auth, async (req, res) => {
       keyword = '' 
     } = req.query;
 
-    // 基本フィルター: アクティブなキャラクターのみ
-    let filter = { isActive: true };
+    let characters;
 
-    // 無料キャラクターのみフィルター
-    if (freeOnly === 'true') {
-      filter.characterAccessType = 'free';
+    if (USE_MOCK) {
+      console.log('🎭 モックデータを使用してキャラクター一覧を返します');
+      characters = mockCharacters.filter(char => char.isActive);
+      
+      // フィルタリング処理
+      if (freeOnly === 'true') {
+        characters = characters.filter(char => char.characterAccessType === 'free');
+      }
+
+      if (keyword) {
+        const keywordLower = keyword.toLowerCase();
+        characters = characters.filter(char => 
+          char.name.ja.toLowerCase().includes(keywordLower) ||
+          char.name.en.toLowerCase().includes(keywordLower) ||
+          char.description.ja.toLowerCase().includes(keywordLower) ||
+          char.description.en.toLowerCase().includes(keywordLower) ||
+          char.personalityTags.some(tag => tag.toLowerCase().includes(keywordLower)) ||
+          char.personalityPreset.toLowerCase().includes(keywordLower)
+        );
+      }
+
+      // ソート処理
+      switch (sort) {
+        case 'popular':
+          characters.sort((a, b) => (b.affinityStats?.totalUsers || 0) - (a.affinityStats?.totalUsers || 0));
+          break;
+        case 'newest':
+          characters.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          break;
+        case 'oldest':
+          characters.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+          break;
+        case 'name':
+          characters.sort((a, b) => (a.name[locale] || a.name.ja).localeCompare(b.name[locale] || b.name.ja));
+          break;
+        case 'affinity':
+          characters.sort((a, b) => (b.affinityStats?.averageLevel || 0) - (a.affinityStats?.averageLevel || 0));
+          break;
+      }
+    } else {
+      // MongoDB を使用する場合の処理
+      const Character = require('../models/Character');
+      
+      // 基本フィルター: アクティブなキャラクターのみ
+      let filter = { isActive: true };
+
+      // 無料キャラクターのみフィルター
+      if (freeOnly === 'true') {
+        filter.characterAccessType = 'free';
+      }
+
+      // キーワード検索フィルター
+      if (keyword) {
+        const keywordRegex = new RegExp(keyword, 'i');
+        filter.$or = [
+          { [`name.${locale}`]: keywordRegex },
+          { [`name.ja`]: keywordRegex },
+          { [`name.en`]: keywordRegex },
+          { [`description.${locale}`]: keywordRegex },
+          { [`description.ja`]: keywordRegex },
+          { [`description.en`]: keywordRegex },
+          { personalityTags: { $in: [keywordRegex] } },
+          { personalityPreset: keywordRegex }
+        ];
+      }
+
+      // ソート設定
+      let sortOption = {};
+      switch (sort) {
+        case 'popular':
+          sortOption = { 'affinityStats.totalUsers': -1, createdAt: -1 };
+          break;
+        case 'newest':
+          sortOption = { createdAt: -1 };
+          break;
+        case 'oldest':
+          sortOption = { createdAt: 1 };
+          break;
+        case 'name':
+          sortOption = { [`name.${locale}`]: 1, [`name.ja`]: 1 };
+          break;
+        case 'affinity':
+          sortOption = { 'affinityStats.averageLevel': -1, createdAt: -1 };
+          break;
+        default:
+          sortOption = { createdAt: -1 };
+      }
+
+      characters = await Character.find(filter)
+        .select('-adminPrompt')
+        .sort(sortOption)
+        .lean();
     }
-
-    // キーワード検索フィルター
-    if (keyword) {
-      const keywordRegex = new RegExp(keyword, 'i');
-      filter.$or = [
-        { [`name.${locale}`]: keywordRegex },
-        { [`name.ja`]: keywordRegex },
-        { [`name.en`]: keywordRegex },
-        { [`description.${locale}`]: keywordRegex },
-        { [`description.ja`]: keywordRegex },
-        { [`description.en`]: keywordRegex },
-        { personalityTags: { $in: [keywordRegex] } },
-        { personalityPreset: keywordRegex }
-      ];
-    }
-
-    // ソート設定
-    let sortOption = {};
-    switch (sort) {
-      case 'popular':
-        // 人気順（チャット数や統計データがある場合）
-        sortOption = { 'affinityStats.totalUsers': -1, createdAt: -1 };
-        break;
-      case 'newest':
-        // 新しい順
-        sortOption = { createdAt: -1 };
-        break;
-      case 'oldest':
-        // 古い順
-        sortOption = { createdAt: 1 };
-        break;
-      case 'name':
-        // 名前順（ロケールに応じて）
-        sortOption = { [`name.${locale}`]: 1, [`name.ja`]: 1 };
-        break;
-      case 'affinity':
-        // 親密度の高い順
-        sortOption = { 'affinityStats.averageLevel': -1, createdAt: -1 };
-        break;
-      default:
-        sortOption = { createdAt: -1 };
-    }
-
-    // adminPromptを除外してキャラクター一覧を取得
-    const characters = await Character.find(filter)
-      .select('-adminPrompt')
-      .sort(sortOption)
-      .lean();
 
     // ロケールに応じたレスポンス構築
     const localizedCharacters = characters.map(character => {
