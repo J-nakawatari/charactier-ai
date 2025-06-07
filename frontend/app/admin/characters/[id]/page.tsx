@@ -17,10 +17,13 @@ import {
   Image,
   Star,
   TrendingUp,
-  Settings,
   Gift,
   Zap,
-  Volume2
+  Volume2,
+  Globe,
+  Upload,
+  User,
+  Brain
 } from 'lucide-react';
 
 export default function CharacterDetailPage() {
@@ -267,47 +270,147 @@ export default function CharacterDetailPage() {
             </div>
           </div>
 
-          {/* 詳細情報 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {/* キャラクター設定 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">キャラクター設定</h3>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <Tag className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500">性格プリセット</p>
-                    <p className="text-gray-900 font-medium">{character.personalityPreset || character.personalityType}</p>
+          {/* 基本情報詳細 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">基本情報</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="flex items-start space-x-3 mb-4">
+                  <Globe className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-500 mb-1">キャラクター名</p>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-xs text-gray-400">日本語:</span>
+                        <p className="text-gray-900 font-medium">{character.name?.ja || character.name}</p>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-400">英語:</span>
+                        <p className="text-gray-900 font-medium">{character.name?.en || 'N/A'}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                
-                <div className="flex items-start space-x-3">
-                  <Users className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500">性別</p>
-                    <p className="text-gray-900 font-medium">{getGenderText(character.gender)}</p>
+              </div>
+
+              <div>
+                <div className="flex items-start space-x-3 mb-4">
+                  <User className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-500 mb-2">基本属性</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-xs text-gray-400">性別:</span>
+                        <p className="text-gray-900 font-medium">{getGenderText(character.gender)}</p>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-400">年齢:</span>
+                        <p className="text-gray-900 font-medium">{character.age || 'N/A'}</p>
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <span className="text-xs text-gray-400">職業設定:</span>
+                      <p className="text-gray-900 font-medium">{character.occupation || 'N/A'}</p>
+                    </div>
                   </div>
                 </div>
-                
+              </div>
+
+              <div className="md:col-span-2">
                 <div className="flex items-start space-x-3">
-                  <DollarSign className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500">アクセスタイプ</p>
-                    <p className="text-gray-900 font-medium">
-                      {getAccessTypeText(character.characterAccessType)}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500">作成日</p>
-                    <p className="text-gray-900 font-medium">{formatDate(character.createdAt)}</p>
+                  <MessageSquare className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-500 mb-1">説明</p>
+                    <div className="space-y-3">
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <span className="text-xs text-gray-400 block mb-1">日本語:</span>
+                        <p className="text-gray-900 text-sm">{character.description?.ja || character.description || 'N/A'}</p>
+                      </div>
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <span className="text-xs text-gray-400 block mb-1">英語:</span>
+                        <p className="text-gray-900 text-sm">{character.description?.en || 'N/A'}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* 性格・特徴設定 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">性格・特徴設定</h3>
+            <div className="space-y-6">
+              <div className="flex items-start space-x-3">
+                <Brain className="w-5 h-5 text-gray-400 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm text-gray-500 mb-2">性格プリセット</p>
+                  <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <p className="text-purple-900 font-medium">{character.personalityPreset || character.personalityType}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <Tag className="w-5 h-5 text-gray-400 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm text-gray-500 mb-3">性格タグ</p>
+                  <div className="flex flex-wrap gap-2">
+                    {character.personalityTags ? character.personalityTags.map((tag, index) => (
+                      <span 
+                        key={index}
+                        className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-full border border-purple-200"
+                      >
+                        {tag}
+                      </span>
+                    )) : character.traits.map((trait, index) => (
+                      <span 
+                        key={index}
+                        className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full"
+                      >
+                        {trait}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* AI・アクセス設定 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">AI・アクセス設定</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex items-start space-x-3">
+                <Zap className="w-5 h-5 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="text-sm text-gray-500">AIモデル</p>
+                  <p className="text-gray-900 font-medium">{character.model || 'GPT-3.5'}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <DollarSign className="w-5 h-5 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="text-sm text-gray-500">アクセスタイプ</p>
+                  <p className="text-gray-900 font-medium">
+                    {getAccessTypeText(character.characterAccessType)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="text-sm text-gray-500">作成日</p>
+                  <p className="text-gray-900 font-medium">{formatDate(character.createdAt)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 詳細情報 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 
             {/* パフォーマンス指標 */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -366,32 +469,107 @@ export default function CharacterDetailPage() {
             {/* メディア・アセット */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">メディア・アセット</h3>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                  <Image className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500">キャラクター画像</p>
-                    <p className="text-gray-900 font-medium">{character.imageCharacterSelect ? '設定済み' : '未設定'}</p>
+              <div className="space-y-6">
+                {/* 画像設定 */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">画像設定</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Image className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-700">キャラクター選択画像</span>
+                      </div>
+                      <p className="text-sm text-gray-600">{character.imageCharacterSelect ? '設定済み' : '未設定'}</p>
+                    </div>
+                    
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Image className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-700">ダッシュボード画像</span>
+                      </div>
+                      <p className="text-sm text-gray-600">{character.imageDashboard ? '設定済み' : '未設定'}</p>
+                    </div>
+                    
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Image className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-700">チャット背景画像</span>
+                      </div>
+                      <p className="text-sm text-gray-600">{character.imageChatBackground ? '設定済み' : '未設定'}</p>
+                    </div>
+                    
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Image className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-700">チャットアバター画像</span>
+                      </div>
+                      <p className="text-sm text-gray-600">{character.imageChatAvatar ? '設定済み' : '未設定'}</p>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="flex items-start space-x-3">
-                  <Star className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500">ギャラリー画像</p>
-                    <p className="text-gray-900 font-medium">{character.galleryImages?.length || 0}枚</p>
+                {/* ギャラリー画像 */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">ギャラリー画像（親密度アンロック）</h4>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <Star className="w-4 h-4 text-yellow-500" />
+                        <span className="text-sm font-medium text-gray-700">登録済み画像</span>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900">{character.galleryImages?.length || 0}/10枚</span>
+                    </div>
+                    
+                    {character.galleryImages && character.galleryImages.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        {Array.from({ length: 10 }, (_, index) => {
+                          const hasImage = character.galleryImages && character.galleryImages[index];
+                          const unlockLevel = (index + 1) * 10;
+                          return (
+                            <div key={index} className={`p-3 rounded-lg border-2 ${
+                              hasImage ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white'
+                            }`}>
+                              <div className="text-center">
+                                <div className={`w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center ${
+                                  hasImage ? 'bg-green-100' : 'bg-gray-100'
+                                }`}>
+                                  <span className={`text-xs font-medium ${
+                                    hasImage ? 'text-green-600' : 'text-gray-400'
+                                  }`}>{unlockLevel}</span>
+                                </div>
+                                <p className={`text-xs ${
+                                  hasImage ? 'text-green-700' : 'text-gray-500'
+                                }`}>
+                                  {hasImage ? '設定済み' : '未設定'}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center py-4">ギャラリー画像が設定されていません</p>
+                    )}
                   </div>
                 </div>
                 
-                <div className="flex items-start space-x-3">
-                  <Volume2 className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500">音声サンプル</p>
-                    <p className="text-gray-900 font-medium">{character.sampleVoiceUrl ? '設定済み' : '未設定'}</p>
+                {/* 音声設定 */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">音声設定</h4>
+                  <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <Volume2 className="w-4 h-4 text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">音声サンプル</p>
+                      <p className="text-sm text-gray-600">{character.sampleVoiceUrl ? '設定済み' : '未設定'}</p>
+                      {character.voiceSettings && (
+                        <div className="mt-2 space-y-1">
+                          <p className="text-xs text-gray-500">声の高さ: {character.voiceSettings.pitch || 'デフォルト'}</p>
+                          <p className="text-xs text-gray-500">話す速度: {character.voiceSettings.speed || 'デフォルト'}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-                
               </div>
             </div>
           </div>
