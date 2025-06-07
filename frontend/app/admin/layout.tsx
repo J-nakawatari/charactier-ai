@@ -6,13 +6,11 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ja">
-      <body className="antialiased">
-        <Sidebar />
-        <main className="ml-64 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-          {children}
-        </main>
-      </body>
-    </html>
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1 ml-64 bg-gradient-to-br from-gray-50 to-gray-100">
+        {children}
+      </main>
+    </div>
   );
 }
