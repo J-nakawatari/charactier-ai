@@ -29,7 +29,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-100 flex flex-col shadow-sm">
+    <div className="fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-100 flex flex-col shadow-sm overflow-y-auto">
       {/* ヘッダー */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
@@ -42,7 +42,7 @@ export default function Sidebar() {
       </div>
 
       {/* ナビゲーション */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 min-h-0">
         <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3 px-3">
           General
         </div>
