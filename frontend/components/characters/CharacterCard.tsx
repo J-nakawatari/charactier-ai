@@ -179,7 +179,7 @@ export default function CharacterCard({
               className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors font-medium"
             >
               <span>
-                {character.characterAccessType === 'purchaseOnly' ? 'アンロック' : 'トークンが必要'}
+                {character.characterAccessType === 'premium' ? 'アンロック' : 'トークンが必要'}
               </span>
             </button>
           ) : (
