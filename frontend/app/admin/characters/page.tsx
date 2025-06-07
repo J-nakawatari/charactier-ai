@@ -2,10 +2,12 @@
 
 import CharacterStats from '@/components/admin/CharacterStats';
 import CharacterManagementTable from '@/components/admin/CharacterManagementTable';
+import { useToast } from '@/contexts/ToastContext';
 import { Search, Filter, Plus, Download, Users } from 'lucide-react';
 import { mockCharacters } from '@/mock/adminData';
 
 export default function CharactersPage() {
+  const { success } = useToast();
   return (
     <div className="flex-1 flex flex-col">
       {/* ヘッダー */}
@@ -43,7 +45,10 @@ export default function CharactersPage() {
               </button>
               
               {/* 新規追加 */}
-              <button className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex-1 sm:flex-none justify-center">
+              <button 
+                onClick={() => success('新規キャラクター', 'キャラクター作成画面を開きました')}
+                className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex-1 sm:flex-none justify-center"
+              >
                 <Plus className="w-4 h-4" />
                 <span className="text-sm hidden sm:inline">新規作成</span>
               </button>

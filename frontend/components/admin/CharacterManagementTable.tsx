@@ -1,6 +1,7 @@
 'use client';
 
 import { CharacterData } from '@/mock/adminData';
+import { useToast } from '@/contexts/ToastContext';
 import { Eye, Edit, Play, Pause, Heart } from 'lucide-react';
 
 interface CharacterManagementTableProps {
@@ -8,6 +9,7 @@ interface CharacterManagementTableProps {
 }
 
 export default function CharacterManagementTable({ characters }: CharacterManagementTableProps) {
+  const { success, warning } = useToast();
   const getStatusBadge = (isActive: boolean, isFree: boolean) => {
     if (!isActive) {
       return (
@@ -37,6 +39,22 @@ export default function CharacterManagementTable({ characters }: CharacterManage
 
   const formatNumber = (num: number) => {
     return num.toLocaleString('ja-JP');
+  };
+
+  const handleViewCharacter = (character: CharacterData) => {
+    success('キャラクター詳細', `${character.name}の詳細を表示しました`);
+  };
+
+  const handleEditCharacter = (character: CharacterData) => {
+    success('編集モード', `${character.name}の編集画面を開きました`);
+  };
+
+  const handleToggleStatus = (character: CharacterData) => {
+    if (character.isActive) {
+      warning('キャラクター非公開', `${character.name}を非公開にしました`);
+    } else {
+      success('キャラクター公開', `${character.name}を公開しました`);
+    }
   };
 
   return (
@@ -131,18 +149,30 @@ export default function CharacterManagementTable({ characters }: CharacterManage
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end space-x-2">
-                    <button className="text-gray-400 hover:text-gray-600">
+                    <button 
+                      onClick={() => handleViewCharacter(character)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
                       <Eye className="w-4 h-4" />
                     </button>
-                    <button className="text-gray-400 hover:text-purple-600">
+                    <button 
+                      onClick={() => handleEditCharacter(character)}
+                      className="text-gray-400 hover:text-purple-600"
+                    >
                       <Edit className="w-4 h-4" />
                     </button>
                     {character.isActive ? (
-                      <button className="text-gray-400 hover:text-yellow-600">
+                      <button 
+                        onClick={() => handleToggleStatus(character)}
+                        className="text-gray-400 hover:text-yellow-600"
+                      >
                         <Pause className="w-4 h-4" />
                       </button>
                     ) : (
-                      <button className="text-gray-400 hover:text-green-600">
+                      <button 
+                        onClick={() => handleToggleStatus(character)}
+                        className="text-gray-400 hover:text-green-600"
+                      >
                         <Play className="w-4 h-4" />
                       </button>
                     )}
