@@ -1,7 +1,8 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { mockCharacters, mockUser } from './mockData';
+import { CharacterDocument, MockUser } from './types';
 
 dotenv.config({ path: './backend/.env' });
 
@@ -21,8 +22,15 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Extend Request interface
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: MockUser;
+  }
+}
+
 // Mock auth middleware
-const mockAuth = (req: any, res: any, next: any) => {
+const mockAuth = (req: Request, res: Response, next: NextFunction) => {
   if (USE_MOCK) {
     console.log('🎭 モックモード: 認証をスキップして仮ユーザーを設定');
     req.user = mockUser;
@@ -34,14 +42,17 @@ const mockAuth = (req: any, res: any, next: any) => {
 };
 
 // Characters API (using mock data from TypeScript)
-app.get('/api/characters', mockAuth, (req, res) => {
+app.get('/api/characters', mockAuth, (req: Request, res: Response): void => {
   console.log('🎭 モックデータを使用してキャラクター一覧を返します');
   const characters = mockCharacters.filter(char => char.isActive);
   
-  // Query parameter handling
-  const { locale = 'ja', freeOnly = 'false', sort = 'popular', keyword = '' } = req.query;
+  // Query parameter handling with proper types
+  const locale = (req.query.locale as string) || 'ja';
+  const freeOnly = (req.query.freeOnly as string) || 'false';
+  const sort = (req.query.sort as string) || 'popular';
+  const keyword = (req.query.keyword as string) || '';
   
-  let filteredCharacters = characters;
+  let filteredCharacters: CharacterDocument[] = characters;
   
   // Filter by free only
   if (freeOnly === 'true') {
@@ -50,14 +61,14 @@ app.get('/api/characters', mockAuth, (req, res) => {
   
   // Filter by keyword
   if (keyword) {
-    const searchTerm = keyword.toString().toLowerCase();
+    const searchTerm = keyword.toLowerCase();
     filteredCharacters = filteredCharacters.filter(char => 
       char.name.ja.toLowerCase().includes(searchTerm) ||
       char.name.en.toLowerCase().includes(searchTerm) ||
       char.description.ja.toLowerCase().includes(searchTerm) ||
       char.description.en.toLowerCase().includes(searchTerm) ||
-      char.personalityTags.some(tag => tag.toLowerCase().includes(searchTerm)) ||
-      char.personalityPreset.toLowerCase().includes(searchTerm)
+      (char.personalityTags && char.personalityTags.some(tag => tag.toLowerCase().includes(searchTerm))) ||
+      (char.personalityPreset && char.personalityPreset.toLowerCase().includes(searchTerm))
     );
   }
   
@@ -73,7 +84,11 @@ app.get('/api/characters', mockAuth, (req, res) => {
       filteredCharacters.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       break;
     case 'name':
-      filteredCharacters.sort((a, b) => (a.name[locale as string] || a.name.ja).localeCompare(b.name[locale as string] || b.name.ja));
+      filteredCharacters.sort((a, b) => {
+        const aName = (locale as 'ja' | 'en') === 'ja' ? a.name.ja : a.name.en;
+        const bName = (locale as 'ja' | 'en') === 'ja' ? b.name.ja : b.name.en;
+        return aName.localeCompare(bName);
+      });
       break;
     case 'affinity':
       filteredCharacters.sort((a, b) => (b.affinityStats?.averageLevel || 0) - (a.affinityStats?.averageLevel || 0));
@@ -83,8 +98,8 @@ app.get('/api/characters', mockAuth, (req, res) => {
   // Localized response format
   const localizedCharacters = filteredCharacters.map(character => ({
     _id: character._id,
-    name: character.name[locale as string] || character.name.ja,
-    description: character.description[locale as string] || character.description.ja,
+    name: (locale as 'ja' | 'en') === 'ja' ? character.name.ja : character.name.en,
+    description: (locale as 'ja' | 'en') === 'ja' ? character.description.ja : character.description.en,
     personalityPreset: character.personalityPreset,
     personalityTags: character.personalityTags || [],
     gender: character.gender,
@@ -114,22 +129,24 @@ app.get('/api/characters', mockAuth, (req, res) => {
   });
 });
 
-app.get('/api/characters/:id', mockAuth, (req, res) => {
+app.get('/api/characters/:id', mockAuth, (req: Request, res: Response): void => {
   console.log(`🎭 モックデータから個別キャラクター取得: ID ${req.params.id}`);
   const character = mockCharacters.find(char => char._id === req.params.id);
   
   if (!character) {
-    return res.status(404).json({ msg: 'キャラクターが見つかりません' });
+    res.status(404).json({ msg: 'キャラクターが見つかりません' });
+    return;
   }
   if (!character.isActive) {
-    return res.status(404).json({ msg: 'キャラクターが見つかりません' });
+    res.status(404).json({ msg: 'キャラクターが見つかりません' });
+    return;
   }
 
   res.set('Cache-Control', 'no-store');
   res.json(character);
 });
 
-app.get('/api/ping', (_req, res) => {
+app.get('/api/ping', (_req: Request, res: Response): void => {
   res.send('pong');
 });
 

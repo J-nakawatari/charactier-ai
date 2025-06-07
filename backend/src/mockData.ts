@@ -1,5 +1,7 @@
+import { CharacterDocument, MockUser } from './types';
+
 // Mock data for testing when MongoDB is not available
-export const mockCharacters = [
+export const mockCharacters: CharacterDocument[] = [
   {
     _id: '1',
     name: { ja: 'ルナ', en: 'Luna' },
@@ -16,7 +18,16 @@ export const mockCharacters = [
     imageCharacterSelect: '/characters/luna.png',
     isActive: true,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    affinityStats: {
+      totalUsers: 150,
+      averageLevel: 25,
+      maxLevelUsers: 5
+    },
+    defaultMessage: {
+      ja: 'こんにちは！私はルナだよ✨ 今日はどんなことをお話ししようかな？',
+      en: 'Hello! I\'m Luna✨ What would you like to talk about today?'
+    }
   },
   {
     _id: '2',
@@ -34,7 +45,16 @@ export const mockCharacters = [
     imageCharacterSelect: '/characters/miko.png',
     isActive: true,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    affinityStats: {
+      totalUsers: 89,
+      averageLevel: 42,
+      maxLevelUsers: 3
+    },
+    defaultMessage: {
+      ja: 'こんにちは。私はミコです。今日はどのようなお話をしましょうか？',
+      en: 'Hello. I\'m Miko. What would you like to discuss today?'
+    }
   },
   {
     _id: '3',
@@ -53,11 +73,21 @@ export const mockCharacters = [
     imageCharacterSelect: '/characters/zen.png',
     isActive: true,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    stripeProductId: 'prod_test_zen',
+    affinityStats: {
+      totalUsers: 67,
+      averageLevel: 38,
+      maxLevelUsers: 2
+    },
+    defaultMessage: {
+      ja: 'こんにちは。僕はゼンだ。何について相談したいんだ？',
+      en: 'Hello. I\'m Zen. What would you like to consult about?'
+    }
   }
 ];
 
-export const mockUser = {
+export const mockUser: MockUser = {
   id: 'mock-user-id',
   email: 'test@example.com',
   isActive: true,
