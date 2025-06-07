@@ -78,6 +78,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setIsOpen(false)}
               className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                 isActive
                   ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-700'
@@ -99,6 +100,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setIsOpen(false)}
               className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                 isActive
                   ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-700'
