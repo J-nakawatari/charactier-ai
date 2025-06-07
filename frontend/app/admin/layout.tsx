@@ -1,3 +1,5 @@
+import Sidebar from '@/components/admin/Sidebar';
+
 export default function AdminLayout({
   children,
 }: {
@@ -6,7 +8,10 @@ export default function AdminLayout({
   return (
     <html lang="ja">
       <body className="antialiased">
-        {children}
+        <Sidebar />
+        <main className="ml-64 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+          {children}
+        </main>
       </body>
     </html>
   );
