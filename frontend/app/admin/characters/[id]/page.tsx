@@ -205,6 +205,11 @@ export default function CharacterDetailPage() {
                   <p className="text-xl font-semibold text-gray-900">
                     {character.isFree ? '無料' : `¥${character.price.toLocaleString()}`}
                   </p>
+                  {character.stripePriceId && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      ID: {character.stripePriceId}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -396,6 +401,11 @@ export default function CharacterDetailPage() {
                   <p className="text-gray-900 font-medium">
                     {getAccessTypeText(character.characterAccessType)}
                   </p>
+                  {character.characterAccessType === 'purchaseOnly' && character.stripePriceId && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Stripe価格ID: {character.stripePriceId}
+                    </p>
+                  )}
                 </div>
               </div>
 

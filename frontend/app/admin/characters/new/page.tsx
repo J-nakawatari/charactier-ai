@@ -63,6 +63,8 @@ export default function CharacterNewPage() {
   const router = useRouter();
   const { success, error } = useToast();
   
+  const [isLoadingPrice, setIsLoadingPrice] = useState(false);
+
   const [formData, setFormData] = useState({
     // 基本情報
     name: { ja: '', en: '' },
@@ -78,7 +80,8 @@ export default function CharacterNewPage() {
     // AI設定
     model: 'gpt-3.5-turbo',
     characterAccessType: 'free',
-    price: 1500,
+    stripePriceId: '',
+    displayPrice: 0,
     
     // プロンプト・メッセージ
     adminPrompt: { ja: '', en: '' },
@@ -123,8 +126,8 @@ export default function CharacterNewPage() {
       return;
     }
 
-    if (formData.characterAccessType === 'purchaseOnly' && formData.price <= 0) {
-      error('入力エラー', '買い切りキャラクターの場合、価格を設定してください');
+    if (formData.characterAccessType === 'purchaseOnly' && !formData.stripePriceId.trim()) {
+      error('入力エラー', '買い切りキャラクターの場合、Stripe価格IDを設定してください');
       return;
     }
 
@@ -139,6 +142,36 @@ export default function CharacterNewPage() {
 
   const handleCancel = () => {
     router.push('/admin/characters');
+  };
+
+  // Stripe価格ID変更時の価格取得処理
+  const handlePriceIdChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const priceId = e.target.value;
+    setFormData(prev => ({ ...prev, stripePriceId: priceId, displayPrice: 0 }));
+    
+    // 価格IDが正しい形式かチェック
+    if (priceId && priceId.startsWith('price_') && priceId.length > 10) {
+      setIsLoadingPrice(true);
+      try {
+        // 実際の実装ではStripe APIを呼び出して価格を取得
+        // ここでは仮の実装
+        const response = await fetch(`/api/admin/stripe/prices/${priceId}`);
+        if (response.ok) {
+          const priceData = await response.json();
+          setFormData(prev => ({
+            ...prev,
+            displayPrice: priceData.unit_amount / 100 // centから円に変換
+          }));
+          success('価格取得完了', `価格: ¥${(priceData.unit_amount / 100).toLocaleString()}`);
+        } else {
+          error('価格取得エラー', '指定されたStripe価格IDが見つかりません');
+        }
+      } catch (err) {
+        error('価格取得エラー', 'Stripe価格の取得に失敗しました');
+      } finally {
+        setIsLoadingPrice(false);
+      }
+    }
   };
 
   const togglePersonalityTag = (tag: string) => {
@@ -647,19 +680,33 @@ export default function CharacterNewPage() {
                 {formData.characterAccessType === 'purchaseOnly' && (
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      価格（円）
+                      Stripe価格ID
                     </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="1500"
-                    />
-                    <p className="text-sm text-gray-500 mt-1">
-                      推奨価格: 1500円〜3000円
-                    </p>
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={formData.stripePriceId}
+                        onChange={handlePriceIdChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="price_1234567890abcdef"
+                        disabled={isLoadingPrice}
+                      />
+                      <p className="text-sm text-gray-500">
+                        例: price_1234567890abcdef（Stripeダッシュボードから価格IDをコピー）
+                      </p>
+                      {isLoadingPrice && (
+                        <p className="text-sm text-blue-500">
+                          価格情報を取得中...
+                        </p>
+                      )}
+                      {formData.displayPrice > 0 && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                          <p className="text-sm text-green-800">
+                            取得した価格: <span className="font-semibold">¥{formData.displayPrice.toLocaleString()}</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
