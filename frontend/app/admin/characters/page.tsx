@@ -46,7 +46,7 @@ export default function CharactersPage() {
               
               {/* 新規追加 */}
               <button 
-                onClick={() => success('新規キャラクター', 'キャラクター作成画面を開きました')}
+                onClick={() => window.location.href = '/admin/characters/new'}
                 className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex-1 sm:flex-none justify-center"
               >
                 <Plus className="w-4 h-4" />

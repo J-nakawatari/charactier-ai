@@ -39,11 +39,11 @@ export default function UserTable({ users }: UserTableProps) {
   };
 
   const handleViewUser = (user: UserData) => {
-    success('ユーザー詳細', `${user.name}の詳細を表示しました`);
+    window.location.href = `/admin/users/${user.id}`;
   };
 
   const handleEditUser = (user: UserData) => {
-    success('編集モード', `${user.name}の編集画面を開きました`);
+    window.location.href = `/admin/users/${user.id}/edit`;
   };
 
   const handleBanUser = (user: UserData) => {
