@@ -5,7 +5,7 @@ import { Search, Filter, SortAsc, X } from 'lucide-react';
 
 interface FilterState {
   keyword: string;
-  freeOnly: boolean;
+  freeOnly: boolean; // 実際は初期開放キャラのみを表示するフィルター
   sort: 'popular' | 'newest' | 'oldest' | 'name' | 'affinity';
 }
 
@@ -80,7 +80,7 @@ export default function CharacterFilters({
       {/* フィルターとソート */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex flex-col sm:flex-row gap-3">
-          {/* 無料キャラのみフィルター */}
+          {/* ベースキャラのみフィルター */}
           <label className="flex items-center space-x-2 cursor-pointer">
             <input
               type="checkbox"
@@ -89,7 +89,7 @@ export default function CharacterFilters({
               disabled={isLoading}
               className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 disabled:cursor-not-allowed"
             />
-            <span className="text-sm font-medium text-gray-700">無料キャラのみ</span>
+            <span className="text-sm font-medium text-gray-700">ベースキャラのみ</span>
           </label>
 
           {/* ソート */}

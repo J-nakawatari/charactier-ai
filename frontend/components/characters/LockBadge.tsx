@@ -4,7 +4,7 @@ import React from 'react';
 import { Lock, Gift, Zap, DollarSign } from 'lucide-react';
 
 interface LockBadgeProps {
-  accessType: 'free' | 'token-based' | 'purchaseOnly';
+  accessType: 'initial' | 'premium';
   isLocked: boolean;
   price?: number;
   size?: 'sm' | 'md';
@@ -33,41 +33,37 @@ export default function LockBadge({
 
   const sizes = getSizeClasses(size);
 
-  // 無料キャラクターの場合
-  if (accessType === 'free') {
+  // ベースキャラクターの場合（新規登録の30,000トークンで利用可能）
+  if (accessType === 'initial') {
     return (
       <div className={`inline-flex items-center space-x-1 bg-green-100 text-green-700 rounded-full font-medium ${sizes.badge}`}>
         <Gift className={sizes.icon} />
-        <span>FREE</span>
+        <span>ベースキャラ</span>
       </div>
     );
   }
 
-  // ロック状態でない場合は何も表示しない
-  if (!isLocked) {
-    return null;
-  }
-
-  // トークン制キャラクターの場合
-  if (accessType === 'token-based') {
-    return (
-      <div className={`inline-flex items-center space-x-1 bg-blue-100 text-blue-700 rounded-full font-medium ${sizes.badge}`}>
-        <Zap className={sizes.icon} />
-        <span>トークン制</span>
-      </div>
-    );
-  }
-
-  // 買い切りキャラクターの場合
-  if (accessType === 'purchaseOnly') {
-    return (
-      <div className={`inline-flex items-center space-x-1 bg-orange-100 text-orange-700 rounded-full font-medium ${sizes.badge}`}>
-        <Lock className={sizes.icon} />
-        <span>
-          {price ? `¥${price.toLocaleString()}` : 'アンロック'}
-        </span>
-      </div>
-    );
+  // プレミアキャラクターの場合
+  if (accessType === 'premium') {
+    if (isLocked) {
+      // 未購入の場合
+      return (
+        <div className={`inline-flex items-center space-x-1 bg-orange-100 text-orange-700 rounded-full font-medium ${sizes.badge}`}>
+          <Lock className={sizes.icon} />
+          <span>
+            {price ? `¥${price.toLocaleString()}` : 'プレミアキャラ'}
+          </span>
+        </div>
+      );
+    } else {
+      // 購入済みの場合
+      return (
+        <div className={`inline-flex items-center space-x-1 bg-blue-100 text-blue-700 rounded-full font-medium ${sizes.badge}`}>
+          <Zap className={sizes.icon} />
+          <span>利用可能</span>
+        </div>
+      );
+    }
   }
 
   // その他の場合（フォールバック）

@@ -14,7 +14,7 @@ interface Character {
   personalityPreset: string;
   personalityTags: string[];
   gender: string;
-  characterAccessType: 'free' | 'token-based' | 'purchaseOnly';
+  characterAccessType: 'initial' | 'premium';
   imageCharacterSelect?: string;
   imageChatAvatar?: string;
   affinityStats?: {
