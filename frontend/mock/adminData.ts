@@ -51,6 +51,21 @@ export interface SecurityEvent {
   timestamp: string;
 }
 
+export interface UserData {
+  id: string;
+  email: string;
+  name: string;
+  status: 'active' | 'inactive' | 'suspended';
+  tokenBalance: number;
+  totalSpent: number;
+  registrationDate: string;
+  lastLogin: string;
+  chatCount: number;
+  unlockedCharacters: string[];
+  avgIntimacy: number;
+  isTrialUser: boolean;
+}
+
 // Mock Data
 export const mockDashboardStats: DashboardStats = {
   totalUsers: 12547,
@@ -170,5 +185,78 @@ export const mockSecurityEvents: SecurityEvent[] = [
     description: "短時間で大量のアカウント作成試行",
     ipAddress: "45.77.156.123",
     timestamp: "2024-06-07T09:12:00Z"
+  }
+];
+
+export const mockUsers: UserData[] = [
+  {
+    id: "user_1",
+    email: "tanaka@example.com",
+    name: "田中太郎",
+    status: "active",
+    tokenBalance: 45200,
+    totalSpent: 2980,
+    registrationDate: "2024-01-15T09:30:00Z",
+    lastLogin: "2024-06-07T14:22:00Z",
+    chatCount: 156,
+    unlockedCharacters: ["1", "2"],
+    avgIntimacy: 67.3,
+    isTrialUser: false
+  },
+  {
+    id: "user_2", 
+    email: "suzuki.hanako@gmail.com",
+    name: "鈴木花子",
+    status: "active",
+    tokenBalance: 12800,
+    totalSpent: 1480,
+    registrationDate: "2024-02-03T16:45:00Z",
+    lastLogin: "2024-06-07T10:15:00Z", 
+    chatCount: 89,
+    unlockedCharacters: ["1"],
+    avgIntimacy: 42.1,
+    isTrialUser: false
+  },
+  {
+    id: "user_3",
+    email: "yamada.jiro@example.com", 
+    name: "山田次郎",
+    status: "inactive",
+    tokenBalance: 95000,
+    totalSpent: 0,
+    registrationDate: "2024-05-20T11:20:00Z",
+    lastLogin: "2024-05-25T09:40:00Z",
+    chatCount: 12,
+    unlockedCharacters: ["1"],
+    avgIntimacy: 18.5,
+    isTrialUser: true
+  },
+  {
+    id: "user_4",
+    email: "watanabe.mai@example.com",
+    name: "渡辺舞",
+    status: "active", 
+    tokenBalance: 78300,
+    totalSpent: 4960,
+    registrationDate: "2024-01-08T13:15:00Z",
+    lastLogin: "2024-06-06T21:30:00Z",
+    chatCount: 234,
+    unlockedCharacters: ["1", "2", "3"],
+    avgIntimacy: 81.2,
+    isTrialUser: false
+  },
+  {
+    id: "user_5",
+    email: "sato.ken@example.com",
+    name: "佐藤健",
+    status: "suspended",
+    tokenBalance: 2100,
+    totalSpent: 980,
+    registrationDate: "2024-03-12T08:45:00Z",
+    lastLogin: "2024-06-01T15:20:00Z",
+    chatCount: 67,
+    unlockedCharacters: ["1"],
+    avgIntimacy: 28.7,
+    isTrialUser: false
   }
 ];
