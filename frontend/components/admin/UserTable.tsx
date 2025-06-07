@@ -2,7 +2,7 @@
 
 import { UserData } from '@/mock/adminData';
 import { useToast } from '@/contexts/ToastContext';
-import { Eye, Edit, Ban, Unlock } from 'lucide-react';
+import { Eye, Ban, Unlock } from 'lucide-react';
 
 interface UserTableProps {
   users: UserData[];
@@ -42,9 +42,6 @@ export default function UserTable({ users }: UserTableProps) {
     window.location.href = `/admin/users/${user.id}`;
   };
 
-  const handleEditUser = (user: UserData) => {
-    window.location.href = `/admin/users/${user.id}/edit`;
-  };
 
   const handleBanUser = (user: UserData) => {
     if (user.status === 'suspended') {
@@ -58,7 +55,7 @@ export default function UserTable({ users }: UserTableProps) {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       <div className="px-4 py-4 md:px-6 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">ユーザー一覧</h3>
-        <p className="text-sm text-gray-500 mt-1">登録ユーザーの詳細情報と管理</p>
+        <p className="text-sm text-gray-500 mt-1">登録ユーザーの詳細情報表示</p>
       </div>
       
       <div className="overflow-x-auto">
@@ -141,12 +138,6 @@ export default function UserTable({ users }: UserTableProps) {
                       className="text-gray-400 hover:text-gray-600"
                     >
                       <Eye className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleEditUser(user)}
-                      className="text-gray-400 hover:text-purple-600"
-                    >
-                      <Edit className="w-4 h-4" />
                     </button>
                     {user.status === 'suspended' ? (
                       <button 

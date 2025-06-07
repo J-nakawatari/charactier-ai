@@ -5,7 +5,6 @@ import { useToast } from '@/contexts/ToastContext';
 import { mockUsers } from '@/mock/adminData';
 import { 
   ArrowLeft, 
-  Edit, 
   Ban, 
   Unlock, 
   CreditCard, 
@@ -46,9 +45,6 @@ export default function UserDetailPage() {
     );
   }
 
-  const handleEdit = () => {
-    router.push(`/admin/users/${user.id}/edit`);
-  };
 
   const handleBanToggle = () => {
     if (user.status === 'suspended') {
@@ -124,20 +120,12 @@ export default function UserDetailPage() {
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-gray-900">ユーザー詳細</h1>
               <p className="text-sm text-gray-500 mt-1">
-                ユーザー情報と活動履歴
+                ユーザー情報と活動履歴（参照のみ）
               </p>
             </div>
           </div>
           
           <div className="flex items-center space-x-3">
-            <button
-              onClick={handleEdit}
-              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              <Edit className="w-4 h-4" />
-              <span className="hidden sm:inline">編集</span>
-            </button>
-            
             <button
               onClick={handleBanToggle}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${

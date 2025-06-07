@@ -3,7 +3,7 @@
 import UserStats from '@/components/admin/UserStats';
 import UserTable from '@/components/admin/UserTable';
 import { useToast } from '@/contexts/ToastContext';
-import { Search, Filter, UserPlus, Download } from 'lucide-react';
+import { Search, Filter, Download } from 'lucide-react';
 import { mockUsers } from '@/mock/adminData';
 
 export default function UsersPage() {
@@ -16,7 +16,7 @@ export default function UsersPage() {
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">ユーザー管理</h1>
             <p className="text-sm text-gray-500 mt-1">
-              登録ユーザーの管理とアクティビティ監視
+              登録ユーザーの情報確認とアクティビティ監視
             </p>
           </div>
           
@@ -42,15 +42,6 @@ export default function UsersPage() {
               <button className="flex items-center space-x-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex-1 sm:flex-none justify-center">
                 <Download className="w-4 h-4" />
                 <span className="text-sm hidden sm:inline">エクスポート</span>
-              </button>
-              
-              {/* 新規追加 */}
-              <button 
-                onClick={() => window.location.href = '/admin/users/new'}
-                className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex-1 sm:flex-none justify-center"
-              >
-                <UserPlus className="w-4 h-4" />
-                <span className="text-sm hidden sm:inline">新規</span>
               </button>
             </div>
           </div>

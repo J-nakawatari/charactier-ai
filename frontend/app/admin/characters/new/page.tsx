@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { getCroppedImg } from '@/utils/cropImage';
 import ImageCropper from '@/components/admin/ImageCropper';
-import { ArrowLeft, Save, X, Upload, Palette } from 'lucide-react';
+import { ArrowLeft, Save, X, Upload } from 'lucide-react';
 
 // 調査したデータから取得した性格プリセット
 const PERSONALITY_PRESETS = [
@@ -58,11 +58,6 @@ const GENDERS = [
   { value: 'neutral', label: '中性' }
 ];
 
-// テーマカラープリセット
-const THEME_COLORS = [
-  '#ff6b9d', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', 
-  '#ec4899', '#7c3aed', '#0ea5e9', '#059669', '#d97706', '#dc2626'
-];
 
 export default function CharacterNewPage() {
   const router = useRouter();
@@ -90,19 +85,24 @@ export default function CharacterNewPage() {
     defaultMessage: { ja: '', en: '' },
     limitMessage: { ja: '', en: '' },
     
-    // デザイン
-    themeColor: '#8b5cf6',
+    
+    // 画像設定
+    imageCharacterSelect: null,
+    imageDashboard: null,
+    imageChatBackground: null,
+    imageChatAvatar: null,
+    galleryImages: [] as { file: File; unlockLevel: number; title: string; description: string }[],
     
     // その他
     isActive: false,
     isBaseCharacter: false
   });
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showCropper, setShowCropper] = useState(false);
   const [cropperImageSrc, setCropperImageSrc] = useState<string>('');
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [currentImageType, setCurrentImageType] = useState<string>('');
+  const [currentGalleryIndex, setCurrentGalleryIndex] = useState<number>(-1);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,7 +150,7 @@ export default function CharacterNewPage() {
     }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, imageType: string, galleryIndex?: number) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) { // 5MB制限
@@ -167,10 +167,14 @@ export default function CharacterNewPage() {
       reader.onload = (e) => {
         const imageSrc = e.target?.result as string;
         setCropperImageSrc(imageSrc);
+        setCurrentImageType(imageType);
+        setCurrentGalleryIndex(galleryIndex ?? -1);
         setShowCropper(true);
       };
       reader.readAsDataURL(file);
     }
+    // inputをリセット
+    e.target.value = '';
   };
 
   const handleCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
@@ -179,22 +183,41 @@ export default function CharacterNewPage() {
 
   const handleCropSave = async () => {
     try {
-      if (cropperImageSrc && croppedAreaPixels) {
+      if (cropperImageSrc && croppedAreaPixels && currentImageType) {
         const croppedImage = await getCroppedImg(
           cropperImageSrc,
           croppedAreaPixels
         );
         
-        const croppedFile = new File([croppedImage], 'cropped-avatar.jpg', {
+        const croppedFile = new File([croppedImage], `${currentImageType}.jpg`, {
           type: 'image/jpeg',
         });
         
-        setImageFile(croppedFile);
-        
-        const previewUrl = URL.createObjectURL(croppedImage);
-        setImagePreview(previewUrl);
+        if (currentImageType === 'gallery' && currentGalleryIndex >= 0) {
+          // ギャラリー画像の場合
+          const newGalleryImages = [...formData.galleryImages];
+          if (newGalleryImages[currentGalleryIndex]) {
+            newGalleryImages[currentGalleryIndex].file = croppedFile;
+          } else {
+            newGalleryImages[currentGalleryIndex] = {
+              file: croppedFile,
+              unlockLevel: (currentGalleryIndex + 1) * 10,
+              title: '',
+              description: ''
+            };
+          }
+          setFormData({ ...formData, galleryImages: newGalleryImages });
+        } else {
+          // その他の画像の場合
+          setFormData({ 
+            ...formData, 
+            [currentImageType]: croppedFile 
+          });
+        }
         
         setShowCropper(false);
+        setCurrentImageType('');
+        setCurrentGalleryIndex(-1);
         success('画像トリミング', '画像のトリミングが完了しました');
       }
     } catch (error) {
@@ -207,11 +230,26 @@ export default function CharacterNewPage() {
     setShowCropper(false);
     setCropperImageSrc('');
     setCroppedAreaPixels(null);
+    setCurrentImageType('');
+    setCurrentGalleryIndex(-1);
   };
 
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
+  const removeImage = (imageType: string, galleryIndex?: number) => {
+    if (imageType === 'gallery' && galleryIndex !== undefined) {
+      const newGalleryImages = [...formData.galleryImages];
+      newGalleryImages.splice(galleryIndex, 1);
+      setFormData({ ...formData, galleryImages: newGalleryImages });
+    } else {
+      setFormData({ ...formData, [imageType]: null });
+    }
+  };
+
+  const updateGalleryInfo = (index: number, field: 'title' | 'description', value: string) => {
+    const newGalleryImages = [...formData.galleryImages];
+    if (newGalleryImages[index]) {
+      newGalleryImages[index][field] = value;
+      setFormData({ ...formData, galleryImages: newGalleryImages });
+    }
   };
 
   return (
@@ -241,54 +279,193 @@ export default function CharacterNewPage() {
         <div className="max-w-4xl mx-auto">
           <form onSubmit={handleSubmit} className="space-y-8">
             
-            {/* アバター画像 */}
+            {/* キャラクター画像設定 */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">アバター画像</h3>
-              <div className="flex items-center space-x-6">
-                <div className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: formData.themeColor }}>
-                  {imagePreview ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img 
-                      src={imagePreview} 
-                      alt="プレビュー" 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-white text-2xl font-medium">
-                      {formData.name.ja.charAt(0) || '?'}
-                    </span>
-                  )}
-                </div>
-                
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">キャラクター画像設定</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* キャラクター選択画像 */}
                 <div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                    id="avatar-upload"
-                  />
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="avatar-upload"
-                      className="cursor-pointer inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <Upload className="w-4 h-4" />
-                      <span>画像を選択</span>
-                    </label>
-                    {imageFile && (
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="block text-sm text-red-600 hover:text-red-800"
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    キャラクター選択画像
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-20 h-20 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+                      {formData.imageCharacterSelect ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img 
+                          src={URL.createObjectURL(formData.imageCharacterSelect)} 
+                          alt="キャラクター選択" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-gray-400 text-xs">選択画像</span>
+                      )}
+                    </div>
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageChange(e, 'imageCharacterSelect')}
+                        className="hidden"
+                        id="character-select-upload"
+                      />
+                      <label
+                        htmlFor="character-select-upload"
+                        className="cursor-pointer inline-flex items-center space-x-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                       >
-                        画像を削除
-                      </button>
-                    )}
+                        <Upload className="w-3 h-3" />
+                        <span>選択</span>
+                      </label>
+                      {formData.imageCharacterSelect && (
+                        <button
+                          type="button"
+                          onClick={() => removeImage('imageCharacterSelect')}
+                          className="block text-xs text-red-600 hover:text-red-800 mt-1"
+                        >
+                          削除
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    推奨: 正方形、5MB以下
-                  </p>
+                </div>
+
+                {/* ダッシュボード画像 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    ダッシュボード画像
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-20 h-20 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+                      {formData.imageDashboard ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img 
+                          src={URL.createObjectURL(formData.imageDashboard)} 
+                          alt="ダッシュボード" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-gray-400 text-xs">ダッシュボード</span>
+                      )}
+                    </div>
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageChange(e, 'imageDashboard')}
+                        className="hidden"
+                        id="dashboard-upload"
+                      />
+                      <label
+                        htmlFor="dashboard-upload"
+                        className="cursor-pointer inline-flex items-center space-x-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                      >
+                        <Upload className="w-3 h-3" />
+                        <span>選択</span>
+                      </label>
+                      {formData.imageDashboard && (
+                        <button
+                          type="button"
+                          onClick={() => removeImage('imageDashboard')}
+                          className="block text-xs text-red-600 hover:text-red-800 mt-1"
+                        >
+                          削除
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* チャット背景画像 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    チャット背景画像
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-20 h-20 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+                      {formData.imageChatBackground ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img 
+                          src={URL.createObjectURL(formData.imageChatBackground)} 
+                          alt="チャット背景" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-gray-400 text-xs">背景画像</span>
+                      )}
+                    </div>
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageChange(e, 'imageChatBackground')}
+                        className="hidden"
+                        id="chat-background-upload"
+                      />
+                      <label
+                        htmlFor="chat-background-upload"
+                        className="cursor-pointer inline-flex items-center space-x-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                      >
+                        <Upload className="w-3 h-3" />
+                        <span>選択</span>
+                      </label>
+                      {formData.imageChatBackground && (
+                        <button
+                          type="button"
+                          onClick={() => removeImage('imageChatBackground')}
+                          className="block text-xs text-red-600 hover:text-red-800 mt-1"
+                        >
+                          削除
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* チャットアバター画像 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    チャットアバター画像
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-20 h-20 rounded-full border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+                      {formData.imageChatAvatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img 
+                          src={URL.createObjectURL(formData.imageChatAvatar)} 
+                          alt="アバター" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-gray-400 text-xs">アバター</span>
+                      )}
+                    </div>
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageChange(e, 'imageChatAvatar')}
+                        className="hidden"
+                        id="chat-avatar-upload"
+                      />
+                      <label
+                        htmlFor="chat-avatar-upload"
+                        className="cursor-pointer inline-flex items-center space-x-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                      >
+                        <Upload className="w-3 h-3" />
+                        <span>選択</span>
+                      </label>
+                      {formData.imageChatAvatar && (
+                        <button
+                          type="button"
+                          onClick={() => removeImage('imageChatAvatar')}
+                          className="block text-xs text-red-600 hover:text-red-800 mt-1"
+                        >
+                          削除
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -357,10 +534,10 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.gender}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                   >
                     {GENDERS.map(gender => (
-                      <option key={gender.value} value={gender.value}>
+                      <option key={gender.value} value={gender.value} className="text-gray-900">
                         {gender.label}
                       </option>
                     ))}
@@ -407,12 +584,12 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.personalityPreset}
                     onChange={(e) => setFormData({ ...formData, personalityPreset: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                     required
                   >
-                    <option value="">プリセットを選択してください</option>
+                    <option value="" className="text-gray-500">プリセットを選択してください</option>
                     {PERSONALITY_PRESETS.map(preset => (
-                      <option key={preset.value} value={preset.value}>
+                      <option key={preset.value} value={preset.value} className="text-gray-900">
                         {preset.label} - {preset.description}
                       </option>
                     ))}
@@ -456,10 +633,10 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.model}
                     onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                   >
                     {AI_MODELS.map(model => (
-                      <option key={model.value} value={model.value}>
+                      <option key={model.value} value={model.value} className="text-gray-900">
                         {model.label} - {model.description}
                       </option>
                     ))}
@@ -473,10 +650,10 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.characterAccessType}
                     onChange={(e) => setFormData({ ...formData, characterAccessType: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                   >
                     {ACCESS_TYPES.map(type => (
-                      <option key={type.value} value={type.value}>
+                      <option key={type.value} value={type.value} className="text-gray-900">
                         {type.label} - {type.description}
                       </option>
                     ))}
@@ -564,36 +741,94 @@ export default function CharacterNewPage() {
               </div>
             </div>
 
-            {/* デザイン設定 */}
+            {/* ギャラリー画像（親密度解放用） */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">デザイン設定</h3>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  テーマカラー
-                </label>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div 
-                      className="w-12 h-12 rounded-lg border-2 border-gray-300"
-                      style={{ backgroundColor: formData.themeColor }}
-                    ></div>
-                    <span className="text-sm text-gray-600 font-medium">{formData.themeColor}</span>
-                  </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">ギャラリー画像（親密度解放用）</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                親密度レベルに応じて解放される画像を設定します。最大10枚まで登録可能です。
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {Array.from({ length: 10 }, (_, index) => {
+                  const galleryItem = formData.galleryImages[index];
+                  const unlockLevel = (index + 1) * 10;
                   
-                  <div className="grid grid-cols-6 gap-2">
-                    {THEME_COLORS.map(color => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, themeColor: color })}
-                        className={`w-8 h-8 rounded-lg border-2 transition-transform hover:scale-110 ${
-                          formData.themeColor === color ? 'border-gray-900' : 'border-gray-300'
-                        }`}
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
+                  return (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-medium text-gray-900">
+                          解放レベル {unlockLevel}
+                        </h4>
+                        <span className="text-xs text-gray-500">
+                          {index + 1}/10
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-start space-x-4">
+                        <div className="w-16 h-16 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
+                          {galleryItem?.file ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img 
+                              src={URL.createObjectURL(galleryItem.file)} 
+                              alt={`ギャラリー ${index + 1}`} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-gray-400 text-xs">画像{index + 1}</span>
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 space-y-3">
+                          <div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageChange(e, 'gallery', index)}
+                              className="hidden"
+                              id={`gallery-upload-${index}`}
+                            />
+                            <label
+                              htmlFor={`gallery-upload-${index}`}
+                              className="cursor-pointer inline-flex items-center space-x-2 px-3 py-1 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs"
+                            >
+                              <Upload className="w-3 h-3" />
+                              <span>画像選択</span>
+                            </label>
+                            {galleryItem?.file && (
+                              <button
+                                type="button"
+                                onClick={() => removeImage('gallery', index)}
+                                className="ml-2 text-xs text-red-600 hover:text-red-800"
+                              >
+                                削除
+                              </button>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <input
+                              type="text"
+                              value={galleryItem?.title || ''}
+                              onChange={(e) => updateGalleryInfo(index, 'title', e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                              placeholder="画像タイトル"
+                            />
+                          </div>
+                          
+                          <div>
+                            <textarea
+                              value={galleryItem?.description || ''}
+                              onChange={(e) => updateGalleryInfo(index, 'description', e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                              rows={2}
+                              placeholder="画像説明"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -641,7 +876,7 @@ export default function CharacterNewPage() {
                 <li>• プロンプトは具体的で分かりやすく記述してください</li>
                 <li>• 買い切りキャラクターの価格は1500円〜3000円を推奨</li>
                 <li>• 公開前にテストユーザーでの動作確認を推奨します</li>
-                <li>• 画像とテーマカラーはキャラクターのイメージに合わせてください</li>
+                <li>• ギャラリー画像は親密度レベルに応じて順次解放されます</li>
               </ul>
             </div>
 
