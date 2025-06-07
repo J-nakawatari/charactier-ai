@@ -123,7 +123,7 @@ const ToastContainer: React.FC = () => {
             ${getToastStyles(toast.type)}
             border rounded-lg shadow-lg p-4 max-w-sm w-full
             transform transition-all duration-300 ease-in-out
-            animate-in slide-in-from-right
+            animate-pulse
           `}
         >
           <div className="flex items-start">

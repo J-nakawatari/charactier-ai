@@ -9,10 +9,13 @@ import {
   Settings, 
   Shield, 
   BarChart3,
-  LogOut 
+  LogOut,
+  Menu,
+  X
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 const sidebarItems = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'ダッシュボード' },
@@ -27,9 +30,32 @@ const sidebarItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-100 flex flex-col shadow-sm overflow-y-auto">
+    <>
+      {/* ハンバーガーメニューボタン（モバイル用） */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed top-4 left-4 z-50 p-2 bg-white border border-gray-300 rounded-lg shadow-sm lg:hidden"
+      >
+        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
+      {/* オーバーレイ（モバイル用） */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* サイドバー */}
+      <div className={`
+        fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-100 
+        flex flex-col shadow-sm overflow-y-auto transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
+      `}>
       {/* ヘッダー */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
@@ -94,5 +120,6 @@ export default function Sidebar() {
         </button>
       </div>
     </div>
+    </>
   );
 }

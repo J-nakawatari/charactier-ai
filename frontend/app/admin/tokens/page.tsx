@@ -33,7 +33,7 @@ export default function TokensPage() {
             
             <div className="flex items-center space-x-2">
               {/* フィルター */}
-              <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex-1 sm:flex-none justify-center">
+              <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex-1 sm:flex-none justify-center text-gray-700">
                 <Filter className="w-4 h-4" />
                 <span className="text-sm hidden sm:inline">フィルター</span>
               </button>
