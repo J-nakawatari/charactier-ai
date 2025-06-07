@@ -1,6 +1,7 @@
 'use client';
 
 import { UserData } from '@/mock/adminData';
+import { useToast } from '@/contexts/ToastContext';
 import { Eye, Edit, Ban, Unlock } from 'lucide-react';
 
 interface UserTableProps {
@@ -8,6 +9,7 @@ interface UserTableProps {
 }
 
 export default function UserTable({ users }: UserTableProps) {
+  const { success, error } = useToast();
   const getStatusBadge = (status: string) => {
     const styles = {
       active: 'bg-green-100 text-green-800',
@@ -34,6 +36,22 @@ export default function UserTable({ users }: UserTableProps) {
 
   const formatNumber = (num: number) => {
     return num.toLocaleString('ja-JP');
+  };
+
+  const handleViewUser = (user: UserData) => {
+    success('ユーザー詳細', `${user.name}の詳細を表示しました`);
+  };
+
+  const handleEditUser = (user: UserData) => {
+    success('編集モード', `${user.name}の編集画面を開きました`);
+  };
+
+  const handleBanUser = (user: UserData) => {
+    if (user.status === 'suspended') {
+      success('アカウント復活', `${user.name}のアカウントを復活させました`);
+    } else {
+      error('アカウント停止', `${user.name}のアカウントを停止しました`);
+    }
   };
 
   return (
@@ -118,18 +136,30 @@ export default function UserTable({ users }: UserTableProps) {
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end space-x-2">
-                    <button className="text-gray-400 hover:text-gray-600">
+                    <button 
+                      onClick={() => handleViewUser(user)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
                       <Eye className="w-4 h-4" />
                     </button>
-                    <button className="text-gray-400 hover:text-purple-600">
+                    <button 
+                      onClick={() => handleEditUser(user)}
+                      className="text-gray-400 hover:text-purple-600"
+                    >
                       <Edit className="w-4 h-4" />
                     </button>
                     {user.status === 'suspended' ? (
-                      <button className="text-gray-400 hover:text-green-600">
+                      <button 
+                        onClick={() => handleBanUser(user)}
+                        className="text-gray-400 hover:text-green-600"
+                      >
                         <Unlock className="w-4 h-4" />
                       </button>
                     ) : (
-                      <button className="text-gray-400 hover:text-red-600">
+                      <button 
+                        onClick={() => handleBanUser(user)}
+                        className="text-gray-400 hover:text-red-600"
+                      >
                         <Ban className="w-4 h-4" />
                       </button>
                     )}
