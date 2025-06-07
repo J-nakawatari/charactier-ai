@@ -29,7 +29,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="h-screen w-64 bg-white border-r border-gray-200 flex flex-col">
+    <div className="fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-100 flex flex-col shadow-sm overflow-y-auto">
       {/* ヘッダー */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
@@ -38,11 +38,11 @@ export default function Sidebar() {
           </div>
           <h1 className="text-xl font-semibold text-gray-900">Charactier</h1>
         </div>
-        <p className="text-sm text-gray-500 mt-1">管理者ダッシュボード</p>
+        <p className="text-sm text-gray-400 mt-1">管理者だっしゅぼーど</p>
       </div>
 
       {/* ナビゲーション */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-1 min-h-0">
         <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
           一般
         </div>
