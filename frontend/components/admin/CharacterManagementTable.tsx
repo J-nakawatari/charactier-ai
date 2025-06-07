@@ -42,11 +42,11 @@ export default function CharacterManagementTable({ characters }: CharacterManage
   };
 
   const handleViewCharacter = (character: CharacterData) => {
-    success('キャラクター詳細', `${character.name}の詳細を表示しました`);
+    window.location.href = `/admin/characters/${character.id}`;
   };
 
   const handleEditCharacter = (character: CharacterData) => {
-    success('編集モード', `${character.name}の編集画面を開きました`);
+    window.location.href = `/admin/characters/${character.id}/edit`;
   };
 
   const handleToggleStatus = (character: CharacterData) => {

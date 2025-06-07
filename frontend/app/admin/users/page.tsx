@@ -46,7 +46,7 @@ export default function UsersPage() {
               
               {/* 新規追加 */}
               <button 
-                onClick={() => success('新規ユーザー', '新規ユーザー作成画面を開きました')}
+                onClick={() => window.location.href = '/admin/users/new'}
                 className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex-1 sm:flex-none justify-center"
               >
                 <UserPlus className="w-4 h-4" />
