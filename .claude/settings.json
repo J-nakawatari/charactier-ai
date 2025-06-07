@@ -1,0 +1,41 @@
+{
+  "model": "claude-3-opus",
+  "theme": "dark",
+  "includeCoAuthoredBy": false,
+  "cleanupPeriodDays": 30,
+  "permissions": {
+    "allow": [
+      "Edit(./backend/models/**)",
+      "Edit(./backend/routes/characterPrompt.js)",
+      "Edit(./backend/routes/tokenPurchase.js)",
+      "Edit(./frontend/app/**)",
+      "Edit(./frontend/components/**)",
+      "Edit(./frontend/styles/**)",
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(pm2:*)",
+      "Bash(git:*)",
+      "Read(**)"
+    ],
+    "deny": [
+      "Edit(./backend/routes/webhook.js)",
+      "Edit(./backend/routes/admin/**)",
+      "Edit(./backend/utils/securityAlertSystem.js)",
+      "Edit(./backend/middleware/rateLimitSecurity.js)",
+      "Edit(./backend/models/User.js)",
+      "Read(.env)",
+      "Read(./*.pem)",
+      "Read(./*.key)",
+      "WebFetch(domain:*)",
+      "Bash(rm -rf *)",
+      "Bash(git push -f:*)"
+    ]
+  },
+  "env": {
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
+    "DISABLE_COST_WARNINGS": "1",
+    "DISABLE_AUTOUPDATER": "1",
+    "BASH_DEFAULT_TIMEOUT_MS": "300000",
+    "BASH_MAX_TIMEOUT_MS": "1200000"
+  }
+}
