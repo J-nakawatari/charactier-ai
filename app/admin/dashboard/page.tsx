@@ -1,6 +1,5 @@
 'use client';
 
-import Sidebar from '@/components/admin/Sidebar';
 import StatsCards from '@/components/admin/StatsCards';
 import UserChart from '@/components/admin/UserChart';
 import TokenChart from '@/components/admin/TokenChart';
@@ -20,21 +19,14 @@ import {
 
 export default function AdminDashboard() {
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* サイドバー */}
-      <div className="hidden lg:block">
-        <Sidebar />
-      </div>
-
-      {/* メインコンテンツ */}
-      <div className="flex-1 flex flex-col lg:ml-0">
+    <div className="flex flex-col min-h-screen">
         {/* ヘッダー */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <header className="bg-white/80 backdrop-blur-sm border-b border-gray-100 px-6 py-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">ダッシュボード</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                システム全体の状況を監視・管理できます
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-sm text-gray-400 mt-1">
+                Monitor and manage your system overview
               </p>
             </div>
             
@@ -44,25 +36,25 @@ export default function AdminDashboard() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  placeholder="検索..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                  placeholder="Search..."
+                  className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm bg-gray-50 focus:bg-white transition-colors"
                 />
               </div>
               
               {/* 通知 */}
-              <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
+              <button className="relative p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-all">
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
               
               {/* 設定 */}
-              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+              <button className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-all">
                 <Settings className="w-5 h-5" />
               </button>
               
               {/* プロファイル */}
-              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">A</span>
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-sm">
+                <span className="text-white text-sm font-semibold">A</span>
               </div>
             </div>
           </div>
@@ -99,7 +91,6 @@ export default function AdminDashboard() {
             </div>
           </div>
         </main>
-      </div>
     </div>
   );
 }
