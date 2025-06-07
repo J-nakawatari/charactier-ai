@@ -11,7 +11,7 @@ export default function UsersPage() {
   return (
     <div className="flex-1 flex flex-col">
       {/* ヘッダー */}
-      <header className="bg-white border-b border-gray-200 p-4 md:p-6">
+      <header className="bg-white border-b border-gray-200 p-4 md:p-6 pr-16 lg:pr-6">
         <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">ユーザー管理</h1>

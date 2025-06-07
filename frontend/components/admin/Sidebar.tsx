@@ -37,7 +37,7 @@ export default function Sidebar() {
       {/* ハンバーガーメニューボタン（モバイル用） */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 p-2 bg-white border border-gray-300 rounded-lg shadow-sm lg:hidden"
+        className="fixed top-4 right-4 z-50 p-3 bg-purple-600 text-white rounded-lg shadow-lg lg:hidden hover:bg-purple-700 transition-colors"
       >
         {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
