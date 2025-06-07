@@ -115,17 +115,19 @@ const ToastContainer: React.FC = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 space-y-3">
-      {toasts.map((toast) => (
-        <div
-          key={toast.id}
-          className={`
-            ${getToastStyles(toast.type)}
-            border rounded-lg shadow-lg p-4 max-w-sm w-full
-            transform transition-all duration-300 ease-in-out
-            animate-pulse
-          `}
-        >
+    <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+      <div className="space-y-3">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`
+              ${getToastStyles(toast.type)}
+              border rounded-lg shadow-lg p-4 max-w-sm w-full
+              transform transition-all duration-300 ease-in-out
+              animate-in slide-in-from-top-5 duration-300
+              pointer-events-auto
+            `}
+          >
           <div className="flex items-start">
             <div className="flex-shrink-0">
               {getToastIcon(toast.type)}
@@ -147,8 +149,9 @@ const ToastContainer: React.FC = () => {
               <X className="w-4 h-4" />
             </button>
           </div>
-        </div>
-      ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
