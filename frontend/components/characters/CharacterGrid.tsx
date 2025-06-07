@@ -11,7 +11,7 @@ interface Character {
   personalityPreset: string;
   personalityTags: string[];
   gender: string;
-  characterAccessType: 'free' | 'token-based' | 'purchaseOnly';
+  characterAccessType: 'initial' | 'premium';
   imageCharacterSelect?: string;
   imageChatAvatar?: string;
   affinityStats?: {
@@ -46,17 +46,14 @@ export default function CharacterGrid({
   // キャラクターのロック状態とアクセス権限を判定
   const getCharacterAccess = (character: Character) => {
     switch (character.characterAccessType) {
-      case 'free':
+      case 'initial':
+        // ベースキャラ: 新規登録の30,000トークンで利用可能
         return { isLocked: false, hasAccess: true };
       
-      case 'token-based':
-        return { 
-          isLocked: userTokenBalance <= 0, 
-          hasAccess: userTokenBalance > 0 
-        };
-      
-      case 'purchaseOnly':
+      case 'premium':
+        // プレミアキャラ: 購入が必要
         const isPurchased = userPurchasedCharacters.includes(character._id);
+        console.log(`Character ${character.name} (${character._id}): isPurchased=${isPurchased}, accessType=${character.characterAccessType}`);
         return { 
           isLocked: !isPurchased, 
           hasAccess: isPurchased 
