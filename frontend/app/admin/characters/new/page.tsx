@@ -297,44 +297,38 @@ export default function CharacterNewPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     キャラクター選択画像
                   </label>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-20 h-20 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
-                      {formData.imageCharacterSelect ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img 
-                          src={URL.createObjectURL(formData.imageCharacterSelect)} 
-                          alt="キャラクター選択" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-gray-400 text-xs">選択画像</span>
-                      )}
-                    </div>
-                    <div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleImageChange(e, 'imageCharacterSelect')}
-                        className="hidden"
-                        id="character-select-upload"
-                      />
-                      <label
-                        htmlFor="character-select-upload"
-                        className="cursor-pointer inline-flex items-center space-x-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-                      >
-                        <Upload className="w-3 h-3" />
-                        <span>選択</span>
-                      </label>
-                      {formData.imageCharacterSelect && (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
+                    {formData.imageCharacterSelect ? (
+                      <div className="space-y-2">
+                        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img 
+                            src={URL.createObjectURL(formData.imageCharacterSelect)} 
+                            alt="キャラクター選択" 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <p className="text-sm text-gray-600">画像が設定されています</p>
                         <button
                           type="button"
                           onClick={() => removeImage('imageCharacterSelect')}
-                          className="block text-xs text-red-600 hover:text-red-800 mt-1"
+                          className="text-red-500 hover:text-red-700 text-sm"
                         >
                           削除
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto" />
+                        <p className="text-sm text-gray-500">クリックまたはドラッグ&ドロップで画像をアップロード</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageChange(e, 'imageCharacterSelect')}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
                   </div>
                 </div>
 
@@ -343,44 +337,38 @@ export default function CharacterNewPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     ダッシュボード画像
                   </label>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-20 h-20 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
-                      {formData.imageDashboard ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img 
-                          src={URL.createObjectURL(formData.imageDashboard)} 
-                          alt="ダッシュボード" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-gray-400 text-xs">ダッシュボード</span>
-                      )}
-                    </div>
-                    <div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleImageChange(e, 'imageDashboard')}
-                        className="hidden"
-                        id="dashboard-upload"
-                      />
-                      <label
-                        htmlFor="dashboard-upload"
-                        className="cursor-pointer inline-flex items-center space-x-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-                      >
-                        <Upload className="w-3 h-3" />
-                        <span>選択</span>
-                      </label>
-                      {formData.imageDashboard && (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
+                    {formData.imageDashboard ? (
+                      <div className="space-y-2">
+                        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img 
+                            src={URL.createObjectURL(formData.imageDashboard)} 
+                            alt="ダッシュボード" 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <p className="text-sm text-gray-600">画像が設定されています</p>
                         <button
                           type="button"
                           onClick={() => removeImage('imageDashboard')}
-                          className="block text-xs text-red-600 hover:text-red-800 mt-1"
+                          className="text-red-500 hover:text-red-700 text-sm"
                         >
                           削除
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto" />
+                        <p className="text-sm text-gray-500">クリックまたはドラッグ&ドロップで画像をアップロード</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageChange(e, 'imageDashboard')}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
                   </div>
                 </div>
 
@@ -389,44 +377,38 @@ export default function CharacterNewPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     チャット背景画像
                   </label>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-20 h-20 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
-                      {formData.imageChatBackground ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img 
-                          src={URL.createObjectURL(formData.imageChatBackground)} 
-                          alt="チャット背景" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-gray-400 text-xs">背景画像</span>
-                      )}
-                    </div>
-                    <div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleImageChange(e, 'imageChatBackground')}
-                        className="hidden"
-                        id="chat-background-upload"
-                      />
-                      <label
-                        htmlFor="chat-background-upload"
-                        className="cursor-pointer inline-flex items-center space-x-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-                      >
-                        <Upload className="w-3 h-3" />
-                        <span>選択</span>
-                      </label>
-                      {formData.imageChatBackground && (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
+                    {formData.imageChatBackground ? (
+                      <div className="space-y-2">
+                        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img 
+                            src={URL.createObjectURL(formData.imageChatBackground)} 
+                            alt="チャット背景" 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <p className="text-sm text-gray-600">画像が設定されています</p>
                         <button
                           type="button"
                           onClick={() => removeImage('imageChatBackground')}
-                          className="block text-xs text-red-600 hover:text-red-800 mt-1"
+                          className="text-red-500 hover:text-red-700 text-sm"
                         >
                           削除
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto" />
+                        <p className="text-sm text-gray-500">クリックまたはドラッグ&ドロップで画像をアップロード</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageChange(e, 'imageChatBackground')}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
                   </div>
                 </div>
 
@@ -435,44 +417,38 @@ export default function CharacterNewPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     チャットアバター画像
                   </label>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-20 h-20 rounded-full border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
-                      {formData.imageChatAvatar ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img 
-                          src={URL.createObjectURL(formData.imageChatAvatar)} 
-                          alt="アバター" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-gray-400 text-xs">アバター</span>
-                      )}
-                    </div>
-                    <div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleImageChange(e, 'imageChatAvatar')}
-                        className="hidden"
-                        id="chat-avatar-upload"
-                      />
-                      <label
-                        htmlFor="chat-avatar-upload"
-                        className="cursor-pointer inline-flex items-center space-x-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-                      >
-                        <Upload className="w-3 h-3" />
-                        <span>選択</span>
-                      </label>
-                      {formData.imageChatAvatar && (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
+                    {formData.imageChatAvatar ? (
+                      <div className="space-y-2">
+                        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img 
+                            src={URL.createObjectURL(formData.imageChatAvatar)} 
+                            alt="チャットアバター" 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <p className="text-sm text-gray-600">画像が設定されています</p>
                         <button
                           type="button"
                           onClick={() => removeImage('imageChatAvatar')}
-                          className="block text-xs text-red-600 hover:text-red-800 mt-1"
+                          className="text-red-500 hover:text-red-700 text-sm"
                         >
                           削除
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto" />
+                        <p className="text-sm text-gray-500">クリックまたはドラッグ&ドロップで画像をアップロード</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageChange(e, 'imageChatAvatar')}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
                   </div>
                 </div>
               </div>
