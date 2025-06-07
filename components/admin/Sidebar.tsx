@@ -38,7 +38,7 @@ export default function Sidebar() {
           </div>
           <h1 className="text-xl font-bold text-gray-900">Charactier</h1>
         </div>
-        <p className="text-sm text-gray-400 mt-1">Admin Dashboard</p>
+        <p className="text-sm text-gray-400 mt-1">管理者だっしゅぼーど</p>
       </div>
 
       {/* ナビゲーション */}
