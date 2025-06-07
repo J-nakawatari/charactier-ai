@@ -65,3 +65,6 @@ next-env.d.ts
 
 # Data folder - デーモンローカル情報
 data/
+
+# Documentation folder - 仕様書・ドキュメント
+Docs/

@@ -13,7 +13,14 @@ import {
   Calendar,
   DollarSign,
   Users,
-  Tag
+  Tag,
+  Image,
+  Star,
+  TrendingUp,
+  Settings,
+  Gift,
+  Zap,
+  Volume2
 } from 'lucide-react';
 
 export default function CharacterDetailPage() {
@@ -58,6 +65,24 @@ export default function CharacterDetailPage() {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const getGenderText = (gender: string) => {
+    const genderMap = {
+      'male': '男性',
+      'female': '女性', 
+      'neutral': '中性'
+    };
+    return genderMap[gender as keyof typeof genderMap] || gender;
+  };
+  
+  const getAccessTypeText = (type: string) => {
+    const typeMap = {
+      'free': '無料',
+      'token-based': 'トークン制',
+      'purchaseOnly': '買い切り'
+    };
+    return typeMap[type as keyof typeof typeMap] || type;
   };
 
   const getStatusBadge = (isActive: boolean, isFree: boolean) => {
@@ -167,7 +192,7 @@ export default function CharacterDetailPage() {
             </div>
 
             {/* 統計情報 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               <div className="flex items-center space-x-3">
                 <div className="p-3 bg-green-100 rounded-lg">
                   <DollarSign className="w-6 h-6 text-green-600" />
@@ -209,9 +234,33 @@ export default function CharacterDetailPage() {
                   <Users className="w-6 h-6 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">推定売上</p>
+                  <p className="text-sm text-gray-500">利用ユーザー数</p>
                   <p className="text-xl font-semibold text-gray-900">
-                    ¥{((character.price || 0) * 10).toLocaleString()}
+                    {character.totalUsers?.toLocaleString() || 0}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-yellow-100 rounded-lg">
+                  <TrendingUp className="w-6 h-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">総売上</p>
+                  <p className="text-xl font-semibold text-gray-900">
+                    ¥{character.totalRevenue?.toLocaleString() || 0}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-indigo-100 rounded-lg">
+                  <Zap className="w-6 h-6 text-indigo-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">AIモデル</p>
+                  <p className="text-xl font-semibold text-gray-900">
+                    {character.model || 'GPT-3.5'}
                   </p>
                 </div>
               </div>
@@ -219,7 +268,7 @@ export default function CharacterDetailPage() {
           </div>
 
           {/* 詳細情報 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {/* キャラクター設定 */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">キャラクター設定</h3>
@@ -227,17 +276,25 @@ export default function CharacterDetailPage() {
                 <div className="flex items-start space-x-3">
                   <Tag className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-500">性格タイプ</p>
-                    <p className="text-gray-900 font-medium">{character.personalityType}</p>
+                    <p className="text-sm text-gray-500">性格プリセット</p>
+                    <p className="text-gray-900 font-medium">{character.personalityPreset || character.personalityType}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Users className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-500">性別</p>
+                    <p className="text-gray-900 font-medium">{getGenderText(character.gender)}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-3">
                   <DollarSign className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-500">料金設定</p>
+                    <p className="text-sm text-gray-500">アクセスタイプ</p>
                     <p className="text-gray-900 font-medium">
-                      {character.isFree ? '無料キャラクター' : `有料 - ¥${character.price.toLocaleString()}`}
+                      {getAccessTypeText(character.characterAccessType)}
                     </p>
                   </div>
                 </div>
@@ -305,7 +362,117 @@ export default function CharacterDetailPage() {
                 </div>
               </div>
             </div>
+            
+            {/* メディア・アセット */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">メディア・アセット</h3>
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3">
+                  {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                  <Image className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-500">キャラクター画像</p>
+                    <p className="text-gray-900 font-medium">{character.imageCharacterSelect ? '設定済み' : '未設定'}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Star className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-500">ギャラリー画像</p>
+                    <p className="text-gray-900 font-medium">{character.galleryImages?.length || 0}枚</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Volume2 className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-500">音声サンプル</p>
+                    <p className="text-gray-900 font-medium">{character.sampleVoiceUrl ? '設定済み' : '未設定'}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Settings className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-500">テーマカラー</p>
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-4 h-4 rounded-full border border-gray-300"
+                        style={{ backgroundColor: character.themeColor || '#8b5cf6' }}
+                      ></div>
+                      <span className="text-gray-900 font-medium">{character.themeColor || '#8b5cf6'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+          
+          {/* プロンプト・メッセージ設定 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">プロンプト・メッセージ設定</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">デフォルトメッセージ</h4>
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    {character.defaultMessage?.ja || 'デフォルトメッセージが設定されていません'}
+                  </p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">制限メッセージ</h4>
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    {character.limitMessage?.ja || '制限メッセージが設定されていません'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">管理者プロンプト</h4>
+              <div className="p-3 bg-gray-50 rounded-lg max-h-32 overflow-y-auto">
+                <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                  {character.adminPrompt?.ja || 'プロンプトが設定されていません'}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* 親密度・報酬システム */}
+          {character.affinitySettings && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">親密度・報酬システム</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Heart className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900">最大レベル</span>
+                  </div>
+                  <p className="text-lg font-semibold text-blue-900">{character.affinitySettings.maxLevel || 100}</p>
+                </div>
+                
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <TrendingUp className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-900">経験値倍率</span>
+                  </div>
+                  <p className="text-lg font-semibold text-green-900">{character.affinitySettings.experienceMultiplier || 1.0}x</p>
+                </div>
+                
+                <div className="p-4 bg-yellow-50 rounded-lg">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Gift className="w-4 h-4 text-yellow-600" />
+                    <span className="text-sm font-medium text-yellow-900">報酬数</span>
+                  </div>
+                  <p className="text-lg font-semibold text-yellow-900">{character.levelRewards?.length || 0}個</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
