@@ -111,13 +111,17 @@ export function ChatLayout({
 
   return (
     <div 
-      className="flex flex-col h-screen relative"
-      style={{
+      className={`flex flex-col h-screen relative ${
+        character.imageChatBackground 
+          ? '' 
+          : 'bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50'
+      }`}
+      style={character.imageChatBackground ? {
         backgroundImage: `url(${character.imageChatBackground})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
-      }}
+      } : {}}
     >
       {/* 背景オーバーレイ */}
       <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>

@@ -55,5 +55,13 @@
     "menu": "Menu",
     "account": "Account",
     "logout": "Logout"
+  },
+  "chat": {
+    "loading": "Loading chat...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "notFound": "Chat not found",
+    "sendMessage": "Send message",
+    "placeholder": "Enter message..."
   }
 }

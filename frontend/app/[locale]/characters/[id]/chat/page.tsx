@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+// import { useTranslations } from 'next-intl';
 import { ChatLayout } from '@/components/chat/ChatLayout';
 
 // モックデータ型定義
@@ -45,7 +45,7 @@ interface ChatData {
 
 export default function ChatPage() {
   const params = useParams();
-  const t = useTranslations('chat');
+  // const t = useTranslations('chat');
   const [chatData, setChatData] = useState<ChatData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +73,7 @@ export default function ChatPage() {
           name: characterId === '1' ? 'ルナ' : characterId === '2' ? 'ミコ' : 'ゼン',
           description: '明るく元気な女の子',
           imageChatAvatar: `/characters/${characterId === '1' ? 'luna' : characterId === '2' ? 'miko' : 'zen'}.png`,
-          imageChatBackground: '/images/chat-bg-default.png',
+          imageChatBackground: '',
           currentMood: 'happy',
           themeColor: '#8B5CF6'
         },
