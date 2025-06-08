@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
+// import { useTranslations } from 'next-intl';
 import { MessageSquare, User, Sparkles, Unlock } from 'lucide-react';
 import AffinityBar from './AffinityBar';
 import LockBadge from './LockBadge';
@@ -41,6 +43,7 @@ export default function CharacterCard({
   const params = useParams();
   const locale = params.locale as string || 'ja';
   const [showAllTags, setShowAllTags] = useState(false);
+  // TODO: 再実装時に復活 - const t = useTranslations('characters');
 
   const handleClick = () => {
     if (onClick) {
@@ -78,10 +81,11 @@ export default function CharacterCard({
       {/* キャラクター画像エリア */}
       <div className="relative aspect-square bg-gradient-to-br from-purple-100 to-pink-100">
         {character.imageCharacterSelect || character.imageChatAvatar ? (
-          <img
+          <Image
             src={character.imageCharacterSelect || character.imageChatAvatar}
             alt={character.name}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -156,7 +160,7 @@ export default function CharacterCard({
             {character.personalityTags.length > 3 && (
               <div className="relative group inline-block" style={{ fontSize: '0.75rem' }}>
                 <span className="inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-500 rounded cursor-pointer hover:bg-gray-200 transition-colors">
-                  全部見る
+                  {/* t('actions.viewAll') */}全部見る
                 </span>
                 {/* ツールチップ - 全ての性格タグを表示 */}
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 max-w-48 w-max min-w-32">
@@ -195,10 +199,10 @@ export default function CharacterCard({
               {character.characterAccessType === 'premium' ? (
                 <>
                   <Unlock className="w-4 h-4" />
-                  <span>アンロック</span>
+                  <span>{/* t('actions.unlock') */}アンロック</span>
                 </>
               ) : (
-                <span>トークチケットが必要</span>
+                <span>{/* t('actions.needTokens') */}トークチケットが必要</span>
               )}
             </button>
           ) : (
@@ -207,7 +211,7 @@ export default function CharacterCard({
               className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
             >
               <MessageSquare className="w-4 h-4" />
-              <span>チャット開始</span>
+              <span>{/* t('actions.startChat') */}チャット開始</span>
             </Link>
           )}
         </div>

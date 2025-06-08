@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+// import { useTranslations } from 'next-intl';
 import { Search, Filter, SortAsc, X } from 'lucide-react';
 
 interface FilterState {
@@ -22,6 +23,8 @@ export default function CharacterFilters({
   isLoading = false,
   totalCount = 0
 }: CharacterFiltersProps) {
+  // TODO: 再実装時に復活 - const t = useTranslations('characters');
+  // TODO: 再実装時に復活 - const tCommon = useTranslations('common');
   
   const updateFilter = (key: keyof FilterState, value: any) => {
     onFiltersChange({
@@ -43,20 +46,20 @@ export default function CharacterFilters({
   };
 
   const sortOptions = [
-    { value: 'popular', label: '人気順' },
-    { value: 'newest', label: '新着順' },
-    { value: 'oldest', label: '登録順' },
-    { value: 'name', label: '名前順' },
-    { value: 'affinity', label: '親密度順' }
+    { value: 'popular', label: /* t('sort.popular') */ '人気順' },
+    { value: 'newest', label: /* t('sort.newest') */ '新着順' },
+    { value: 'oldest', label: /* t('sort.oldest') */ '登録順' },
+    { value: 'name', label: /* t('sort.name') */ '名前順' },
+    { value: 'affinity', label: /* t('sort.affinity') */ '親密度順' }
   ];
 
   const hasActiveFilters = filters.keyword || filters.characterType !== 'all' || filters.sort !== 'popular';
 
   const characterTypeOptions = [
-    { value: 'all', label: '全て表示' },
-    { value: 'initial', label: 'ベースキャラのみ' },
-    { value: 'purchased', label: '購入済みキャラのみ' },
-    { value: 'unpurchased', label: '未購入キャラのみ' }
+    { value: 'all', label: /* t('filters.all') */ '全て表示' },
+    { value: 'initial', label: /* t('filters.initial') */ 'ベースキャラのみ' },
+    { value: 'purchased', label: /* t('filters.purchased') */ '購入済みキャラのみ' },
+    { value: 'unpurchased', label: /* t('filters.unpurchased') */ '未購入キャラのみ' }
   ];
 
   return (
@@ -70,7 +73,7 @@ export default function CharacterFilters({
           type="text"
           value={filters.keyword}
           onChange={(e) => updateFilter('keyword', e.target.value)}
-          placeholder="キャラクター名や性格で検索..."
+          placeholder={/* t('search.placeholder') */ "キャラクター名や性格で検索..."}
           disabled={isLoading}
           className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400 text-gray-900 placeholder-gray-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
         />
@@ -149,7 +152,7 @@ export default function CharacterFilters({
         {/* 結果の数とリセットボタン */}
         <div className="flex items-center justify-between sm:justify-end gap-4">
           <span className="text-sm text-gray-600">
-            {totalCount > 0 && `${totalCount}件のキャラクター`}
+            {totalCount > 0 && /* t('totalCount', { count: totalCount }) */ `${totalCount}件のキャラクター`}
           </span>
           
           {hasActiveFilters && (
@@ -159,7 +162,7 @@ export default function CharacterFilters({
               className="flex items-center space-x-1 text-sm text-purple-600 hover:text-purple-700 disabled:cursor-not-allowed"
             >
               <Filter className="h-3 w-3" />
-              <span>リセット</span>
+              <span>{/* tCommon('reset') */}リセット</span>
             </button>
           )}
         </div>
@@ -181,17 +184,6 @@ export default function CharacterFilters({
               </span>
             )}
             
-            {filters.freeOnly && (
-              <span className="inline-flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                <span>無料のみ</span>
-                <button
-                  onClick={() => updateFilter('freeOnly', false)}
-                  className="text-green-500 hover:text-green-700"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
             
             {filters.sort !== 'popular' && (
               <span className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">

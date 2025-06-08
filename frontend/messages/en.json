@@ -1,0 +1,39 @@
+{
+  "characters": {
+    "title": "Character List",
+    "subtitle": "Find your favorite character and enjoy conversations",
+    "totalCount": "{count} characters available",
+    "search": {
+      "placeholder": "Search by character name or personality...",
+      "notFound": "No characters found",
+      "notFoundDesc": "Please try changing your search criteria",
+      "resetFilters": "Reset Filters"
+    },
+    "filters": {
+      "all": "Show All",
+      "initial": "Base Characters Only",
+      "purchased": "Purchased Characters Only", 
+      "unpurchased": "Unpurchased Characters Only"
+    },
+    "sort": {
+      "popular": "Popular",
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "name": "Name",
+      "affinity": "Affinity"
+    },
+    "actions": {
+      "unlock": "Unlock",
+      "startChat": "Start Chat",
+      "needTokens": "Token Tickets Required",
+      "viewAll": "View All"
+    },
+    "loading": "Loading character list...",
+    "loadError": "Loading Error",
+    "retry": "Retry"
+  },
+  "common": {
+    "reset": "Reset",
+    "close": "Close"
+  }
+}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+// import { useTranslations } from 'next-intl';
 import { Users, Search, Filter } from 'lucide-react';
 import CharacterGrid from '@/components/characters/CharacterGrid';
 import CharacterFilters from '@/components/characters/CharacterFilters';
@@ -28,9 +29,14 @@ interface FilterState {
   sort: 'popular' | 'newest' | 'oldest' | 'name' | 'affinity';
 }
 
-export default function CharactersPage() {
-  const params = useParams();
-  const locale = params.locale as string || 'ja';
+export default function CharactersPage({
+  params
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const resolvedParams = React.use(params);
+  const locale = resolvedParams.locale || 'ja';
+  // TODO: 再実装時に復活 - const t = useTranslations('characters');
 
   const [characters, setCharacters] = useState<Character[]>([]);
   const [filters, setFilters] = useState<FilterState>({
@@ -119,7 +125,7 @@ export default function CharactersPage() {
         <div className="flex-1 lg:ml-64 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">キャラクター一覧を読み込み中...</p>
+            <p className="text-gray-600">{/* t('loading') */}キャラクター一覧を読み込み中...</p>
           </div>
         </div>
       </div>
@@ -135,13 +141,13 @@ export default function CharactersPage() {
             <div className="bg-red-100 rounded-full p-3 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
               <Users className="w-8 h-8 text-red-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">読み込みエラー</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{/* t('loadError') */}読み込みエラー</h2>
             <p className="text-gray-600 mb-4">{error}</p>
             <button
               onClick={handleRetry}
               className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
             >
-              再試行
+              {/* t('retry') */}再試行
             </button>
           </div>
         </div>
@@ -160,14 +166,14 @@ export default function CharactersPage() {
         {/* ヘッダー */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            キャラクター一覧
+            {/* t('title') */}キャラクター一覧
           </h1>
           <p className="text-gray-600">
-            お気に入りのキャラクターを見つけて、会話を楽しもう
+            {/* t('subtitle') */}お気に入りのキャラクターを見つけて、会話を楽しもう
           </p>
           <div className="mt-4 flex items-center text-sm text-gray-500">
             <Users className="w-4 h-4 mr-1" />
-            <span>{totalCount}体のキャラクターが利用可能</span>
+            <span>{/* t('totalCount', { count: totalCount }) */}{totalCount}体のキャラクターが利用可能</span>
           </div>
         </div>
 
@@ -186,23 +192,23 @@ export default function CharactersPage() {
             characters={characters}
             onCharacterClick={handleCharacterClick}
             userAffinities={[]} // モック環境では空配列
-            purchasedCharacters={[]} // モック環境では空配列
+            userPurchasedCharacters={[]} // モック環境では空配列
             filterKey={`${filters.characterType}-${filters.sort}-${filters.keyword}`} // アニメーション用のキー
           />
         ) : (
           <div className="text-center py-12">
             <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              キャラクターが見つかりません
+              {/* t('search.notFound') */}キャラクターが見つかりません
             </h3>
             <p className="text-gray-500 mb-4">
-              検索条件を変更してもう一度お試しください
+              {/* t('search.notFoundDesc') */}検索条件を変更してもう一度お試しください
             </p>
             <button
               onClick={() => setFilters({ keyword: '', characterType: 'all', sort: 'popular' })}
               className="text-purple-600 hover:text-purple-700 font-medium"
             >
-              フィルターをリセット
+              {/* t('search.resetFilters') */}フィルターをリセット
             </button>
           </div>
         )}
