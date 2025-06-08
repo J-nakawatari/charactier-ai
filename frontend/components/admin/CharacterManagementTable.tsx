@@ -51,9 +51,9 @@ export default function CharacterManagementTable({ characters }: CharacterManage
 
   const handleToggleStatus = (character: CharacterData) => {
     if (character.isActive) {
-      warning('キャラクター非公開', `${character.name}を非公開にしました`);
+      warning('キャラクター非公開', `${character.name.ja}を非公開にしました`);
     } else {
-      success('キャラクター公開', `${character.name}を公開しました`);
+      success('キャラクター公開', `${character.name.ja}を公開しました`);
     }
   };
 
@@ -72,11 +72,11 @@ export default function CharacterManagementTable({ characters }: CharacterManage
               <div className="flex items-center flex-1">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-medium">
-                    {character.name.charAt(0)}
+                    {character.name.ja.charAt(0)}
                   </span>
                 </div>
                 <div className="ml-3 flex-1">
-                  <div className="text-sm font-medium text-gray-900 mb-1">{character.name}</div>
+                  <div className="text-sm font-medium text-gray-900 mb-1">{character.name.ja}</div>
                   <div className="text-xs text-gray-500 mb-2">ID: {character.id}</div>
                   {getStatusBadge(character.isActive, character.isFree)}
                 </div>
@@ -198,11 +198,11 @@ export default function CharacterManagementTable({ characters }: CharacterManage
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                       <span className="text-white text-sm font-medium">
-                        {character.name.charAt(0)}
+                        {character.name.ja.charAt(0)}
                       </span>
                     </div>
                     <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{character.name}</div>
+                      <div className="text-sm font-medium text-gray-900">{character.name.ja}</div>
                       <div className="text-sm text-gray-500">ID: {character.id}</div>
                     </div>
                   </div>

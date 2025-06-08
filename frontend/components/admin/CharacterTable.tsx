@@ -28,11 +28,11 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
               <div className="flex items-center space-x-3 flex-1">
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
                   <span className="text-white font-medium">
-                    {character.name.charAt(0)}
+                    {character.name.ja.charAt(0)}
                   </span>
                 </div>
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900">{character.name}</div>
+                  <div className="font-medium text-gray-900">{character.name.ja}</div>
                   <div className="text-sm text-gray-500">ID: {character.id}</div>
                   <div className="text-sm text-gray-900">{character.personalityType}</div>
                 </div>
@@ -128,11 +128,11 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
                       <span className="text-white font-medium text-sm">
-                        {character.name.charAt(0)}
+                        {character.name.ja.charAt(0)}
                       </span>
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900">{character.name}</div>
+                      <div className="font-medium text-gray-900">{character.name.ja}</div>
                       <div className="text-sm text-gray-500">ID: {character.id}</div>
                     </div>
                   </div>

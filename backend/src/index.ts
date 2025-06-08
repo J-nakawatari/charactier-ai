@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { mockCharacters, mockUser } from './mockData';
+import { mockCharacters, mockCharacterTranslations, mockUser } from './mockData';
 import { CharacterDocument, MockUser } from './types';
 
 dotenv.config({ path: './backend/.env' });
@@ -44,7 +44,6 @@ const mockAuth = (req: Request, res: Response, next: NextFunction) => {
 // Characters API (using mock data from TypeScript)
 app.get('/api/characters', mockAuth, (req: Request, res: Response): void => {
   console.log('🎭 モックデータを使用してキャラクター一覧を返します');
-  const characters = mockCharacters.filter(char => char.isActive);
   
   // Query parameter handling with proper types
   const locale = (req.query.locale as string) || 'ja';
@@ -52,7 +51,26 @@ app.get('/api/characters', mockAuth, (req: Request, res: Response): void => {
   const sort = (req.query.sort as string) || 'popular';
   const keyword = (req.query.keyword as string) || '';
   
-  let filteredCharacters: CharacterDocument[] = characters;
+  // Combine Character with CharacterTranslation data
+  const charactersWithTranslations = mockCharacters
+    .filter(char => char.isActive)
+    .map(character => {
+      const translation = mockCharacterTranslations.find(t => t.characterId === character._id);
+      if (!translation) {
+        return character; // Fallback to original data if no translation
+      }
+      
+      return {
+        ...character,
+        // Override with translation data for compatibility
+        personalityPreset: (locale as 'ja' | 'en') === 'ja' ? translation.personalityPreset.ja : translation.personalityPreset.en,
+        personalityTags: (locale as 'ja' | 'en') === 'ja' ? translation.personalityTags.ja : translation.personalityTags.en,
+        // Keep original structure for name/description (they're already LocalizedString)
+        translationData: translation // Store full translation for later use
+      };
+    });
+  
+  let filteredCharacters = [...charactersWithTranslations];
   
   // Filter by character type
   console.log('🔍 フィルター前のキャラクター数:', filteredCharacters.length);
@@ -78,7 +96,7 @@ app.get('/api/characters', mockAuth, (req: Request, res: Response): void => {
       char.name.en.toLowerCase().includes(searchTerm) ||
       char.description.ja.toLowerCase().includes(searchTerm) ||
       char.description.en.toLowerCase().includes(searchTerm) ||
-      (char.personalityTags && char.personalityTags.some(tag => tag.toLowerCase().includes(searchTerm))) ||
+      (char.personalityTags && char.personalityTags.some((tag: string) => tag.toLowerCase().includes(searchTerm))) ||
       (char.personalityPreset && char.personalityPreset.toLowerCase().includes(searchTerm))
     );
   }
@@ -111,8 +129,8 @@ app.get('/api/characters', mockAuth, (req: Request, res: Response): void => {
     _id: character._id,
     name: (locale as 'ja' | 'en') === 'ja' ? character.name.ja : character.name.en,
     description: (locale as 'ja' | 'en') === 'ja' ? character.description.ja : character.description.en,
-    personalityPreset: character.personalityPreset,
-    personalityTags: character.personalityTags || [],
+    personalityPreset: character.personalityPreset, // Already localized
+    personalityTags: character.personalityTags, // Already localized
     gender: character.gender,
     model: character.model,
     characterAccessType: character.characterAccessType,
@@ -161,6 +179,111 @@ app.get('/api/characters/:id', mockAuth, (req: Request, res: Response): void => 
 
   res.set('Cache-Control', 'no-store');
   res.json(character);
+});
+
+// Character translations management API
+app.put('/api/characters/:id/translations', mockAuth, (req: Request, res: Response): void => {
+  console.log(`📝 キャラクター翻訳更新: ID ${req.params.id}`);
+  const characterId = req.params.id;
+  const translations = req.body;
+  
+  // Validate character exists
+  const character = mockCharacters.find(char => char._id === characterId);
+  if (!character) {
+    res.status(404).json({ msg: 'キャラクターが見つかりません' });
+    return;
+  }
+  
+  // Validate translation data structure
+  if (!translations || typeof translations !== 'object') {
+    res.status(400).json({ msg: '翻訳データが無効です' });
+    return;
+  }
+  
+  const { name, description, personalityPreset, personalityTags } = translations;
+  
+  // Validate required fields
+  if (!name || !description || !personalityPreset || !personalityTags) {
+    res.status(400).json({ msg: '必須フィールドが不足しています' });
+    return;
+  }
+  
+  // Validate language structure
+  const requiredLangs = ['ja', 'en'];
+  for (const field of ['name', 'description', 'personalityPreset']) {
+    for (const lang of requiredLangs) {
+      if (!translations[field] || typeof translations[field][lang] !== 'string') {
+        res.status(400).json({ msg: `${field}.${lang} フィールドが無効です` });
+        return;
+      }
+    }
+  }
+  
+  // Validate personality tags
+  for (const lang of requiredLangs) {
+    if (!Array.isArray(translations.personalityTags[lang])) {
+      res.status(400).json({ msg: `personalityTags.${lang} は配列である必要があります` });
+      return;
+    }
+  }
+  
+  // TODO: In real implementation, save to MongoDB CharacterTranslation collection
+  // For now, update mock data in memory (development only)
+  const characterIndex = mockCharacters.findIndex(char => char._id === characterId);
+  if (characterIndex !== -1) {
+    mockCharacters[characterIndex] = {
+      ...mockCharacters[characterIndex],
+      name: translations.name,
+      description: translations.description,
+      personalityPreset: translations.personalityPreset.ja, // Primary language for now
+      personalityTags: translations.personalityTags.ja, // Primary language for now
+      // Store full translation data in a new field for future use
+      translations: translations
+    };
+  }
+  
+  console.log('✅ 翻訳データを更新しました:', {
+    characterId,
+    hasTranslations: {
+      name: !!translations.name,
+      description: !!translations.description,
+      personalityPreset: !!translations.personalityPreset,
+      personalityTags: !!translations.personalityTags
+    }
+  });
+  
+  res.json({ 
+    success: true, 
+    message: '翻訳データが正常に保存されました',
+    characterId,
+    updatedAt: new Date().toISOString()
+  });
+});
+
+app.get('/api/characters/:id/translations', mockAuth, (req: Request, res: Response): void => {
+  console.log(`📖 キャラクター翻訳取得: ID ${req.params.id}`);
+  const character = mockCharacters.find(char => char._id === req.params.id);
+  
+  if (!character) {
+    res.status(404).json({ msg: 'キャラクターが見つかりません' });
+    return;
+  }
+  
+  // Return translation data if exists, otherwise return default structure
+  const translations = (character as any).translations || {
+    name: character.name,
+    description: character.description,
+    personalityPreset: { 
+      ja: character.personalityPreset || '', 
+      en: '' 
+    },
+    personalityTags: { 
+      ja: character.personalityTags || [], 
+      en: [] 
+    }
+  };
+  
+  res.json(translations);
 });
 
 app.get('/api/ping', (_req: Request, res: Response): void => {

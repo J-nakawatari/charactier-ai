@@ -34,8 +34,7 @@ export default function CharacterDetailPage() {
   const { success, warning } = useToast();
   const [activePromptLanguage, setActivePromptLanguage] = useState<'ja' | 'en'>('ja');
   
-  // TODO: 型を整備する - 管理画面用の型定義を統一
-  const character = mockCharacters.find(c => c.id === params.id) as any;
+  const character = mockCharacters.find(c => c.id === params.id);
   
   if (!character) {
     return (
@@ -170,11 +169,11 @@ export default function CharacterDetailPage() {
               <div className="flex items-center space-x-4">
                 <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-2xl font-medium">
-                    {character.name.charAt(0)}
+                    {character.name.ja.charAt(0)}
                   </span>
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">{character.name}</h2>
+                  <h2 className="text-3xl font-bold text-gray-900">{character.name.ja}</h2>
                   <p className="text-lg text-gray-600 mt-1">{character.personalityType}</p>
                   <div className="mt-3">
                     {getStatusBadge(character.isActive, character.isFree)}
@@ -187,7 +186,7 @@ export default function CharacterDetailPage() {
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">特徴</h3>
               <div className="flex flex-wrap gap-2">
-                {character.traits.map((trait: any, index: number) => ( // TODO: 型を整備する
+                {character.traits.map((trait, index) => (
                   <span 
                     key={index}
                     className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-full"
@@ -287,11 +286,11 @@ export default function CharacterDetailPage() {
                     <div className="space-y-2">
                       <div>
                         <span className="text-xs text-gray-400">日本語:</span>
-                        <p className="text-gray-900 font-medium">{typeof character.name === 'string' ? character.name : (character.name as any).ja}</p> {/* TODO: 型を整備する */}
+                        <p className="text-gray-900 font-medium">{character.name.ja}</p>
                       </div>
                       <div>
                         <span className="text-xs text-gray-400">英語:</span>
-                        <p className="text-gray-900 font-medium">{typeof character.name === 'string' ? 'N/A' : (character.name as any).en}</p> {/* TODO: 型を整備する */}
+                        <p className="text-gray-900 font-medium">{character.name.en}</p>
                       </div>
                     </div>
                   </div>
@@ -306,11 +305,11 @@ export default function CharacterDetailPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <span className="text-xs text-gray-400">性別:</span>
-                        <p className="text-gray-900 font-medium">{getGenderText((character as any).gender)}</p> {/* TODO: 型を整備する */}
+                        <p className="text-gray-900 font-medium">{getGenderText(character.gender || 'female')}</p>
                       </div>
                       <div>
                         <span className="text-xs text-gray-400">年齢:</span>
-                        <p className="text-gray-900 font-medium">{(character as any).age || 'N/A'}</p> {/* TODO: 型を整備する */}
+                        <p className="text-gray-900 font-medium">{character.age || 'N/A'}</p>
                       </div>
                     </div>
                     <div className="mt-2">
@@ -329,7 +328,7 @@ export default function CharacterDetailPage() {
                     <div className="space-y-3">
                       <div className="p-3 bg-gray-50 rounded-lg">
                         <span className="text-xs text-gray-400 block mb-1">日本語:</span>
-                        <p className="text-gray-900 text-sm">{character.description?.ja || character.description || 'N/A'}</p>
+                        <p className="text-gray-900 text-sm">{character.description?.ja || 'N/A'}</p>
                       </div>
                       <div className="p-3 bg-gray-50 rounded-lg">
                         <span className="text-xs text-gray-400 block mb-1">英語:</span>
@@ -361,14 +360,14 @@ export default function CharacterDetailPage() {
                 <div className="flex-1">
                   <p className="text-sm text-gray-500 mb-3">性格タグ</p>
                   <div className="flex flex-wrap gap-2">
-                    {character.personalityTags ? character.personalityTags.map((tag: any, index: number) => ( // TODO: 型を整備する
+                    {character.personalityTags ? character.personalityTags.map((tag, index) => (
                       <span 
                         key={index}
                         className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-full border border-purple-200"
                       >
                         {tag}
                       </span>
-                    )) : character.traits.map((trait: any, index: number) => ( // TODO: 型を整備する
+                    )) : character.traits.map((trait, index) => (
                       <span 
                         key={index}
                         className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full"
@@ -399,7 +398,7 @@ export default function CharacterDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">アクセスタイプ</p>
                   <p className="text-gray-900 font-medium">
-                    {getAccessTypeText(character.characterAccessType)}
+                    {getAccessTypeText(character.characterAccessType || 'token-based')}
                   </p>
                   {character.characterAccessType === 'purchaseOnly' && character.stripePriceId && (
                     <p className="text-xs text-gray-500 mt-1">

@@ -11,6 +11,17 @@ export interface AffinityStats {
   maxLevelUsers: number;
 }
 
+export interface CharacterTranslation {
+  characterId: string;
+  name: LocalizedString;
+  description: LocalizedString;
+  personalityPreset: LocalizedString;
+  personalityTags: {
+    ja: string[];
+    en: string[];
+  };
+}
+
 export interface CharacterDocument {
   _id: string;
   name: LocalizedString;
@@ -36,6 +47,7 @@ export interface CharacterDocument {
   defaultMessage?: LocalizedString;
   limitMessage?: LocalizedString;
   adminPrompt?: LocalizedString;
+  translations?: CharacterTranslation; // Optional translation data for mock storage
 }
 
 export interface MockUser {

@@ -7,10 +7,17 @@ export interface DashboardStats {
   securityEvents: number;
 }
 
+export interface LocalizedString {
+  ja: string;
+  en: string;
+}
+
 export interface CharacterData {
   id: string;
-  name: string;
+  name: LocalizedString;
+  description?: LocalizedString;
   personalityType: string;
+  personalityPreset?: string;
   traits: string[];
   price: number;
   isFree: boolean;
@@ -18,6 +25,30 @@ export interface CharacterData {
   totalChats: number;
   avgIntimacy: number;
   createdAt: string;
+  gender?: 'female' | 'male' | 'other';
+  age?: string;
+  occupation?: string;
+  personalityTags?: string[];
+  model?: string;
+  characterAccessType?: string;
+  stripePriceId?: string;
+  imageCharacterSelect?: string;
+  imageDashboard?: string;
+  imageChatBackground?: string;
+  imageChatAvatar?: string;
+  galleryImages?: Array<{
+    file?: string;
+    title?: string;
+    description?: string;
+  }>;
+  adminPrompt?: LocalizedString;
+  defaultMessage?: LocalizedString;
+  limitMessage?: LocalizedString;
+  affinitySettings?: {
+    maxLevel?: number;
+    experienceMultiplier?: number;
+  };
+  levelRewards?: any[];
 }
 
 export interface UserStats {
@@ -64,6 +95,19 @@ export interface UserData {
   unlockedCharacters: string[];
   avgIntimacy: number;
   isTrialUser: boolean;
+  loginStreak?: number;
+  maxLoginStreak?: number;
+  violationCount?: number;
+  suspensionEndDate?: string;
+  banReason?: string;
+  affinities?: Array<{
+    characterId: string;
+    level: number;
+    progress: number;
+    totalConversations: number;
+    relationshipType: string;
+    trustLevel: number;
+  }>;
 }
 
 // Mock Data
@@ -79,7 +123,8 @@ export const mockDashboardStats: DashboardStats = {
 export const mockCharacters: CharacterData[] = [
   {
     id: "1",
-    name: "美咲",
+    name: { ja: "美咲", en: "Misaki" },
+    description: { ja: "優しくて天然な癒し系キャラクター", en: "A gentle and naturally healing character" },
     personalityType: "優しい",
     traits: ["天然", "癒し系", "おっとり"],
     price: 980,
@@ -87,11 +132,15 @@ export const mockCharacters: CharacterData[] = [
     isActive: true,
     totalChats: 15234,
     avgIntimacy: 45.6,
-    createdAt: "2024-01-15"
+    createdAt: "2024-01-15",
+    gender: "female" as const,
+    age: "20",
+    occupation: "学生"
   },
   {
     id: "2", 
-    name: "リン",
+    name: { ja: "リン", en: "Rin" },
+    description: { ja: "ツンデレで強気だけど実は恥ずかしがり", en: "Tsundere and strong-willed but actually shy" },
     personalityType: "ツンデレ",
     traits: ["強気", "恥ずかしがり", "素直になれない"],
     price: 1480,
@@ -99,11 +148,15 @@ export const mockCharacters: CharacterData[] = [
     isActive: true,
     totalChats: 9876,
     avgIntimacy: 38.2,
-    createdAt: "2024-02-01"
+    createdAt: "2024-02-01",
+    gender: "female" as const,
+    age: "18",
+    occupation: "高校生"
   },
   {
     id: "3",
-    name: "さくら",
+    name: { ja: "さくら", en: "Sakura" },
+    description: { ja: "明るくて元気いっぱいの好奇心旺盛なキャラクター", en: "Bright and energetic character full of curiosity" },
     personalityType: "明るい",
     traits: ["元気", "ポジティブ", "好奇心旺盛"],
     price: 1280,
@@ -111,7 +164,10 @@ export const mockCharacters: CharacterData[] = [
     isActive: false,
     totalChats: 5432,
     avgIntimacy: 52.1,
-    createdAt: "2024-02-20"
+    createdAt: "2024-02-20",
+    gender: "female" as const,
+    age: "22",
+    occupation: "大学生"
   }
 ];
 

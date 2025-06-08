@@ -1,4 +1,4 @@
-import { CharacterDocument, MockUser } from './types';
+import { CharacterDocument, CharacterTranslation, MockUser } from './types';
 
 // Mock data for testing when MongoDB is not available
 export const mockCharacters: CharacterDocument[] = [
@@ -83,6 +83,49 @@ export const mockCharacters: CharacterDocument[] = [
     defaultMessage: {
       ja: 'こんにちは。僕はゼンだ。何について相談したいんだ？',
       en: 'Hello. I\'m Zen. What would you like to consult about?'
+    }
+  }
+];
+
+// CharacterTranslation mock data
+export const mockCharacterTranslations: CharacterTranslation[] = [
+  {
+    characterId: '1',
+    name: { ja: 'ルナ', en: 'Luna' },
+    description: { 
+      ja: '明るく元気な女の子。いつも笑顔で、みんなを励ましてくれる優しい性格です。',
+      en: 'A bright and energetic girl. Always smiling and encouraging everyone with her kind personality.'
+    },
+    personalityPreset: { ja: '元気系', en: 'Energetic Type' },
+    personalityTags: {
+      ja: ['明るい', 'よく笑う', 'ポジティブ', '元気いっぱい'],
+      en: ['Bright', 'Cheerful', 'Positive', 'Energetic']
+    }
+  },
+  {
+    characterId: '2',
+    name: { ja: 'ミコ', en: 'Miko' },
+    description: { 
+      ja: '落ち着いた知的な女性。読書が好きで、深い話題について語り合うのを好みます。',
+      en: 'A calm and intellectual woman. She loves reading and enjoys discussing deep topics.'
+    },
+    personalityPreset: { ja: '知的系', en: 'Intellectual Type' },
+    personalityTags: {
+      ja: ['知的', '静か', '大人っぽい', '優しい'],
+      en: ['Intellectual', 'Calm', 'Mature', 'Kind']
+    }
+  },
+  {
+    characterId: '3',
+    name: { ja: 'ゼン', en: 'Zen' },
+    description: { 
+      ja: 'クールで冷静な男性。論理的思考が得意で、的確なアドバイスをくれます。',
+      en: 'A cool and calm man. Good at logical thinking and gives accurate advice.'
+    },
+    personalityPreset: { ja: 'クール系', en: 'Cool Type' },
+    personalityTags: {
+      ja: ['静か', '知的', '大人っぽい'],
+      en: ['Quiet', 'Intellectual', 'Mature']
     }
   }
 ];
