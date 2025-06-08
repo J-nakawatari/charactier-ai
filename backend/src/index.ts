@@ -48,16 +48,27 @@ app.get('/api/characters', mockAuth, (req: Request, res: Response): void => {
   
   // Query parameter handling with proper types
   const locale = (req.query.locale as string) || 'ja';
-  const freeOnly = (req.query.freeOnly as string) || 'false';
+  const characterType = (req.query.characterType as string) || 'all';
   const sort = (req.query.sort as string) || 'popular';
   const keyword = (req.query.keyword as string) || '';
   
   let filteredCharacters: CharacterDocument[] = characters;
   
-  // Filter by initial characters only (初期開放キャラのみ)
-  if (freeOnly === 'true') {
+  // Filter by character type
+  console.log('🔍 フィルター前のキャラクター数:', filteredCharacters.length);
+  console.log('🔍 選択されたフィルター:', characterType);
+  
+  if (characterType === 'initial') {
     filteredCharacters = filteredCharacters.filter(char => char.characterAccessType === 'initial');
+  } else if (characterType === 'purchased') {
+    // モック環境では全てのプレミアムキャラを購入済みとして扱う
+    filteredCharacters = filteredCharacters.filter(char => char.characterAccessType === 'premium');
+  } else if (characterType === 'unpurchased') {
+    // モック環境では購入が必要なキャラはないため空配列
+    filteredCharacters = [];
   }
+  
+  console.log('🔍 フィルター後のキャラクター数:', filteredCharacters.length);
   
   // Filter by keyword
   if (keyword) {
@@ -117,12 +128,18 @@ app.get('/api/characters', mockAuth, (req: Request, res: Response): void => {
   }));
   
   res.set('Cache-Control', 'no-store');
+  console.log('🔍 最終レスポンス:', {
+    characterCount: localizedCharacters.length,
+    characterNames: localizedCharacters.map(c => c.name),
+    filter: { characterType, keyword, sort }
+  });
+  
   res.json({
     characters: localizedCharacters,
     total: localizedCharacters.length,
     locale,
     filter: {
-      freeOnly: freeOnly === 'true',
+      characterType,
       keyword,
       sort
     }
