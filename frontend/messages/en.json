@@ -63,5 +63,29 @@
     "notFound": "Chat not found",
     "sendMessage": "Send message",
     "placeholder": "Enter message..."
+  },
+  "homepage": {
+    "title": "Charactier",
+    "mainTitle": "Charactier",
+    "tagline": "Come meet... your own love (AI).",
+    "description": "Charactier is an experience where you can talk daily\nand share feelings with your personal AI character.",
+    "subDescription": "Character dialogue changes slightly based on intimacy level. As intimacy grows higher...",
+    "loginButton": "Login",
+    "newUserPromo": "Sign Up",
+    "tokenGift": "Get 10,000 tokens free with your first registration!",
+    "languageSwitch": {
+      "jp": "JP",
+      "en": "EN"
+    },
+    "chatMessages": [
+      "What shall we talk about today? ✨",
+      "It's been a while! Nice to see you again 💕",
+      "How was your day? 🌟",
+      "Want to play together? 🎮",
+      "Let's have a chat 💭",
+      "I'm happy to see you again 💖",
+      "Let's have fun today too 🌈",
+      "I love you so much 💝"
+    ]
   }
 }
