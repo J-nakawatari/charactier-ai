@@ -22,8 +22,7 @@ export const config = {
     // all requests that have a locale prefix
     '/(ja|en)/:path*',
 
-    // Enable redirects that add missing locales
-    // (e.g. `/pathnames` -> `/en/pathnames`)
-    '/((?!_next|_vercel|.*\\..*).*)'
+    // Enable redirects that add missing locales, but exclude API routes and admin routes
+    '/((?!_next|_vercel|api|admin|.*\\..*).*)'
   ]
 };

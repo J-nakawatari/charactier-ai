@@ -1,4 +1,4 @@
-// TODO: 再実装時に復活 - const withNextIntl = require('next-intl/plugin')('./i18n.ts');
+const withNextIntl = require('next-intl/plugin')('./i18n.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -15,5 +15,4 @@ const nextConfig = {
   },
 };
 
-// TODO: 再実装時に復活 - module.exports = withNextIntl(nextConfig);
-module.exports = nextConfig;
+module.exports = withNextIntl(nextConfig);

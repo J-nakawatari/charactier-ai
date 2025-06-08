@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { mockCharacters } from '@/mock/adminData';
@@ -23,15 +24,17 @@ import {
   Globe,
   Upload,
   User,
-  Brain
+  Brain,
+  Languages
 } from 'lucide-react';
 
 export default function CharacterDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { success, warning } = useToast();
+  const [activePromptLanguage, setActivePromptLanguage] = useState<'ja' | 'en'>('ja');
   
-  const character = mockCharacters.find(c => c.id === params.id);
+  const character = mockCharacters.find(c => c.id === params.id) as any;
   
   if (!character) {
     return (
@@ -183,7 +186,7 @@ export default function CharacterDetailPage() {
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">特徴</h3>
               <div className="flex flex-wrap gap-2">
-                {character.traits.map((trait, index) => (
+                {character.traits.map((trait: any, index: number) => (
                   <span 
                     key={index}
                     className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-full"
@@ -283,11 +286,11 @@ export default function CharacterDetailPage() {
                     <div className="space-y-2">
                       <div>
                         <span className="text-xs text-gray-400">日本語:</span>
-                        <p className="text-gray-900 font-medium">{character.name?.ja || character.name}</p>
+                        <p className="text-gray-900 font-medium">{typeof character.name === 'string' ? character.name : (character.name as any).ja}</p>
                       </div>
                       <div>
                         <span className="text-xs text-gray-400">英語:</span>
-                        <p className="text-gray-900 font-medium">{character.name?.en || 'N/A'}</p>
+                        <p className="text-gray-900 font-medium">{typeof character.name === 'string' ? 'N/A' : (character.name as any).en}</p>
                       </div>
                     </div>
                   </div>
@@ -302,11 +305,11 @@ export default function CharacterDetailPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <span className="text-xs text-gray-400">性別:</span>
-                        <p className="text-gray-900 font-medium">{getGenderText(character.gender)}</p>
+                        <p className="text-gray-900 font-medium">{getGenderText((character as any).gender)}</p>
                       </div>
                       <div>
                         <span className="text-xs text-gray-400">年齢:</span>
-                        <p className="text-gray-900 font-medium">{character.age || 'N/A'}</p>
+                        <p className="text-gray-900 font-medium">{(character as any).age || 'N/A'}</p>
                       </div>
                     </div>
                     <div className="mt-2">
@@ -357,14 +360,14 @@ export default function CharacterDetailPage() {
                 <div className="flex-1">
                   <p className="text-sm text-gray-500 mb-3">性格タグ</p>
                   <div className="flex flex-wrap gap-2">
-                    {character.personalityTags ? character.personalityTags.map((tag, index) => (
+                    {character.personalityTags ? character.personalityTags.map((tag: any, index: number) => (
                       <span 
                         key={index}
                         className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-full border border-purple-200"
                       >
                         {tag}
                       </span>
-                    )) : character.traits.map((trait, index) => (
+                    )) : character.traits.map((trait: any, index: number) => (
                       <span 
                         key={index}
                         className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full"
@@ -415,200 +418,253 @@ export default function CharacterDetailPage() {
             </div>
           </div>
 
-          {/* 詳細情報 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-
-            {/* パフォーマンス指標 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">パフォーマンス</h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-500">親密度レベル</span>
-                    <span className="text-sm font-medium text-gray-900">{character.avgIntimacy.toFixed(1)}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-pink-500 h-2 rounded-full transition-all duration-300" 
-                      style={{ width: `${character.avgIntimacy}%` }}
-                    ></div>
-                  </div>
+          {/* パフォーマンス指標 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">パフォーマンス</h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-500">親密度レベル</span>
+                  <span className="text-sm font-medium text-gray-900">{character.avgIntimacy.toFixed(1)}%</span>
                 </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-500">人気度</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {character.totalChats > 10000 ? '高' : character.totalChats > 5000 ? '中' : '低'}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className={`h-2 rounded-full transition-all duration-300 ${
-                        character.totalChats > 10000 ? 'bg-green-500' : 
-                        character.totalChats > 5000 ? 'bg-yellow-500' : 'bg-red-500'
-                      }`}
-                      style={{ 
-                        width: `${Math.min(100, (character.totalChats / 15000) * 100)}%` 
-                      }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-gray-200">
-                  <p className="text-sm text-gray-600">
-                    このキャラクターは
-                    <span className="font-medium text-gray-900">
-                      {character.totalChats > 10000 ? '非常に人気があり' : 
-                       character.totalChats > 5000 ? 'そこそこ人気があり' : 'まだ発見されていない'}
-                    </span>
-                    、ユーザーとの親密度も
-                    <span className="font-medium text-gray-900">
-                      {character.avgIntimacy > 60 ? '高い' : character.avgIntimacy > 30 ? '普通' : '低い'}
-                    </span>
-                    水準です。
-                  </p>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-pink-500 h-2 rounded-full transition-all duration-300" 
+                    style={{ width: `${character.avgIntimacy}%` }}
+                  ></div>
                 </div>
               </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-500">人気度</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {character.totalChats > 10000 ? '高' : character.totalChats > 5000 ? '中' : '低'}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      character.totalChats > 10000 ? 'bg-green-500' : 
+                      character.totalChats > 5000 ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}
+                    style={{ 
+                      width: `${Math.min(100, (character.totalChats / 15000) * 100)}%` 
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-gray-200">
+                <p className="text-sm text-gray-600">
+                  このキャラクターは
+                  <span className="font-medium text-gray-900">
+                    {character.totalChats > 10000 ? '非常に人気があり' : 
+                     character.totalChats > 5000 ? 'そこそこ人気があり' : 'まだ発見されていない'}
+                  </span>
+                  、ユーザーとの親密度も
+                  <span className="font-medium text-gray-900">
+                    {character.avgIntimacy > 60 ? '高い' : character.avgIntimacy > 30 ? '普通' : '低い'}
+                  </span>
+                  水準です。
+                </p>
+              </div>
             </div>
+          </div>
+
+          {/* キャラクター画像設定 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">キャラクター画像設定</h3>
             
-            {/* メディア・アセット */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">メディア・アセット</h3>
-              <div className="space-y-6">
-                {/* 画像設定 */}
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">画像設定</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Image className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-700">キャラクター選択画像</span>
-                      </div>
-                      <p className="text-sm text-gray-600">{character.imageCharacterSelect ? '設定済み' : '未設定'}</p>
-                    </div>
-                    
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Image className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-700">ダッシュボード画像</span>
-                      </div>
-                      <p className="text-sm text-gray-600">{character.imageDashboard ? '設定済み' : '未設定'}</p>
-                    </div>
-                    
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Image className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-700">チャット背景画像</span>
-                      </div>
-                      <p className="text-sm text-gray-600">{character.imageChatBackground ? '設定済み' : '未設定'}</p>
-                    </div>
-                    
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Image className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-700">チャットアバター画像</span>
-                      </div>
-                      <p className="text-sm text-gray-600">{character.imageChatAvatar ? '設定済み' : '未設定'}</p>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* キャラクター選択画像 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  キャラクター選択画像
+                </label>
+                <div className="p-4 bg-gray-50 rounded-lg text-center">
+                  <div className="flex items-center justify-center space-x-2 mb-2">
+                    <Image className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">{character.imageCharacterSelect ? '設定済み' : '未設定'}</span>
                   </div>
                 </div>
-                
-                {/* ギャラリー画像 */}
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">ギャラリー画像（親密度アンロック）</h4>
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                        <Star className="w-4 h-4 text-yellow-500" />
-                        <span className="text-sm font-medium text-gray-700">登録済み画像</span>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900">{character.galleryImages?.length || 0}/10枚</span>
-                    </div>
-                    
-                    {character.galleryImages && character.galleryImages.length > 0 ? (
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                        {Array.from({ length: 10 }, (_, index) => {
-                          const hasImage = character.galleryImages && character.galleryImages[index];
-                          const unlockLevel = (index + 1) * 10;
-                          return (
-                            <div key={index} className={`p-3 rounded-lg border-2 ${
-                              hasImage ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white'
-                            }`}>
-                              <div className="text-center">
-                                <div className={`w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center ${
-                                  hasImage ? 'bg-green-100' : 'bg-gray-100'
-                                }`}>
-                                  <span className={`text-xs font-medium ${
-                                    hasImage ? 'text-green-600' : 'text-gray-400'
-                                  }`}>{unlockLevel}</span>
-                                </div>
-                                <p className={`text-xs ${
-                                  hasImage ? 'text-green-700' : 'text-gray-500'
-                                }`}>
-                                  {hasImage ? '設定済み' : '未設定'}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500 text-center py-4">ギャラリー画像が設定されていません</p>
-                    )}
+              </div>
+
+              {/* ダッシュボード画像 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ダッシュボード画像
+                </label>
+                <div className="p-4 bg-gray-50 rounded-lg text-center">
+                  <div className="flex items-center justify-center space-x-2 mb-2">
+                    <Image className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">{character.imageDashboard ? '設定済み' : '未設定'}</span>
                   </div>
                 </div>
-                
-                {/* 音声設定 */}
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">音声設定</h4>
-                  <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <Volume2 className="w-4 h-4 text-gray-400 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">音声サンプル</p>
-                      <p className="text-sm text-gray-600">{character.sampleVoiceUrl ? '設定済み' : '未設定'}</p>
-                      {character.voiceSettings && (
-                        <div className="mt-2 space-y-1">
-                          <p className="text-xs text-gray-500">声の高さ: {character.voiceSettings.pitch || 'デフォルト'}</p>
-                          <p className="text-xs text-gray-500">話す速度: {character.voiceSettings.speed || 'デフォルト'}</p>
-                        </div>
-                      )}
-                    </div>
+              </div>
+
+              {/* チャット背景画像 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  チャット背景画像
+                </label>
+                <div className="p-4 bg-gray-50 rounded-lg text-center">
+                  <div className="flex items-center justify-center space-x-2 mb-2">
+                    <Image className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">{character.imageChatBackground ? '設定済み' : '未設定'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* チャットアバター画像 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  チャットアバター画像
+                </label>
+                <div className="p-4 bg-gray-50 rounded-lg text-center">
+                  <div className="flex items-center justify-center space-x-2 mb-2">
+                    <Image className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">{character.imageChatAvatar ? '設定済み' : '未設定'}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* ギャラリー画像（親密度解放用） */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">ギャラリー画像（親密度解放用）</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              親密度レベルに応じて解放される画像を設定します。最大10枚まで登録可能です。
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Array.from({ length: 10 }, (_, index) => {
+                const galleryItem = character.galleryImages && character.galleryImages[index];
+                const unlockLevel = (index + 1) * 10;
+                
+                return (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-medium text-gray-900">
+                        解放レベル {unlockLevel}
+                      </h4>
+                      <span className="text-xs text-gray-500">
+                        {index + 1}/10
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-start space-x-4">
+                      <div className="w-16 h-16 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
+                        {galleryItem?.file ? (
+                          <Image className="w-6 h-6 text-green-600" />
+                        ) : (
+                          <span className="text-gray-400 text-xs">画像{index + 1}</span>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 space-y-2">
+                        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                          galleryItem ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          {galleryItem ? '設定済み' : '未設定'}
+                        </div>
+                        
+                        {galleryItem && (
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-900 font-medium">
+                              {galleryItem.title || '無題'}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {galleryItem.description || '説明なし'}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
           
           {/* プロンプト・メッセージ設定 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">プロンプト・メッセージ設定</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <Languages className="w-5 h-5 text-purple-600" />
+              <h3 className="text-lg font-semibold text-gray-900">プロンプト・メッセージ設定</h3>
+            </div>
+            
+            {/* 言語切り替えタブ */}
+            <div className="flex space-x-2 mb-6 border-b border-gray-200">
+              <button
+                onClick={() => setActivePromptLanguage('ja')}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  activePromptLanguage === 'ja'
+                    ? 'border-purple-600 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <span className="mr-2">🇯🇵</span>
+                日本語
+              </button>
+              <button
+                onClick={() => setActivePromptLanguage('en')}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  activePromptLanguage === 'en'
+                    ? 'border-purple-600 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <span className="mr-2">🇺🇸</span>
+                English
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              {/* 管理者プロンプト */}
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">デフォルトメッセージ</h4>
-                <div className="p-3 bg-gray-50 rounded-lg">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">
+                  管理者プロンプト ({activePromptLanguage === 'ja' ? '日本語' : '英語'})
+                </h4>
+                <div className="p-4 bg-gray-50 rounded-lg max-h-40 overflow-y-auto">
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                    {activePromptLanguage === 'ja' 
+                      ? (character.adminPrompt?.ja || 'プロンプトが設定されていません')
+                      : (character.adminPrompt?.en || 'Prompt not set')
+                    }
+                  </p>
+                </div>
+              </div>
+
+              {/* デフォルトメッセージ */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">
+                  デフォルトメッセージ ({activePromptLanguage === 'ja' ? '日本語' : '英語'})
+                </h4>
+                <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-600">
-                    {character.defaultMessage?.ja || 'デフォルトメッセージが設定されていません'}
+                    {activePromptLanguage === 'ja' 
+                      ? (character.defaultMessage?.ja || 'デフォルトメッセージが設定されていません')
+                      : (character.defaultMessage?.en || 'Default message not set')
+                    }
                   </p>
                 </div>
               </div>
               
+              {/* 制限メッセージ */}
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">制限メッセージ</h4>
-                <div className="p-3 bg-gray-50 rounded-lg">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">
+                  制限メッセージ ({activePromptLanguage === 'ja' ? '日本語' : '英語'})
+                </h4>
+                <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-600">
-                    {character.limitMessage?.ja || '制限メッセージが設定されていません'}
+                    {activePromptLanguage === 'ja' 
+                      ? (character.limitMessage?.ja || '制限メッセージが設定されていません')
+                      : (character.limitMessage?.en || 'Limit message not set')
+                    }
                   </p>
                 </div>
-              </div>
-            </div>
-            
-            <div className="mt-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">管理者プロンプト</h4>
-              <div className="p-3 bg-gray-50 rounded-lg max-h-32 overflow-y-auto">
-                <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                  {character.adminPrompt?.ja || 'プロンプトが設定されていません'}
-                </p>
               </div>
             </div>
           </div>

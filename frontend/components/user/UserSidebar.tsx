@@ -16,6 +16,7 @@ import {
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface UserSidebarProps {
   locale?: string;
@@ -26,15 +27,16 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
   const params = useParams();
   const currentLocale = locale || params?.locale || 'ja';
   const [isOpen, setIsOpen] = useState(false);
+  const t = useTranslations('sidebar');
 
   const sidebarItems = [
-    { href: `/${currentLocale}`, icon: Home, label: 'ホーム' },
-    { href: `/${currentLocale}/characters`, icon: Users, label: 'キャラクター一覧' },
-    { href: `/${currentLocale}/chat`, icon: MessageSquare, label: 'チャット履歴' },
-    { href: `/${currentLocale}/favorites`, icon: Heart, label: 'お気に入り' },
-    { href: `/${currentLocale}/tokens`, icon: Coins, label: 'トークチケット購入' },
-    { href: `/${currentLocale}/purchase-history`, icon: ShoppingCart, label: '購入履歴' },
-    { href: `/${currentLocale}/settings`, icon: Settings, label: '設定' },
+    { href: `/${currentLocale}`, icon: Home, label: t('home') },
+    { href: `/${currentLocale}/characters`, icon: Users, label: t('characters') },
+    { href: `/${currentLocale}/chat`, icon: MessageSquare, label: t('chatHistory') },
+    { href: `/${currentLocale}/favorites`, icon: Heart, label: t('favorites') },
+    { href: `/${currentLocale}/tokens`, icon: Coins, label: t('tokens') },
+    { href: `/${currentLocale}/purchase-history`, icon: ShoppingCart, label: t('purchaseHistory') },
+    { href: `/${currentLocale}/settings`, icon: Settings, label: t('settings') },
   ];
 
   return (
@@ -69,7 +71,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
             </div>
             <h1 className="text-xl font-semibold text-gray-900">Charactier</h1>
           </div>
-          <p className="text-sm text-gray-400 mt-1">AIキャラクターチャット</p>
+          <p className="text-sm text-gray-400 mt-1">{t('appDescription')}</p>
         </div>
 
         {/* ユーザー情報 */}
@@ -79,8 +81,8 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
               <span className="text-sm font-medium text-purple-600">U</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">ユーザー</p>
-              <p className="text-xs text-gray-500">トークチケット: 30,000</p>
+              <p className="text-sm font-medium text-gray-900 truncate">{t('user')}</p>
+              <p className="text-xs text-gray-500">{t('tokenBalance', { count: 30000 })}</p>
             </div>
           </div>
         </div>
@@ -88,7 +90,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
         {/* ナビゲーション */}
         <nav className="flex-1 p-4 space-y-1 min-h-0">
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            メニュー
+            {t('menu')}
           </div>
           {sidebarItems.slice(0, 4).map((item) => {
             const isActive = pathname === item.href;
@@ -110,7 +112,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           })}
 
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 mt-6">
-            アカウント
+            {t('account')}
           </div>
           {sidebarItems.slice(4).map((item) => {
             const isActive = pathname === item.href;
@@ -136,7 +138,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
         <div className="p-4 border-t border-gray-200">
           <button className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 w-full transition-colors">
             <LogOut className="w-5 h-5 text-gray-400" />
-            <span>ログアウト</span>
+            <span>{t('logout')}</span>
           </button>
         </div>
       </div>

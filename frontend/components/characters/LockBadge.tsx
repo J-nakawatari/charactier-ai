@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Lock, Unlock, Gift, Zap, DollarSign } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface LockBadgeProps {
   accessType: 'initial' | 'premium';
@@ -16,6 +17,7 @@ export default function LockBadge({
   price,
   size = 'md' 
 }: LockBadgeProps) {
+  const t = useTranslations('characters');
   const getSizeClasses = (size: string) => {
     switch (size) {
       case 'sm':
@@ -38,7 +40,7 @@ export default function LockBadge({
     return (
       <div className={`inline-flex items-center space-x-1 bg-green-100 text-green-700 rounded-full font-medium ${sizes.badge}`}>
         <Gift className={sizes.icon} />
-        <span>ベースキャラ</span>
+        <span>{t('characterTypes.initial')}</span>
       </div>
     );
   }
@@ -51,7 +53,7 @@ export default function LockBadge({
         <div className={`inline-flex items-center space-x-1 bg-orange-100 text-orange-700 rounded-full font-medium ${sizes.badge}`}>
           <Lock className={sizes.icon} />
           <span>
-            {price ? `¥${price.toLocaleString()}` : 'プレミアキャラ'}
+            {price ? `¥${price.toLocaleString()}` : t('characterTypes.premium')}
           </span>
         </div>
       );
@@ -60,7 +62,7 @@ export default function LockBadge({
       return (
         <div className={`inline-flex items-center space-x-1 bg-blue-100 text-blue-700 rounded-full font-medium ${sizes.badge}`}>
           <Unlock className={sizes.icon} />
-          <span>アンロック</span>
+          <span>{t('actions.unlock')}</span>
         </div>
       );
     }
@@ -70,7 +72,7 @@ export default function LockBadge({
   return (
     <div className={`inline-flex items-center space-x-1 bg-gray-100 text-gray-700 rounded-full font-medium ${sizes.badge}`}>
       <Lock className={sizes.icon} />
-      <span>ロック中</span>
+      <span>{t('characterTypes.locked')}</span>
     </div>
   );
 }

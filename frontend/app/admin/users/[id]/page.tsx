@@ -26,7 +26,7 @@ export default function UserDetailPage() {
   const router = useRouter();
   const { success, error } = useToast();
   
-  const user = mockUsers.find(u => u.id === params.id);
+  const user = mockUsers.find(u => u.id === params.id) as any;
   
   if (!user) {
     return (
@@ -226,7 +226,7 @@ export default function UserDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">ログインストリーク</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    {user.loginStreak || 0}日
+                    {(user as any).loginStreak || 0}日
                   </p>
                 </div>
               </div>
@@ -238,7 +238,7 @@ export default function UserDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">違反回数</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    {user.violationCount || 0}回
+                    {(user as any).violationCount || 0}回
                   </p>
                 </div>
               </div>
@@ -289,7 +289,7 @@ export default function UserDetailPage() {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">解放キャラクター</h3>
               <div className="space-y-2">
-                {user.unlockedCharacters.map((charId) => (
+                {user.unlockedCharacters.map((charId: any) => (
                   <div key={charId} className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
                     <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                       <span className="text-white text-sm font-medium">{charId}</span>
@@ -347,7 +347,7 @@ export default function UserDetailPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">キャラクター別親密度</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {user.affinities && user.affinities.map((affinity, index) => (
+              {user.affinities && user.affinities.map((affinity: any, index: number) => (
                 <div key={index} className="p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium text-gray-900">キャラクター {affinity.characterId}</span>

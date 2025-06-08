@@ -1,0 +1,210 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
+import TranslationEditor from '@/components/admin/TranslationEditor';
+
+export default function CharacterEditPage() {
+  const params = useParams();
+  const router = useRouter();
+  const characterId = params.id as string;
+  
+  // 全てのuseStateを最初に配置
+  const [formData, setFormData] = useState({
+    characterAccessType: 'initial' as 'initial' | 'premium',
+    isActive: false
+  });
+
+  const [translationData, setTranslationData] = useState({
+    name: { ja: '', en: '' },
+    description: { ja: '', en: '' },
+    personalityPreset: { ja: '', en: '' },
+    personalityTags: { ja: [] as string[], en: [] as string[] }
+  });
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Load existing character data and translations
+  useEffect(() => {
+    const loadCharacterData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Load basic character data
+        const characterResponse = await fetch(`http://localhost:3002/api/characters/${characterId}`);
+        if (characterResponse.ok) {
+          const character = await characterResponse.json();
+          setFormData({
+            characterAccessType: character.characterAccessType || 'initial',
+            isActive: character.isActive || false
+          });
+        }
+        
+        // Load translation data
+        const translationsResponse = await fetch(`http://localhost:3002/api/characters/${characterId}/translations`);
+        if (translationsResponse.ok) {
+          const translations = await translationsResponse.json();
+          setTranslationData(translations);
+        }
+      } catch (error) {
+        console.error('データの読み込みに失敗しました:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (characterId) {
+      loadCharacterData();
+    }
+  }, [characterId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      setIsSaving(true);
+      
+      // Save translation data
+      const translationsResponse = await fetch(`http://localhost:3002/api/characters/${characterId}/translations`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(translationData)
+      });
+      
+      if (translationsResponse.ok) {
+        const result = await translationsResponse.json();
+        console.log('✅ 翻訳データ保存成功:', result);
+        alert('翻訳データが正常に保存されました！');
+      } else {
+        const error = await translationsResponse.json();
+        console.error('❌ 翻訳データ保存エラー:', error);
+        alert(`保存に失敗しました: ${error.msg || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('❌ 保存処理中にエラーが発生しました:', error);
+      alert('保存処理中にエラーが発生しました。もう一度お試しください。');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    router.push('/admin/characters');
+  };
+
+  return (
+    <div className="flex-1 flex flex-col">
+      {/* ヘッダー */}
+      <header className="bg-white border-b border-gray-200 p-4 md:p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleCancel}
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">キャラクター編集</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                キャラクターの情報を編集（開発中）
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* メインコンテンツ */}
+      <div className="flex-1 overflow-auto p-6">
+        <div className="max-w-4xl mx-auto">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-gray-500">データを読み込み中...</div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* 翻訳管理 */}
+              <TranslationEditor
+                data={translationData}
+                onChange={setTranslationData}
+              />
+
+            {/* 基本設定 */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">基本設定</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    アクセスタイプ
+                  </label>
+                  <select
+                    value={formData.characterAccessType}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      characterAccessType: e.target.value as 'initial' | 'premium'
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="initial">ベースキャラ</option>
+                    <option value="premium">プレミアムキャラ</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        isActive: e.target.checked
+                      })}
+                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">キャラクターを公開する</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* その他の設定は開発中メッセージ */}
+            <div className="bg-gray-50 rounded-lg border border-gray-200 p-6 text-center">
+              <p className="text-gray-600">
+                詳細設定（性格設定、画像アップロード、プロンプト設定など）は開発中です。
+              </p>
+            </div>
+
+              {/* フッター */}
+              <div className="flex justify-end space-x-4 pt-6">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {isSaving && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                  <span>{isSaving ? '保存中...' : '翻訳データを保存'}</span>
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

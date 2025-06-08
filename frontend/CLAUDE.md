@@ -10,6 +10,10 @@ It MUST be:
 * Styled using Tailwind CSS
 * Accessible (WCAG AA minimum)
 
+## Development Commands
+
+* `npx next dev -H 0.0.0.0 -p 3000` - Start development server (WSL-compatible)
+
 ## Rules
 
 YOU MUST:

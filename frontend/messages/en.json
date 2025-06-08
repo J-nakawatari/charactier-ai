@@ -25,8 +25,13 @@
     "actions": {
       "unlock": "Unlock",
       "startChat": "Start Chat",
-      "needTokens": "Token Tickets Required",
+      "needTokens": "Talk Tickets Required",
       "viewAll": "View All"
+    },
+    "characterTypes": {
+      "initial": "Base Character",
+      "premium": "Premium",
+      "locked": "Locked"
     },
     "loading": "Loading character list...",
     "loadError": "Loading Error",
@@ -35,5 +40,20 @@
   "common": {
     "reset": "Reset",
     "close": "Close"
+  },
+  "sidebar": {
+    "home": "Home",
+    "characters": "Characters", 
+    "chatHistory": "Chat History",
+    "favorites": "Favorites",
+    "tokens": "Buy Talk Tickets",
+    "purchaseHistory": "Purchase History",
+    "settings": "Settings",
+    "appDescription": "AI Character Chat",
+    "user": "User",
+    "tokenBalance": "Talk Tickets: {count, number}",
+    "menu": "Menu",
+    "account": "Account",
+    "logout": "Logout"
   }
 }

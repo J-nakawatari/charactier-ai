@@ -28,6 +28,11 @@
       "needTokens": "トークチケットが必要",
       "viewAll": "全部見る"
     },
+    "characterTypes": {
+      "initial": "ベースキャラ",
+      "premium": "プレミアム",
+      "locked": "ロック中"
+    },
     "loading": "キャラクター一覧を読み込み中...",
     "loadError": "読み込みエラー",
     "retry": "再試行"
@@ -35,5 +40,20 @@
   "common": {
     "reset": "リセット",
     "close": "閉じる"
+  },
+  "sidebar": {
+    "home": "ホーム",
+    "characters": "キャラクター一覧", 
+    "chatHistory": "チャット履歴",
+    "favorites": "お気に入り",
+    "tokens": "トークチケット購入",
+    "purchaseHistory": "購入履歴",
+    "settings": "設定",
+    "appDescription": "AIキャラクターチャット",
+    "user": "ユーザー",
+    "tokenBalance": "トークチケット: {count, number}",
+    "menu": "メニュー",
+    "account": "アカウント",
+    "logout": "ログアウト"
   }
 }
