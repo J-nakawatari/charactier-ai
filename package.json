@@ -8,9 +8,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
-"scripts": {
-  "dev": "concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\""
-}
-
-
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\""
+  }
 }
