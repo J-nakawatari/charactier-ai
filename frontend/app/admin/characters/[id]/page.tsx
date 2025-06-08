@@ -205,11 +205,7 @@ export default function CharacterDetailPage() {
                   <p className="text-xl font-semibold text-gray-900">
                     {character.isFree ? '無料' : `¥${character.price.toLocaleString()}`}
                   </p>
-                  {character.stripePriceId && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      ID: {character.stripePriceId}
-                    </p>
-                  )}
+                  {/* Stripe ID は後で実装 */}
                 </div>
               </div>
 
@@ -244,7 +240,7 @@ export default function CharacterDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">利用ユーザー数</p>
                   <p className="text-xl font-semibold text-gray-900">
-                    {character.totalUsers?.toLocaleString() || 0}
+                    0
                   </p>
                 </div>
               </div>
@@ -256,7 +252,7 @@ export default function CharacterDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">総売上</p>
                   <p className="text-xl font-semibold text-gray-900">
-                    ¥{character.totalRevenue?.toLocaleString() || 0}
+                    ¥0
                   </p>
                 </div>
               </div>
@@ -268,7 +264,7 @@ export default function CharacterDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">AIモデル</p>
                   <p className="text-xl font-semibold text-gray-900">
-                    {character.model || 'GPT-3.5'}
+                    GPT-3.5
                   </p>
                 </div>
               </div>

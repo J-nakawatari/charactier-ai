@@ -15,7 +15,7 @@ export interface CharacterDocument {
   _id: string;
   name: LocalizedString;
   description: LocalizedString;
-  characterAccessType: 'free' | 'token-based' | 'purchaseOnly';
+  characterAccessType: 'initial' | 'premium'; // initial = 初期開放, premium = 課金キャラ
   model: 'gpt-3.5-turbo' | 'gpt-4';
   gender?: 'female' | 'male' | 'other';
   personalityPreset?: string;

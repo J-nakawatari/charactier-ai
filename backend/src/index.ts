@@ -8,7 +8,7 @@ dotenv.config({ path: './backend/.env' });
 
 const app = express();
 const PORT = process.env.PORT || 3002;
-const USE_MOCK = process.env.USE_MOCK === 'true';
+const USE_MOCK = true; // Force mock mode for development
 
 console.log('🚀 USE_MOCK:', USE_MOCK);
 console.log('🚀 PORT:', PORT);
@@ -54,9 +54,9 @@ app.get('/api/characters', mockAuth, (req: Request, res: Response): void => {
   
   let filteredCharacters: CharacterDocument[] = characters;
   
-  // Filter by free only
+  // Filter by initial characters only (初期開放キャラのみ)
   if (freeOnly === 'true') {
-    filteredCharacters = filteredCharacters.filter(char => char.characterAccessType === 'free');
+    filteredCharacters = filteredCharacters.filter(char => char.characterAccessType === 'initial');
   }
   
   // Filter by keyword
@@ -148,6 +148,15 @@ app.get('/api/characters/:id', mockAuth, (req: Request, res: Response): void => 
 
 app.get('/api/ping', (_req: Request, res: Response): void => {
   res.send('pong');
+});
+
+app.get('/api/debug', (_req: Request, res: Response): void => {
+  res.json({
+    USE_MOCK: USE_MOCK,
+    PORT: PORT,
+    NODE_ENV: process.env.NODE_ENV,
+    env_USE_MOCK: process.env.USE_MOCK
+  });
 });
 
 app.listen(PORT, () => {

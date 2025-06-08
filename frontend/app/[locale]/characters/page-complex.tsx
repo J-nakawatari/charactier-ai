@@ -168,12 +168,9 @@ export default function CharactersPage() {
 
   // キャラクタークリック時の処理
   const handleCharacterClick = (character: Character) => {
-    if (character.characterAccessType === 'purchaseOnly') {
+    if (character.characterAccessType === 'premium') {
       // 購入ページに遷移
       window.location.href = `/${locale}/purchase/character/${character._id}`;
-    } else if (character.characterAccessType === 'token-based') {
-      // トークン購入ページに遷移
-      window.location.href = `/${locale}/purchase/tokens`;
     }
   };
 

@@ -9,7 +9,7 @@ export const mockCharacters: CharacterDocument[] = [
       ja: '明るく元気な女の子。いつも笑顔で、みんなを励ましてくれる優しい性格です。',
       en: 'A bright and energetic girl. Always smiling and encouraging everyone with her kind personality.'
     },
-    characterAccessType: 'free',
+    characterAccessType: 'initial',
     model: 'gpt-3.5-turbo',
     gender: 'female',
     personalityPreset: '元気系',
@@ -36,7 +36,7 @@ export const mockCharacters: CharacterDocument[] = [
       ja: '落ち着いた知的な女性。読書が好きで、深い話題について語り合うのを好みます。',
       en: 'A calm and intellectual woman. She loves reading and enjoys discussing deep topics.'
     },
-    characterAccessType: 'token-based',
+    characterAccessType: 'initial',
     model: 'gpt-4',
     gender: 'female',
     personalityPreset: '知的系',
@@ -63,7 +63,7 @@ export const mockCharacters: CharacterDocument[] = [
       ja: 'クールで冷静な男性。論理的思考が得意で、的確なアドバイスをくれます。',
       en: 'A cool and calm man. Good at logical thinking and gives accurate advice.'
     },
-    characterAccessType: 'purchaseOnly',
+    characterAccessType: 'premium',
     model: 'gpt-4',
     gender: 'male',
     personalityPreset: 'クール系',
