@@ -5,7 +5,7 @@ import { Search, Filter, SortAsc, X } from 'lucide-react';
 
 interface FilterState {
   keyword: string;
-  freeOnly: boolean; // 実際は初期開放キャラのみを表示するフィルター
+  characterType: 'all' | 'initial' | 'purchased' | 'unpurchased'; // キャラクター種別フィルター
   sort: 'popular' | 'newest' | 'oldest' | 'name' | 'affinity';
 }
 
@@ -37,7 +37,7 @@ export default function CharacterFilters({
   const resetFilters = () => {
     onFiltersChange({
       keyword: '',
-      freeOnly: false,
+      characterType: 'all',
       sort: 'popular'
     });
   };
@@ -50,7 +50,14 @@ export default function CharacterFilters({
     { value: 'affinity', label: '親密度順' }
   ];
 
-  const hasActiveFilters = filters.keyword || filters.freeOnly || filters.sort !== 'popular';
+  const hasActiveFilters = filters.keyword || filters.characterType !== 'all' || filters.sort !== 'popular';
+
+  const characterTypeOptions = [
+    { value: 'all', label: '全て表示' },
+    { value: 'initial', label: 'ベースキャラのみ' },
+    { value: 'purchased', label: '購入済みキャラのみ' },
+    { value: 'unpurchased', label: '未購入キャラのみ' }
+  ];
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
@@ -65,7 +72,7 @@ export default function CharacterFilters({
           onChange={(e) => updateFilter('keyword', e.target.value)}
           placeholder="キャラクター名や性格で検索..."
           disabled={isLoading}
-          className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 placeholder-gray-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+          className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400 text-gray-900 placeholder-gray-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
         />
         {filters.keyword && (
           <button
@@ -80,17 +87,46 @@ export default function CharacterFilters({
       {/* フィルターとソート */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex flex-col sm:flex-row gap-3">
-          {/* ベースキャラのみフィルター */}
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={filters.freeOnly}
-              onChange={(e) => updateFilter('freeOnly', e.target.checked)}
-              disabled={isLoading}
-              className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 disabled:cursor-not-allowed"
-            />
-            <span className="text-sm font-medium text-gray-700">ベースキャラのみ</span>
-          </label>
+          {/* キャラクター種別フィルター */}
+          <div>
+            {/* モバイル: プルダウン */}
+            <div className="flex items-center space-x-2 sm:hidden">
+              <Filter className="h-4 w-4 text-gray-400" />
+              <select
+                value={filters.characterType}
+                onChange={(e) => updateFilter('characterType', e.target.value)}
+                disabled={isLoading}
+                className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed min-w-0 text-gray-900 bg-white"
+              >
+                {characterTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value} className="text-gray-900">
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* PC: ラジオボタン */}
+            <div className="hidden sm:flex items-center space-x-4">
+              <Filter className="h-4 w-4 text-gray-400" />
+              <div className="flex space-x-4">
+                {characterTypeOptions.map((option) => (
+                  <label key={option.value} className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="characterType"
+                      value={option.value}
+                      checked={filters.characterType === option.value}
+                      onChange={(e) => updateFilter('characterType', e.target.value)}
+                      disabled={isLoading}
+                      className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 disabled:cursor-not-allowed"
+                    />
+                    <span className="text-sm font-medium text-gray-700">{option.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
 
           {/* ソート */}
           <div className="flex items-center space-x-2">

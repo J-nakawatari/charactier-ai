@@ -32,6 +32,7 @@ interface CharacterGridProps {
   userPurchasedCharacters?: string[];
   onCharacterClick?: (character: Character) => void;
   isLoading?: boolean;
+  filterKey?: string; // アニメーション用のキー
 }
 
 export default function CharacterGrid({ 
@@ -40,7 +41,8 @@ export default function CharacterGrid({
   userTokenBalance = 0,
   userPurchasedCharacters = [],
   onCharacterClick,
-  isLoading = false
+  isLoading = false,
+  filterKey = 'default'
 }: CharacterGridProps) {
   
   // キャラクターのロック状態とアクセス権限を判定
@@ -123,19 +125,30 @@ export default function CharacterGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {characters.map((character) => {
+    <div 
+      key={filterKey}
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+    >
+      {characters.map((character, index) => {
         const { isLocked } = getCharacterAccess(character);
         const currentAffinity = getUserAffinity(character._id);
         
         return (
-          <CharacterCard
+          <div
             key={character._id}
-            character={character}
-            currentAffinity={currentAffinity}
-            isLocked={isLocked}
-            onClick={onCharacterClick}
-          />
+            className="opacity-0 translate-y-4 transition-all duration-500 ease-out"
+            style={{ 
+              animationDelay: `${index * 100}ms`,
+              animation: `fadeInUp 0.5s ease-out ${index * 100}ms forwards`
+            }}
+          >
+            <CharacterCard
+              character={character}
+              currentAffinity={currentAffinity}
+              isLocked={isLocked}
+              onClick={onCharacterClick}
+            />
+          </div>
         );
       })}
     </div>

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { Users, Search, Filter } from 'lucide-react';
 import CharacterGrid from '@/components/characters/CharacterGrid';
 import CharacterFilters from '@/components/characters/CharacterFilters';
+import UserSidebar from '@/components/user/UserSidebar';
 
 interface Character {
   _id: string;
@@ -23,7 +24,7 @@ interface Character {
 
 interface FilterState {
   keyword: string;
-  freeOnly: boolean;
+  characterType: 'all' | 'initial' | 'purchased' | 'unpurchased';
   sort: 'popular' | 'newest' | 'oldest' | 'name' | 'affinity';
 }
 
@@ -34,24 +35,32 @@ export default function CharactersPage() {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [filters, setFilters] = useState<FilterState>({
     keyword: '',
-    freeOnly: false,
+    characterType: 'all',
     sort: 'popular'
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // 初期ローディングも無効化
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
 
   const fetchCharacters = useCallback(async () => {
     try {
-      setIsLoading(true);
+      // setIsLoading(true); // ローディング表示を無効化
       setError(null);
 
       const queryParams = new URLSearchParams({
         locale,
-        freeOnly: filters.freeOnly.toString(),
+        characterType: filters.characterType,
         sort: filters.sort,
         ...(filters.keyword && { keyword: filters.keyword })
       });
+
+      console.log('🔍 フロントエンド: 送信するパラメータ', {
+        locale,
+        characterType: filters.characterType,
+        sort: filters.sort,
+        keyword: filters.keyword
+      });
+      console.log('🔍 フロントエンド: APIリクエストURL', `/api/characters?${queryParams}`);
 
       const response = await fetch(`/api/characters?${queryParams}`, {
         headers: {
@@ -75,7 +84,7 @@ export default function CharactersPage() {
       setCharacters([]);
       setTotalCount(0);
     } finally {
-      setIsLoading(false);
+      // setIsLoading(false); // ローディング表示を無効化
     }
   }, [locale, filters]);
 
@@ -105,10 +114,13 @@ export default function CharactersPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">キャラクター一覧を読み込み中...</p>
+      <div className="min-h-screen bg-gray-50 flex">
+        <UserSidebar locale={locale} />
+        <div className="flex-1 lg:ml-64 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">キャラクター一覧を読み込み中...</p>
+          </div>
         </div>
       </div>
     );
@@ -116,27 +128,35 @@ export default function CharactersPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="bg-red-100 rounded-full p-3 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
-            <Users className="w-8 h-8 text-red-600" />
+      <div className="min-h-screen bg-gray-50 flex">
+        <UserSidebar locale={locale} />
+        <div className="flex-1 lg:ml-64 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-6">
+            <div className="bg-red-100 rounded-full p-3 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+              <Users className="w-8 h-8 text-red-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">読み込みエラー</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={handleRetry}
+              className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              再試行
+            </button>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">読み込みエラー</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={handleRetry}
-            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            再試行
-          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* サイドバー */}
+      <UserSidebar locale={locale} />
+      
+      {/* メインコンテンツ */}
+      <div className="flex-1 lg:ml-64">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* ヘッダー */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -167,6 +187,7 @@ export default function CharactersPage() {
             onCharacterClick={handleCharacterClick}
             userAffinities={[]} // モック環境では空配列
             purchasedCharacters={[]} // モック環境では空配列
+            filterKey={`${filters.characterType}-${filters.sort}-${filters.keyword}`} // アニメーション用のキー
           />
         ) : (
           <div className="text-center py-12">
@@ -178,13 +199,14 @@ export default function CharactersPage() {
               検索条件を変更してもう一度お試しください
             </p>
             <button
-              onClick={() => setFilters({ keyword: '', freeOnly: false, sort: 'popular' })}
+              onClick={() => setFilters({ keyword: '', characterType: 'all', sort: 'popular' })}
               className="text-purple-600 hover:text-purple-700 font-medium"
             >
               フィルターをリセット
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

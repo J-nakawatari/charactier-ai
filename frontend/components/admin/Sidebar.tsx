@@ -21,7 +21,7 @@ const sidebarItems = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'ダッシュボード' },
   { href: '/admin/users', icon: Users, label: 'ユーザー管理' },
   { href: '/admin/characters', icon: MessageSquare, label: 'キャラクター管理' },
-  { href: '/admin/tokens', icon: Coins, label: 'トークン管理' },
+  { href: '/admin/tokens', icon: Coins, label: 'トークチケット管理' },
   { href: '/admin/notifications', icon: Bell, label: '通知管理' },
   { href: '/admin/analytics', icon: BarChart3, label: 'アナリティクス' },
   { href: '/admin/security', icon: Shield, label: 'セキュリティ' },
