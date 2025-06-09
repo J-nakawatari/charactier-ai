@@ -903,6 +903,137 @@ app.get('/api/analytics/affinity', mockAuth, (req: Request, res: Response): void
   res.json(analyticsData);
 });
 
+// Purchase History API
+app.get('/api/user/purchase-history', mockAuth, (req: Request, res: Response): void => {
+  console.log('🛒 Purchase History API called');
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  // Generate mock purchase history data
+  const mockPurchases = [
+    {
+      _id: 'purchase_001',
+      type: 'token',
+      amount: 5000,
+      price: 1000,
+      currency: 'JPY',
+      status: 'completed',
+      paymentMethod: 'Credit Card',
+      date: new Date('2025-01-05T10:15:00Z'),
+      details: 'トークンパック: 5,000トークン',
+      description: '5,000トークンパック（ボーナス+500トークン）',
+      transactionId: 'txn_1234567890',
+      invoiceUrl: '/invoices/001'
+    },
+    {
+      _id: 'purchase_002',
+      type: 'character',
+      amount: 1,
+      price: 500,
+      currency: 'JPY',
+      status: 'completed',
+      paymentMethod: 'Credit Card',
+      date: new Date('2024-12-20T14:30:00Z'),
+      details: 'キャラクター: ルナ',
+      description: 'プレミアムキャラクター「ルナ」のアンロック',
+      transactionId: 'txn_1234567891',
+      invoiceUrl: '/invoices/002'
+    },
+    {
+      _id: 'purchase_003',
+      type: 'token',
+      amount: 10000,
+      price: 1800,
+      currency: 'JPY',
+      status: 'completed',
+      paymentMethod: 'PayPal',
+      date: new Date('2024-12-01T09:00:00Z'),
+      details: 'トークンパック: 10,000トークン（ボーナス付き）',
+      description: '10,000トークンパック（限定ボーナス+2000トークン）',
+      transactionId: 'txn_1234567892',
+      invoiceUrl: '/invoices/003'
+    },
+    {
+      _id: 'purchase_004',
+      type: 'character',
+      amount: 1,
+      price: 500,
+      currency: 'JPY',
+      status: 'completed',
+      paymentMethod: 'Credit Card',
+      date: new Date('2024-11-15T16:45:00Z'),
+      details: 'キャラクター: ミコ',
+      description: 'プレミアムキャラクター「ミコ」のアンロック',
+      transactionId: 'txn_1234567893',
+      invoiceUrl: '/invoices/004'
+    },
+    {
+      _id: 'purchase_005',
+      type: 'token',
+      amount: 2500,
+      price: 500,
+      currency: 'JPY',
+      status: 'completed',
+      paymentMethod: 'Bank Transfer',
+      date: new Date('2024-11-01T11:20:00Z'),
+      details: 'トークンパック: 2,500トークン',
+      description: '2,500トークンパック（スタンダード）',
+      transactionId: 'txn_1234567894',
+      invoiceUrl: '/invoices/005'
+    },
+    {
+      _id: 'purchase_006',
+      type: 'token',
+      amount: 1000,
+      price: 200,
+      currency: 'JPY',
+      status: 'refunded',
+      paymentMethod: 'Credit Card',
+      date: new Date('2024-10-20T08:30:00Z'),
+      details: 'トークンパック: 1,000トークン（返金済み）',
+      description: '1,000トークンパック - 返金処理完了',
+      transactionId: 'txn_1234567895',
+      invoiceUrl: '/invoices/006'
+    }
+  ];
+
+  // Calculate summary statistics
+  const completedPurchases = mockPurchases.filter(p => p.status === 'completed');
+  const totalSpent = completedPurchases.reduce((sum, purchase) => sum + purchase.price, 0);
+  
+  const tokenPurchases = completedPurchases.filter(p => p.type === 'token');
+  const characterPurchases = completedPurchases.filter(p => p.type === 'character');
+  const subscriptionPurchases = completedPurchases.filter(p => p.type === 'subscription');
+
+  const summary = {
+    tokens: {
+      count: tokenPurchases.length,
+      amount: tokenPurchases.reduce((sum, p) => sum + p.price, 0)
+    },
+    characters: {
+      count: characterPurchases.length,
+      amount: characterPurchases.reduce((sum, p) => sum + p.price, 0)
+    },
+    subscriptions: {
+      count: subscriptionPurchases.length,
+      amount: subscriptionPurchases.reduce((sum, p) => sum + p.price, 0)
+    }
+  };
+
+  const purchaseHistoryData = {
+    purchases: mockPurchases,
+    totalSpent,
+    totalPurchases: mockPurchases.length,
+    summary
+  };
+
+  console.log('✅ Purchase history data generated successfully');
+  res.json(purchaseHistoryData);
+});
+
 app.get('/api/debug', (_req: Request, res: Response): void => {
   res.json({
     USE_MOCK: USE_MOCK,

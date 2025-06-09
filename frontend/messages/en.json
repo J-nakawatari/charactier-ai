@@ -127,5 +127,68 @@
       "Let's have fun today too 🌈",
       "I love you so much 💝"
     ]
+  },
+  "dashboard": {
+    "title": "Welcome back, {name}",
+    "welcome": "Have a wonderful day!",
+    "loading": "Loading...",
+    "error": "Failed to fetch data",
+    "retry": "Retry"
+  },
+  "purchaseHistory": {
+    "title": "Purchase History",
+    "subtitle": "View your past purchase records",
+    "loading": "Loading purchase history...",
+    "summary": {
+      "totalSpent": "Total Spent",
+      "tokens": "Tokens",
+      "characters": "Characters",
+      "totalTransactions": "Total Transactions",
+      "count": "{count} times",
+      "characterCount": "{count} characters"
+    },
+    "filters": {
+      "label": "Filter:",
+      "all": "All",
+      "token": "Tokens",
+      "character": "Characters",
+      "subscription": "Subscriptions"
+    },
+    "sort": {
+      "label": "Sort:",
+      "dateDesc": "Date (Newest)",
+      "dateAsc": "Date (Oldest)",
+      "amountDesc": "Amount (Highest)",
+      "amountAsc": "Amount (Lowest)"
+    },
+    "table": {
+      "product": "Product",
+      "date": "Date",
+      "amount": "Amount",
+      "paymentMethod": "Payment Method",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "completed": "Completed",
+      "pending": "Pending",
+      "failed": "Failed",
+      "refunded": "Refunded"
+    },
+    "details": {
+      "amount": "Amount:",
+      "paymentMethod": "Payment:",
+      "invoice": "Invoice",
+      "details": "Details"
+    },
+    "types": {
+      "token": "{amount} tokens",
+      "character": "1 character",
+      "subscription": "Subscription"
+    },
+    "empty": {
+      "title": "No Purchase History",
+      "description": "No purchases have been made yet."
+    }
   }
 }
