@@ -198,11 +198,8 @@ export default function RegisterPage() {
           />
         )}
         
-        {/* Noise Overlay */}
-        <div className="absolute inset-0 w-full h-full noise-overlay" />
-        
         {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-60" />
+        <div className="absolute inset-0 bg-black bg-opacity-70" />
       </div>
       
       {/* Language Switcher */}
