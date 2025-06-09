@@ -79,7 +79,6 @@ export default function LoginPage() {
     
     const switchVideo = () => {
       currentIndex = (currentIndex + 1) % videoSources.length;
-      setCurrentVideoIndex(currentIndex);
       
       nextVideo.src = videoSources[currentIndex];
       nextVideo.style.opacity = '0';
@@ -109,7 +108,7 @@ export default function LoginPage() {
     return () => {
       clearInterval(interval);
     };
-  }, [mounted, isMobile, videoSources]);
+  }, [mounted, isMobile]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
