@@ -21,6 +21,8 @@ export default function HomePage() {
   // Video state
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [videoElements, setVideoElements] = useState<HTMLVideoElement[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
   
   // Chat bubble state
   const [leftText, setLeftText] = useState('');
@@ -34,6 +36,13 @@ export default function HomePage() {
     '/video/hero-videos_02.mp4',
     '/video/hero-videos_03.mp4'
   ];
+
+  // Fallback images for mobile
+  const fallbackImages = [
+    '/images/hero/hero-fallback_01.jpg',
+    '/images/hero/hero-fallback_02.jpg', 
+    '/images/hero/hero-fallback_03.jpg'
+  ];
   
   const chatMessages = t.raw('chatMessages') as string[];
   
@@ -42,8 +51,23 @@ export default function HomePage() {
     router.push(`/${newLocale}`);
   };
   
-  // Video switching effect
+  // Mobile detection
   useEffect(() => {
+    setMounted(true);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Video switching effect (desktop only)
+  useEffect(() => {
+    if (isMobile) return; // Skip video logic on mobile
+    
     const video1 = document.getElementById('video1') as HTMLVideoElement;
     const video2 = document.getElementById('video2') as HTMLVideoElement;
     
@@ -96,7 +120,9 @@ export default function HomePage() {
     return () => {
       clearInterval(interval);
     };
-  }, []);
+  }, [isMobile, videoSources]);
+
+  // Mobile uses static image - no switching needed
   
   // Chat bubble animation
   useEffect(() => {
@@ -176,24 +202,42 @@ export default function HomePage() {
   
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Background Video Container */}
+      {/* Background Video/Image Container */}
       <div className="absolute inset-0 w-full h-full">
-        <video
-          id="video1"
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-in-out"
-          style={{ opacity: 0, zIndex: 0 }}
-          muted
-          loop
-          playsInline
-        />
-        <video
-          id="video2"
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-in-out"
-          style={{ opacity: 0, zIndex: 0 }}
-          muted
-          loop
-          playsInline
-        />
+        {/* Desktop: Video Background */}
+        {!isMobile && (
+          <>
+            <video
+              id="video1"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-in-out"
+              style={{ opacity: 0, zIndex: 0 }}
+              muted
+              loop
+              playsInline
+            />
+            <video
+              id="video2"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-in-out"
+              style={{ opacity: 0, zIndex: 0 }}
+              muted
+              loop
+              playsInline
+            />
+          </>
+        )}
+        
+        {/* Mobile: Static Image Background */}
+        {isMobile && (
+          <Image
+            id="hero-image"
+            src={fallbackImages[0]}
+            alt="Hero Background"
+            fill
+            className="object-cover transition-opacity duration-[2000ms] ease-in-out"
+            priority
+            sizes="100vw"
+          />
+        )}
         
         {/* Noise Overlay */}
         <div className="absolute inset-0 w-full h-full noise-overlay" />
@@ -227,15 +271,15 @@ export default function HomePage() {
       
       {/* Main Content */}
       <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
-        <div className="relative text-center" style={{ width: '50rem' }}>
+        <div className="relative text-center w-full max-w-4xl">
           {/* Small Title */}
-          <p className="text-white text-lg font-medium mb-4 tracking-wide">
+          <p className="text-white text-sm sm:text-base md:text-lg font-medium mb-4 tracking-wide">
             {t('title')}
           </p>
           
           {/* Main Logo */}
           <h1 
-            className={`${orbitron.className} text-6xl md:text-8xl font-bold mb-6`}
+            className={`${orbitron.className} text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold mb-6`}
             style={{
               color: '#E91E63',
               textShadow: '0 0 20px rgba(233, 30, 99, 0.5), 0 0 40px rgba(233, 30, 99, 0.3)'
@@ -245,27 +289,26 @@ export default function HomePage() {
           </h1>
           
           {/* Tagline */}
-          <h2 className="text-white text-2xl md:text-3xl font-medium mb-8 tracking-wide">
+          <h2 className="text-white text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium mb-8 tracking-wide">
             {t('tagline')}
           </h2>
           
           {/* Description */}
-          <p className="text-white text-base md:text-lg mb-4 leading-relaxed opacity-90 whitespace-pre-line">
+          <p className="text-white text-sm sm:text-base md:text-lg mb-4 leading-relaxed opacity-90 whitespace-pre-line">
             {t('description')}
           </p>
           
-          <p className="text-white text-sm md:text-base mb-12 leading-relaxed opacity-80">
+          <p className="text-white text-xs sm:text-sm md:text-base mb-12 leading-relaxed opacity-80">
             {t('subDescription')}
           </p>
           
           {/* Login Button */}
           <button
             onClick={() => router.push(`/${locale}/login`)}
-            className="flex items-center justify-center gap-3 text-white font-bold py-4 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl mb-6 mx-auto"
+            className="flex items-center justify-center gap-3 text-white font-bold py-3 md:py-4 px-6 rounded-lg text-base md:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl mb-6 mx-auto w-full max-w-xs"
             style={{
               backgroundColor: '#E91E63',
-              borderRadius: '8px',
-              width: '320px'
+              borderRadius: '8px'
             }}
           >
             {t('loginButton')}
@@ -282,14 +325,14 @@ export default function HomePage() {
           <div className="text-center mt-8 flex flex-col items-center">
             <button
               onClick={() => router.push(`/${locale}/register`)}
-              className="text-lg font-bold mb-1 hover:opacity-80 transition-colors underline cursor-pointer"
+              className="text-base md:text-lg font-bold mb-1 hover:opacity-80 transition-colors underline cursor-pointer"
               style={{ color: '#E91E63' }}
             >
               {t('newUserPromo')}
             </button>
             <div className="relative">
               <div 
-                className="px-4 py-2 rounded-lg text-base font-semibold"
+                className="px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm md:text-base font-semibold"
                 style={{ 
                   color: '#E91E63',
                   backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -315,8 +358,8 @@ export default function HomePage() {
             </div>
           </div>
           
-          {/* Chat Bubbles - Hidden on mobile for better UX */}
-          <div className="hidden md:block">
+          {/* Chat Bubbles - Desktop only */}
+          <div className="hidden lg:block">
             <div
               className={`absolute max-w-sm p-5 bg-white rounded-2xl shadow-xl transition-opacity duration-600 z-20 chat-bubble ${
                 leftVisible ? 'opacity-100' : 'opacity-0'

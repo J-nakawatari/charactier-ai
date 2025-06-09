@@ -124,6 +124,13 @@ body {
   height: 100%;
 }
 
+/* Mobile: Disable noise animation and show simple overlay */
+@media (max-width: 767px) {
+  .noise-overlay {
+    display: none;
+  }
+}
+
 @keyframes filmGrainStatic {
   0% { 
     background-position: 0 0, 1px 1px, 2px 2px, 3px 3px, 4px 4px;
