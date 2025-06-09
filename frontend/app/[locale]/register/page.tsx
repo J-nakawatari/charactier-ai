@@ -67,16 +67,54 @@ export default function RegisterPage() {
     
     if (!video1 || !video2) return;
     
-    // Simple video setup - just play the first video
-    video1.src = videoSources[0];
-    video1.style.opacity = '1';
-    video1.style.zIndex = '1';
-    video1.load();
-    video1.play().catch(() => {
+    let currentIndex = 0;
+    let activeVideo = video1;
+    let nextVideo = video2;
+    
+    // Initialize first video
+    activeVideo.src = videoSources[0];
+    activeVideo.style.opacity = '1';
+    activeVideo.style.zIndex = '1';
+    activeVideo.load();
+    activeVideo.play().catch(() => {
       // Ignore play errors
     });
     
-    // Don't do switching for now - just show first video
+    const switchVideo = () => {
+      currentIndex = (currentIndex + 1) % videoSources.length;
+      
+      // Prepare next video
+      nextVideo.src = videoSources[currentIndex];
+      nextVideo.style.opacity = '0';
+      nextVideo.style.zIndex = '2';
+      nextVideo.load();
+      
+      nextVideo.addEventListener('canplay', () => {
+        nextVideo.play().catch(() => {
+          // Ignore play errors
+        });
+        
+        // Smooth transition without DOM manipulation
+        nextVideo.style.opacity = '1';
+        activeVideo.style.opacity = '0';
+        
+        setTimeout(() => {
+          // Swap videos
+          const temp = activeVideo;
+          activeVideo = nextVideo;
+          nextVideo = temp;
+          
+          activeVideo.style.zIndex = '1';
+          nextVideo.style.zIndex = '0';
+        }, 2000);
+      }, { once: true });
+    };
+    
+    const interval = setInterval(switchVideo, 7000);
+    
+    return () => {
+      clearInterval(interval);
+    };
   }, [mounted, isMobile]);
 
   const validateForm = () => {
