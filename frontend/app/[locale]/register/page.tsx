@@ -199,7 +199,7 @@ export default function RegisterPage() {
         )}
         
         {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-60" />
+        <div className="absolute inset-0 bg-black bg-opacity-60 z-10" />
       </div>
       
       {/* Language Switcher */}
