@@ -3,22 +3,17 @@
 import { 
   MessageSquare, 
   Users, 
-  Heart, 
   Coins, 
-  Settings, 
-  LogOut,
   Menu,
   X,
-  Home,
-  ShoppingCart,
-  History
+  Home
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 
-interface UserSidebarProps {
+interface ChatSidebarProps {
   locale?: string;
 }
 
@@ -33,7 +28,7 @@ interface User {
   } | null;
 }
 
-export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
+export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
   const pathname = usePathname();
   const params = useParams();
   const currentLocale = locale || params?.locale || 'ja';
@@ -63,7 +58,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           return;
         }
 
-        console.log('🔄 UserSidebar: Fetching user data...');
+        console.log('🔄 ChatSidebar: Fetching user data...');
         const response = await fetch('/api/auth/user', {
           headers: {
             'x-auth-token': token,
@@ -73,7 +68,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
 
         if (response.ok) {
           const userData = await response.json();
-          console.log('✅ UserSidebar: User data updated:', {
+          console.log('✅ ChatSidebar: User data updated:', {
             name: userData.name,
             selectedCharacter: userData.selectedCharacter?.name || 'None'
           });
@@ -104,10 +99,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
     { id: 'home', href: `/${currentLocale}`, icon: Home, label: t('home') },
     { id: 'characters', href: `/${currentLocale}/characters`, icon: Users, label: t('characters') },
     { id: 'chat', href: getChatHref(), icon: MessageSquare, label: t('chatHistory') },
-    { id: 'favorites', href: `/${currentLocale}/favorites`, icon: Heart, label: t('favorites') },
     { id: 'tokens', href: `/${currentLocale}/tokens`, icon: Coins, label: t('tokens') },
-    { id: 'purchase-history', href: `/${currentLocale}/purchase-history`, icon: ShoppingCart, label: t('purchaseHistory') },
-    { id: 'settings', href: `/${currentLocale}/settings`, icon: Settings, label: t('settings') },
   ];
 
   return (
@@ -115,7 +107,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
       {/* ハンバーガーメニューボタン（モバイル用） */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 right-4 z-50 p-3 bg-purple-600 text-white rounded-lg shadow-lg lg:hidden hover:bg-purple-700 transition-colors"
+        className="fixed top-4 left-4 z-50 p-2 bg-white/80 backdrop-blur-sm text-gray-700 rounded-lg shadow-lg lg:hidden hover:bg-white transition-colors border border-gray-200/50"
       >
         {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -169,7 +161,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
             {t('menu')}
           </div>
-          {sidebarItems.slice(0, 4).map((item) => {
+          {sidebarItems.map((item) => {
             // チャット画面(/characters/[id]/chat)の場合、チャット履歴をアクティブにする
             const isChatPage = pathname.includes('/characters/') && pathname.includes('/chat');
             // キャラ一覧画面(/characters)の場合、キャラクター一覧をアクティブにする
@@ -193,45 +185,26 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
                 onClick={() => setIsOpen(false)}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                   isActive
-                    ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-700'
+                    ? 'bg-purple-50 border-l-4 border-purple-700'
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
+                style={isActive ? { color: 'rgb(147, 51, 234)' } : {}}
               >
-                <item.icon className={`w-5 h-5 ${isActive ? 'text-purple-700' : 'text-gray-400'}`} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-
-          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 mt-6">
-            {t('account')}
-          </div>
-          {sidebarItems.slice(4).map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                onClick={() => setIsOpen(false)}
-                className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  isActive
-                    ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-700'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <item.icon className={`w-5 h-5 ${isActive ? 'text-purple-700' : 'text-gray-400'}`} />
+                <item.icon 
+                  className="w-5 h-5" 
+                  style={isActive ? { color: 'rgb(147, 51, 234)' } : { color: '#9CA3AF' }}
+                />
                 <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* フッター */}
+        {/* 簡素化されたフッター */}
         <div className="p-4 border-t border-gray-200">
-          <button className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 w-full transition-colors">
-            <LogOut className="w-5 h-5 text-gray-400" />
-            <span>{t('logout')}</span>
-          </button>
+          <div className="text-xs text-gray-400 text-center">
+            AI Character Chat
+          </div>
         </div>
       </div>
     </>

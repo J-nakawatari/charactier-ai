@@ -66,61 +66,24 @@ export default function HomePage() {
 
   // Video switching effect (desktop only)
   useEffect(() => {
-    if (isMobile) return; // Skip video logic on mobile
+    if (!mounted || isMobile) return;
     
     const video1 = document.getElementById('video1') as HTMLVideoElement;
     const video2 = document.getElementById('video2') as HTMLVideoElement;
     
     if (!video1 || !video2) return;
     
-    setVideoElements([video1, video2]);
+    // Simple video setup - just play the first video
+    video1.src = videoSources[0];
+    video1.style.opacity = '1';
+    video1.style.zIndex = '1';
+    video1.load();
+    video1.play().catch(() => {
+      // Ignore play errors
+    });
     
-    let currentIndex = 0;
-    let activeVideo = video1;
-    let nextVideo = video2;
-    
-    // Initialize first video
-    activeVideo.src = videoSources[0];
-    activeVideo.style.opacity = '1';
-    activeVideo.style.zIndex = '1';
-    activeVideo.load();
-    activeVideo.play();
-    
-    const switchVideo = () => {
-      currentIndex = (currentIndex + 1) % videoSources.length;
-      setCurrentVideoIndex(currentIndex);
-      
-      // Prepare next video
-      nextVideo.src = videoSources[currentIndex];
-      nextVideo.style.opacity = '0';
-      nextVideo.style.zIndex = '2';
-      nextVideo.load();
-      
-      nextVideo.addEventListener('canplay', () => {
-        nextVideo.play();
-        
-        // Fade transition
-        nextVideo.style.opacity = '1';
-        activeVideo.style.opacity = '0';
-        
-        setTimeout(() => {
-          // Swap videos
-          const temp = activeVideo;
-          activeVideo = nextVideo;
-          nextVideo = temp;
-          
-          activeVideo.style.zIndex = '1';
-          nextVideo.style.zIndex = '0';
-        }, 2000); // 2s fade duration
-      }, { once: true });
-    };
-    
-    const interval = setInterval(switchVideo, 7000); // 7s interval
-    
-    return () => {
-      clearInterval(interval);
-    };
-  }, [isMobile, videoSources]);
+    // Don't do switching for now - just show first video
+  }, [mounted, isMobile]); // Add dependencies
 
   // Mobile uses static image - no switching needed
   
@@ -205,7 +168,7 @@ export default function HomePage() {
       {/* Background Video/Image Container */}
       <div className="absolute inset-0 w-full h-full">
         {/* Desktop: Video Background */}
-        {!isMobile && (
+        {mounted && !isMobile && (
           <>
             <video
               id="video1"
@@ -227,7 +190,7 @@ export default function HomePage() {
         )}
         
         {/* Mobile: Static Image Background */}
-        {isMobile && (
+        {mounted && isMobile && (
           <Image
             id="hero-image"
             src={fallbackImages[0]}
@@ -237,6 +200,28 @@ export default function HomePage() {
             priority
             sizes="100vw"
           />
+        )}
+        
+        {/* Fallback before mounted */}
+        {!mounted && (
+          <>
+            <video
+              id="video1"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-in-out"
+              style={{ opacity: 0, zIndex: 0 }}
+              muted
+              loop
+              playsInline
+            />
+            <video
+              id="video2"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-in-out"
+              style={{ opacity: 0, zIndex: 0 }}
+              muted
+              loop
+              playsInline
+            />
+          </>
         )}
         
         {/* Noise Overlay */}
@@ -365,7 +350,7 @@ export default function HomePage() {
                 leftVisible ? 'opacity-100' : 'opacity-0'
               }`}
               style={{
-                left: '499px',
+                left: '540px',
                 top: '-46px',
                 pointerEvents: leftVisible ? 'auto' : 'none',
                 minHeight: '60px',
@@ -396,7 +381,7 @@ export default function HomePage() {
                 rightVisible ? 'opacity-100' : 'opacity-0'
               }`}
               style={{
-                right: '490px',
+                right: '530px',
                 top: '-30px',
                 pointerEvents: rightVisible ? 'auto' : 'none',
                 minHeight: '60px',

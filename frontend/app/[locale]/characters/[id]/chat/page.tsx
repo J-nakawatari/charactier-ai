@@ -67,15 +67,53 @@ export default function ChatPage() {
       // const data = await response.json();
 
       // モックデータ（仮）
+      const getCharacterData = (id: string) => {
+        switch (id) {
+          case '1':
+            return {
+              name: 'ルナ',
+              description: '明るく元気な女の子',
+              imageChatAvatar: '/characters/00009-3823393646_cleanup.png',
+              imageChatBackground: '', // 背景画像なし
+              currentMood: 'happy' as const,
+              themeColor: '#8B5CF6'
+            };
+          case '2':
+            return {
+              name: 'ミコ',
+              description: '神秘的な巫女さん',
+              imageChatAvatar: '/characters/00010-3296923052.png',
+              imageChatBackground: '', // 背景画像なし
+              currentMood: 'shy' as const,
+              themeColor: '#EC4899'
+            };
+          case '3':
+            return {
+              name: 'ゼン',
+              description: 'クールな武士',
+              imageChatAvatar: '/characters/00012-2372329152.png',
+              imageChatBackground: '', // 背景画像なし
+              currentMood: 'excited' as const,
+              themeColor: '#0EA5E9'
+            };
+          default:
+            return {
+              name: 'ルナ',
+              description: '明るく元気な女の子',
+              imageChatAvatar: '/characters/00009-3823393646_cleanup.png',
+              imageChatBackground: '',
+              currentMood: 'happy' as const,
+              themeColor: '#8B5CF6'
+            };
+        }
+      };
+
+      const characterData = getCharacterData(characterId);
+
       const mockData: ChatData = {
         character: {
           _id: characterId,
-          name: characterId === '1' ? 'ルナ' : characterId === '2' ? 'ミコ' : 'ゼン',
-          description: '明るく元気な女の子',
-          imageChatAvatar: `/characters/${characterId === '1' ? 'luna' : characterId === '2' ? 'miko' : 'zen'}.png`,
-          imageChatBackground: '',
-          currentMood: 'happy',
-          themeColor: '#8B5CF6'
+          ...characterData
         },
         affinity: {
           level: 12,
@@ -92,7 +130,8 @@ export default function ChatPage() {
             id: '1',
             role: 'assistant',
             content: 'こんにちは！今日はどんなお話をしましょうか？',
-            timestamp: new Date(Date.now() - 60000)
+            timestamp: new Date(Date.now() - 60000),
+            tokens: 180
           }
         ]
       };

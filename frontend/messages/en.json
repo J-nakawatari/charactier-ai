@@ -41,6 +41,17 @@
     "reset": "Reset",
     "close": "Close"
   },
+  "login": {
+    "title": "Login",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email address",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "loginButton": "Sign In",
+    "noAccount": "Don't have an account?",
+    "register": "Sign Up",
+    "backToTop": "Back to TOP"
+  },
   "sidebar": {
     "home": "Home",
     "characters": "Characters", 

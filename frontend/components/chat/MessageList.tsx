@@ -40,7 +40,7 @@ export function MessageList({ messages, character, isLoading }: MessageListProps
   return (
     <div 
       ref={scrollRef}
-      className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+      className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent relative z-20"
     >
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {messages.length === 0 && (
@@ -70,8 +70,8 @@ export function MessageList({ messages, character, isLoading }: MessageListProps
         ))}
 
         {isLoading && (
-          <div className="flex items-start space-x-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
+          <div className="flex items-start space-x-2 sm:space-x-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
               <img 
                 src={character.imageChatAvatar} 
                 alt={character.name}
@@ -80,7 +80,7 @@ export function MessageList({ messages, character, isLoading }: MessageListProps
             </div>
             <div className="flex-1">
               <div 
-                className="inline-block bg-white/90 backdrop-blur-sm rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-gray-200/50"
+                className="inline-block bg-white/70 backdrop-blur-md rounded-2xl rounded-tl-sm px-3 sm:px-4 py-2 sm:py-3 shadow-sm border border-gray-200/30"
                 style={{ borderLeftColor: character.themeColor }}
               >
                 <div className="flex items-center space-x-1">

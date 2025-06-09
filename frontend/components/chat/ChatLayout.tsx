@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Send, Heart, Zap } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Send, Heart, Zap } from 'lucide-react';
 import { MessageList } from './MessageList';
 import { AffinityBar } from './AffinityBar';
 import { MoodVisualizer } from './MoodVisualizer';
 import { TokenBar } from './TokenBar';
 import { UnlockPopup } from './UnlockPopup';
+import ChatSidebar from './ChatSidebar';
 
 interface Character {
   _id: string;
@@ -54,7 +54,6 @@ export function ChatLayout({
   messages, 
   onSendMessage 
 }: ChatLayoutProps) {
-  const router = useRouter();
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [localMessages, setLocalMessages] = useState<Message[]>(messages);
@@ -107,48 +106,42 @@ export function ChatLayout({
       e.preventDefault();
       handleSendMessage();
     }
+    // シフト+エンターの場合は何もしない（デフォルトの改行）
   };
 
   return (
-    <div 
-      className={`flex flex-col h-screen relative ${
-        character.imageChatBackground 
-          ? '' 
-          : 'bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50'
-      }`}
-      style={character.imageChatBackground ? {
-        backgroundImage: `url(${character.imageChatBackground})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      } : {}}
-    >
-      {/* 背景オーバーレイ */}
-      <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
+    <div className="flex h-screen">
+      {/* サイドバー */}
+      <ChatSidebar />
+      
+      {/* メインチャットエリア */}
+      <div 
+        className="flex-1 flex flex-col relative lg:ml-64"
+        style={{
+          backgroundImage: character.imageChatBackground 
+            ? `url(${character.imageChatBackground})` 
+            : 'linear-gradient(to bottom right, #faf5ff, #f3e8ff, #ddd6fe)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* 背景オーバーレイ */}
+        <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
       
       {/* ヘッダー */}
-      <header className="relative z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200/50 p-4">
+      <header className="relative z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200/50 p-3 sm:p-4">
         <div className="flex items-center justify-between max-w-4xl mx-auto">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => router.back()}
-              className="p-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg hover:bg-white/50"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
-                <img 
-                  src={character.imageChatAvatar} 
-                  alt={character.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <h1 className="font-semibold text-gray-900">{character.name}</h1>
-                <MoodVisualizer mood={character.currentMood} />
-              </div>
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="hidden sm:block w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
+              <img 
+                src={character.imageChatAvatar} 
+                alt={character.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="hidden sm:block">
+              <h1 className="font-semibold text-gray-900 text-base">{character.name}</h1>
             </div>
           </div>
 
@@ -161,18 +154,30 @@ export function ChatLayout({
 
       {/* 親密度バー */}
       <div className="relative z-10 bg-white/80 backdrop-blur-sm border-b border-gray-200/50">
-        <div className="max-w-4xl mx-auto px-4 py-3">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <AffinityBar 
             level={affinity.level}
             currentExp={affinity.currentExp}
             nextLevelExp={affinity.nextLevelExp}
             themeColor={character.themeColor}
+            mood={character.currentMood}
           />
         </div>
       </div>
 
       {/* メッセージエリア */}
       <div className="flex-1 relative z-10 overflow-hidden">
+        {/* キャラクター画像（真ん中に配置） */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="h-full">
+            <img 
+              src={character.imageChatAvatar}
+              alt={character.name}
+              className="h-full object-contain"
+            />
+          </div>
+        </div>
+        
         <MessageList 
           messages={localMessages}
           character={character}
@@ -181,20 +186,20 @@ export function ChatLayout({
       </div>
 
       {/* 入力エリア */}
-      <div className="relative z-10 bg-white/90 backdrop-blur-sm border-t border-gray-200/50 p-4">
+      <div className="relative z-10 bg-white/90 backdrop-blur-sm border-t border-gray-200/50 p-3 sm:p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-end space-x-3">
+          <div className="flex items-start space-x-2 sm:space-x-3">
             <div className="flex-1 relative">
               <textarea
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={`${character.name}にメッセージを送る...`}
-                className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-colors bg-white/80 backdrop-blur-sm"
+                className="w-full resize-none rounded-lg border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 focus:outline-none focus:border-[#ec4899] bg-white text-gray-900 placeholder-gray-500 text-sm sm:text-base min-h-[40px] sm:min-h-[48px]"
                 rows={1}
-                style={{ minHeight: '48px', maxHeight: '120px' }}
+                style={{ maxHeight: '80px' }}
               />
-              <div className="absolute bottom-3 right-3 text-xs text-gray-500">
+              <div className="absolute bottom-2 right-2 text-xs text-gray-500">
                 ~{tokenStatus.lastMessageCost}枚
               </div>
             </div>
@@ -202,28 +207,32 @@ export function ChatLayout({
             <button
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isLoading}
-              className="p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg"
+              className="px-3 sm:px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg min-h-[40px] sm:min-h-[48px]"
               style={{ backgroundColor: character.themeColor }}
             >
               {isLoading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
               ) : (
-                <Send className="w-5 h-5" />
+                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </button>
           </div>
+          
+          {/* 改行説明テキスト */}
+          <span className="block text-center text-xs text-gray-400 m-0" style={{ lineHeight: 0, marginTop: '4px' }}>Shift+エンターで改行できます</span>
         </div>
       </div>
 
-      {/* アンロック演出ポップアップ */}
-      {showUnlockPopup && unlockData && (
-        <UnlockPopup
-          level={unlockData.level}
-          illustration={unlockData.illustration}
-          characterName={character.name}
-          onClose={() => setShowUnlockPopup(false)}
-        />
-      )}
+        {/* アンロック演出ポップアップ */}
+        {showUnlockPopup && unlockData && (
+          <UnlockPopup
+            level={unlockData.level}
+            illustration={unlockData.illustration}
+            characterName={character.name}
+            onClose={() => setShowUnlockPopup(false)}
+          />
+        )}
+      </div>
     </div>
   );
 }

@@ -39,10 +39,8 @@ export function TokenBar({ tokensRemaining, lastMessageCost }: TokenBarProps) {
                 ? 'text-yellow-700'
                 : 'text-gray-700'
           }`}>
-            {tokensRemaining.toLocaleString()}枚
-          </div>
-          <div className="text-xs text-gray-500">
-            あと約{remainingMessages}メッセージ
+            <span>{tokensRemaining.toLocaleString()}枚</span>
+            <span className="hidden sm:inline">（あと約{remainingMessages}メッセージ）</span>
           </div>
         </div>
       </div>
@@ -71,16 +69,10 @@ export function TokenBar({ tokensRemaining, lastMessageCost }: TokenBarProps) {
         }}
       >
         <Plus className="w-4 h-4" />
-        <span className="hidden sm:inline">チャージ</span>
+        <span className="sm:hidden text-xs">トークチケット購入</span>
+        <span className="hidden sm:inline">トークチケット購入</span>
       </button>
 
-      {/* 消費量表示 */}
-      <div className="hidden lg:flex items-center space-x-2 text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
-        <span>1メッセージ</span>
-        <span>=</span>
-        <Coins className="w-3 h-3" />
-        <span>~{lastMessageCost}枚</span>
-      </div>
     </div>
   );
 }

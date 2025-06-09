@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { MessageSquare, User, Sparkles, Unlock } from 'lucide-react';
 import AffinityBar from './AffinityBar';
@@ -41,13 +41,82 @@ export default function CharacterCard({
   onClick 
 }: CharacterCardProps) {
   const params = useParams();
+  const router = useRouter();
   const locale = params.locale as string || 'ja';
   const [showAllTags, setShowAllTags] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const t = useTranslations('characters');
 
   const handleClick = () => {
     if (onClick) {
       onClick(character);
+    }
+  };
+
+  const handleChatStart = async () => {
+    console.log('🚀 handleChatStart called for character:', character.name, character._id);
+    
+    if (isUpdating) {
+      console.log('⏸️ Already updating, skipping...');
+      return;
+    }
+    
+    try {
+      setIsUpdating(true);
+      console.log('📝 Starting character selection update...');
+      
+      // selectedCharacterを更新
+      let token = localStorage.getItem('token');
+      
+      // localStorageにない場合はクッキーから取得を試みる
+      if (!token && typeof document !== 'undefined') {
+        const cookies = document.cookie.split(';');
+        const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+        if (tokenCookie) {
+          token = tokenCookie.split('=')[1];
+        }
+      }
+      
+      console.log('🔑 Token found:', !!token);
+      
+      if (!token) {
+        console.log('❌ No token found, redirecting to login...');
+        router.push(`/${locale}/login`);
+        return;
+      }
+      
+      if (token) {
+        console.log('📡 Sending API request to update selectedCharacter...');
+        const response = await fetch('/api/users/me/use-character', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': token,
+          },
+          body: JSON.stringify({
+            characterId: character._id,
+          }),
+        });
+
+        console.log('📡 API Response status:', response.status);
+        if (response.ok) {
+          console.log('✅ selectedCharacter updated:', character.name);
+        } else {
+          const errorText = await response.text();
+          console.error('❌ Failed to update selectedCharacter:', response.status, errorText);
+        }
+      }
+      
+      // チャット画面に遷移
+      console.log('🔄 Navigating to chat page...');
+      router.push(`/${locale}/characters/${character._id}/chat`);
+      
+    } catch (error) {
+      console.error('❌ Error updating selectedCharacter:', error);
+      // エラーが発生してもチャット画面には遷移する
+      router.push(`/${locale}/characters/${character._id}/chat`);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -206,13 +275,14 @@ export default function CharacterCard({
               )}
             </button>
           ) : (
-            <Link 
-              href={`/${locale}/characters/${character._id}/chat`}
-              className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+            <button
+              onClick={handleChatStart}
+              disabled={isUpdating}
+              className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <MessageSquare className="w-4 h-4" />
-              <span>{t('actions.startChat')}</span>
-            </Link>
+              <span>{isUpdating ? 'Loading...' : t('actions.startChat')}</span>
+            </button>
           )}
         </div>
       </div>

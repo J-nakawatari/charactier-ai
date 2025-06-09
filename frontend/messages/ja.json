@@ -41,6 +41,17 @@
     "reset": "リセット",
     "close": "閉じる"
   },
+  "login": {
+    "title": "ログイン",
+    "email": "メールアドレス",
+    "emailPlaceholder": "メールアドレスを入力してください",
+    "password": "パスワード",
+    "passwordPlaceholder": "パスワードを入力してください",
+    "loginButton": "ログインする",
+    "noAccount": "アカウントをお持ちでない方は",
+    "register": "新規登録",
+    "backToTop": "TOPに戻る"
+  },
   "sidebar": {
     "home": "ホーム",
     "characters": "キャラクター一覧", 
