@@ -198,8 +198,11 @@ export default function RegisterPage() {
           />
         )}
         
+        {/* Noise Overlay */}
+        <div className="absolute inset-0 w-full h-full noise-overlay" />
+        
         {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-60 z-10" />
+        <div className="absolute inset-0 bg-black bg-opacity-60" />
       </div>
       
       {/* Language Switcher */}
@@ -314,16 +317,9 @@ export default function RegisterPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder={t('confirmPasswordPlaceholder')}
-                  className={`w-full px-4 py-3 bg-gray-100 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900 ${
-                    confirmPassword && password !== confirmPassword
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-pink-500'
-                  }`}
+                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all text-gray-900"
                   required
                 />
-                {confirmPassword && password !== confirmPassword && (
-                  <p className="text-red-600 text-xs mt-1">{t('errors.passwordMismatch')}</p>
-                )}
               </div>
               
               
@@ -347,7 +343,7 @@ export default function RegisterPage() {
               {/* Register Button */}
               <button
                 type="submit"
-                disabled={isLoading || (confirmPassword && password !== confirmPassword)}
+                disabled={isLoading}
                 className="w-full py-3 px-4 rounded-lg text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-6"
                 style={{ backgroundColor: '#E91E63' }}
               >
