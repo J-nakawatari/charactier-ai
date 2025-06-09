@@ -321,7 +321,6 @@ export default function RegisterPage() {
                   className={`w-full px-4 py-3 bg-gray-100 border rounded-lg outline-none text-gray-900 ${
                     fieldErrors.name ? 'border-pink-500' : 'border-gray-300'
                   }`}
-                  required
                 />
                 {fieldErrors.name && (
                   <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E91E63' }}>
@@ -352,7 +351,6 @@ export default function RegisterPage() {
                   className={`w-full px-4 py-3 bg-gray-100 border rounded-lg outline-none text-gray-900 ${
                     fieldErrors.email ? 'border-pink-500' : 'border-gray-300'
                   }`}
-                  required
                 />
                 {fieldErrors.email && (
                   <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E91E63' }}>
@@ -383,7 +381,6 @@ export default function RegisterPage() {
                   className={`w-full px-4 py-3 bg-gray-100 border rounded-lg outline-none text-gray-900 ${
                     fieldErrors.password ? 'border-pink-500' : 'border-gray-300'
                   }`}
-                  required
                 />
                 {fieldErrors.password && (
                   <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E91E63' }}>
@@ -414,7 +411,6 @@ export default function RegisterPage() {
                   className={`w-full px-4 py-3 bg-gray-100 border rounded-lg outline-none text-gray-900 ${
                     fieldErrors.confirmPassword ? 'border-pink-500' : 'border-gray-300'
                   }`}
-                  required
                 />
                 {fieldErrors.confirmPassword && (
                   <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E91E63' }}>
