@@ -51,8 +51,13 @@ export interface CharacterDocument {
 }
 
 export interface MockUser {
-  id: string;
+  _id: string;
+  name: string;
   email: string;
   isActive: boolean;
   tokenBalance: number;
+  selectedCharacter?: {
+    _id: string;
+    name: LocalizedString | string;
+  } | null;
 }

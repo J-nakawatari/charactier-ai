@@ -286,8 +286,621 @@ app.get('/api/characters/:id/translations', mockAuth, (req: Request, res: Respon
   res.json(translations);
 });
 
+// User API endpoints
+app.get('/api/auth/user', mockAuth, (req: Request, res: Response): void => {
+  console.log('👤 ユーザー情報取得');
+  if (!req.user) {
+    res.status(401).json({ msg: 'Unauthorized' });
+    return;
+  }
+  
+  res.json({
+    _id: req.user._id,
+    name: req.user.name,
+    email: req.user.email,
+    tokenBalance: req.user.tokenBalance,
+    selectedCharacter: req.user.selectedCharacter
+  });
+});
+
+app.patch('/api/users/me/use-character', mockAuth, (req: Request, res: Response): void => {
+  console.log('🔄 selectedCharacter更新:', req.body);
+  const { characterId } = req.body;
+  
+  if (!req.user) {
+    res.status(401).json({ msg: 'Unauthorized' });
+    return;
+  }
+  
+  if (!characterId) {
+    res.status(400).json({ msg: 'Character ID is required' });
+    return;
+  }
+  
+  // キャラクターが存在するかチェック
+  const character = mockCharacters.find(char => char._id === characterId);
+  if (!character || !character.isActive) {
+    res.status(404).json({ msg: 'Character not found' });
+    return;
+  }
+  
+  // モックユーザーのselectedCharacterを更新
+  mockUser.selectedCharacter = {
+    _id: characterId,
+    name: character.name
+  };
+  
+  console.log('✅ selectedCharacter updated:', characterId, character.name);
+  
+  res.json({
+    _id: mockUser._id,
+    name: mockUser.name,
+    email: mockUser.email,
+    tokenBalance: mockUser.tokenBalance,
+    selectedCharacter: mockUser.selectedCharacter
+  });
+});
+
 app.get('/api/ping', (_req: Request, res: Response): void => {
   res.send('pong');
+});
+
+// Dashboard API route
+app.get('/api/user/dashboard', mockAuth, (req: Request, res: Response): void => {
+  console.log('📊 Dashboard API called (mock implementation)');
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  // Mock dashboard data structure
+  const mockDashboardData = {
+    user: {
+      _id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      createdAt: new Date('2024-01-15T10:30:00Z'),
+      lastLoginAt: new Date()
+    },
+    tokens: {
+      balance: req.user.tokenBalance,
+      totalPurchased: 15000,
+      totalUsed: 15000 - req.user.tokenBalance,
+      recentUsage: [
+        { date: "2025-01-09", amount: 450 },
+        { date: "2025-01-08", amount: 320 },
+        { date: "2025-01-07", amount: 180 },
+        { date: "2025-01-06", amount: 290 },
+        { date: "2025-01-05", amount: 410 },
+        { date: "2025-01-04", amount: 220 },
+        { date: "2025-01-03", amount: 380 }
+      ]
+    },
+    affinities: mockCharacters.slice(0, 3).map((char, index) => ({
+      character: {
+        _id: char._id,
+        name: char.name,
+        imageCharacterSelect: char.imageCharacterSelect || `/characters/${char._id}.png`,
+        themeColor: ['#E91E63', '#9C27B0', '#2196F3'][index]
+      },
+      level: [23, 15, 8][index],
+      experience: [1250, 890, 420][index],
+      experienceToNext: [150, 110, 80][index],
+      maxExperience: [1400, 1000, 500][index],
+      unlockedImages: index === 0 ? ['/characters/luna/unlock_10.png', '/characters/luna/unlock_20.png'] : 
+                      index === 1 ? ['/characters/miko/unlock_10.png'] : [],
+      nextUnlockLevel: [30, 20, 10][index]
+    })),
+    recentChats: [
+      {
+        _id: 'chat_001',
+        character: {
+          _id: mockCharacters[0]._id,
+          name: mockCharacters[0].name,
+          imageCharacterSelect: mockCharacters[0].imageCharacterSelect || '/characters/luna.png'
+        },
+        lastMessage: 'また今度お話ししましょうね♪',
+        lastMessageAt: new Date('2025-01-09T14:30:00Z'),
+        messageCount: 45
+      }
+    ],
+    purchaseHistory: [
+      {
+        type: 'token',
+        amount: 5000,
+        date: new Date('2025-01-05T10:15:00Z'),
+        details: 'トークンパック: 5,000トークン'
+      }
+    ],
+    loginHistory: [
+      { date: new Date(), platform: 'web', ipAddress: '192.168.1.100' }
+    ],
+    notifications: [
+      {
+        _id: 'notif_001',
+        title: { ja: '新年キャンペーン開始！', en: 'New Year Campaign Started!' },
+        message: { ja: '1月31日まで全トークンパック20%オフ！', en: '20% off all token packs until January 31st!' },
+        type: 'info',
+        isRead: false,
+        createdAt: new Date('2025-01-01T00:00:00Z')
+      }
+    ],
+    badges: [
+      {
+        _id: 'badge_001',
+        name: { ja: '初心者', en: 'Beginner' },
+        description: { ja: '初回ログインを達成', en: 'Completed first login' },
+        iconUrl: '/icon/badge_beginner.svg',
+        isUnlocked: true,
+        unlockedAt: new Date('2024-01-15T10:30:00Z'),
+        progress: 1,
+        maxProgress: 1
+      }
+    ],
+    analytics: {
+      chatCountPerDay: [
+        { date: "2025-01-03", count: 5 },
+        { date: "2025-01-04", count: 3 },
+        { date: "2025-01-05", count: 8 },
+        { date: "2025-01-06", count: 4 },
+        { date: "2025-01-07", count: 6 },
+        { date: "2025-01-08", count: 7 },
+        { date: "2025-01-09", count: 9 }
+      ],
+      tokenUsagePerDay: [
+        { date: "2025-01-03", amount: 380 },
+        { date: "2025-01-04", amount: 220 },
+        { date: "2025-01-05", amount: 410 },
+        { date: "2025-01-06", amount: 290 },
+        { date: "2025-01-07", amount: 180 },
+        { date: "2025-01-08", amount: 320 },
+        { date: "2025-01-09", amount: 450 }
+      ],
+      affinityProgress: [
+        { characterName: 'ルナ', level: 23, color: '#E91E63' },
+        { characterName: 'ミコ', level: 15, color: '#9C27B0' },
+        { characterName: 'ゼン', level: 8, color: '#2196F3' }
+      ]
+    }
+  };
+
+  console.log('✅ Dashboard mock data compiled successfully');
+  res.json(mockDashboardData);
+});
+
+// Token Analytics API
+app.get('/api/analytics/tokens', mockAuth, (req: Request, res: Response): void => {
+  console.log('📊 Token Analytics API called');
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const range = (req.query.range as string) || 'month';
+  
+  // Generate mock data based on range
+  const generateDailyUsage = (days: number) => {
+    const data = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      data.push({
+        date: date.toISOString().slice(0, 10),
+        amount: Math.floor(Math.random() * 500) + 200,
+        count: Math.floor(Math.random() * 15) + 5
+      });
+    }
+    return data;
+  };
+
+  const generateWeeklyTrend = () => {
+    const data = [];
+    for (let i = 11; i >= 0; i--) {
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - (i * 7));
+      data.push({
+        week: `${weekStart.getMonth() + 1}/${weekStart.getDate()}`,
+        amount: Math.floor(Math.random() * 3000) + 1500,
+        efficiency: Math.floor(Math.random() * 30) + 40
+      });
+    }
+    return data;
+  };
+
+  const generateMonthlyTrend = () => {
+    const data = [];
+    for (let i = 5; i >= 0; i--) {
+      const month = new Date();
+      month.setMonth(month.getMonth() - i);
+      const monthlyAmount = Math.floor(Math.random() * 8000) + 6000;
+      data.push({
+        month: `${month.getFullYear()}/${month.getMonth() + 1}`,
+        amount: monthlyAmount,
+        averageDaily: Math.floor(monthlyAmount / 30)
+      });
+    }
+    return data;
+  };
+
+  const generateHourlyPattern = () => {
+    const data = [];
+    for (let hour = 0; hour < 24; hour++) {
+      const baseAmount = hour >= 19 && hour <= 23 ? 200 : 
+                       hour >= 12 && hour <= 18 ? 150 : 
+                       hour >= 7 && hour <= 11 ? 100 : 50;
+      data.push({
+        hour: `${hour.toString().padStart(2, '0')}:00`,
+        amount: baseAmount + Math.floor(Math.random() * 100),
+        sessions: Math.floor((baseAmount / 50) * (Math.random() * 2 + 1))
+      });
+    }
+    return data;
+  };
+
+  const characterUsage = [
+    { characterName: 'ルナ', amount: 4850, percentage: 45, color: '#E91E63' },
+    { characterName: 'ミコ', amount: 3240, percentage: 30, color: '#9C27B0' },
+    { characterName: 'ゼン', amount: 1620, percentage: 15, color: '#2196F3' },
+    { characterName: 'アリス', amount: 1080, percentage: 10, color: '#4CAF50' }
+  ];
+
+  const efficiency = {
+    tokensPerMessage: 23.4,
+    averageSessionLength: 18.7,
+    peakHour: '21:00',
+    mostEfficientCharacter: 'ゼン'
+  };
+
+  const days = range === 'week' ? 7 : range === 'month' ? 30 : 90;
+
+  const analyticsData = {
+    dailyUsage: generateDailyUsage(days),
+    weeklyTrend: generateWeeklyTrend(),
+    monthlyTrend: generateMonthlyTrend(),
+    characterUsage,
+    hourlyPattern: generateHourlyPattern(),
+    efficiency
+  };
+
+  console.log('✅ Token analytics data generated successfully');
+  res.json(analyticsData);
+});
+
+// Chat Analytics API
+app.get('/api/analytics/chats', mockAuth, (req: Request, res: Response): void => {
+  console.log('📊 Chat Analytics API called');
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const range = (req.query.range as string) || 'month';
+  
+  // Generate mock conversation statistics
+  const conversationStats = {
+    totalConversations: 124,
+    averageLength: 17.3,
+    longestStreak: 12,
+    currentStreak: 5,
+    totalMessages: 2148,
+    averageDaily: 4.1
+  };
+
+  // Generate daily activity data
+  const generateDailyActivity = (days: number) => {
+    const data = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      data.push({
+        date: date.toISOString().slice(0, 10),
+        conversations: Math.floor(Math.random() * 8) + 2,
+        messages: Math.floor(Math.random() * 40) + 10,
+        duration: Math.floor(Math.random() * 60) + 15
+      });
+    }
+    return data;
+  };
+
+  // Character interaction data
+  const characterInteraction = [
+    { 
+      characterName: 'ルナ', 
+      conversations: 45, 
+      averageLength: 18.5, 
+      emotionalState: 'happy',
+      color: '#E91E63' 
+    },
+    { 
+      characterName: 'ミコ', 
+      conversations: 32, 
+      averageLength: 15.2, 
+      emotionalState: 'excited',
+      color: '#9C27B0' 
+    },
+    { 
+      characterName: 'ゼン', 
+      conversations: 28, 
+      averageLength: 22.1, 
+      emotionalState: 'loving',
+      color: '#2196F3' 
+    },
+    { 
+      characterName: 'アリス', 
+      conversations: 19, 
+      averageLength: 12.8, 
+      emotionalState: 'curious',
+      color: '#4CAF50' 
+    }
+  ];
+
+  // Generate time patterns
+  const generateTimePatterns = () => {
+    const data = [];
+    for (let hour = 0; hour < 24; hour++) {
+      const baseConv = hour >= 19 && hour <= 23 ? 8 : 
+                      hour >= 12 && hour <= 18 ? 6 : 
+                      hour >= 7 && hour <= 11 ? 4 : 2;
+      data.push({
+        hour: `${hour.toString().padStart(2, '0')}:00`,
+        conversations: baseConv + Math.floor(Math.random() * 3),
+        averageLength: Math.floor(Math.random() * 10) + 15
+      });
+    }
+    return data;
+  };
+
+  // Generate emotional journey
+  const generateEmotionalJourney = (days: number) => {
+    const data = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      data.push({
+        date: date.toISOString().slice(0, 10),
+        happiness: Math.floor(Math.random() * 30) + 70,
+        excitement: Math.floor(Math.random() * 40) + 60,
+        affection: Math.floor(Math.random() * 25) + 65
+      });
+    }
+    return data;
+  };
+
+  // Generate streak history
+  const generateStreakHistory = (days: number) => {
+    const data = [];
+    let currentStreakValue = 0;
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const hasActivity = Math.random() > 0.2;
+      
+      if (hasActivity) {
+        currentStreakValue++;
+      } else {
+        currentStreakValue = 0;
+      }
+      
+      data.push({
+        date: date.toISOString().slice(0, 10),
+        streak: currentStreakValue,
+        active: hasActivity
+      });
+    }
+    return data;
+  };
+
+  // Conversation depth distribution
+  const conversationDepth = [
+    { range: '1-5メッセージ', count: 15, percentage: 25 },
+    { range: '6-15メッセージ', count: 25, percentage: 42 },
+    { range: '16-30メッセージ', count: 12, percentage: 20 },
+    { range: '31+メッセージ', count: 8, percentage: 13 }
+  ];
+
+  const days = range === 'week' ? 7 : range === 'month' ? 30 : 90;
+
+  const analyticsData = {
+    conversationStats,
+    dailyActivity: generateDailyActivity(days),
+    characterInteraction,
+    timePatterns: generateTimePatterns(),
+    emotionalJourney: generateEmotionalJourney(days),
+    streakHistory: generateStreakHistory(days),
+    conversationDepth
+  };
+
+  console.log('✅ Chat analytics data generated successfully');
+  res.json(analyticsData);
+});
+
+// Affinity Analytics API
+app.get('/api/analytics/affinity', mockAuth, (req: Request, res: Response): void => {
+  console.log('📊 Affinity Analytics API called');
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const range = (req.query.range as string) || 'quarter';
+  const character = (req.query.character as string) || 'all';
+  
+  // Mock character data
+  const characters = [
+    { name: 'ルナ', color: '#E91E63' },
+    { name: 'ミコ', color: '#9C27B0' },
+    { name: 'ゼン', color: '#2196F3' },
+    { name: 'アリス', color: '#4CAF50' }
+  ];
+
+  // Character progress data
+  const characterProgress = characters.map((char, index) => ({
+    characterName: char.name,
+    level: [67, 43, 28, 15][index],
+    trustLevel: [85, 72, 45, 32][index],
+    intimacyLevel: [78, 65, 38, 25][index],
+    experience: [6700, 4300, 2800, 1500][index],
+    relationshipType: ['close_friend', 'friend', 'acquaintance', 'stranger'][index],
+    emotionalState: ['loving', 'happy', 'excited', 'curious'][index],
+    color: char.color,
+    firstInteraction: new Date(2024, index + 1, 15).toISOString(),
+    lastInteraction: new Date().toISOString(),
+    totalConversations: [156, 89, 67, 34][index],
+    currentStreak: [8, 3, 1, 0][index],
+    maxStreak: [15, 7, 5, 2][index]
+  }));
+
+  // Generate level progression over time
+  const generateLevelProgression = (days: number) => {
+    const data = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const entry: any = { date: date.toISOString().slice(0, 10) };
+      
+      characters.forEach((char, index) => {
+        const baseLevel = characterProgress[index].level;
+        const variation = Math.floor(Math.random() * 5) - 2;
+        entry[char.name] = Math.max(0, baseLevel - Math.floor(i / 3) + variation);
+      });
+      
+      data.push(entry);
+    }
+    return data;
+  };
+
+  // Trust correlation data
+  const trustCorrelation = characters.map(char => {
+    const charProgress = characterProgress.find(cp => cp.characterName === char.name)!;
+    return {
+      trust: charProgress.trustLevel,
+      intimacy: charProgress.intimacyLevel,
+      level: charProgress.level,
+      characterName: char.name
+    };
+  });
+
+  // Memory timeline
+  const memoryTimeline = [
+    {
+      date: '2025-01-05',
+      event: 'ルナとの初めてのデート',
+      characterName: 'ルナ',
+      importance: 5,
+      type: 'special'
+    },
+    {
+      date: '2025-01-03',
+      event: 'ミコへのプレゼント',
+      characterName: 'ミコ',
+      importance: 4,
+      type: 'gift'
+    },
+    {
+      date: '2024-12-25',
+      event: 'ゼンとのクリスマス',
+      characterName: 'ゼン',
+      importance: 5,
+      type: 'milestone'
+    },
+    {
+      date: '2024-12-20',
+      event: 'アリスとの深い会話',
+      characterName: 'アリス',
+      importance: 3,
+      type: 'conversation'
+    }
+  ];
+
+  // Gift history
+  const giftHistory = [
+    {
+      date: '2025-01-03',
+      characterName: 'ミコ',
+      giftType: 'flower',
+      giftName: 'バラの花束',
+      value: 500,
+      impact: 8
+    },
+    {
+      date: '2024-12-24',
+      characterName: 'ルナ',
+      giftType: 'jewelry',
+      giftName: 'ネックレス',
+      value: 1200,
+      impact: 12
+    },
+    {
+      date: '2024-12-15',
+      characterName: 'ゼン',
+      giftType: 'book',
+      giftName: '詩集',
+      value: 300,
+      impact: 6
+    }
+  ];
+
+  // Emotional development
+  const emotionalDevelopment = characters.map(char => ({
+    character: char.name,
+    happy: Math.floor(Math.random() * 30) + 70,
+    excited: Math.floor(Math.random() * 25) + 65,
+    loving: Math.floor(Math.random() * 35) + 60,
+    shy: Math.floor(Math.random() * 20) + 40,
+    curious: Math.floor(Math.random() * 30) + 50
+  }));
+
+  // Relationship milestones
+  const relationshipMilestones = [
+    {
+      characterName: 'ルナ',
+      milestone: '親友レベル到達',
+      achievedAt: '2024-11-15',
+      level: 50,
+      description: 'ルナとの関係が親友レベルに到達しました'
+    },
+    {
+      characterName: 'ミコ',
+      milestone: '信頼関係確立',
+      achievedAt: '2024-10-20',
+      level: 30,
+      description: 'ミコからの信頼を得ることができました'
+    },
+    {
+      characterName: 'ゼン',
+      milestone: '初回ロック解除',
+      achievedAt: '2024-09-10',
+      level: 10,
+      description: 'ゼンの特別な画像をアンロックしました'
+    }
+  ];
+
+  const days = range === 'month' ? 30 : range === 'quarter' ? 90 : 365;
+
+  const analyticsData = {
+    overallStats: {
+      totalCharacters: characters.length,
+      averageLevel: Math.floor(characterProgress.reduce((sum, char) => sum + char.level, 0) / characterProgress.length),
+      highestLevel: Math.max(...characterProgress.map(char => char.level)),
+      totalGiftsGiven: giftHistory.length,
+      totalInteractionDays: 127,
+      relationshipMilestones: relationshipMilestones.length
+    },
+    characterProgress: character === 'all' ? characterProgress : characterProgress.filter(cp => cp.characterName.toLowerCase().includes(character)),
+    levelProgression: generateLevelProgression(days),
+    trustCorrelation,
+    memoryTimeline,
+    giftHistory,
+    emotionalDevelopment,
+    relationshipMilestones
+  };
+
+  console.log('✅ Affinity analytics data generated successfully');
+  res.json(analyticsData);
 });
 
 app.get('/api/debug', (_req: Request, res: Response): void => {

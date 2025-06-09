@@ -21,6 +21,19 @@ const CharacterSchema = new mongoose.Schema({
   },
   personalityPreset: { type: String },
   personalityTags: [String],
+  themeColor: {
+    type: String,
+    default: '#6366f1',
+    validate: {
+      validator: function(v: string) {
+        return /^#[0-9A-Fa-f]{6}$/.test(v);
+      },
+      message: 'themeColor must be a valid hex color (e.g., #6366f1)'
+    }
+  },
+  imageCharacterSelect: { type: String },
+  imageDashboard: { type: String },
+  imageChatAvatar: { type: String },
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
 });

@@ -131,8 +131,13 @@ export const mockCharacterTranslations: CharacterTranslation[] = [
 ];
 
 export const mockUser: MockUser = {
-  id: 'mock-user-id',
+  _id: 'mock-user-id',
+  name: 'テストユーザー',
   email: 'test@example.com',
   isActive: true,
-  tokenBalance: 1000
+  tokenBalance: 1000,
+  selectedCharacter: {
+    _id: '3',
+    name: { ja: 'ゼン', en: 'Zen' }
+  }
 };
