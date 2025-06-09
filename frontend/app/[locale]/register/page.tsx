@@ -176,16 +176,18 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    // バリデーション成功時にエラーをクリア
     setFieldErrors({
       name: '',
       email: '',
       password: '',
       confirmPassword: ''
     });
-    
-    if (!validateForm()) {
-      return;
-    }
     
     setIsLoading(true);
 
