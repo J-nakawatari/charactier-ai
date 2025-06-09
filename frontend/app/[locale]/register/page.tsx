@@ -24,6 +24,12 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -118,18 +124,49 @@ export default function RegisterPage() {
   }, [mounted, isMobile]);
 
   const validateForm = () => {
-    if (!name.trim() || !email.trim() || !password || !confirmPassword) {
-      setError(t('errors.required'));
-      return false;
+    const errors = {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    };
+    
+    let hasErrors = false;
+    
+    // Name validation
+    if (!name.trim()) {
+      errors.name = t('errors.required');
+      hasErrors = true;
     }
     
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError(t('errors.invalidEmail'));
-      return false;
+    // Email validation
+    if (!email.trim()) {
+      errors.email = t('errors.required');
+      hasErrors = true;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = t('errors.invalidEmail');
+      hasErrors = true;
     }
     
-    if (password !== confirmPassword) {
-      setError(t('errors.passwordMismatch'));
+    // Password validation
+    if (!password) {
+      errors.password = t('errors.required');
+      hasErrors = true;
+    }
+    
+    // Confirm password validation
+    if (!confirmPassword) {
+      errors.confirmPassword = t('errors.required');
+      hasErrors = true;
+    } else if (password !== confirmPassword) {
+      errors.confirmPassword = t('errors.passwordMismatch');
+      hasErrors = true;
+    }
+    
+    setFieldErrors(errors);
+    
+    if (hasErrors) {
+      setError('入力内容に誤りがあります。各項目をご確認ください。');
       return false;
     }
     
@@ -139,6 +176,12 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    });
     
     if (!validateForm()) {
       return;
@@ -273,9 +316,24 @@ export default function RegisterPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={t('namePlaceholder')}
-                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg outline-none text-gray-900"
+                  className={`w-full px-4 py-3 bg-gray-100 border rounded-lg outline-none text-gray-900 ${
+                    fieldErrors.name ? 'border-pink-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {fieldErrors.name && (
+                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E91E63' }}>
+                    <p className="text-white text-sm font-medium">{fieldErrors.name}</p>
+                    <div 
+                      className="absolute left-4 -top-2 w-0 h-0"
+                      style={{
+                        borderLeft: '8px solid transparent',
+                        borderRight: '8px solid transparent',
+                        borderBottom: '8px solid #E91E63'
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               
               {/* Email Field */}
@@ -289,9 +347,24 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={t('emailPlaceholder')}
-                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg outline-none text-gray-900"
+                  className={`w-full px-4 py-3 bg-gray-100 border rounded-lg outline-none text-gray-900 ${
+                    fieldErrors.email ? 'border-pink-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {fieldErrors.email && (
+                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E91E63' }}>
+                    <p className="text-white text-sm font-medium">{fieldErrors.email}</p>
+                    <div 
+                      className="absolute left-4 -top-2 w-0 h-0"
+                      style={{
+                        borderLeft: '8px solid transparent',
+                        borderRight: '8px solid transparent',
+                        borderBottom: '8px solid #E91E63'
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               
               {/* Password Field */}
@@ -305,9 +378,24 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t('passwordPlaceholder')}
-                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg outline-none text-gray-900"
+                  className={`w-full px-4 py-3 bg-gray-100 border rounded-lg outline-none text-gray-900 ${
+                    fieldErrors.password ? 'border-pink-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {fieldErrors.password && (
+                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E91E63' }}>
+                    <p className="text-white text-sm font-medium">{fieldErrors.password}</p>
+                    <div 
+                      className="absolute left-4 -top-2 w-0 h-0"
+                      style={{
+                        borderLeft: '8px solid transparent',
+                        borderRight: '8px solid transparent',
+                        borderBottom: '8px solid #E91E63'
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               
               {/* Confirm Password Field */}
@@ -321,9 +409,24 @@ export default function RegisterPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder={t('confirmPasswordPlaceholder')}
-                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg outline-none text-gray-900"
+                  className={`w-full px-4 py-3 bg-gray-100 border rounded-lg outline-none text-gray-900 ${
+                    fieldErrors.confirmPassword ? 'border-pink-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {fieldErrors.confirmPassword && (
+                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E91E63' }}>
+                    <p className="text-white text-sm font-medium">{fieldErrors.confirmPassword}</p>
+                    <div 
+                      className="absolute left-4 -top-2 w-0 h-0"
+                      style={{
+                        borderLeft: '8px solid transparent',
+                        borderRight: '8px solid transparent',
+                        borderBottom: '8px solid #E91E63'
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               
               
