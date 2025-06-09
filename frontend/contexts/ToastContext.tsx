@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
 
 export interface Toast {
@@ -43,7 +44,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Auto remove after duration (default 5 seconds)
     const duration = toast.duration ?? 5000;
     setTimeout(() => {
-      removeToast(id);
+      setToasts(prev => prev.filter(t => t.id !== id));
     }, duration);
   }, []);
 
@@ -85,6 +86,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 const ToastContainer: React.FC = () => {
   const { toasts, removeToast } = useToast();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const getToastIcon = (type: Toast['type']) => {
     switch (type) {
@@ -112,10 +118,23 @@ const ToastContainer: React.FC = () => {
     }
   };
 
-  if (toasts.length === 0) return null;
+  const handleCloseToast = (toastId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Closing toast:', toastId);
+    removeToast(toastId);
+  };
 
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+  if (toasts.length === 0 || !mounted) return null;
+
+  const toastElement = (
+    <div 
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ 
+        zIndex: 99999,
+        pointerEvents: 'none'
+      }}
+    >
       <div className="space-y-3">
         {toasts.map((toast) => (
           <div
@@ -125,8 +144,12 @@ const ToastContainer: React.FC = () => {
               border rounded-lg shadow-lg p-4 max-w-sm w-full
               transform transition-all duration-300 ease-in-out
               animate-in slide-in-from-top-5 duration-300
-              pointer-events-auto
             `}
+            style={{ 
+              zIndex: 100000,
+              pointerEvents: 'auto',
+              position: 'relative'
+            }}
           >
           <div className="flex items-start">
             <div className="flex-shrink-0">
@@ -143,10 +166,51 @@ const ToastContainer: React.FC = () => {
               )}
             </div>
             <button
-              onClick={() => removeToast(toast.id)}
-              className="ml-3 flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+              type="button"
+              onClick={(e) => {
+                console.log('✅ Close button clicked!', toast.id);
+                handleCloseToast(toast.id, e);
+              }}
+              style={{ 
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                zIndex: 100001,
+                width: '32px',
+                height: '32px',
+                minWidth: '32px',
+                minHeight: '32px',
+                backgroundColor: 'rgba(255,255,255,0.9)',
+                border: '1px solid #d1d5db',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                pointerEvents: 'auto',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+              onMouseEnter={(e) => {
+                console.log('🔍 Mouse enter close button');
+                e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.1)';
+                e.currentTarget.style.borderColor = '#ef4444';
+              }}
+              onMouseLeave={(e) => {
+                console.log('🔍 Mouse leave close button');
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.9)';
+                e.currentTarget.style.borderColor = '#d1d5db';
+              }}
+              onMouseDown={(e) => {
+                console.log('🔍 Mouse down on close button');
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              aria-label="トーストを閉じる"
             >
-              <X className="w-4 h-4" />
+              <X 
+                className="w-4 h-4 text-gray-600" 
+                style={{ pointerEvents: 'none' }}
+              />
             </button>
           </div>
           </div>
@@ -154,4 +218,7 @@ const ToastContainer: React.FC = () => {
       </div>
     </div>
   );
+
+  // Portal使用でDOM構造から独立
+  return typeof window !== 'undefined' ? createPortal(toastElement, document.body) : null;
 };

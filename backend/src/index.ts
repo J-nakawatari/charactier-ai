@@ -1,14 +1,33 @@
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { mockCharacters, mockCharacterTranslations, mockUser } from './mockData';
-import { CharacterDocument, MockUser } from './types';
+import Stripe from 'stripe';
+import { mockCharacters, mockCharacterTranslations, mockUser, mockTokenPacks } from './mockData';
+import { CharacterDocument, MockUser, TokenPack } from './types';
 
-dotenv.config({ path: './backend/.env' });
+dotenv.config({ path: './.env' });
 
 const app = express();
-const PORT = process.env.PORT || 3002;
-const USE_MOCK = true; // Force mock mode for development
+const PORT = process.env.PORT || 3004;
+const USE_MOCK = process.env.USE_MOCK === 'true' || !process.env.STRIPE_SECRET_KEY; // デフォルトはモック、STRIPE_SECRET_KEYがあれば本番
+
+// GPT-4原価モデル定数
+const TOKEN_COST_PER_UNIT = 0.003; // 1トークンあたり0.003円の原価
+const COST_RATIO = 0.5; // 販売額の50%が原価
+const TOKENS_PER_YEN = 1 / (TOKEN_COST_PER_UNIT / COST_RATIO); // 約166.66トークン/円
+
+// Stripe インスタンス初期化
+let stripe: Stripe | null = null;
+if (process.env.STRIPE_SECRET_KEY && !USE_MOCK) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2025-05-28.basil' // 最新のAPIバージョン
+  });
+  console.log('🔥 Stripe SDK initialized with real API');
+} else {
+  console.log('🎭 Stripe is in mock mode');
+}
 
 console.log('🚀 USE_MOCK:', USE_MOCK);
 console.log('🚀 PORT:', PORT);
@@ -1034,6 +1053,474 @@ app.get('/api/user/purchase-history', mockAuth, (req: Request, res: Response): v
   res.json(purchaseHistoryData);
 });
 
+// GPT-4原価モデルバリデーション関数
+const validateTokenPriceRatio = (tokens: number, price: number): boolean => {
+  // GPT-4原価モデル: 1円あたり約166.66トークンが基準
+  const expectedTokens = Math.floor(price * TOKENS_PER_YEN);
+  const tolerance = 0.05; // 5%の許容範囲
+  const minTokens = expectedTokens * (1 - tolerance);
+  const maxTokens = expectedTokens * (1 + tolerance);
+  
+  return tokens >= minTokens && tokens <= maxTokens;
+};
+
+// Token Packs CRUD API endpoints
+app.get('/api/admin/token-packs', mockAuth, (req: Request, res: Response): void => {
+  console.log('📦 Token Packs 一覧取得 API called');
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  // Query parameters
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
+  
+  // Filter by isActive if specified
+  let filteredPacks = [...mockTokenPacks];
+  if (isActive !== undefined) {
+    filteredPacks = filteredPacks.filter(pack => pack.isActive === isActive);
+  }
+  
+  // Pagination
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedPacks = filteredPacks.slice(startIndex, endIndex);
+  
+  // Calculate profit margin and token per yen for each pack
+  const enrichedPacks = paginatedPacks.map(pack => ({
+    ...pack,
+    profitMargin: ((pack.tokens - pack.price * 2) / pack.tokens * 100), // 実際の利益率計算
+    tokenPerYen: pack.tokens / pack.price
+  }));
+  
+  const pagination = {
+    total: filteredPacks.length,
+    page,
+    limit,
+    totalPages: Math.ceil(filteredPacks.length / limit)
+  };
+
+  console.log('✅ Token Packs 一覧データ生成完了:', {
+    totalPacks: filteredPacks.length,
+    returnedPacks: enrichedPacks.length,
+    page,
+    isActiveFilter: isActive
+  });
+
+  res.json({
+    tokenPacks: enrichedPacks,
+    pagination
+  });
+});
+
+app.post('/api/admin/token-packs', mockAuth, (req: Request, res: Response): void => {
+  console.log('📦 Token Pack 作成 API called:', req.body);
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { 
+    name, 
+    description, 
+    tokens, 
+    price, 
+    purchaseAmountYen,
+    tokensPurchased,
+    priceId, 
+    isActive = true 
+  } = req.body;
+  
+  // Support both new and legacy field names
+  const finalTokens = tokensPurchased || tokens;
+  const finalPrice = purchaseAmountYen || price;
+  
+  // Required fields validation
+  if (!name || !finalTokens || !finalPrice) {
+    res.status(400).json({ 
+      success: false,
+      message: '必須フィールドが不足しています (name, tokens/tokensPurchased, price/purchaseAmountYen)' 
+    });
+    return;
+  }
+  
+  // Type validation
+  if (typeof finalTokens !== 'number' || typeof finalPrice !== 'number' || finalTokens <= 0 || finalPrice <= 0) {
+    res.status(400).json({ 
+      success: false,
+      message: 'tokens と price は正の数値である必要があります' 
+    });
+    return;
+  }
+  
+  // GPT-4原価モデルのバリデーション
+  if (!validateTokenPriceRatio(finalTokens, finalPrice)) {
+    const expectedTokens = Math.floor(finalPrice * TOKENS_PER_YEN);
+    res.status(400).json({ 
+      success: false,
+      message: `GPT-4原価モデル違反: ${finalPrice}円に対して${finalTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン` 
+    });
+    return;
+  }
+  
+  // Check if priceId already exists
+  if (priceId && mockTokenPacks.some(pack => pack.priceId === priceId)) {
+    res.status(400).json({ 
+      success: false,
+      message: 'この priceId は既に使用されています' 
+    });
+    return;
+  }
+  
+  // Create new token pack
+  const newTokenPack: TokenPack = {
+    _id: `pack_${Date.now()}`,
+    name,
+    description: description || '',
+    tokens: finalTokens,
+    price: finalPrice,
+    priceId: priceId || `price_${Date.now()}`,
+    isActive,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    profitMargin: ((finalTokens - finalPrice * 2) / finalTokens * 100),
+    tokenPerYen: finalTokens / finalPrice
+  };
+  
+  // Add to mock data (in real implementation, save to MongoDB)
+  mockTokenPacks.push(newTokenPack);
+  
+  console.log('✅ Token Pack 作成完了:', {
+    id: newTokenPack._id,
+    name: newTokenPack.name,
+    profitMargin: newTokenPack.profitMargin
+  });
+
+  res.status(201).json({
+    success: true,
+    created: newTokenPack
+  });
+});
+
+app.get('/api/admin/token-packs/:id', mockAuth, (req: Request, res: Response): void => {
+  console.log(`📦 Token Pack 詳細取得 API called: ID ${req.params.id}`);
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { id } = req.params;
+  const tokenPack = mockTokenPacks.find(pack => pack._id === id);
+  
+  if (!tokenPack) {
+    res.status(404).json({ 
+      success: false,
+      message: 'トークンパックが見つかりません' 
+    });
+    return;
+  }
+  
+  // Enrich with calculated fields
+  const enrichedPack = {
+    ...tokenPack,
+    profitMargin: ((tokenPack.tokens - tokenPack.price * 2) / tokenPack.tokens * 100),
+    tokenPerYen: tokenPack.tokens / tokenPack.price
+  };
+
+  console.log('✅ Token Pack 詳細取得完了:', enrichedPack.name);
+  res.json(enrichedPack);
+});
+
+app.put('/api/admin/token-packs/:id', mockAuth, (req: Request, res: Response): void => {
+  console.log(`📦 Token Pack 更新 API called: ID ${req.params.id}`, req.body);
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { id } = req.params;
+  const { name, description, tokens, price, priceId, isActive } = req.body;
+  
+  const packIndex = mockTokenPacks.findIndex(pack => pack._id === id);
+  if (packIndex === -1) {
+    res.status(404).json({ 
+      success: false,
+      message: 'トークンパックが見つかりません' 
+    });
+    return;
+  }
+  
+  const existingPack = mockTokenPacks[packIndex];
+  
+  // Validate tokens and price if provided
+  const newTokens = tokens !== undefined ? tokens : existingPack.tokens;
+  const newPrice = price !== undefined ? price : existingPack.price;
+  
+  if (typeof newTokens !== 'number' || typeof newPrice !== 'number' || newTokens <= 0 || newPrice <= 0) {
+    res.status(400).json({ 
+      success: false,
+      message: 'tokens と price は正の数値である必要があります' 
+    });
+    return;
+  }
+  
+  // GPT-4原価モデルのバリデーション
+  if (!validateTokenPriceRatio(newTokens, newPrice)) {
+    const expectedTokens = Math.floor(newPrice * TOKENS_PER_YEN);
+    res.status(400).json({ 
+      success: false,
+      message: `GPT-4原価モデル違反: ${newPrice}円に対して${newTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン` 
+    });
+    return;
+  }
+  
+  // Check if priceId is being changed and already exists elsewhere
+  if (priceId && priceId !== existingPack.priceId && mockTokenPacks.some(pack => pack.priceId === priceId && pack._id !== id)) {
+    res.status(400).json({ 
+      success: false,
+      message: 'この priceId は既に他のパックで使用されています' 
+    });
+    return;
+  }
+  
+  // Update token pack
+  const updatedPack: TokenPack = {
+    ...existingPack,
+    name: name !== undefined ? name : existingPack.name,
+    description: description !== undefined ? description : existingPack.description,
+    tokens: newTokens,
+    price: newPrice,
+    priceId: priceId !== undefined ? priceId : existingPack.priceId,
+    isActive: isActive !== undefined ? isActive : existingPack.isActive,
+    updatedAt: new Date(),
+    profitMargin: ((newTokens - newPrice * 2) / newTokens * 100),
+    tokenPerYen: newTokens / newPrice
+  };
+  
+  // Update in mock data (in real implementation, update in MongoDB)
+  mockTokenPacks[packIndex] = updatedPack;
+  
+  console.log('✅ Token Pack 更新完了:', {
+    id: updatedPack._id,
+    name: updatedPack.name,
+    profitMargin: updatedPack.profitMargin
+  });
+
+  res.json(updatedPack);
+});
+
+app.delete('/api/admin/token-packs/:id', mockAuth, (req: Request, res: Response): void => {
+  console.log(`📦 Token Pack 削除 API called: ID ${req.params.id}`);
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { id } = req.params;
+  const packIndex = mockTokenPacks.findIndex(pack => pack._id === id);
+  
+  if (packIndex === -1) {
+    res.status(404).json({ 
+      success: false,
+      message: 'トークンパックが見つかりません' 
+    });
+    return;
+  }
+  
+  const deletedPack = mockTokenPacks[packIndex];
+  
+  // Remove from mock data (in real implementation, soft delete or hard delete in MongoDB)
+  mockTokenPacks.splice(packIndex, 1);
+  
+  console.log('✅ Token Pack 削除完了:', deletedPack.name);
+
+  res.json({
+    success: true,
+    message: `トークンパック「${deletedPack.name}」を削除しました`,
+    deletedPack: {
+      _id: deletedPack._id,
+      name: deletedPack.name
+    }
+  });
+});
+
+// Stripe Price API endpoint
+app.get('/api/admin/stripe/price/:priceId', mockAuth, async (req: Request, res: Response): Promise<void> => {
+  console.log(`💳 Stripe Price 取得 API called: Price ID ${req.params.priceId}`);
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { priceId } = req.params;
+  
+  if (!priceId || typeof priceId !== 'string') {
+    res.status(400).json({ 
+      success: false,
+      message: 'Price ID が無効です' 
+    });
+    return;
+  }
+
+  try {
+    if (USE_MOCK) {
+      // モック環境での Price ID パターンマッチング（開発用）
+      console.log('🎭 モックモード: Stripe Price ID をパターンマッチングで処理');
+      
+      let mockPrice = 1000; // デフォルト価格（円）
+      let currency = 'jpy';
+      let productName = 'トークンパック';
+      
+      // Price ID パターンに基づく価格推定
+      if (priceId.includes('500') || priceId.includes('basic')) {
+        mockPrice = 500;
+        productName = 'ベーシックトークンパック';
+      } else if (priceId.includes('1000') || priceId.includes('standard')) {
+        mockPrice = 1000;
+        productName = 'スタンダードトークンパック';
+      } else if (priceId.includes('3000') || priceId.includes('premium')) {
+        mockPrice = 3000;
+        productName = 'プレミアムトークンパック';
+      } else if (priceId.includes('5000') || priceId.includes('ultimate')) {
+        mockPrice = 5000;
+        productName = 'アルティメットトークンパック';
+      }
+      
+      // GPT-4原価モデルに基づくトークン数計算
+      const calculatedTokens = Math.floor(mockPrice * TOKENS_PER_YEN);
+      
+      // モックレスポンス構造（実際のStripe Price APIに近い形式）
+      const mockPriceData = {
+        id: priceId,
+        object: 'price',
+        active: true,
+        currency: currency,
+        unit_amount: mockPrice * 100, // Stripeは最小単位（銭）で返す
+        unit_amount_decimal: (mockPrice * 100).toString(),
+        product: {
+          id: `prod_mock_${Date.now()}`,
+          name: productName,
+          description: `${calculatedTokens.toLocaleString()}トークンを含むパック`
+        },
+        recurring: null,
+        type: 'one_time'
+      };
+      
+      console.log('✅ モック Price データ生成完了:', {
+        priceId,
+        amount: mockPrice,
+        tokens: calculatedTokens,
+        productName
+      });
+      
+      // モック環境での利益率計算
+      const totalCost = calculatedTokens * TOKEN_COST_PER_UNIT;
+      const mockProfitMargin = ((mockPrice - totalCost) / mockPrice) * 100;
+      
+      res.json({
+        success: true,
+        price: mockPriceData,
+        // フロントエンド用の追加情報
+        calculatedTokens,
+        profitMargin: mockProfitMargin,
+        tokenPerYen: TOKENS_PER_YEN
+      });
+      
+    } else {
+      // 実際のStripe API呼び出し（本番環境用）
+      if (!stripe) {
+        throw new Error('Stripe が正しく初期化されていません');
+      }
+      
+      console.log('🔥 実際のStripe APIでPrice情報を取得します:', priceId);
+      
+      const price = await stripe.prices.retrieve(priceId, {
+        expand: ['product']
+      });
+      
+      if (!price.active) {
+        throw new Error('この Price ID は無効または非アクティブです');
+      }
+      
+      if (!price.unit_amount) {
+        throw new Error('Price に金額情報がありません');
+      }
+      
+      // 通貨に応じた単位変換
+      let priceInMainUnit: number;
+      if (price.currency === 'jpy') {
+        // 日本円は最小単位が円なので変換不要
+        priceInMainUnit = price.unit_amount;
+      } else {
+        // USD等は最小単位がセントなので100で割る
+        priceInMainUnit = Math.floor(price.unit_amount / 100);
+      }
+      
+      console.log('💰 Stripe価格情報:', {
+        unit_amount: price.unit_amount,
+        currency: price.currency,
+        converted_amount: priceInMainUnit
+      });
+      
+      // GPT-4原価モデルに基づくトークン数計算
+      const calculatedTokens = Math.floor(priceInMainUnit * TOKENS_PER_YEN);
+      
+      // 実際の利益率計算
+      const totalCost = calculatedTokens * TOKEN_COST_PER_UNIT; // 総原価
+      const profitMargin = ((priceInMainUnit - totalCost) / priceInMainUnit) * 100; // 実際の利益率
+      const tokenPerYen = TOKENS_PER_YEN; // 166.66トークン/円
+      
+      // Product名を安全に取得
+      const productName = price.product && typeof price.product === 'object' && 'name' in price.product 
+        ? price.product.name 
+        : 'Unknown Product';
+      
+      console.log('✅ 実際のStripe Price データ取得完了:', {
+        priceId,
+        amount: priceInMainUnit,
+        currency: price.currency,
+        tokens: calculatedTokens,
+        productName
+      });
+      
+      res.json({
+        success: true,
+        price: {
+          id: price.id,
+          object: price.object,
+          active: price.active,
+          currency: price.currency,
+          unit_amount: price.unit_amount,
+          unit_amount_decimal: price.unit_amount_decimal,
+          product: price.product,
+          recurring: price.recurring,
+          type: price.type
+        },
+        // フロントエンド用の追加情報
+        calculatedTokens,
+        profitMargin,
+        tokenPerYen
+      });
+    }
+    
+  } catch (error: any) {
+    console.error('❌ Stripe Price 取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Price情報の取得に失敗しました',
+      error: USE_MOCK ? error.message : 'Internal server error'
+    });
+  }
+});
+
 app.get('/api/debug', (_req: Request, res: Response): void => {
   res.json({
     USE_MOCK: USE_MOCK,
@@ -1042,6 +1529,10 @@ app.get('/api/debug', (_req: Request, res: Response): void => {
     env_USE_MOCK: process.env.USE_MOCK
   });
 });
+
+import path from 'path';
+const swaggerDocument = YAML.load(path.resolve(__dirname, '../../docs/openapi.yaml'));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);
