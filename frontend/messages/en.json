@@ -52,6 +52,35 @@
     "register": "Sign Up",
     "backToTop": "Back to TOP"
   },
+  "register": {
+    "title": "Sign Up",
+    "subtitle": "Get 10,000 tokens free with your first registration!",
+    "name": "Name",
+    "namePlaceholder": "Enter your name",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email address",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Re-enter your password",
+    "language": "Language",
+    "languageOptions": {
+      "ja": "日本語",
+      "en": "English"
+    },
+    "terms": "By registering, you agree to our ",
+    "termsLink": "Terms of Service and Privacy Policy",
+    "termsAccept": ".",
+    "registerButton": "Agree to Terms and Sign Up",
+    "hasAccount": "Already have an account?",
+    "login": "Sign In",
+    "backToTop": "Back to TOP",
+    "errors": {
+      "passwordMismatch": "Passwords do not match",
+      "required": "Please fill in all required fields",
+      "invalidEmail": "Please enter a valid email address"
+    }
+  },
   "sidebar": {
     "home": "Home",
     "characters": "Characters", 

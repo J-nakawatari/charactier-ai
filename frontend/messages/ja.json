@@ -52,6 +52,35 @@
     "register": "新規登録",
     "backToTop": "TOPに戻る"
   },
+  "register": {
+    "title": "新規登録",
+    "subtitle": "今なら初回登録で10,000トークンプレゼント!",
+    "name": "お名前",
+    "namePlaceholder": "お名前を入力してください",
+    "email": "メールアドレス",
+    "emailPlaceholder": "メールアドレスを入力してください",
+    "password": "パスワード",
+    "passwordPlaceholder": "パスワードを入力してください",
+    "confirmPassword": "パスワード確認",
+    "confirmPasswordPlaceholder": "パスワードを再度入力してください",
+    "language": "言語設定",
+    "languageOptions": {
+      "ja": "日本語",
+      "en": "English"
+    },
+    "terms": "登録することで、",
+    "termsLink": "利用規約とプライバシーポリシー",
+    "termsAccept": "に同意したものとみなします。",
+    "registerButton": "利用規約に同意して登録する",
+    "hasAccount": "すでにアカウントをお持ちの方は",
+    "login": "ログイン",
+    "backToTop": "TOPに戻る",
+    "errors": {
+      "passwordMismatch": "パスワードが一致しません",
+      "required": "必須項目を入力してください",
+      "invalidEmail": "正しいメールアドレスを入力してください"
+    }
+  },
   "sidebar": {
     "home": "ホーム",
     "characters": "キャラクター一覧", 
