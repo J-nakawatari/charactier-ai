@@ -24,7 +24,6 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState(locale);
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -270,7 +269,7 @@ export default function RegisterPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={t('namePlaceholder')}
-                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all text-gray-900"
                   required
                 />
               </div>
@@ -286,7 +285,7 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={t('emailPlaceholder')}
-                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all text-gray-900"
                   required
                 />
               </div>
@@ -302,7 +301,7 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t('passwordPlaceholder')}
-                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all text-gray-900"
                   required
                 />
               </div>
@@ -318,7 +317,7 @@ export default function RegisterPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder={t('confirmPasswordPlaceholder')}
-                  className={`w-full px-4 py-3 bg-gray-100 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                  className={`w-full px-4 py-3 bg-gray-100 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900 ${
                     confirmPassword && password !== confirmPassword
                       ? 'border-red-300 focus:ring-red-500'
                       : 'border-gray-300 focus:ring-pink-500'
@@ -330,21 +329,6 @@ export default function RegisterPage() {
                 )}
               </div>
               
-              {/* Language Selection */}
-              <div>
-                <label htmlFor="language" className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('language')}
-                </label>
-                <select
-                  id="language"
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
-                >
-                  <option value="ja">{t('languageOptions.ja')}</option>
-                  <option value="en">{t('languageOptions.en')}</option>
-                </select>
-              </div>
               
               {/* Terms Agreement */}
               <div className="text-xs text-gray-600 leading-relaxed">
