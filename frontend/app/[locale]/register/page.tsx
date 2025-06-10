@@ -20,12 +20,10 @@ export default function RegisterPage() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState({
-    name: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -126,19 +124,12 @@ export default function RegisterPage() {
 
   const validateForm = () => {
     const errors = {
-      name: '',
       email: '',
       password: '',
       confirmPassword: ''
     };
     
     let hasErrors = false;
-    
-    // Name validation
-    if (!name.trim()) {
-      errors.name = t('errors.required');
-      hasErrors = true;
-    }
     
     // Email validation
     if (!email.trim()) {
@@ -152,6 +143,9 @@ export default function RegisterPage() {
     // Password validation
     if (!password) {
       errors.password = t('errors.required');
+      hasErrors = true;
+    } else if (password.length < 6) {
+      errors.password = 'パスワードは6文字以上で入力してください';
       hasErrors = true;
     }
     
@@ -184,7 +178,6 @@ export default function RegisterPage() {
     
     // バリデーション成功時にエラーをクリア
     setFieldErrors({
-      name: '',
       email: '',
       password: '',
       confirmPassword: ''
@@ -195,16 +188,33 @@ export default function RegisterPage() {
     try {
       console.log('🔐 新規登録実行中...');
       
-      // TODO: 実際の登録API呼び出し
-      const testToken = 'test-token-register-12345';
-      localStorage.setItem('token', testToken);
+      // バックエンドの登録APIを呼び出し（名前は一時的に空文字で登録）
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || '登録に失敗しました');
+      }
+      
+      // JWTトークンを保存
+      localStorage.setItem('accessToken', data.tokens.accessToken);
+      localStorage.setItem('refreshToken', data.tokens.refreshToken);
+      localStorage.setItem('user', JSON.stringify(data.user));
       
       console.log('✅ 新規登録成功');
-      router.push(`/${locale}/characters`);
+      // 初回セットアップ画面に遷移
+      router.push(`/${locale}/setup`);
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('❌ 新規登録エラー:', err);
-      setError('登録に失敗しました。もう一度お試しください。');
+      setError(err.message || '登録に失敗しました。もう一度お試しください。');
     } finally {
       setIsLoading(false);
     }
@@ -308,36 +318,6 @@ export default function RegisterPage() {
             
             {/* Register Form */}
             <form onSubmit={handleRegister} noValidate className="space-y-5">
-              {/* Name Field */}
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('name')}
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={t('namePlaceholder')}
-                  className={`w-full px-4 py-3 bg-gray-100 border rounded-lg outline-none text-gray-900 ${
-                    fieldErrors.name ? 'border-pink-500' : 'border-gray-300'
-                  }`}
-                />
-                {fieldErrors.name && (
-                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E91E63' }}>
-                    <p className="text-white text-sm font-medium">{fieldErrors.name}</p>
-                    <div 
-                      className="absolute left-4 -top-2 w-0 h-0"
-                      style={{
-                        borderLeft: '8px solid transparent',
-                        borderRight: '8px solid transparent',
-                        borderBottom: '8px solid #E91E63'
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-              
               {/* Email Field */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">

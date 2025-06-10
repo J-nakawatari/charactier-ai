@@ -1,6 +1,21 @@
 'use client';
 
-import { UserData } from '@/mock/adminData';
+// import { UserData } from '@/mock/adminData'; // モックデータは使用しない
+
+interface UserData {
+  id: string;
+  _id: string;
+  name: string;
+  email: string;
+  tokenBalance: number;
+  totalSpent: number;
+  chatCount: number;
+  avgIntimacy: number;
+  lastLogin: string;
+  status: string;
+  isTrialUser: boolean;
+  createdAt: string;
+}
 import { Users, UserCheck, UserX, DollarSign } from 'lucide-react';
 
 interface UserStatsProps {

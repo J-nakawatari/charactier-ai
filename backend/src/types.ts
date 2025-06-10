@@ -60,6 +60,7 @@ export interface MockUser {
     _id: string;
     name: LocalizedString | string;
   } | null;
+  affinity?: { [characterId: string]: number };
 }
 
 export interface TokenPack {

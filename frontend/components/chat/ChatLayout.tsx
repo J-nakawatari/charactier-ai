@@ -10,6 +10,9 @@ import { TokenBar } from './TokenBar';
 import { UnlockPopup } from './UnlockPopup';
 import { TokenPurchaseModal } from './TokenPurchaseModal';
 import ChatSidebar from './ChatSidebar';
+import { TypingIndicator } from './TypingIndicator';
+import { ConnectionIndicator } from './ConnectionIndicator';
+import { useRealtimeChat, useTypingDebounce, useChatConnectionStatus } from '@/hooks/useRealtimeChat';
 
 interface Character {
   _id: string;
@@ -47,6 +50,9 @@ interface ChatLayoutProps {
   tokenStatus: TokenStatus;
   messages: Message[];
   onSendMessage: (message: string) => Promise<void>;
+  onLoadMore?: () => Promise<void>;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }
 
 export function ChatLayout({ 
@@ -54,23 +60,48 @@ export function ChatLayout({
   affinity, 
   tokenStatus, 
   messages, 
-  onSendMessage 
+  onSendMessage,
+  onLoadMore,
+  hasMore = false,
+  isLoadingMore = false
 }: ChatLayoutProps) {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [localMessages, setLocalMessages] = useState<Message[]>(messages);
+
+  // 親からのmessagesプロパティが更新された時にlocalMessagesを同期
+  useEffect(() => {
+    setLocalMessages(messages);
+  }, [messages]);
   const [showUnlockPopup, setShowUnlockPopup] = useState(false);
   const [unlockData, setUnlockData] = useState<{ level: number; illustration: string } | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [currentTokens, setCurrentTokens] = useState(tokenStatus.tokensRemaining);
+  
+  // リアルタイムチャット機能
+  const realtimeChat = useRealtimeChat(character._id);
+  const connectionStatus = useChatConnectionStatus();
+  
+  // タイピングデバウンス
+  const { handleTyping, stopTyping } = useTypingDebounce(
+    realtimeChat.startTyping,
+    realtimeChat.stopTyping,
+    1500
+  );
+
+  // 親からのtokenStatusが更新された時にcurrentTokensを同期
+  useEffect(() => {
+    setCurrentTokens(tokenStatus.tokensRemaining);
+  }, [tokenStatus.tokensRemaining]);
 
   // 定期的にトークン残高を更新する関数
   const refreshTokenBalance = async () => {
     try {
-      const response = await fetch('/api/auth/user');
+      // TODO: 適切なユーザー情報取得APIに変更
+      const response = await fetch('/api/user/profile');
       if (response.ok) {
         const userData = await response.json();
-        setCurrentTokens(userData.tokenBalance);
+        setCurrentTokens(userData.tokenBalance || userData.user?.tokenBalance || currentTokens);
       }
     } catch (error) {
       console.error('Token balance refresh failed:', error);
@@ -99,30 +130,20 @@ export function ChatLayout({
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: inputMessage.trim(),
-      timestamp: new Date()
-    };
-
-    setLocalMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsLoading(true);
 
     try {
-      await onSendMessage(userMessage.content);
+      // 親コンポーネントのonSendMessage関数を呼び出し
+      // メッセージの更新は親コンポーネントで管理される
+      const messageToSend = inputMessage.trim();
+      setInputMessage('');
       
-      // モック AI レスポンス（実際のAPIレスポンスに置き換える）
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `${userMessage.content}について考えてみますね。とても興味深いお話ですね！`,
-        timestamp: new Date(),
-        tokens: 180
-      };
-
-      setLocalMessages(prev => [...prev, aiResponse]);
+      // タイピング停止とキャラクタータイピング開始
+      stopTyping();
+      realtimeChat.setCharacterTyping(true);
+      
+      await onSendMessage(messageToSend);
 
       // レベルアップ演出のトリガー（テスト用）
       if (Math.random() > 0.8) {
@@ -134,6 +155,7 @@ export function ChatLayout({
       console.error('Message send error:', error);
     } finally {
       setIsLoading(false);
+      realtimeChat.setCharacterTyping(false);
     }
   };
 
@@ -184,9 +206,9 @@ export function ChatLayout({
           </div>
 
           <TokenBar 
-            tokensRemaining={currentTokens}
             lastMessageCost={tokenStatus.lastMessageCost}
             onPurchaseClick={() => setShowPurchaseModal(true)}
+            onTokenUpdate={(newTokens) => setCurrentTokens(newTokens)}
           />
         </div>
       </header>
@@ -200,6 +222,10 @@ export function ChatLayout({
             nextLevelExp={affinity.nextLevelExp}
             themeColor={character.themeColor}
             mood={character.currentMood}
+            characterId={character._id}
+            onAffinityUpdate={(newAffinity) => {
+              console.log('Affinity updated:', newAffinity);
+            }}
           />
         </div>
       </div>
@@ -223,6 +249,9 @@ export function ChatLayout({
           messages={localMessages}
           character={character}
           isLoading={isLoading}
+          onLoadMore={onLoadMore}
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
         />
       </div>
 

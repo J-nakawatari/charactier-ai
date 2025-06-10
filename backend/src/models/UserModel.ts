@@ -1,41 +1,370 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+// 親密度・関係性データ
+interface IAffinity {
+  character: string; // ObjectId
+  
+  // 基本親密度指標
+  level: number; // 0-100
+  experience: number;
+  experienceToNext: number;
+  
+  // 関係性状態
+  emotionalState: 'happy' | 'excited' | 'calm' | 'sad' | 'angry' | 'neutral';
+  relationshipType: 'stranger' | 'acquaintance' | 'friend' | 'close_friend' | 'lover';
+  trustLevel: number; // 0-100
+  intimacyLevel: number; // 0-100
+  
+  // 会話統計
+  totalConversations: number;
+  totalMessages: number;
+  averageResponseTime: number;
+  lastInteraction: Date;
+  
+  // ストリーク・継続性
+  currentStreak: number;
+  maxStreak: number;
+  consecutiveDays: number;
+  
+  // 個性・記憶
+  favoriteTopics: string[];
+  specialMemories: string[];
+  personalNotes: string;
+  
+  // ギフト・報酬
+  giftsReceived: {
+    giftType: string;
+    giftName: string;
+    value: number;
+    senderId: string; // ObjectId
+    sentAt: Date;
+    affinityBonus: number;
+    experienceBonus: number;
+    message: string;
+    rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  }[];
+  totalGiftsValue: number;
+  
+  // レベル進行管理
+  unlockedRewards: string[]; // 解放済み報酬ID
+  nextRewardLevel: number;
+  
+  // 感情変化・状態遷移
+  moodHistory: {
+    mood: string;
+    intensity: number; // 1-10
+    triggeredBy: 'user_message' | 'gift' | 'level_up' | 'time_decay';
+    duration: number; // 分
+    createdAt: Date;
+  }[];
+  currentMoodModifiers: {
+    type: string; // 'excited' | 'shy' | 'playful' | 'melancholic'
+    strength: number; // 0-1
+    expiresAt: Date;
+  }[];
+}
+
 export interface IUser extends Document {
   _id: string;
+  
+  // 基本認証情報
   email: string;
   name: string;
+  password: string;
+  preferredLanguage: 'ja' | 'en';
+  isAdmin: boolean;
+  
+  // キャラクター関連
+  selectedCharacter?: string; // ObjectId
+  purchasedCharacters: string[]; // ObjectId[]
+  
+  // トークン・課金
   tokenBalance: number;
-  selectedCharacter?: {
-    _id: string;
-    name: { ja: string; en: string };
-  };
+  activeTokenPackId?: string; // ObjectId
+  totalSpent: number;
+  
+  // セキュリティ・制裁
+  violationCount: number;
+  accountStatus: 'active' | 'inactive' | 'suspended' | 'banned';
+  suspensionEndDate?: Date;
+  banReason?: string;
+  lastViolationDate?: Date;
+  
+  // アクティビティ
+  registrationDate: Date;
+  lastLogin: Date;
+  loginStreak: number;
+  maxLoginStreak: number;
+  
+  // 統計・分析用
+  totalChatMessages: number;
+  averageSessionDuration: number;
+  favoriteCharacterTypes: string[];
+  
+  // 親密度システム
+  affinities: IAffinity[];
+  
+  // システム管理
+  isActive: boolean;
+  isSetupComplete: boolean; // 初回セットアップ完了フラグ
   createdAt: Date;
   updatedAt: Date;
 }
 
+// 親密度サブスキーマ
+const AffinitySchema = new Schema({
+  character: {
+    type: Schema.Types.ObjectId,
+    ref: 'Character',
+    required: true
+  },
+  
+  // 基本親密度指標
+  level: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  experience: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  experienceToNext: {
+    type: Number,
+    default: 100
+  },
+  
+  // 関係性状態
+  emotionalState: {
+    type: String,
+    enum: ['happy', 'excited', 'calm', 'sad', 'angry', 'neutral'],
+    default: 'neutral'
+  },
+  relationshipType: {
+    type: String,
+    enum: ['stranger', 'acquaintance', 'friend', 'close_friend', 'lover'],
+    default: 'stranger'
+  },
+  trustLevel: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  intimacyLevel: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  
+  // 会話統計
+  totalConversations: {
+    type: Number,
+    default: 0
+  },
+  totalMessages: {
+    type: Number,
+    default: 0
+  },
+  averageResponseTime: {
+    type: Number,
+    default: 0
+  },
+  lastInteraction: Date,
+  
+  // ストリーク・継続性
+  currentStreak: {
+    type: Number,
+    default: 0
+  },
+  maxStreak: {
+    type: Number,
+    default: 0
+  },
+  consecutiveDays: {
+    type: Number,
+    default: 0
+  },
+  
+  // 個性・記憶
+  favoriteTopics: [String],
+  specialMemories: [String],
+  personalNotes: String,
+  
+  // ギフト・報酬
+  giftsReceived: [{
+    giftType: String,
+    giftName: String,
+    value: Number,
+    senderId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    sentAt: {
+      type: Date,
+      default: Date.now
+    },
+    affinityBonus: Number,
+    experienceBonus: Number,
+    message: String,
+    rarity: {
+      type: String,
+      enum: ['common', 'rare', 'epic', 'legendary'],
+      default: 'common'
+    }
+  }],
+  totalGiftsValue: {
+    type: Number,
+    default: 0
+  },
+  
+  // レベル進行管理
+  unlockedRewards: [String],
+  nextRewardLevel: {
+    type: Number,
+    default: 10
+  },
+  
+  // 感情変化・状態遷移
+  moodHistory: [{
+    mood: String,
+    intensity: {
+      type: Number,
+      min: 1,
+      max: 10
+    },
+    triggeredBy: {
+      type: String,
+      enum: ['user_message', 'gift', 'level_up', 'time_decay']
+    },
+    duration: Number, // 分
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  currentMoodModifiers: [{
+    type: String,
+    strength: {
+      type: Number,
+      min: 0,
+      max: 1
+    },
+    expiresAt: Date
+  }]
+}, { _id: false });
+
 const UserSchema: Schema = new Schema({
+  // 基本認証情報
   email: {
     type: String,
     required: true,
     unique: true,
-    trim: true
+    trim: true,
+    lowercase: true
   },
   name: {
     type: String,
-    required: true,
-    trim: true
+    required: false,
+    trim: true,
+    default: ''
   },
+  password: {
+    type: String,
+    required: true,
+    minlength: 6
+  },
+  preferredLanguage: {
+    type: String,
+    enum: ['ja', 'en'],
+    default: 'ja'
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
+  },
+  
+  // キャラクター関連
+  selectedCharacter: {
+    type: Schema.Types.ObjectId,
+    ref: 'Character'
+  },
+  purchasedCharacters: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Character'
+  }],
+  
+  // トークン・課金
   tokenBalance: {
     type: Number,
-    default: 1000, // 初回登録時に1000トークン付与
+    default: 10000, // 初回登録時に10,000トークン付与
     min: 0
   },
-  selectedCharacter: {
-    _id: String,
-    name: {
-      ja: String,
-      en: String
-    }
+  activeTokenPackId: {
+    type: Schema.Types.ObjectId,
+    ref: 'TokenPack'
+  },
+  totalSpent: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  
+  // セキュリティ・制裁
+  violationCount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  accountStatus: {
+    type: String,
+    enum: ['active', 'inactive', 'suspended', 'banned'],
+    default: 'active'
+  },
+  suspensionEndDate: Date,
+  banReason: String,
+  lastViolationDate: Date,
+  
+  // アクティビティ
+  registrationDate: {
+    type: Date,
+    default: Date.now
+  },
+  lastLogin: Date,
+  loginStreak: {
+    type: Number,
+    default: 0
+  },
+  maxLoginStreak: {
+    type: Number,
+    default: 0
+  },
+  
+  // 統計・分析用
+  totalChatMessages: {
+    type: Number,
+    default: 0
+  },
+  averageSessionDuration: {
+    type: Number,
+    default: 0
+  },
+  favoriteCharacterTypes: [String],
+  
+  // 親密度システム
+  affinities: [AffinitySchema],
+  
+  // システム管理
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  isSetupComplete: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true,

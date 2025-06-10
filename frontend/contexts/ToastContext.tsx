@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
+import { ApiError, formatErrorMessage, getErrorSeverity } from '@/utils/errorHandler';
 
 export interface Toast {
   id: string;
@@ -20,6 +21,9 @@ interface ToastContextType {
   error: (title: string, message?: string) => void;
   warning: (title: string, message?: string) => void;
   info: (title: string, message?: string) => void;
+  // 統合エラーハンドリング
+  handleApiError: (error: ApiError, customTitle?: string) => void;
+  handleError: (error: unknown, fallbackTitle?: string) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -68,6 +72,48 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addToast({ type: 'info', title, message });
   }, [addToast]);
 
+  // API エラー専用ハンドリング
+  const handleApiError = useCallback((apiError: ApiError, customTitle?: string) => {
+    const severity = getErrorSeverity(apiError);
+    const message = formatErrorMessage(apiError);
+    const title = customTitle || '操作に失敗しました';
+    
+    // 重要度に応じて表示タイプを決定
+    const toastType = severity === 'critical' || severity === 'high' ? 'error' : 'warning';
+    
+    // 重要度に応じて表示時間を調整
+    const duration = severity === 'critical' ? 10000 : severity === 'high' ? 7000 : 5000;
+    
+    addToast({ 
+      type: toastType, 
+      title, 
+      message,
+      duration 
+    });
+  }, [addToast]);
+  
+  // 一般的なエラーハンドリング
+  const handleError = useCallback((error: unknown, fallbackTitle = 'エラーが発生しました') => {
+    if (typeof error === 'object' && error !== null && 'code' in error) {
+      // ApiError として処理
+      handleApiError(error as ApiError, fallbackTitle);
+    } else if (error instanceof Error) {
+      // 通常の Error オブジェクト
+      addToast({
+        type: 'error',
+        title: fallbackTitle,
+        message: error.message
+      });
+    } else {
+      // その他の不明なエラー
+      addToast({
+        type: 'error',
+        title: fallbackTitle,
+        message: '予期しないエラーが発生しました'
+      });
+    }
+  }, [addToast, handleApiError]);
+
   return (
     <ToastContext.Provider value={{
       toasts,
@@ -76,7 +122,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       success,
       error,
       warning,
-      info
+      info,
+      handleApiError,
+      handleError
     }}>
       {children}
       <ToastContainer />

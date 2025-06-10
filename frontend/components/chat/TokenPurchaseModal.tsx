@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Coins, Zap, CreditCard, Loader2 } from 'lucide-react';
+import { getCurrentUser } from '@/utils/auth';
 
 interface TokenPack {
   _id: string;
@@ -41,7 +42,21 @@ export function TokenPurchaseModal({
   const fetchTokenPacks = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/token-packs?isActive=true');
+      
+      // 認証ヘッダーを取得
+      const token = localStorage.getItem('accessToken');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch('/api/token-packs?isActive=true', {
+        headers
+      });
+      
       if (!response.ok) throw new Error('Failed to fetch token packs');
       
       const data = await response.json();
@@ -66,7 +81,7 @@ export function TokenPurchaseModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           priceId: pack.priceId,
-          userId: 'mock_user_1' // TODO: 実際のユーザーIDに置き換え
+          userId: getCurrentUser().id
         })
       });
 

@@ -1,20 +1,34 @@
 'use client';
 
-import { CharacterData } from '@/mock/adminData';
 import { MessageSquare, Heart, Users, DollarSign } from 'lucide-react';
 
+interface Character {
+  _id: string;
+  name: { ja: string; en: string };
+  description: { ja: string; en: string };
+  personalityPreset: string;
+  personalityTags: string[];
+  characterAccessType: 'initial' | 'premium';
+  isActive: boolean;
+  imageCharacterSelect?: string;
+  totalConversations?: number;
+  averageAffinity?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface CharacterStatsProps {
-  characters: CharacterData[];
+  characters: Character[];
 }
 
 export default function CharacterStats({ characters }: CharacterStatsProps) {
   const stats = {
     total: characters.length,
     active: characters.filter(c => c.isActive).length,
-    free: characters.filter(c => c.isFree).length,
-    totalChats: characters.reduce((sum, c) => sum + c.totalChats, 0),
-    avgIntimacy: characters.reduce((sum, c) => sum + c.avgIntimacy, 0) / characters.length,
-    totalRevenue: characters.filter(c => !c.isFree).reduce((sum, c) => sum + (c.price * 10), 0) // 推定売上
+    free: characters.filter(c => c.characterAccessType === 'initial').length,
+    totalChats: characters.reduce((sum, c) => sum + (c.totalConversations || 0), 0),
+    avgIntimacy: characters.length > 0 ? characters.reduce((sum, c) => sum + (c.averageAffinity || 0), 0) / characters.length : 0,
+    premium: characters.filter(c => c.characterAccessType === 'premium').length
   };
 
   const cards = [
@@ -35,20 +49,20 @@ export default function CharacterStats({ characters }: CharacterStatsProps) {
       textColor: 'text-green-700'
     },
     {
-      title: '平均親密度',
-      value: `${stats.avgIntimacy.toFixed(1)}%`,
+      title: '無料キャラクター',
+      value: stats.free.toLocaleString(),
       icon: Heart,
-      color: 'bg-pink-500',
-      bgColor: 'bg-pink-50',
-      textColor: 'text-pink-700'
+      color: 'bg-blue-500',
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-700'
     },
     {
       title: '総チャット数',
       value: stats.totalChats.toLocaleString(),
       icon: MessageSquare,
-      color: 'bg-blue-500',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-700'
+      color: 'bg-orange-500',
+      bgColor: 'bg-orange-50',
+      textColor: 'text-orange-700'
     }
   ];
 

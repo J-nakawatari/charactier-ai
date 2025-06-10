@@ -1,49 +1,111 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { MessageItem } from './MessageItem';
+import { Loader2, ChevronUp } from 'lucide-react';
+import { Message } from '@/types/common';
 
+// ChatLayout向けの文字列ベースCharacter型
 interface Character {
   _id: string;
-  name: string;
-  description: string;
+  name: string; // すでに多言語処理済み文字列
+  description: string; // すでに多言語処理済み文字列
   imageChatAvatar: string;
   imageChatBackground: string;
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
 }
 
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  tokens?: number;
-}
-
 interface MessageListProps {
   messages: Message[];
   character: Character;
   isLoading: boolean;
+  onLoadMore?: () => Promise<void>;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }
 
-export function MessageList({ messages, character, isLoading }: MessageListProps) {
+export function MessageList({ 
+  messages, 
+  character, 
+  isLoading, 
+  onLoadMore, 
+  hasMore = false, 
+  isLoadingMore = false 
+}: MessageListProps) {
+  const [isNearTop, setIsNearTop] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastScrollTop = useRef<number>(0);
+  const shouldAutoScroll = useRef<boolean>(true);
 
+  // スクロールイベントハンドラー
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const element = e.currentTarget;
+    const scrollTop = element.scrollTop;
+    const scrollHeight = element.scrollHeight;
+    const clientHeight = element.clientHeight;
+
+    // 上部に近いかどうかをチェック（過去のメッセージ読み込み用）
+    const nearTop = scrollTop < 500;
+    setIsNearTop(nearTop);
+
+    // 上部にスクロールした時に過去のメッセージを読み込み
+    if (nearTop && hasMore && !isLoadingMore && onLoadMore) {
+      onLoadMore();
+    }
+
+    // スクロールトップボタンの表示判定
+    const showButton = scrollTop > 1000;
+    setShowScrollTop(showButton);
+
+    // 自動スクロールの判定（下部付近でのみ自動スクロール）
+    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 100;
+    shouldAutoScroll.current = isAtBottom;
+
+    lastScrollTop.current = scrollTop;
+  }, [hasMore, isLoadingMore, onLoadMore]);
+
+  // 新しいメッセージが追加された時の自動スクロール
   useEffect(() => {
-    // 新しいメッセージが追加されたら自動スクロール
-    if (scrollRef.current) {
+    if (scrollRef.current && shouldAutoScroll.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
 
+  // スクロールトップファンクション
+  const scrollToTop = useCallback(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, []);
+
+  // 最新メッセージにスクロール
+  const scrollToBottom = useCallback(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, []);
+
   return (
-    <div 
-      ref={scrollRef}
-      className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent relative z-20"
-    >
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div className="relative h-full">
+      <div 
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent relative z-20"
+      >
+        {/* 過去のメッセージ読み込みインジケーター */}
+        {isLoadingMore && (
+          <div className="flex justify-center py-4">
+            <div className="flex items-center space-x-2 text-gray-500 text-sm bg-white/70 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>過去のメッセージを読み込み中...</span>
+            </div>
+          </div>
+        )}
+        
+        <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {messages.length === 0 && (
           <div className="text-center py-12">
             <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-lg">
@@ -97,7 +159,19 @@ export function MessageList({ messages, character, isLoading }: MessageListProps
             </div>
           </div>
         )}
+        </div>
       </div>
+      
+      {/* スクロールトップボタン */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="absolute top-4 right-4 z-30 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full p-2 shadow-lg hover:bg-white hover:shadow-xl transition-all duration-200"
+          aria-label="トップにスクロール"
+        >
+          <ChevronUp className="w-5 h-5 text-gray-600" />
+        </button>
+      )}
     </div>
   );
 }

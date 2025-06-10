@@ -4,23 +4,17 @@ import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import Image from 'next/image';
 import { Coins } from 'lucide-react';
+import { Message } from '@/types/common';
 
+// ChatLayout向けの文字列ベースCharacter型
 interface Character {
   _id: string;
-  name: string;
-  description: string;
+  name: string; // すでに多言語処理済み文字列
+  description: string; // すでに多言語処理済み文字列
   imageChatAvatar: string;
   imageChatBackground: string;
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
-}
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  tokens?: number;
 }
 
 interface MessageItemProps {

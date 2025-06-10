@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { logout } from '../../utils/auth';
 
 interface UserSidebarProps {
   locale?: string;
@@ -27,10 +28,8 @@ interface User {
   name: string;
   email: string;
   tokenBalance: number;
-  selectedCharacter?: {
-    _id: string;
-    name: string;
-  } | null;
+  selectedCharacter?: string; // ObjectIdの文字列
+  isSetupComplete?: boolean;
 }
 
 export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
@@ -46,44 +45,19 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        let token = localStorage.getItem('token');
-        
-        // localStorageにない場合はクッキーから取得を試みる
-        if (!token && typeof document !== 'undefined') {
-          const cookies = document.cookie.split(';');
-          const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
-          if (tokenCookie) {
-            token = tokenCookie.split('=')[1];
-          }
-        }
-        
-        if (!token) {
-          console.log('❌ No token found in localStorage or cookies');
+        // 新しい認証システムからユーザー情報を取得
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const userData = JSON.parse(userStr);
+          setUser(userData);
           setLoading(false);
           return;
         }
-
-        console.log('🔄 UserSidebar: Fetching user data...');
-        const response = await fetch('/api/auth/user', {
-          headers: {
-            'x-auth-token': token,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          console.log('✅ UserSidebar: User data updated:', {
-            name: userData.name,
-            selectedCharacter: userData.selectedCharacter?.name || 'None'
-          });
-          setUser(userData);
-        } else {
-          console.error('Failed to fetch user data:', response.status);
-        }
+        
+        console.log('❌ No user data found in localStorage');
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching user data:', error);
-      } finally {
         setLoading(false);
       }
     };
@@ -91,10 +65,17 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
     fetchUserData();
   }, [pathname]); // pathnameの変更を監視
 
+  // ログアウト処理
+  const handleLogout = () => {
+    if (confirm('ログアウトしますか？')) {
+      logout();
+    }
+  };
+
   // selectedCharacterに基づく動的なチャットリンク
   const getChatHref = () => {
-    if (user?.selectedCharacter?._id) {
-      return `/${currentLocale}/characters/${user.selectedCharacter._id}/chat`;
+    if (user?.selectedCharacter) {
+      return `/${currentLocale}/characters/${user.selectedCharacter}/chat`;
     }
     // キャラクター未選択の場合は一覧へ（重複を避けるため特別な処理）
     return `/${currentLocale}/characters?from=chat`;
@@ -228,8 +209,11 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
 
         {/* フッター */}
         <div className="p-4 border-t border-gray-200">
-          <button className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 w-full transition-colors">
-            <LogOut className="w-5 h-5 text-gray-400" />
+          <button 
+            onClick={handleLogout}
+            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 w-full transition-colors hover:bg-red-50 hover:text-red-600"
+          >
+            <LogOut className="w-5 h-5 text-gray-400 hover:text-red-600" />
             <span>{t('logout')}</span>
           </button>
         </div>

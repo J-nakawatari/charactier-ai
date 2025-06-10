@@ -5,14 +5,18 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const isActive = searchParams.get('isActive') || 'true';
     
-    console.log('🔗 Token Packs API Route: プロキシ先バックエンド', `isActive=${isActive}`);
+    console.log('🔗 Token Packs API Route: ユーザー用APIに転送', `isActive=${isActive}`);
     
-    // バックエンドAPIに転送
-    const backendUrl = `http://localhost:3004/api/admin/token-packs?isActive=${isActive}&limit=50`;
+    // 認証ヘッダーを取得
+    const authHeader = request.headers.get('authorization');
+    
+    // バックエンドのユーザー用APIに転送
+    const backendUrl = `http://localhost:3004/api/token-packs?isActive=${isActive}&limit=50`;
     const response = await fetch(backendUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        ...(authHeader && { 'Authorization': authHeader }),
       },
     });
 

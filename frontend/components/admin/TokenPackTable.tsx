@@ -46,7 +46,18 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
         params.append('isActive', isActiveFilter.toString());
       }
 
-      const response = await fetch(`/api/admin/token-packs?${params}`);
+      const adminToken = localStorage.getItem('adminAccessToken');
+      
+      if (!adminToken) {
+        throw new Error('Admin authentication required');
+      }
+
+      const response = await fetch(`http://localhost:3004/api/admin/token-packs?${params}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        }
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch token packs');
@@ -77,8 +88,19 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
     }
 
     try {
-      const response = await fetch(`/api/admin/token-packs/${pack._id}`, {
-        method: 'DELETE'
+      const adminToken = localStorage.getItem('adminAccessToken');
+      
+      if (!adminToken) {
+        error('認証エラー', '管理者認証が必要です');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3004/api/admin/token-packs/${pack._id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        }
       });
 
       if (!response.ok) {
@@ -97,10 +119,18 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
     const newStatus = !pack.isActive;
     
     try {
-      const response = await fetch(`/api/admin/token-packs/${pack._id}`, {
+      const adminToken = localStorage.getItem('adminAccessToken');
+      
+      if (!adminToken) {
+        error('認証エラー', '管理者認証が必要です');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3004/api/admin/token-packs/${pack._id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
         },
         body: JSON.stringify({
           isActive: newStatus

@@ -11,8 +11,8 @@ import LockBadge from './LockBadge';
 
 interface Character {
   _id: string;
-  name: string;
-  description: string;
+  name: { ja: string; en: string } | string;
+  description: { ja: string; en: string } | string;
   personalityPreset: string;
   personalityTags: string[];
   gender: string;
@@ -46,6 +46,12 @@ export default function CharacterCard({
   const [showAllTags, setShowAllTags] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const t = useTranslations('characters');
+
+  // 多言語対応のテキスト取得関数
+  const getLocalizedText = (text: { ja: string; en: string } | string): string => {
+    if (typeof text === 'string') return text;
+    return text[locale as 'ja' | 'en'] || text.ja || '';
+  };
 
   const handleClick = () => {
     if (onClick) {
@@ -100,7 +106,7 @@ export default function CharacterCard({
 
         console.log('📡 API Response status:', response.status);
         if (response.ok) {
-          console.log('✅ selectedCharacter updated:', character.name);
+          console.log('✅ selectedCharacter updated:', getLocalizedText(character.name));
         } else {
           const errorText = await response.text();
           console.error('❌ Failed to update selectedCharacter:', response.status, errorText);
@@ -152,7 +158,7 @@ export default function CharacterCard({
         {character.imageCharacterSelect || character.imageChatAvatar ? (
           <Image
             src={character.imageCharacterSelect || character.imageChatAvatar || ''}
-            alt={character.name}
+            alt={getLocalizedText(character.name)}
             fill
             className="object-cover"
           />
@@ -199,7 +205,7 @@ export default function CharacterCard({
         {/* キャラクター名 */}
         <div>
           <h3 className="font-semibold text-gray-900 text-lg leading-tight">
-            {character.name}
+            {getLocalizedText(character.name)}
           </h3>
           
           {/* 性格プリセット */}
@@ -212,7 +218,7 @@ export default function CharacterCard({
 
         {/* 説明文 */}
         <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-          {character.description}
+          {getLocalizedText(character.description)}
         </p>
 
         {/* 性格タグ */}

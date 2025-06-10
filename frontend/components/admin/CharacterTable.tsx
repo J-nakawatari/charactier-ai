@@ -1,10 +1,24 @@
 'use client';
 
 import { Eye, Edit, MoreHorizontal, Heart } from 'lucide-react';
-import { CharacterData } from '@/mock/adminData';
+
+interface Character {
+  _id: string;
+  name: { ja: string; en: string };
+  description: { ja: string; en: string };
+  personalityPreset: string;
+  personalityTags: string[];
+  characterAccessType: 'initial' | 'premium';
+  isActive: boolean;
+  imageCharacterSelect?: string;
+  totalConversations?: number;
+  averageAffinity?: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface CharacterTableProps {
-  characters: CharacterData[];
+  characters: Character[];
 }
 
 export default function CharacterTable({ characters }: CharacterTableProps) {
@@ -23,18 +37,26 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
       {/* モバイル用カードビュー */}
       <div className="block lg:hidden space-y-4">
         {characters.map((character) => (
-          <div key={character.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <div key={character._id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center space-x-3 flex-1">
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium">
-                    {character.name.ja.charAt(0)}
-                  </span>
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center overflow-hidden">
+                  {character.imageCharacterSelect ? (
+                    <img
+                      src={character.imageCharacterSelect}
+                      alt={character.name.ja}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white font-medium">
+                      {character.name.ja.charAt(0)}
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900">{character.name.ja}</div>
-                  <div className="text-sm text-gray-500">ID: {character.id}</div>
-                  <div className="text-sm text-gray-900">{character.personalityType}</div>
+                  <div className="font-medium text-gray-900">{character.name?.ja || 'N/A'}</div>
+                  <div className="text-sm text-gray-500">ID: {character._id ? character._id.slice(-8) : 'N/A'}</div>
+                  <div className="text-sm text-gray-900">{character.personalityPreset || 'N/A'}</div>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -123,49 +145,59 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {characters.map((character) => (
-              <tr key={character.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={character._id} className="hover:bg-gray-50 transition-colors">
                 <td className="py-4 px-2">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
-                      <span className="text-white font-medium text-sm">
-                        {character.name.ja.charAt(0)}
-                      </span>
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center overflow-hidden">
+                      {character.imageCharacterSelect ? (
+                        <img
+                          src={character.imageCharacterSelect}
+                          alt={character.name.ja}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-white font-medium text-sm">
+                          {character.name.ja.charAt(0)}
+                        </span>
+                      )}
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900">{character.name.ja}</div>
-                      <div className="text-sm text-gray-500">ID: {character.id}</div>
+                      <div className="font-medium text-gray-900">{character.name?.ja || 'N/A'}</div>
+                      <div className="text-sm text-gray-500">ID: {character._id ? character._id.slice(-8) : 'N/A'}</div>
                     </div>
                   </div>
                 </td>
                 <td className="py-4 px-2">
                   <div>
-                    <div className="text-sm text-gray-900">{character.personalityType}</div>
+                    <div className="text-sm text-gray-900">{character.personalityPreset || 'N/A'}</div>
                     <div className="text-xs text-gray-500">
-                      {character.traits.slice(0, 2).join(', ')}
+                      {character.personalityTags ? character.personalityTags.slice(0, 2).join(', ') : 'N/A'}
                     </div>
                   </div>
                 </td>
                 <td className="py-4 px-2">
                   <div className="text-sm text-gray-900">
-                    {character.isFree ? (
+                    {character.characterAccessType === 'initial' ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         無料
                       </span>
                     ) : (
-                      `¥${character.price}`
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        プレミアム
+                      </span>
                     )}
                   </div>
                 </td>
                 <td className="py-4 px-2">
                   <div className="text-sm text-gray-900">
-                    {character.totalChats.toLocaleString()}
+                    {(character.totalConversations || 0).toLocaleString()}
                   </div>
                 </td>
                 <td className="py-4 px-2">
                   <div className="flex items-center space-x-2">
                     <Heart className="w-4 h-4 text-red-400" />
                     <span className="text-sm text-gray-900">
-                      {character.avgIntimacy.toFixed(1)}
+                      {(character.averageAffinity || 0).toFixed(1)}
                     </span>
                   </div>
                 </td>

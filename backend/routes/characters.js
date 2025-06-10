@@ -3,7 +3,7 @@ const rateLimit = require('express-rate-limit');
 const escapeStringRegexp = require('escape-string-regexp');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const { mockCharacters } = require('../mockData');
+const { CharacterModel: Character } = require('../src/models/CharacterModel');
 
 // Characters rate limiting - 1つのIPから1分間に60回まで
 const charactersRateLimit = rateLimit({
@@ -17,9 +17,6 @@ const charactersRateLimit = rateLimit({
   legacyHeaders: false,
 });
 
-// モックモード判定
-const USE_MOCK = process.env.USE_MOCK === 'true' || !process.env.MONGO_URI || process.env.MONGO_URI.includes('localhost:27017');
-
 // GET /api/characters - キャラ一覧API（検索・ソート・ロケール対応）
 router.get('/', charactersRateLimit, auth, async (req, res) => {
   try {
@@ -30,154 +27,106 @@ router.get('/', charactersRateLimit, auth, async (req, res) => {
       keyword = '' 
     } = req.query;
 
-    let characters;
+    // 基本フィルター: アクティブなキャラクターのみ
+    let filter = { isActive: true };
 
-    if (USE_MOCK) {
-      console.log('🎭 モックデータを使用してキャラクター一覧を返します');
-      characters = mockCharacters.filter(char => char.isActive);
-      
-      // フィルタリング処理
-      if (freeOnly === 'true') {
-        characters = characters.filter(char => char.characterAccessType === 'free');
-      }
-
-      if (keyword) {
-        const escapedKeyword = escapeStringRegexp(keyword.toLowerCase());
-        const keywordRegex = new RegExp(escapedKeyword, 'i');
-        characters = characters.filter(char => 
-          keywordRegex.test(char.name.ja) ||
-          keywordRegex.test(char.name.en) ||
-          keywordRegex.test(char.description.ja) ||
-          keywordRegex.test(char.description.en) ||
-          char.personalityTags.some(tag => keywordRegex.test(tag)) ||
-          keywordRegex.test(char.personalityPreset)
-        );
-      }
-
-      // ソート処理
-      switch (sort) {
-        case 'popular':
-          characters.sort((a, b) => (b.affinityStats?.totalUsers || 0) - (a.affinityStats?.totalUsers || 0));
-          break;
-        case 'newest':
-          characters.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          break;
-        case 'oldest':
-          characters.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-          break;
-        case 'name':
-          characters.sort((a, b) => (a.name[locale] || a.name.ja).localeCompare(b.name[locale] || b.name.ja));
-          break;
-        case 'affinity':
-          characters.sort((a, b) => (b.affinityStats?.averageLevel || 0) - (a.affinityStats?.averageLevel || 0));
-          break;
-      }
-    } else {
-      // MongoDB を使用する場合の処理
-      const Character = require('../models/Character');
-      
-      // 基本フィルター: アクティブなキャラクターのみ
-      let filter = { isActive: true };
-
-      // 無料キャラクターのみフィルター
-      if (freeOnly === 'true') {
-        filter.characterAccessType = 'free';
-      }
-
-      // キーワード検索フィルター（正規表現インジェクション対策）
-      if (keyword) {
-        const escapedKeyword = escapeStringRegexp(keyword);
-        const keywordRegex = new RegExp(escapedKeyword, 'i');
-        filter.$or = [
-          { [`name.${locale}`]: keywordRegex },
-          { [`name.ja`]: keywordRegex },
-          { [`name.en`]: keywordRegex },
-          { [`description.${locale}`]: keywordRegex },
-          { [`description.ja`]: keywordRegex },
-          { [`description.en`]: keywordRegex },
-          { personalityTags: { $in: [keywordRegex] } },
-          { personalityPreset: keywordRegex }
-        ];
-      }
-
-      // ソート設定
-      let sortOption = {};
-      switch (sort) {
-        case 'popular':
-          sortOption = { 'affinityStats.totalUsers': -1, createdAt: -1 };
-          break;
-        case 'newest':
-          sortOption = { createdAt: -1 };
-          break;
-        case 'oldest':
-          sortOption = { createdAt: 1 };
-          break;
-        case 'name':
-          sortOption = { [`name.${locale}`]: 1, [`name.ja`]: 1 };
-          break;
-        case 'affinity':
-          sortOption = { 'affinityStats.averageLevel': -1, createdAt: -1 };
-          break;
-        default:
-          sortOption = { createdAt: -1 };
-      }
-
-      characters = await Character.find(filter)
-        .select('-adminPrompt')
-        .sort(sortOption)
-        .lean();
+    // 無料キャラクターのみフィルター
+    if (freeOnly === 'true') {
+      filter.characterAccessType = 'free';
     }
 
-    // ロケールに応じたレスポンス構築
-    const localizedCharacters = characters.map(character => {
-      // ローカライズされた名前と説明を構築
-      const localizedName = character.name?.[locale] || character.name?.ja || character.name || '';
-      const localizedDescription = character.description?.[locale] || character.description?.ja || character.description || '';
-      const localizedDefaultMessage = character.defaultMessage?.[locale] || character.defaultMessage?.ja || '';
+    // キーワード検索フィルター（正規表現インジェクション対策）
+    if (keyword) {
+      const escapedKeyword = escapeStringRegexp(keyword);
+      const keywordRegex = new RegExp(escapedKeyword, 'i');
+      filter.$or = [
+        { [`name.${locale}`]: keywordRegex },
+        { [`name.ja`]: keywordRegex },
+        { [`name.en`]: keywordRegex },
+        { [`description.${locale}`]: keywordRegex },
+        { [`description.ja`]: keywordRegex },
+        { [`description.en`]: keywordRegex },
+        { personalityTags: { $in: [keywordRegex] } },
+        { personalityPreset: keywordRegex }
+      ];
+    }
 
-      return {
-        _id: character._id,
-        name: localizedName,
-        description: localizedDescription,
-        personalityPreset: character.personalityPreset,
-        personalityTags: character.personalityTags || [],
-        gender: character.gender,
-        model: character.model,
-        characterAccessType: character.characterAccessType,
-        stripeProductId: character.stripeProductId,
-        defaultMessage: localizedDefaultMessage,
-        imageCharacterSelect: character.imageCharacterSelect,
-        imageDashboard: character.imageDashboard,
-        imageChatAvatar: character.imageChatAvatar,
-        sampleVoiceUrl: character.sampleVoiceUrl,
-        isActive: character.isActive,
-        createdAt: character.createdAt,
-        // 統計情報
-        affinityStats: character.affinityStats || {
-          totalUsers: 0,
-          averageLevel: 0,
-          maxLevelUsers: 0
-        }
-      };
-    });
+    // ソート設定
+    let sortOption = {};
+    switch (sort) {
+      case 'popular':
+        sortOption = { totalUsers: -1 };
+        break;
+      case 'newest':
+        sortOption = { createdAt: -1 };
+        break;
+      case 'oldest':
+        sortOption = { createdAt: 1 };
+        break;
+      case 'name':
+        sortOption = { [`name.${locale}`]: 1 };
+        break;
+      case 'affinity':
+        sortOption = { averageAffinityLevel: -1 };
+        break;
+      default:
+        sortOption = { totalUsers: -1 };
+    }
 
-    res.set('Cache-Control', 'no-store');
+    // データベースクエリ実行
+    const characters = await Character.find(filter)
+      .select('name description imageCharacterSelect themeColor characterAccessType personalityPreset personalityTags totalUsers averageAffinityLevel createdAt')
+      .sort(sortOption)
+      .lean();
+
+    console.log(`✅ ${characters.length}件のキャラクターを取得`);
     res.json({
-      characters: localizedCharacters,
-      total: localizedCharacters.length,
-      locale,
-      filter: {
-        freeOnly: freeOnly === 'true',
-        keyword,
-        sort
-      }
+      characters,
+      total: characters.length,
+      filters: { locale, freeOnly, sort, keyword }
     });
 
   } catch (error) {
-    console.error('Characters list error:', error);
+    console.error('❌ Characters API error:', error);
     res.status(500).json({ 
-      error: 'サーバーエラーが発生しました',
-      message: error.message 
+      error: 'Internal server error',
+      message: 'キャラクター取得中にエラーが発生しました'
+    });
+  }
+});
+
+// GET /api/characters/:id - キャラクター詳細取得
+router.get('/:id', charactersRateLimit, auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { locale = 'ja' } = req.query;
+
+    const character = await Character.findById(id)
+      .select('-__v')
+      .lean();
+
+    if (!character) {
+      return res.status(404).json({
+        error: 'Character not found',
+        message: 'キャラクターが見つかりません'
+      });
+    }
+
+    if (!character.isActive) {
+      return res.status(404).json({
+        error: 'Character not available',
+        message: 'このキャラクターは利用できません'
+      });
+    }
+
+    console.log(`✅ キャラクター詳細取得: ${character.name[locale] || character.name.ja}`);
+    res.json({ character });
+
+  } catch (error) {
+    console.error('❌ Character detail API error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'キャラクター詳細取得中にエラーが発生しました'
     });
   }
 });

@@ -17,12 +17,12 @@ const dashboardRateLimit = rateLimit({
 });
 
 // モデルのインポート
-const User = require('../../data/ai-character-feature-simplify-terms-privacy-pages/backend/models/User');
+const { UserModel: User } = require('../../src/models/UserModel');
 const UserTokenPack = require('../../models/UserTokenPack');
 const TokenUsage = require('../../models/TokenUsage');
-const Chat = require('../../data/ai-character-feature-simplify-terms-privacy-pages/backend/models/Chat');
+// const Chat = require('../../models/Chat'); // Chat model not found
 const Character = require('../../models/Character');
-const Notification = require('../../data/ai-character-feature-simplify-terms-privacy-pages/backend/models/Notification');
+// const Notification = require('../../models/Notification'); // Notification model not found
 
 /**
  * GET /api/user/dashboard
@@ -117,48 +117,8 @@ router.get('/dashboard', dashboardRateLimit, auth, async (req, res) => {
       }
     }
 
-    // 4. 最近のチャット（3件制限）
+    // 4. 最近のチャット（実装待ち）
     const recentChatData = [];
-    try {
-      const recentChats = await Chat.aggregate([
-        { $match: { userId: new mongoose.Types.ObjectId(userId) } },
-        { $sort: { updatedAt: -1 } },
-        {
-          $group: {
-            _id: '$characterId',
-            lastMessage: { $first: { $arrayElemAt: ['$messages.content', -1] } },
-            lastMessageAt: { $first: '$updatedAt' },
-            messageCount: { $first: { $size: '$messages' } }
-          }
-        },
-        { $limit: 3 }
-      ]);
-
-      // キャラクター情報を取得
-      const chatCharacterIds = recentChats.map(chat => chat._id);
-      const chatCharacters = await Character.find({ _id: { $in: chatCharacterIds } })
-        .select('_id name imageCharacterSelect')
-        .lean();
-
-      recentChats.forEach(chat => {
-        const character = chatCharacters.find(c => c._id.toString() === chat._id.toString());
-        if (character) {
-          recentChatData.push({
-            _id: chat._id,
-            character: {
-              _id: character._id,
-              name: character.name || { ja: 'Unknown', en: 'Unknown' },
-              imageCharacterSelect: character.imageCharacterSelect || ''
-            },
-            lastMessage: chat.lastMessage || 'メッセージなし',
-            lastMessageAt: chat.lastMessageAt || new Date(),
-            messageCount: chat.messageCount || 0
-          });
-        }
-      });
-    } catch (chatError) {
-      console.error('Recent chats fetch error:', chatError);
-    }
 
     // 5. 購入履歴（最新20件）
     const purchaseHistory = (user.purchaseHistory || []).slice(-20).reverse().map(purchase => ({
@@ -168,59 +128,14 @@ router.get('/dashboard', dashboardRateLimit, auth, async (req, res) => {
       details: purchase.details || purchase.description || 'Purchase'
     }));
 
-    // 6. お知らせ
+    // 6. お知らせ（実装待ち）
     const notifications = [];
-    try {
-      const notificationData = await Notification.find({ 
-        $or: [
-          { userId: userId },
-          { isGlobal: true }
-        ]
-      })
-      .sort({ createdAt: -1 })
-      .limit(20)
-      .lean();
 
-      notificationData.forEach(notif => {
-        notifications.push({
-          _id: notif._id,
-          title: notif.title || { ja: 'お知らせ', en: 'Notification' },
-          message: notif.message || { ja: 'メッセージ', en: 'Message' },
-          type: notif.type || 'info',
-          isRead: notif.isRead || false,
-          createdAt: notif.createdAt || new Date()
-        });
-      });
-    } catch (notifError) {
-      console.error('Notifications fetch error:', notifError);
-    }
+    // 7. バッジ（実装待ち）
+    const badges = [];
 
-    // 7. バッジ（ダミーデータ）
-    const badges = [
-      {
-        _id: 'badge_001',
-        name: { ja: '初心者', en: 'Beginner' },
-        description: { ja: '初回ログインを達成', en: 'Completed first login' },
-        iconUrl: '/icon/badge_beginner.svg',
-        isUnlocked: true,
-        unlockedAt: user.createdAt,
-        progress: 1,
-        maxProgress: 1
-      },
-      {
-        _id: 'badge_002',
-        name: { ja: 'チャットマスター', en: 'Chat Master' },
-        description: { ja: '100回のチャットを達成', en: 'Completed 100 chats' },
-        iconUrl: '/icon/badge_chat_master.svg',
-        isUnlocked: false,
-        progress: Math.min(recentChatData.reduce((sum, chat) => sum + chat.messageCount, 0), 100),
-        maxProgress: 100
-      }
-    ];
-
-    // 8. 統計データ（ダミー実装）
+    // 8. 統計データ
     const analytics = {
-      chatCountPerDay: generateDummyChatData(7),
       tokenUsagePerDay: recentUsage,
       affinityProgress: affinities.map(a => ({
         characterName: a.character.name.ja || 'Unknown',
@@ -265,18 +180,5 @@ router.get('/dashboard', dashboardRateLimit, auth, async (req, res) => {
   }
 });
 
-// ダミーデータ生成関数
-function generateDummyChatData(days) {
-  const data = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    data.push({
-      date: date.toISOString().slice(0, 10),
-      count: Math.floor(Math.random() * 10) + 1
-    });
-  }
-  return data;
-}
 
 module.exports = router;

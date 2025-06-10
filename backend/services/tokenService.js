@@ -1,4 +1,4 @@
-const User = require('../../data/ai-character-feature-simplify-terms-privacy-pages/backend/models/User');
+const { UserModel: User } = require('../src/models/UserModel');
 const UserTokenPack = require('../models/UserTokenPack');
 const TokenUsage = require('../models/TokenUsage');
 

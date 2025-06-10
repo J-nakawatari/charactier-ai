@@ -1,14 +1,30 @@
 'use client';
 
-import { UserData } from '@/mock/adminData';
+// import { UserData } from '@/mock/adminData'; // モックデータは使用しない
+
+interface UserData {
+  id: string;
+  _id: string;
+  name: string;
+  email: string;
+  tokenBalance: number;
+  totalSpent: number;
+  chatCount: number;
+  avgIntimacy: number;
+  lastLogin: string;
+  status: string;
+  isTrialUser: boolean;
+  createdAt: string;
+}
 import { useToast } from '@/contexts/ToastContext';
-import { Eye, Ban, Unlock } from 'lucide-react';
+import { Eye, Ban, Unlock, Trash2 } from 'lucide-react';
 
 interface UserTableProps {
   users: UserData[];
+  onUserUpdate?: () => void;
 }
 
-export default function UserTable({ users }: UserTableProps) {
+export default function UserTable({ users, onUserUpdate }: UserTableProps) {
   const { success, error } = useToast();
   
   const getStatusBadge = (status: string) => {
@@ -48,6 +64,44 @@ export default function UserTable({ users }: UserTableProps) {
       success('アカウント復活', `${user.name}のアカウントを復活させました`);
     } else {
       error('アカウント停止', `${user.name}のアカウントを停止しました`);
+    }
+  };
+
+  // ⚠️ 一時的機能：トークンリセット
+  const handleResetTokens = async (user: UserData) => {
+    if (!confirm(`⚠️ ${user.name}のトークン残高(${formatNumber(user.tokenBalance)}枚)を0にリセットしますか？\n\n※これは開発用の一時的機能です`)) {
+      return;
+    }
+
+    try {
+      const adminToken = localStorage.getItem('adminAccessToken');
+      
+      if (!adminToken) {
+        error('認証エラー', '管理者認証が必要です');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3004/admin/users/${user.id}/reset-tokens`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Token reset failed');
+      }
+
+      const result = await response.json();
+      success('トークンリセット完了', `${user.name}のトークン残高を${formatNumber(result.previousBalance)}から0にリセットしました`);
+      
+      // ユーザー一覧を更新
+      onUserUpdate?.();
+      
+    } catch (err) {
+      error('リセットエラー', 'トークンのリセットに失敗しました');
+      console.error('Token reset error:', err);
     }
   };
 
@@ -212,13 +266,25 @@ export default function UserTable({ users }: UserTableProps) {
                     <button 
                       onClick={() => handleViewUser(user)}
                       className="text-gray-400 hover:text-gray-600 transition-colors"
+                      title="ユーザー詳細"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
+                    
+                    {/* ⚠️ 一時的機能：トークンリセット */}
+                    <button 
+                      onClick={() => handleResetTokens(user)}
+                      className="text-gray-400 hover:text-orange-600 transition-colors"
+                      title="⚠️ 開発用：トークンを0にリセット"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    
                     {user.status === 'suspended' ? (
                       <button 
                         onClick={() => handleBanUser(user)}
                         className="text-gray-400 hover:text-green-600 transition-colors"
+                        title="アカウント復活"
                       >
                         <Unlock className="w-4 h-4" />
                       </button>
@@ -226,6 +292,7 @@ export default function UserTable({ users }: UserTableProps) {
                       <button 
                         onClick={() => handleBanUser(user)}
                         className="text-gray-400 hover:text-red-600 transition-colors"
+                        title="アカウント停止"
                       >
                         <Ban className="w-4 h-4" />
                       </button>

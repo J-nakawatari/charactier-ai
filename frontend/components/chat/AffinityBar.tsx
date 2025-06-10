@@ -1,7 +1,7 @@
 'use client';
 
 import { Heart, Star } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 
 interface AffinityBarProps {
   level: number;
@@ -9,11 +9,56 @@ interface AffinityBarProps {
   nextLevelExp: number;
   themeColor: string;
   mood?: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
+  characterId?: string;
+  onAffinityUpdate?: (newAffinity: { level: number; experience: number }) => void;
 }
 
-export function AffinityBar({ level, currentExp, nextLevelExp, themeColor, mood = 'happy' }: AffinityBarProps) {
-  const expPercentage = (currentExp / nextLevelExp) * 100;
-  const expNeeded = nextLevelExp - currentExp;
+export function AffinityBar({ 
+  level, 
+  currentExp, 
+  nextLevelExp, 
+  themeColor, 
+  mood = 'happy',
+  characterId,
+  onAffinityUpdate
+}: AffinityBarProps) {
+  const [animatingIncrease, setAnimatingIncrease] = useState(false);
+  const [lastLevel, setLastLevel] = useState(level);
+  const [lastExp, setLastExp] = useState(currentExp);
+  
+  // レベルアップアニメーション管理
+  useEffect(() => {
+    if (level > lastLevel) {
+      setAnimatingIncrease(true);
+      const timer = setTimeout(() => {
+        setAnimatingIncrease(false);
+        setLastLevel(level);
+      }, 2000);
+      return () => clearTimeout(timer);
+    } else if (level !== lastLevel) {
+      setLastLevel(level);
+    }
+  }, [level, lastLevel]);
+  
+  // 経験値増加アニメーション
+  useEffect(() => {
+    if (currentExp > lastExp) {
+      setAnimatingIncrease(true);
+      const timer = setTimeout(() => {
+        setAnimatingIncrease(false);
+        setLastExp(currentExp);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (currentExp !== lastExp) {
+      setLastExp(currentExp);
+    }
+  }, [currentExp, lastExp]);
+  const expPercentage = Math.min((currentExp / nextLevelExp) * 100, 100);
+  const expNeeded = Math.max(nextLevelExp - currentExp, 0);
+  
+  // レベルアップ特效の判定
+  const isLevelingUp = animatingIncrease && level > lastLevel;
+  const isExpGaining = animatingIncrease && currentExp > lastExp;
 
   const moodConfig = useMemo(() => {
     switch (mood) {
@@ -80,7 +125,9 @@ export function AffinityBar({ level, currentExp, nextLevelExp, themeColor, mood 
       <div className="flex items-center space-x-1">
         {/* モバイル: 丸い数字のみ */}
         <div 
-          className="sm:hidden w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm"
+          className={`sm:hidden w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm transition-all duration-500 ${
+            isLevelingUp ? 'animate-bounce scale-110 shadow-lg' : ''
+          }`}
           style={{ backgroundColor: themeColor }}
         >
           {level}
@@ -88,8 +135,15 @@ export function AffinityBar({ level, currentExp, nextLevelExp, themeColor, mood 
         
         {/* デスクトップ: ハートアイコン + Lv.12 */}
         <div className="hidden sm:flex items-center space-x-1">
-          <Heart className="w-4 h-4 text-pink-500" />
-          <span className="text-sm font-medium text-gray-700">Lv.{level}</span>
+          <Heart className={`w-4 h-4 text-pink-500 transition-all duration-300 ${
+            isLevelingUp ? 'animate-pulse scale-125' : ''
+          }`} />
+          <span className={`text-sm font-medium text-gray-700 transition-all duration-300 ${
+            isLevelingUp ? 'text-yellow-600 font-bold' : ''
+          }`}>Lv.{level}</span>
+          {isLevelingUp && (
+            <span className="text-xs text-yellow-600 animate-bounce">UP!</span>
+          )}
         </div>
       </div>
 
@@ -104,14 +158,18 @@ export function AffinityBar({ level, currentExp, nextLevelExp, themeColor, mood 
         
         <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
           <div 
-            className="absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out"
+            className={`absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out ${
+              isExpGaining ? 'shadow-lg shadow-blue-300/50' : ''
+            }`}
             style={{ 
               width: `${expPercentage}%`,
               backgroundColor: themeColor 
             }}
           >
             {/* キラキラエフェクト */}
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+            <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/30 to-transparent ${
+              isExpGaining ? 'animate-bounce' : 'animate-pulse'
+            }`}></div>
           </div>
           
           {/* レベルアップ間近のエフェクト */}

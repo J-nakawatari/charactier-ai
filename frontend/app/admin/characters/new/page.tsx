@@ -41,8 +41,7 @@ const PERSONALITY_TAGS = [
 // アクセスタイプ
 const ACCESS_TYPES = [
   { value: 'free', label: '無料', description: '誰でも無料で利用可能' },
-  { value: 'token-based', label: 'トークン制', description: 'トークンを消費して利用' },
-  { value: 'purchaseOnly', label: '買い切り', description: '一度購入すると永続利用可能' }
+  { value: 'purchaseOnly', label: 'プレミアム', description: '購入が必要なキャラクター' }
 ];
 
 // AIモデル
@@ -64,6 +63,27 @@ export default function CharacterNewPage() {
   const { success, error } = useToast();
   
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
+
+  // フィールドエラーのスタイルを取得する関数
+  const getFieldErrorClass = (fieldName: string) => {
+    return fieldErrors[fieldName] 
+      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+      : 'border-gray-300 focus:border-gray-400';
+  };
+
+  // エラーメッセージを表示する関数
+  const renderFieldError = (fieldName: string) => {
+    if (fieldErrors[fieldName]) {
+      return (
+        <p className="mt-1 text-sm text-red-600">
+          {fieldErrors[fieldName]}
+        </p>
+      );
+    }
+    return null;
+  };
 
   const [formData, setFormData] = useState({
     // 基本情報
@@ -107,37 +127,129 @@ export default function CharacterNewPage() {
   const [currentImageType, setCurrentImageType] = useState<string>('');
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState<number>(-1);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // バリデーション
+    // エラー状態をリセット
+    setValidationErrors([]);
+    setFieldErrors({});
+    
+    // フロントエンドバリデーション
+    const errors: {[key: string]: string} = {};
+    
     if (!formData.name.ja.trim()) {
-      error('入力エラー', 'キャラクター名（日本語）は必須です');
-      return;
+      errors['name.ja'] = 'キャラクター名（日本語）は必須です';
     }
     
     if (!formData.personalityPreset) {
-      error('入力エラー', '性格プリセットを選択してください');
-      return;
+      errors['personalityPreset'] = '性格プリセットを選択してください';
     }
 
     if (formData.personalityTags.length === 0) {
-      error('入力エラー', '性格タグを最低1つ選択してください');
-      return;
+      errors['personalityTags'] = '性格タグを最低1つ選択してください';
     }
 
     if (formData.characterAccessType === 'purchaseOnly' && !formData.stripePriceId.trim()) {
-      error('入力エラー', '買い切りキャラクターの場合、Stripe価格IDを設定してください');
+      errors['stripePriceId'] = 'プレミアムキャラクターの場合、Stripe価格IDを設定してください';
+    }
+
+    // フロントエンドバリデーションエラーがある場合
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
-    // 保存処理（実際の実装では API 呼び出し）
-    success('作成完了', `${formData.name.ja}を新規作成しました`);
-    
-    // キャラクター一覧に戻る
-    setTimeout(() => {
-      router.push('/admin/characters');
-    }, 1000);
+    try {
+      // 実際のAPI呼び出し
+      const adminToken = localStorage.getItem('adminAccessToken');
+      
+      if (!adminToken) {
+        router.push('/admin/login');
+        return;
+      }
+
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        personalityPreset: formData.personalityPreset,
+        personalityTags: formData.personalityTags,
+        gender: formData.gender,
+        characterAccessType: formData.characterAccessType,
+        aiModel: formData.model,
+        personalityPrompt: formData.adminPrompt, // personalityPromptが必須なので使用
+        adminPrompt: formData.adminPrompt,
+        defaultMessage: {
+          ja: formData.defaultMessage.ja || 'こんにちは！よろしくお願いします。',
+          en: formData.defaultMessage.en || 'Hello! Nice to meet you!'
+        },
+        limitMessage: {
+          ja: formData.limitMessage.ja || '今日はたくさんお話ししましたね。また明日お話ししましょう！',
+          en: formData.limitMessage.en || 'We had a great conversation today! Let\'s talk again tomorrow!'
+        },
+        affinitySettings: {
+          maxLevel: 100,
+          experienceMultiplier: 1.0,
+          decayRate: 0.1,
+          decayThreshold: 7,
+          levelUpBonuses: []
+        },
+        stripeProductId: formData.stripePriceId,
+        purchasePrice: formData.displayPrice,
+        isActive: formData.isActive
+      };
+
+      console.log('📤 Sending character data:', {
+        payload,
+        payloadSize: JSON.stringify(payload).length,
+        adminToken: adminToken ? 'Present' : 'Missing'
+      });
+
+      const response = await fetch('http://localhost:3004/api/characters', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        console.error('❌ API Error Response:', responseData);
+        
+        // バリデーションエラーの詳細をUIに表示
+        if (responseData.fieldErrors && Array.isArray(responseData.fieldErrors)) {
+          const apiFieldErrors: {[key: string]: string} = {};
+          responseData.fieldErrors.forEach((errorStr: string) => {
+            const [field, ...messageParts] = errorStr.split(': ');
+            apiFieldErrors[field] = messageParts.join(': ');
+          });
+          setFieldErrors(apiFieldErrors);
+          setValidationErrors(responseData.fieldErrors);
+        }
+        
+        // エラーメッセージを構築
+        let errorMessage = responseData.message || 'キャラクターの作成に失敗しました';
+        if (responseData.details) {
+          errorMessage += ` (${responseData.details})`;
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      console.log('✅ Character created successfully:', responseData);
+      success('作成完了', `${formData.name.ja}を新規作成しました`);
+      
+      // キャラクター一覧に戻る
+      setTimeout(() => {
+        router.push('/admin/characters');
+      }, 1500);
+
+    } catch (err: any) {
+      console.error('❌ Character creation failed:', err);
+      // APIエラーの場合、フィールドエラーが既に設定されているので、追加でトーストは表示しない
+    }
   };
 
   const handleCancel = () => {
@@ -318,7 +430,22 @@ export default function CharacterNewPage() {
       {/* メインコンテンツ */}
       <main className="flex-1 p-4 md:p-6">
         <div className="max-w-6xl mx-auto">
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8" noValidate>
+            
+            {/* バリデーションエラー表示 */}
+            {validationErrors.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h3 className="text-red-800 font-semibold mb-2">入力データに問題があります</h3>
+                <ul className="text-red-700 text-sm space-y-1">
+                  {validationErrors.map((error, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block w-1 h-1 bg-red-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                      {error}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             
             {/* キャラクター画像設定 */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -499,10 +626,10 @@ export default function CharacterNewPage() {
                     type="text"
                     value={formData.name.ja}
                     onChange={(e) => setFormData({ ...formData, name: { ...formData.name, ja: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none ${getFieldErrorClass('name.ja')}`}
                     placeholder="例: ルナ、ミコ、レイ"
-                    required
                   />
+                  {renderFieldError('name.ja')}
                 </div>
 
                 <div>
@@ -513,7 +640,7 @@ export default function CharacterNewPage() {
                     type="text"
                     value={formData.name.en}
                     onChange={(e) => setFormData({ ...formData, name: { ...formData.name, en: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
                     placeholder="例: Luna, Miko, Rei"
                   />
                 </div>
@@ -525,7 +652,7 @@ export default function CharacterNewPage() {
                   <textarea
                     value={formData.description.ja}
                     onChange={(e) => setFormData({ ...formData, description: { ...formData.description, ja: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
                     rows={3}
                     placeholder="キャラクターの説明を入力してください..."
                   />
@@ -538,7 +665,7 @@ export default function CharacterNewPage() {
                   <textarea
                     value={formData.description.en}
                     onChange={(e) => setFormData({ ...formData, description: { ...formData.description, en: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
                     rows={3}
                     placeholder="Character description in English..."
                   />
@@ -551,7 +678,7 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.gender}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 text-gray-900"
                   >
                     {GENDERS.map(gender => (
                       <option key={gender.value} value={gender.value} className="text-gray-900">
@@ -569,7 +696,7 @@ export default function CharacterNewPage() {
                     type="text"
                     value={formData.age}
                     onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
                     placeholder="例: 18歳、20代前半"
                   />
                 </div>
@@ -582,7 +709,7 @@ export default function CharacterNewPage() {
                     type="text"
                     value={formData.occupation}
                     onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
                     placeholder="例: 学生、OL、お嬢様"
                   />
                 </div>
@@ -601,8 +728,7 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.personalityPreset}
                     onChange={(e) => setFormData({ ...formData, personalityPreset: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
-                    required
+                    className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none ${getFieldErrorClass('personalityPreset')}`}
                   >
                     <option value="" className="text-gray-500">プリセットを選択してください</option>
                     {PERSONALITY_PRESETS.map(preset => (
@@ -611,6 +737,7 @@ export default function CharacterNewPage() {
                       </option>
                     ))}
                   </select>
+                  {renderFieldError('personalityPreset')}
                 </div>
 
                 <div>
@@ -635,6 +762,7 @@ export default function CharacterNewPage() {
                   <p className="text-sm text-gray-500 mt-2">
                     選択済み: {formData.personalityTags.length}個
                   </p>
+                  {renderFieldError('personalityTags')}
                 </div>
               </div>
             </div>
@@ -650,7 +778,7 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.model}
                     onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 text-gray-900"
                   >
                     {AI_MODELS.map(model => (
                       <option key={model.value} value={model.value} className="text-gray-900">
@@ -667,7 +795,7 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.characterAccessType}
                     onChange={(e) => setFormData({ ...formData, characterAccessType: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 text-gray-900"
                   >
                     {ACCESS_TYPES.map(type => (
                       <option key={type.value} value={type.value} className="text-gray-900">
@@ -687,10 +815,11 @@ export default function CharacterNewPage() {
                         type="text"
                         value={formData.stripePriceId}
                         onChange={handlePriceIdChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none ${getFieldErrorClass('stripePriceId')}`}
                         placeholder="price_1234567890abcdef"
                         disabled={isLoadingPrice}
                       />
+                      {renderFieldError('stripePriceId')}
                       <p className="text-sm text-gray-500">
                         例: price_1234567890abcdef（Stripeダッシュボードから価格IDをコピー）
                       </p>
@@ -723,7 +852,7 @@ export default function CharacterNewPage() {
                   <textarea
                     value={formData.adminPrompt.ja}
                     onChange={(e) => setFormData({ ...formData, adminPrompt: { ...formData.adminPrompt, ja: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
                     rows={4}
                     placeholder="例: あなたは明るく元気な女の子のルナです。いつも前向きで、相手を励ましたり元気づけたりするのが得意です。語尾に「だよ」「だね」を使い、親しみやすい口調で話してください。"
                   />
@@ -736,7 +865,7 @@ export default function CharacterNewPage() {
                   <textarea
                     value={formData.adminPrompt.en}
                     onChange={(e) => setFormData({ ...formData, adminPrompt: { ...formData.adminPrompt, en: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
                     rows={4}
                     placeholder="Example: You are Luna, a bright and energetic girl. You are always positive and good at encouraging and cheering up others. Use a friendly tone."
                   />
@@ -750,7 +879,7 @@ export default function CharacterNewPage() {
                     <textarea
                       value={formData.defaultMessage.ja}
                       onChange={(e) => setFormData({ ...formData, defaultMessage: { ...formData.defaultMessage, ja: e.target.value } })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
                       rows={3}
                       placeholder="例: こんにちは！私はルナだよ✨ 今日はどんなことをお話ししようかな？"
                     />
@@ -763,7 +892,7 @@ export default function CharacterNewPage() {
                     <textarea
                       value={formData.limitMessage.ja}
                       onChange={(e) => setFormData({ ...formData, limitMessage: { ...formData.limitMessage, ja: e.target.value } })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
                       rows={3}
                       placeholder="例: 今日はたくさんお話しできて楽しかったよ！また明日お話ししようね♪"
                     />
@@ -841,7 +970,7 @@ export default function CharacterNewPage() {
                               type="text"
                               value={galleryItem?.title || ''}
                               onChange={(e) => updateGalleryInfo(index, 'title', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
                               placeholder="画像タイトル"
                             />
                           </div>
@@ -850,7 +979,7 @@ export default function CharacterNewPage() {
                             <textarea
                               value={galleryItem?.description || ''}
                               onChange={(e) => updateGalleryInfo(index, 'description', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
                               rows={2}
                               placeholder="画像説明"
                             />
@@ -905,7 +1034,7 @@ export default function CharacterNewPage() {
               <ul className="text-sm text-purple-700 space-y-1">
                 <li>• 性格タグは3〜5個程度が最適です</li>
                 <li>• プロンプトは具体的で分かりやすく記述してください</li>
-                <li>• 買い切りキャラクターの価格は1500円〜3000円を推奨</li>
+                <li>• プレミアムキャラクターの価格は1500円〜3000円を推奨</li>
                 <li>• 公開前にテストユーザーでの動作確認を推奨します</li>
                 <li>• ギャラリー画像は親密度レベルに応じて順次解放されます</li>
               </ul>

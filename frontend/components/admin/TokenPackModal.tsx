@@ -211,10 +211,22 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
         ? `/api/admin/token-packs/${editingPack._id}`
         : '/api/admin/token-packs';
 
-      const response = await fetch(url, {
+      const adminToken = localStorage.getItem('adminAccessToken');
+      
+      if (!adminToken) {
+        error('認証エラー', '管理者認証が必要です');
+        return;
+      }
+
+      const backendUrl = editingPack 
+        ? `http://localhost:3004/api/admin/token-packs/${editingPack._id}`
+        : 'http://localhost:3004/api/admin/token-packs';
+
+      const response = await fetch(backendUrl, {
         method,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
         },
         body: JSON.stringify({
           name: formData.name,

@@ -1,18 +1,88 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Coins, AlertTriangle, Plus } from 'lucide-react';
+import { getAuthHeaders, getCurrentUser } from '@/utils/auth';
 
 interface TokenBarProps {
-  tokensRemaining: number;
   lastMessageCost: number;
   onPurchaseClick?: () => void;
+  onTokenUpdate?: (newTokens: number) => void;
 }
 
-export function TokenBar({ tokensRemaining, lastMessageCost, onPurchaseClick }: TokenBarProps) {
-  const isLowBalance = tokensRemaining < 500;
-  const isCriticalBalance = tokensRemaining < 200;
+export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: TokenBarProps) {
+  const [currentTokens, setCurrentTokens] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // 初期ロード時に実際の残高を取得
+  useEffect(() => {
+    refreshTokenBalance();
+  }, []);
   
-  const remainingMessages = Math.floor(tokensRemaining / lastMessageCost);
+  // トークン残高の手動更新
+  const refreshTokenBalance = async () => {
+    if (isRefreshing) return;
+    
+    try {
+      setIsRefreshing(true);
+      const response = await fetch('/api/user/profile', {
+        headers: getAuthHeaders()
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        const newTokens = userData.tokenBalance || userData.user?.tokenBalance || 0;
+        setCurrentTokens(newTokens);
+        onTokenUpdate?.(newTokens);
+      }
+    } catch (error) {
+      console.error('Token balance refresh failed:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+  
+  // ページのフォーカス時に自動更新
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshTokenBalance();
+      }
+    };
+    
+    const handleFocus = () => {
+      refreshTokenBalance();
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    // 定期的な更新（60秒間隔）
+    const interval = setInterval(refreshTokenBalance, 60000);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+    };
+  }, []);
+  
+  // ローディング中の処理
+  if (currentTokens === null) {
+    return (
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+          <Coins className="w-4 h-4 text-gray-400 animate-pulse" />
+          <div className="text-sm text-gray-500">読み込み中...</div>
+        </div>
+      </div>
+    );
+  }
+  
+  const isLowBalance = currentTokens < 500;
+  const isCriticalBalance = currentTokens < 200;
+  
+  const remainingMessages = lastMessageCost > 0 ? Math.floor(currentTokens / lastMessageCost) : 0;
 
   return (
     <div className="flex items-center space-x-4">
@@ -40,7 +110,9 @@ export function TokenBar({ tokensRemaining, lastMessageCost, onPurchaseClick }: 
                 ? 'text-yellow-700'
                 : 'text-gray-700'
           }`}>
-            <span>{tokensRemaining.toLocaleString()}枚</span>
+            <span className={isRefreshing ? 'opacity-50' : ''}>
+              {currentTokens.toLocaleString()}枚
+            </span>
             <span className="hidden sm:inline">（あと約{remainingMessages}メッセージ）</span>
           </div>
         </div>

@@ -7,6 +7,7 @@ import { Users, Search, Filter } from 'lucide-react';
 import CharacterGrid from '@/components/characters/CharacterGrid';
 import CharacterFilters from '@/components/characters/CharacterFilters';
 import UserSidebar from '@/components/user/UserSidebar';
+import { getAuthHeaders } from '@/utils/auth';
 
 interface Character {
   _id: string;
@@ -70,7 +71,7 @@ export default function CharactersPage({
 
       const response = await fetch(`/api/characters?${queryParams}`, {
         headers: {
-          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
           'Cache-Control': 'no-store'
         },
         cache: 'no-store'

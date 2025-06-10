@@ -119,16 +119,43 @@ export default function LoginPage() {
     try {
       console.log('🔐 ログイン実行中...');
       
-      // TODO: 実際のログインAPI呼び出し
-      const testToken = 'test-token-12345';
-      localStorage.setItem('token', testToken);
+      if (!email || !password) {
+        setError('メールアドレスとパスワードを入力してください');
+        return;
+      }
       
-      console.log('✅ ログイン成功');
-      router.push(`/${locale}/characters`);
+      // バックエンドのログインAPIを呼び出し
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
       
-    } catch (err) {
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'ログインに失敗しました');
+      }
+      
+      // JWTトークンを保存
+      localStorage.setItem('accessToken', data.tokens.accessToken);
+      localStorage.setItem('refreshToken', data.tokens.refreshToken);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      console.log('✅ ログイン成功:', data.user.name || 'ユーザー');
+      
+      // 初回セットアップが完了していない場合（名前が空 または isSetupCompleteがfalse）はセットアップ画面へ
+      if (!data.user.isSetupComplete || !data.user.name || data.user.name.trim() === '') {
+        router.push(`/${locale}/setup`);
+      } else {
+        router.push(`/${locale}/characters`);
+      }
+      
+    } catch (err: any) {
       console.error('❌ ログインエラー:', err);
-      setError('ログインに失敗しました。もう一度お試しください。');
+      setError(err.message || 'ログインに失敗しました。もう一度お試しください。');
     } finally {
       setIsLoading(false);
     }

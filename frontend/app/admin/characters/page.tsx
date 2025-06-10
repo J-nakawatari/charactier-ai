@@ -1,13 +1,63 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import CharacterStats from '@/components/admin/CharacterStats';
 import CharacterManagementTable from '@/components/admin/CharacterManagementTable';
 import { useToast } from '@/contexts/ToastContext';
 import { Search, Filter, Plus, Download, Users } from 'lucide-react';
-import { mockCharacters } from '@/mock/adminData';
+
+interface Character {
+  _id: string;
+  name: { ja: string; en: string };
+  description: { ja: string; en: string };
+  personalityPreset: string;
+  personalityTags: string[];
+  characterAccessType: 'initial' | 'premium';
+  isActive: boolean;
+  imageCharacterSelect?: string;
+  totalConversations?: number;
+  averageAffinity?: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function CharactersPage() {
   const { success } = useToast();
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // キャラクター一覧を取得
+  useEffect(() => {
+    fetchCharacters();
+  }, []);
+
+  const fetchCharacters = async () => {
+    try {
+      setIsLoading(true);
+      // 認証トークンを取得
+      const token = localStorage.getItem('accessToken');
+      
+      const response = await fetch('/api/characters?locale=ja', {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCharacters(data.characters || []);
+      } else {
+        setError('キャラクター一覧の取得に失敗しました');
+      }
+    } catch (error) {
+      console.error('❌ Characters fetch error:', error);
+      setError('キャラクター一覧の取得に失敗しました');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <div className="flex-1 flex flex-col">
       {/* ヘッダー */}
@@ -60,11 +110,26 @@ export default function CharactersPage() {
       {/* メインコンテンツ */}
       <main className="flex-1 p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
-          {/* 統計カード */}
-          <CharacterStats characters={mockCharacters} />
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
           
-          {/* キャラクター管理テーブル */}
-          <CharacterManagementTable characters={mockCharacters} />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+              <span className="ml-2 text-gray-600">読み込み中...</span>
+            </div>
+          ) : (
+            <>
+              {/* 統計カード */}
+              <CharacterStats characters={characters} />
+              
+              {/* キャラクター管理テーブル */}
+              <CharacterManagementTable characters={characters} />
+            </>
+          )}
         </div>
       </main>
     </div>

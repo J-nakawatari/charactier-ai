@@ -1,15 +1,38 @@
 'use client';
 
-import { CharacterData } from '@/mock/adminData';
 import { useToast } from '@/contexts/ToastContext';
 import { Eye, Edit, Play, Pause, Heart } from 'lucide-react';
 
+interface Character {
+  _id: string;
+  name: { ja: string; en: string };
+  description: { ja: string; en: string };
+  personalityPreset: string;
+  personalityTags: string[];
+  characterAccessType: 'initial' | 'premium';
+  isActive: boolean;
+  imageCharacterSelect?: string;
+  totalConversations?: number;
+  averageAffinity?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface CharacterManagementTableProps {
-  characters: CharacterData[];
+  characters: Character[];
 }
 
 export default function CharacterManagementTable({ characters }: CharacterManagementTableProps) {
   const { success, warning } = useToast();
+  
+  // ヘルパー関数
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
   const getStatusBadge = (isActive: boolean, isFree: boolean) => {
     if (!isActive) {
       return (
@@ -33,27 +56,19 @@ export default function CharacterManagementTable({ characters }: CharacterManage
     );
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ja-JP');
+  const handleViewCharacter = (character: Character) => {
+    window.location.href = `/admin/characters/${character._id}`;
   };
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString('ja-JP');
+  const handleEditCharacter = (character: Character) => {
+    window.location.href = `/admin/characters/${character._id}/edit`;
   };
 
-  const handleViewCharacter = (character: CharacterData) => {
-    window.location.href = `/admin/characters/${character.id}`;
-  };
-
-  const handleEditCharacter = (character: CharacterData) => {
-    window.location.href = `/admin/characters/${character.id}/edit`;
-  };
-
-  const handleToggleStatus = (character: CharacterData) => {
+  const handleToggleStatus = (character: Character) => {
     if (character.isActive) {
-      warning('キャラクター非公開', `${character.name.ja}を非公開にしました`);
+      warning('キャラクター非公開', `${character.name?.ja || 'キャラクター'}を非公開にしました`);
     } else {
-      success('キャラクター公開', `${character.name.ja}を公開しました`);
+      success('キャラクター公開', `${character.name?.ja || 'キャラクター'}を公開しました`);
     }
   };
 
@@ -67,18 +82,26 @@ export default function CharacterManagementTable({ characters }: CharacterManage
       {/* モバイル用カードビュー */}
       <div className="block lg:hidden p-4 space-y-4">
         {characters.map((character) => (
-          <div key={character.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <div key={character._id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center flex-1">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
-                    {character.name.ja.charAt(0)}
-                  </span>
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center overflow-hidden">
+                  {character.imageCharacterSelect ? (
+                    <img
+                      src={character.imageCharacterSelect}
+                      alt={character.name?.ja || 'Character'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white text-sm font-medium">
+                      {character.name?.ja?.charAt(0) || '?'}
+                    </span>
+                  )}
                 </div>
                 <div className="ml-3 flex-1">
-                  <div className="text-sm font-medium text-gray-900 mb-1">{character.name.ja}</div>
-                  <div className="text-xs text-gray-500 mb-2">ID: {character.id}</div>
-                  {getStatusBadge(character.isActive, character.isFree)}
+                  <div className="text-sm font-medium text-gray-900 mb-1">{character.name?.ja || 'N/A'}</div>
+                  <div className="text-xs text-gray-500 mb-2">ID: {character._id ? character._id.slice(-8) : 'N/A'}</div>
+                  {getStatusBadge(character.isActive, character.characterAccessType === 'initial')}
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -114,39 +137,41 @@ export default function CharacterManagementTable({ characters }: CharacterManage
             
             <div className="mb-3">
               <div className="text-xs text-gray-500 mb-1">性格・特徴</div>
-              <div className="text-sm font-medium text-gray-900 mb-2">{character.personalityType}</div>
+              <div className="text-sm font-medium text-gray-900 mb-2">{character.personalityPreset || 'N/A'}</div>
               <div className="flex flex-wrap gap-1">
-                {character.traits.map((trait, index) => (
+                {character.personalityTags ? character.personalityTags.slice(0, 3).map((tag, index) => (
                   <span 
                     key={index}
                     className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-md"
                   >
-                    {trait}
+                    {tag}
                   </span>
-                ))}
+                )) : (
+                  <span className="text-xs text-gray-500">タグなし</span>
+                )}
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4 mb-3">
               <div>
-                <div className="text-xs text-gray-500">価格</div>
+                <div className="text-xs text-gray-500">タイプ</div>
                 <div className="text-sm font-medium text-gray-900">
-                  {character.isFree ? '無料' : `¥${formatNumber(character.price)}`}
+                  {character.characterAccessType === 'initial' ? '無料' : 'プレミアム'}
                 </div>
               </div>
               <div>
                 <div className="text-xs text-gray-500">チャット数</div>
-                <div className="text-sm font-medium text-gray-900">{formatNumber(character.totalChats)}</div>
+                <div className="text-sm font-medium text-gray-900">{(character.totalConversations || 0).toLocaleString()}</div>
               </div>
               <div className="col-span-2">
                 <div className="text-xs text-gray-500 mb-1">平均親密度</div>
                 <div className="flex items-center">
                   <Heart className="w-4 h-4 text-pink-500 mr-1" />
-                  <div className="text-sm font-medium text-gray-900 mr-2">{character.avgIntimacy.toFixed(1)}%</div>
+                  <div className="text-sm font-medium text-gray-900 mr-2">{(character.averageAffinity || 0).toFixed(1)}%</div>
                   <div className="flex-1 bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-pink-500 h-2 rounded-full" 
-                      style={{ width: `${character.avgIntimacy}%` }}
+                      style={{ width: `${character.averageAffinity || 0}%` }}
                     ></div>
                   </div>
                 </div>
@@ -193,50 +218,60 @@ export default function CharacterManagementTable({ characters }: CharacterManage
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {characters.map((character) => (
-              <tr key={character.id} className="hover:bg-gray-50">
+              <tr key={character._id} className="hover:bg-gray-50">
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">
-                        {character.name.ja.charAt(0)}
-                      </span>
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center overflow-hidden">
+                      {character.imageCharacterSelect ? (
+                        <img
+                          src={character.imageCharacterSelect}
+                          alt={character.name?.ja || 'Character'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-white text-sm font-medium">
+                          {character.name?.ja?.charAt(0) || '?'}
+                        </span>
+                      )}
                     </div>
                     <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{character.name.ja}</div>
-                      <div className="text-sm text-gray-500">ID: {character.id}</div>
+                      <div className="text-sm font-medium text-gray-900">{character.name?.ja || 'N/A'}</div>
+                      <div className="text-sm text-gray-500">ID: {character._id ? character._id.slice(-8) : 'N/A'}</div>
                     </div>
                   </div>
                 </td>
                 <td className="px-3 md:px-6 py-4">
-                  <div className="text-sm text-gray-900 font-medium">{character.personalityType}</div>
+                  <div className="text-sm text-gray-900 font-medium">{character.personalityPreset || 'N/A'}</div>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {character.traits.map((trait, index) => (
+                    {character.personalityTags ? character.personalityTags.slice(0, 3).map((tag, index) => (
                       <span 
                         key={index}
                         className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-md"
                       >
-                        {trait}
+                        {tag}
                       </span>
-                    ))}
+                    )) : (
+                      <span className="text-xs text-gray-500">タグなし</span>
+                    )}
                   </div>
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap">
-                  {getStatusBadge(character.isActive, character.isFree)}
+                  {getStatusBadge(character.isActive, character.characterAccessType === 'initial')}
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {character.isFree ? '無料' : `¥${formatNumber(character.price)}`}
+                  {character.characterAccessType === 'initial' ? '無料' : 'プレミアム'}
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {formatNumber(character.totalChats)}
+                  {(character.totalConversations || 0).toLocaleString()}
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <Heart className="w-4 h-4 text-pink-500 mr-1" />
-                    <div className="text-sm text-gray-900">{character.avgIntimacy.toFixed(1)}%</div>
+                    <div className="text-sm text-gray-900">{(character.averageAffinity || 0).toFixed(1)}%</div>
                     <div className="ml-2 w-12 md:w-16 bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-pink-500 h-2 rounded-full" 
-                        style={{ width: `${character.avgIntimacy}%` }}
+                        style={{ width: `${character.averageAffinity || 0}%` }}
                       ></div>
                     </div>
                   </div>

@@ -1,13 +1,125 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import UserStats from '@/components/admin/UserStats';
 import UserTable from '@/components/admin/UserTable';
 import { useToast } from '@/contexts/ToastContext';
 import { Search, Filter, Download } from 'lucide-react';
-import { mockUsers } from '@/mock/adminData';
+
+interface UserData {
+  id: string;
+  _id: string;
+  name: string;
+  email: string;
+  tokenBalance: number;
+  totalSpent: number;
+  chatCount: number;
+  avgIntimacy: number;
+  lastLogin: string;
+  status: string;
+  isTrialUser: boolean;
+  createdAt: string;
+}
+
+interface UsersResponse {
+  users: UserData[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
 
 export default function UsersPage() {
-  const { success } = useToast();
+  const { success, error } = useToast();
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 0
+  });
+
+  // ユーザーデータを取得
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString()
+      });
+      
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+      
+      if (statusFilter) {
+        params.append('status', statusFilter);
+      }
+
+      const url = `http://localhost:3004/admin/users?${params}`;
+      console.log('🔍 Fetching users from:', url);
+
+      const adminToken = localStorage.getItem('adminAccessToken');
+      
+      if (!adminToken) {
+        throw new Error('Admin authentication required');
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        }
+      });
+
+      console.log('📡 Response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error:', errorText);
+        throw new Error(`Failed to fetch users: ${response.status}`);
+      }
+
+      const data: UsersResponse = await response.json();
+      console.log('✅ Received data:', data);
+      
+      setUsers(data.users);
+      setPagination(data.pagination);
+      
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+      error('読み込みエラー', 'ユーザー一覧の取得に失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 初回読み込み
+  useEffect(() => {
+    fetchUsers();
+  }, [pagination.page, searchTerm, statusFilter]);
+
+  // 検索処理
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPagination(prev => ({ ...prev, page: 1 }));
+    fetchUsers();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col">
       {/* ヘッダー */}
@@ -22,14 +134,16 @@ export default function UsersPage() {
           
           <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
             {/* 検索 */}
-            <div className="relative flex-1 sm:flex-none">
+            <form onSubmit={handleSearch} className="relative flex-1 sm:flex-none">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
                 placeholder="ユーザー検索..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:w-auto"
               />
-            </div>
+            </form>
             
             <div className="flex items-center space-x-2">
               {/* フィルター */}
@@ -52,10 +166,52 @@ export default function UsersPage() {
       <main className="flex-1 p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
           {/* 統計カード */}
-          <UserStats users={mockUsers} />
+          <UserStats users={users} />
           
           {/* ユーザーテーブル */}
-          <UserTable users={mockUsers} />
+          {users.length > 0 ? (
+            <UserTable users={users} onUserUpdate={fetchUsers} />
+          ) : (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+              <p className="text-gray-500">ユーザーが見つかりませんでした</p>
+              <button 
+                onClick={fetchUsers}
+                className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                再読み込み
+              </button>
+            </div>
+          )}
+          
+          {/* ページネーション */}
+          {pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between bg-white px-4 py-3 border border-gray-200 rounded-lg">
+              <div className="flex items-center text-sm text-gray-500">
+                <span>
+                  {((pagination.page - 1) * pagination.limit) + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)} / {pagination.total} 件
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                  disabled={pagination.page === 1}
+                  className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  前へ
+                </button>
+                <span className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded">
+                  {pagination.page} / {pagination.totalPages}
+                </span>
+                <button
+                  onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
+                  disabled={pagination.page === pagination.totalPages}
+                  className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  次へ
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
