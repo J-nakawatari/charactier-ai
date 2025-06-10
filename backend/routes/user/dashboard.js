@@ -1,7 +1,20 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const auth = require('../../middleware/auth');
+
+// Dashboard rate limiting - 1つのIPから5分間に10回まで
+const dashboardRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5分
+  max: 10, // 最大10リクエスト
+  message: {
+    error: 'Too many dashboard requests',
+    message: 'ダッシュボードAPIへのアクセスが制限されています。5分後に再試行してください。'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // モデルのインポート
 const User = require('../../data/ai-character-feature-simplify-terms-privacy-pages/backend/models/User');
@@ -16,7 +29,7 @@ const Notification = require('../../data/ai-character-feature-simplify-terms-pri
  * ユーザーダッシュボード統合API
  * JWT認証必須
  */
-router.get('/dashboard', auth, async (req, res) => {
+router.get('/dashboard', dashboardRateLimit, auth, async (req, res) => {
   try {
     const userId = req.user.id;
     console.log('🔍 Dashboard API called for user:', userId);

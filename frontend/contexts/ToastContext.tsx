@@ -173,13 +173,13 @@ const ToastContainer: React.FC = () => {
               }}
               style={{ 
                 position: 'absolute',
-                top: '8px',
-                right: '8px',
+                top: '6px',
+                right: '6px',
                 zIndex: 100001,
-                width: '32px',
-                height: '32px',
-                minWidth: '32px',
-                minHeight: '32px',
+                width: '20px',
+                height: '20px',
+                minWidth: '20px',
+                minHeight: '20px',
                 backgroundColor: 'rgba(255,255,255,0.9)',
                 border: '1px solid #d1d5db',
                 borderRadius: '50%',
@@ -188,7 +188,7 @@ const ToastContainer: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
               }}
               onMouseEnter={(e) => {
                 console.log('🔍 Mouse enter close button');
@@ -208,7 +208,7 @@ const ToastContainer: React.FC = () => {
               aria-label="トーストを閉じる"
             >
               <X 
-                className="w-4 h-4 text-gray-600" 
+                className="w-3 h-3 text-gray-600" 
                 style={{ pointerEvents: 'none' }}
               />
             </button>

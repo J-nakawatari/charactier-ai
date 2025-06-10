@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { Edit, Trash2, Plus, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
 
@@ -23,7 +23,11 @@ interface TokenPackTableProps {
   onEditPack: (pack: TokenPack) => void;
 }
 
-export default function TokenPackTable({ onCreatePack, onEditPack }: TokenPackTableProps) {
+export interface TokenPackTableRef {
+  refreshTokenPacks: () => void;
+}
+
+const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onCreatePack, onEditPack }, ref) => {
   const { success, error, warning } = useToast();
   const [tokenPacks, setTokenPacks] = useState<TokenPack[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +65,11 @@ export default function TokenPackTable({ onCreatePack, onEditPack }: TokenPackTa
   useEffect(() => {
     fetchTokenPacks();
   }, [page, isActiveFilter]);
+
+  // 外部からリフレッシュできるようにする
+  useImperativeHandle(ref, () => ({
+    refreshTokenPacks: fetchTokenPacks
+  }));
 
   const handleDeletePack = async (pack: TokenPack) => {
     if (!confirm(`「${pack.name}」を削除してもよろしいですか？`)) {
@@ -350,4 +359,8 @@ export default function TokenPackTable({ onCreatePack, onEditPack }: TokenPackTa
       )}
     </div>
   );
-}
+});
+
+TokenPackTable.displayName = 'TokenPackTable';
+
+export default TokenPackTable;

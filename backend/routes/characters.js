@@ -1,13 +1,27 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
+const escapeStringRegexp = require('escape-string-regexp');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const { mockCharacters } = require('../mockData');
+
+// Characters rate limiting - 1つのIPから1分間に60回まで
+const charactersRateLimit = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1分
+  max: 60, // 最大60リクエスト
+  message: {
+    error: 'Too many characters requests',
+    message: 'キャラクターAPIへのアクセスが制限されています。1分後に再試行してください。'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // モックモード判定
 const USE_MOCK = process.env.USE_MOCK === 'true' || !process.env.MONGO_URI || process.env.MONGO_URI.includes('localhost:27017');
 
 // GET /api/characters - キャラ一覧API（検索・ソート・ロケール対応）
-router.get('/', auth, async (req, res) => {
+router.get('/', charactersRateLimit, auth, async (req, res) => {
   try {
     const { 
       locale = 'ja', 
@@ -28,14 +42,15 @@ router.get('/', auth, async (req, res) => {
       }
 
       if (keyword) {
-        const keywordLower = keyword.toLowerCase();
+        const escapedKeyword = escapeStringRegexp(keyword.toLowerCase());
+        const keywordRegex = new RegExp(escapedKeyword, 'i');
         characters = characters.filter(char => 
-          char.name.ja.toLowerCase().includes(keywordLower) ||
-          char.name.en.toLowerCase().includes(keywordLower) ||
-          char.description.ja.toLowerCase().includes(keywordLower) ||
-          char.description.en.toLowerCase().includes(keywordLower) ||
-          char.personalityTags.some(tag => tag.toLowerCase().includes(keywordLower)) ||
-          char.personalityPreset.toLowerCase().includes(keywordLower)
+          keywordRegex.test(char.name.ja) ||
+          keywordRegex.test(char.name.en) ||
+          keywordRegex.test(char.description.ja) ||
+          keywordRegex.test(char.description.en) ||
+          char.personalityTags.some(tag => keywordRegex.test(tag)) ||
+          keywordRegex.test(char.personalityPreset)
         );
       }
 
@@ -69,9 +84,10 @@ router.get('/', auth, async (req, res) => {
         filter.characterAccessType = 'free';
       }
 
-      // キーワード検索フィルター
+      // キーワード検索フィルター（正規表現インジェクション対策）
       if (keyword) {
-        const keywordRegex = new RegExp(keyword, 'i');
+        const escapedKeyword = escapeStringRegexp(keyword);
+        const keywordRegex = new RegExp(escapedKeyword, 'i');
         filter.$or = [
           { [`name.${locale}`]: keywordRegex },
           { [`name.ja`]: keywordRegex },

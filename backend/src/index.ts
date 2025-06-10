@@ -4,19 +4,47 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import Stripe from 'stripe';
+import mongoose from 'mongoose';
 import { mockCharacters, mockCharacterTranslations, mockUser, mockTokenPacks } from './mockData';
 import { CharacterDocument, MockUser, TokenPack } from './types';
+import { TokenPackModel, ITokenPack } from './models/TokenPackModel';
+import { getRedisClient } from '../lib/redis';
+import { UserModel, IUser } from './models/UserModel';
 
 dotenv.config({ path: './.env' });
 
 const app = express();
 const PORT = process.env.PORT || 3004;
-const USE_MOCK = process.env.USE_MOCK === 'true' || !process.env.STRIPE_SECRET_KEY; // デフォルトはモック、STRIPE_SECRET_KEYがあれば本番
+const USE_MOCK = process.env.USE_MOCK === 'true' || !process.env.MONGO_URI; // MongoDBがあれば本番モード
 
 // GPT-4原価モデル定数
 const TOKEN_COST_PER_UNIT = 0.003; // 1トークンあたり0.003円の原価
 const COST_RATIO = 0.5; // 販売額の50%が原価
 const TOKENS_PER_YEN = 1 / (TOKEN_COST_PER_UNIT / COST_RATIO); // 約166.66トークン/円
+
+// MongoDB接続
+let isMongoConnected = false;
+const connectMongoDB = async () => {
+  console.log('🔍 MongoDB connection attempt...');
+  console.log('🔍 MONGO_URI exists:', !!process.env.MONGO_URI);
+  console.log('🔍 USE_MOCK:', USE_MOCK);
+  
+  if (process.env.MONGO_URI && !USE_MOCK) {
+    try {
+      console.log('🔄 Connecting to MongoDB...');
+      await mongoose.connect(process.env.MONGO_URI);
+      isMongoConnected = true;
+      console.log('🍃 MongoDB connected successfully');
+    } catch (error) {
+      console.error('❌ MongoDB connection failed:', error);
+      console.log('🎭 Fallback to mock mode');
+      isMongoConnected = false;
+    }
+  } else {
+    console.log('🎭 Using mock data (MONGO_URI not provided or USE_MOCK=true)');
+    isMongoConnected = false;
+  }
+};
 
 // Stripe インスタンス初期化
 let stripe: Stripe | null = null;
@@ -32,13 +60,183 @@ if (process.env.STRIPE_SECRET_KEY && !USE_MOCK) {
 console.log('🚀 USE_MOCK:', USE_MOCK);
 console.log('🚀 PORT:', PORT);
 
-// Middleware
+// MongoDB接続を初期化
+connectMongoDB();
+
+// CORS設定
 app.use(cors({
   origin: 'http://localhost:3001',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
+
+// Stripe Webhook endpoints (must be before express.json())
+app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req: Request, res: Response): Promise<void> => {
+  console.log('🔔 Stripe Webhook received (CLI)');
+  
+  const sig = req.headers['stripe-signature'] as string;
+  let event: Stripe.Event;
+
+  try {
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    
+    if (USE_MOCK || !stripe || !webhookSecret) {
+      console.log('🎭 モックモード: Webhook署名検証をスキップ');
+      event = JSON.parse(req.body.toString());
+    } else {
+      console.log('🔥 本番モード: Stripe署名検証実行');
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      console.log('✅ Stripe signature verified');
+    }
+
+    // Handle different event types
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        console.log('💳 Checkout session completed:', session.id);
+        
+        const userId = session.metadata?.userId;
+        const priceId = session.metadata?.priceId;
+        
+        if (!userId) {
+          console.error('❌ No userId in session metadata');
+          break;
+        }
+        
+        let tokenPack: ITokenPack | null = null;
+        if (isMongoConnected && priceId) {
+          tokenPack = await TokenPackModel.findOne({ priceId }).lean();
+        }
+        
+        let tokensToAdd = 0;
+        if (tokenPack) {
+          tokensToAdd = tokenPack.tokens;
+          console.log('🎁 Using token pack:', { name: tokenPack.name, tokens: tokensToAdd });
+        } else {
+          const amountInYen = session.amount_total || 0;
+          tokensToAdd = Math.floor(amountInYen * TOKENS_PER_YEN);
+          console.log('🎁 Calculated tokens from amount:', { amountInYen, tokensToAdd });
+        }
+        
+        if (tokensToAdd > 0) {
+          if (isMongoConnected) {
+            // MongoDB ObjectIDとして有効かチェック
+            const mongoose = require('mongoose');
+            const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
+            
+            let user;
+            if (isValidObjectId) {
+              user = await UserModel.findById(userId);
+            } else {
+              // 無効なObjectIDの場合は、文字列検索で代替
+              user = await UserModel.findOne({ email: `user_${userId}@example.com` });
+            }
+            
+            if (!user) {
+              // 新しいユーザーを作成（有効なObjectIDを生成）
+              const newObjectId = isValidObjectId ? userId : new mongoose.Types.ObjectId();
+              user = new UserModel({
+                _id: newObjectId,
+                email: `user_${userId}@example.com`,
+                name: `User ${userId}`,
+                tokenBalance: tokensToAdd
+              });
+            } else {
+              user.tokenBalance += tokensToAdd;
+            }
+            await user.save();
+            
+            console.log('✅ MongoDB: Tokens added successfully', {
+              userId,
+              isValidObjectId,
+              actualUserId: user._id,
+              tokensAdded: tokensToAdd,
+              newBalance: user.tokenBalance
+            });
+            
+            // Redisに購入完了通知を保存（SSE用）
+            try {
+              const redis = await getRedisClient();
+              const purchaseData = {
+                addedTokens: tokensToAdd,
+                newBalance: user.tokenBalance,
+                timestamp: new Date().toISOString()
+              };
+              
+              await redis.set(
+                `purchase:${session.id}`, 
+                JSON.stringify(purchaseData), 
+                { EX: 60 } // 60秒で期限切れ
+              );
+              
+              console.log('🔔 通知保存成功 (Redis/Memory):', {
+                sessionId: session.id,
+                data: purchaseData
+              });
+            } catch (redisError) {
+              console.error('❌ 通知保存エラー:', redisError);
+            }
+          } else {
+            mockUser.tokenBalance += tokensToAdd;
+            console.log('✅ Mock: Tokens added successfully', {
+              userId,
+              tokensAdded: tokensToAdd,
+              newBalance: mockUser.tokenBalance
+            });
+            
+            // モック環境でもRedisに購入完了通知を保存（SSE用）
+            try {
+              const redis = await getRedisClient();
+              const purchaseData = {
+                addedTokens: tokensToAdd,
+                newBalance: mockUser.tokenBalance,
+                timestamp: new Date().toISOString()
+              };
+              
+              await redis.set(
+                `purchase:${session.id}`, 
+                JSON.stringify(purchaseData), 
+                { EX: 60 } // 60秒で期限切れ
+              );
+              
+              console.log('🔔 Mock通知保存成功 (Redis/Memory):', {
+                sessionId: session.id,
+                data: purchaseData
+              });
+            } catch (redisError) {
+              console.error('❌ Mock通知保存エラー:', redisError);
+            }
+          }
+        }
+        break;
+      }
+      
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        console.log('💰 Payment succeeded:', paymentIntent.id);
+        break;
+      }
+      
+      case 'payment_intent.payment_failed': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        console.log('❌ Payment failed:', paymentIntent.id);
+        break;
+      }
+      
+      default:
+        console.log('ℹ️ Unhandled event type:', { eventType: event.type });
+    }
+
+    res.json({ received: true, eventType: event.type });
+    
+  } catch (error) {
+    console.error('❌ Webhook処理エラー:', error);
+    res.status(400).send(`Webhook Error: ${(error as Error).message}`);
+  }
+});
+
+// 通常のJSONミドルウェア（Webhookの後に配置）
 app.use(express.json());
 
 // Extend Request interface
@@ -184,7 +382,7 @@ app.get('/api/characters', mockAuth, (req: Request, res: Response): void => {
 });
 
 app.get('/api/characters/:id', mockAuth, (req: Request, res: Response): void => {
-  console.log(`🎭 モックデータから個別キャラクター取得: ID ${req.params.id}`);
+  console.log('🎭 モックデータから個別キャラクター取得:', { characterId: req.params.id });
   const character = mockCharacters.find(char => char._id === req.params.id);
   
   if (!character) {
@@ -202,7 +400,7 @@ app.get('/api/characters/:id', mockAuth, (req: Request, res: Response): void => 
 
 // Character translations management API
 app.put('/api/characters/:id/translations', mockAuth, (req: Request, res: Response): void => {
-  console.log(`📝 キャラクター翻訳更新: ID ${req.params.id}`);
+  console.log('📝 キャラクター翻訳更新:', { characterId: req.params.id });
   const characterId = req.params.id;
   const translations = req.body;
   
@@ -280,7 +478,7 @@ app.put('/api/characters/:id/translations', mockAuth, (req: Request, res: Respon
 });
 
 app.get('/api/characters/:id/translations', mockAuth, (req: Request, res: Response): void => {
-  console.log(`📖 キャラクター翻訳取得: ID ${req.params.id}`);
+  console.log('📖 キャラクター翻訳取得:', { characterId: req.params.id });
   const character = mockCharacters.find(char => char._id === req.params.id);
   
   if (!character) {
@@ -1065,7 +1263,7 @@ const validateTokenPriceRatio = (tokens: number, price: number): boolean => {
 };
 
 // Token Packs CRUD API endpoints
-app.get('/api/admin/token-packs', mockAuth, (req: Request, res: Response): void => {
+app.get('/api/admin/token-packs', mockAuth, async (req: Request, res: Response): Promise<void> => {
   console.log('📦 Token Packs 一覧取得 API called');
   
   if (!req.user) {
@@ -1073,50 +1271,220 @@ app.get('/api/admin/token-packs', mockAuth, (req: Request, res: Response): void 
     return;
   }
 
-  // Query parameters
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
-  const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
-  
-  // Filter by isActive if specified
-  let filteredPacks = [...mockTokenPacks];
-  if (isActive !== undefined) {
-    filteredPacks = filteredPacks.filter(pack => pack.isActive === isActive);
+  try {
+    // Query parameters
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
+    
+    if (isMongoConnected) {
+      // MongoDB実装
+      console.log('🍃 Using MongoDB for token packs');
+      
+      // フィルター条件構築
+      const filter: any = {};
+      if (isActive !== undefined) {
+        filter.isActive = isActive;
+      }
+      
+      // ページネーション計算
+      const skip = (page - 1) * limit;
+      
+      // データ取得（並行実行）
+      const [tokenPacks, total] = await Promise.all([
+        TokenPackModel.find(filter)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        TokenPackModel.countDocuments(filter)
+      ]);
+      
+      const pagination = {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      };
+
+      console.log('✅ MongoDB Token Packs 取得完了:', {
+        totalPacks: total,
+        returnedPacks: tokenPacks.length,
+        page,
+        isActiveFilter: isActive
+      });
+
+      res.json({
+        tokenPacks,
+        pagination
+      });
+      
+    } else {
+      // モック実装（従来通り）
+      console.log('🎭 Using mock data for token packs');
+      
+      let filteredPacks = [...mockTokenPacks];
+      if (isActive !== undefined) {
+        filteredPacks = filteredPacks.filter(pack => pack.isActive === isActive);
+      }
+      
+      // Pagination
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedPacks = filteredPacks.slice(startIndex, endIndex);
+      
+      // Calculate profit margin and token per yen for each pack
+      const enrichedPacks = paginatedPacks.map(pack => ({
+        ...pack,
+        profitMargin: ((pack.tokens - pack.price * 2) / pack.tokens * 100),
+        tokenPerYen: pack.tokens / pack.price
+      }));
+      
+      const pagination = {
+        total: filteredPacks.length,
+        page,
+        limit,
+        totalPages: Math.ceil(filteredPacks.length / limit)
+      };
+
+      console.log('✅ Mock Token Packs データ生成完了:', {
+        totalPacks: filteredPacks.length,
+        returnedPacks: enrichedPacks.length,
+        page,
+        isActiveFilter: isActive
+      });
+
+      res.json({
+        tokenPacks: enrichedPacks,
+        pagination
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Token Packs 取得エラー:', error);
+    console.error('Error details:', {
+      name: (error as Error).name,
+      message: (error as Error).message,
+      stack: (error as Error).stack
+    });
+    res.status(500).json({
+      success: false,
+      message: 'トークンパック一覧の取得に失敗しました',
+      error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+    });
   }
-  
-  // Pagination
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedPacks = filteredPacks.slice(startIndex, endIndex);
-  
-  // Calculate profit margin and token per yen for each pack
-  const enrichedPacks = paginatedPacks.map(pack => ({
-    ...pack,
-    profitMargin: ((pack.tokens - pack.price * 2) / pack.tokens * 100), // 実際の利益率計算
-    tokenPerYen: pack.tokens / pack.price
-  }));
-  
-  const pagination = {
-    total: filteredPacks.length,
-    page,
-    limit,
-    totalPages: Math.ceil(filteredPacks.length / limit)
-  };
-
-  console.log('✅ Token Packs 一覧データ生成完了:', {
-    totalPacks: filteredPacks.length,
-    returnedPacks: enrichedPacks.length,
-    page,
-    isActiveFilter: isActive
-  });
-
-  res.json({
-    tokenPacks: enrichedPacks,
-    pagination
-  });
 });
 
-app.post('/api/admin/token-packs', mockAuth, (req: Request, res: Response): void => {
+// SSE用エンドポイント (購入完了のリアルタイム通知)
+app.get('/api/purchase/events/:sessionId', async (req: Request, res: Response): Promise<void> => {
+  const { sessionId } = req.params;
+  
+  console.log('🌊 SSE接続開始:', sessionId);
+  
+  // SSEヘッダー設定
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
+  
+  try {
+    const redis = await getRedisClient();
+    let intervalId: NodeJS.Timeout;
+    let timeoutId: NodeJS.Timeout;
+    
+    // 1秒ごとにRedisをチェック
+    intervalId = setInterval(async () => {
+      try {
+        const purchaseData = await redis.get(`purchase:${sessionId}`);
+        
+        if (purchaseData) {
+          console.log('✅ SSE: 購入データ発見:', purchaseData);
+          
+          // クライアントにデータを送信
+          res.write(`data: ${purchaseData}\n\n`);
+          
+          // クリーンアップ
+          clearInterval(intervalId);
+          clearTimeout(timeoutId);
+          res.end();
+          
+          // Redisからデータを削除
+          await redis.del(`purchase:${sessionId}`);
+          
+          return;
+        }
+      } catch (error) {
+        console.error('❌ SSE Redis取得エラー:', error);
+      }
+    }, 1000);
+    
+    // 30秒でタイムアウト
+    timeoutId = setTimeout(() => {
+      console.log('⏰ SSE タイムアウト:', sessionId);
+      clearInterval(intervalId);
+      res.write(`data: {"error": "timeout"}\n\n`);
+      res.end();
+    }, 30000);
+    
+    // クライアント接続が閉じられた場合のクリーンアップ
+    req.on('close', () => {
+      console.log('🔌 SSE接続終了:', sessionId);
+      clearInterval(intervalId);
+      clearTimeout(timeoutId);
+    });
+    
+  } catch (error) {
+    console.error('❌ SSE初期化エラー:', error);
+    res.status(500).json({ error: 'SSE connection failed' });
+  }
+});
+
+// セッション情報取得API (購入トークン数確認用)
+app.get('/api/purchase/session/:sessionId', (req: Request, res: Response): void => {
+  const { sessionId } = req.params;
+  
+  console.log('🔍 Stripe セッション情報取得:', sessionId);
+  
+  try {
+    // セッション情報から商品情報を取得してトークン数を推定
+    // 実際の実装では Stripe.checkout.sessions.retrieve(sessionId) を使用
+    
+    // モック実装: セッションIDからトークン数を推定
+    // 実際のトークンパックのpriceIdから逆算
+    const tokenPackMap: { [key: string]: number } = {
+      'price_1QbxZCJGaR4OtJ6FQlMEHOkn': 833333,    // 5,000円 → 833,333トークン
+      'price_1QbxZCJGaR4OtJ6FQlMEHOko': 1666666,   // 10,000円 → 1,666,666トークン  
+      'price_1QbxZCJGaR4OtJ6FQlMEHOkp': 3333333,   // 20,000円 → 3,333,333トークン
+      'price_1QbxZCJGaR4OtJ6FQlMEHOkq': 5000000    // 30,000円 → 5,000,000トークン
+    };
+    
+    // セッションIDからpriceIdを推定（実装では実際のStripe APIから取得）
+    let estimatedTokens = 833333; // デフォルト値
+    
+    // セッションIDにテスト用のマッピングがある場合はそれを使用
+    if (sessionId.includes('test')) {
+      estimatedTokens = 833333; // テストセッション用のデフォルト値
+    }
+    
+    console.log('📋 推定購入トークン数:', estimatedTokens);
+    
+    res.json({
+      sessionId,
+      tokens: estimatedTokens,
+      status: 'completed'
+    });
+    
+  } catch (error) {
+    console.error('❌ セッション情報取得エラー:', error);
+    res.status(500).json({ 
+      error: 'Failed to retrieve session information',
+      sessionId
+    });
+  }
+});
+
+app.post('/api/admin/token-packs', mockAuth, async (req: Request, res: Response): Promise<void> => {
   console.log('📦 Token Pack 作成 API called:', req.body);
   
   if (!req.user) {
@@ -1166,48 +1534,103 @@ app.post('/api/admin/token-packs', mockAuth, (req: Request, res: Response): void
     });
     return;
   }
-  
-  // Check if priceId already exists
-  if (priceId && mockTokenPacks.some(pack => pack.priceId === priceId)) {
-    res.status(400).json({ 
-      success: false,
-      message: 'この priceId は既に使用されています' 
-    });
-    return;
-  }
-  
-  // Create new token pack
-  const newTokenPack: TokenPack = {
-    _id: `pack_${Date.now()}`,
-    name,
-    description: description || '',
-    tokens: finalTokens,
-    price: finalPrice,
-    priceId: priceId || `price_${Date.now()}`,
-    isActive,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    profitMargin: ((finalTokens - finalPrice * 2) / finalTokens * 100),
-    tokenPerYen: finalTokens / finalPrice
-  };
-  
-  // Add to mock data (in real implementation, save to MongoDB)
-  mockTokenPacks.push(newTokenPack);
-  
-  console.log('✅ Token Pack 作成完了:', {
-    id: newTokenPack._id,
-    name: newTokenPack.name,
-    profitMargin: newTokenPack.profitMargin
-  });
 
-  res.status(201).json({
-    success: true,
-    created: newTokenPack
-  });
+  try {
+    if (isMongoConnected) {
+      // MongoDB実装
+      console.log('🍃 Using MongoDB for token pack creation');
+      
+      // priceId重複チェック（MongoDB）
+      if (priceId) {
+        const existingPack = await TokenPackModel.findOne({ priceId });
+        if (existingPack) {
+          res.status(400).json({ 
+            success: false,
+            message: 'この priceId は既に使用されています' 
+          });
+          return;
+        }
+      }
+      
+      // MongoDB用データ準備
+      const tokenPackData = {
+        name,
+        description: description || '',
+        tokens: finalTokens,
+        price: finalPrice,
+        priceId: priceId || `price_${Date.now()}`,
+        isActive
+      };
+      
+      // MongoDBに保存
+      const newTokenPack = new TokenPackModel(tokenPackData);
+      const savedPack = await newTokenPack.save();
+      
+      console.log('✅ MongoDB Token Pack 作成完了:', {
+        id: savedPack._id,
+        name: savedPack.name,
+        profitMargin: savedPack.profitMargin
+      });
+
+      res.status(201).json({
+        success: true,
+        created: savedPack
+      });
+      
+    } else {
+      // モック実装（従来通り）
+      console.log('🎭 Using mock data for token pack creation');
+      
+      // Check if priceId already exists in mock data
+      if (priceId && mockTokenPacks.some(pack => pack.priceId === priceId)) {
+        res.status(400).json({ 
+          success: false,
+          message: 'この priceId は既に使用されています' 
+        });
+        return;
+      }
+      
+      // Create new token pack for mock
+      const newTokenPack: TokenPack = {
+        _id: `pack_${Date.now()}`,
+        name,
+        description: description || '',
+        tokens: finalTokens,
+        price: finalPrice,
+        priceId: priceId || `price_${Date.now()}`,
+        isActive,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        profitMargin: ((finalTokens - finalPrice * 2) / finalTokens * 100),
+        tokenPerYen: finalTokens / finalPrice
+      };
+      
+      // Add to mock data
+      mockTokenPacks.push(newTokenPack);
+      
+      console.log('✅ Mock Token Pack 作成完了:', {
+        id: newTokenPack._id,
+        name: newTokenPack.name,
+        profitMargin: newTokenPack.profitMargin
+      });
+
+      res.status(201).json({
+        success: true,
+        created: newTokenPack
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Token Pack 作成エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'トークンパックの作成に失敗しました'
+    });
+  }
 });
 
-app.get('/api/admin/token-packs/:id', mockAuth, (req: Request, res: Response): void => {
-  console.log(`📦 Token Pack 詳細取得 API called: ID ${req.params.id}`);
+app.get('/api/admin/token-packs/:id', mockAuth, async (req: Request, res: Response): Promise<void> => {
+  console.log('📦 Token Pack 詳細取得 API called:', { tokenPackId: req.params.id });
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -1215,29 +1638,61 @@ app.get('/api/admin/token-packs/:id', mockAuth, (req: Request, res: Response): v
   }
 
   const { id } = req.params;
-  const tokenPack = mockTokenPacks.find(pack => pack._id === id);
   
-  if (!tokenPack) {
-    res.status(404).json({ 
-      success: false,
-      message: 'トークンパックが見つかりません' 
-    });
-    return;
-  }
-  
-  // Enrich with calculated fields
-  const enrichedPack = {
-    ...tokenPack,
-    profitMargin: ((tokenPack.tokens - tokenPack.price * 2) / tokenPack.tokens * 100),
-    tokenPerYen: tokenPack.tokens / tokenPack.price
-  };
+  try {
+    if (isMongoConnected) {
+      // MongoDB実装
+      console.log('🍃 Using MongoDB for token pack retrieval');
+      
+      const tokenPack = await TokenPackModel.findById(id).lean();
+      
+      if (!tokenPack) {
+        res.status(404).json({ 
+          success: false,
+          message: 'トークンパックが見つかりません' 
+        });
+        return;
+      }
 
-  console.log('✅ Token Pack 詳細取得完了:', enrichedPack.name);
-  res.json(enrichedPack);
+      console.log('✅ MongoDB Token Pack 詳細取得完了:', tokenPack.name);
+      res.json(tokenPack);
+      
+    } else {
+      // モック実装（従来通り）
+      console.log('🎭 Using mock data for token pack retrieval');
+      
+      const tokenPack = mockTokenPacks.find(pack => pack._id === id);
+      
+      if (!tokenPack) {
+        res.status(404).json({ 
+          success: false,
+          message: 'トークンパックが見つかりません' 
+        });
+        return;
+      }
+      
+      // Enrich with calculated fields for mock data
+      const enrichedPack = {
+        ...tokenPack,
+        profitMargin: ((tokenPack.tokens - tokenPack.price * 2) / tokenPack.tokens * 100),
+        tokenPerYen: tokenPack.tokens / tokenPack.price
+      };
+
+      console.log('✅ Mock Token Pack 詳細取得完了:', enrichedPack.name);
+      res.json(enrichedPack);
+    }
+    
+  } catch (error) {
+    console.error('❌ Token Pack 詳細取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'トークンパック詳細の取得に失敗しました'
+    });
+  }
 });
 
-app.put('/api/admin/token-packs/:id', mockAuth, (req: Request, res: Response): void => {
-  console.log(`📦 Token Pack 更新 API called: ID ${req.params.id}`, req.body);
+app.put('/api/admin/token-packs/:id', mockAuth, async (req: Request, res: Response): Promise<void> => {
+  console.log('📦 Token Pack 更新 API called:', { tokenPackId: req.params.id, body: req.body });
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -1247,76 +1702,165 @@ app.put('/api/admin/token-packs/:id', mockAuth, (req: Request, res: Response): v
   const { id } = req.params;
   const { name, description, tokens, price, priceId, isActive } = req.body;
   
-  const packIndex = mockTokenPacks.findIndex(pack => pack._id === id);
-  if (packIndex === -1) {
-    res.status(404).json({ 
-      success: false,
-      message: 'トークンパックが見つかりません' 
-    });
-    return;
-  }
-  
-  const existingPack = mockTokenPacks[packIndex];
-  
-  // Validate tokens and price if provided
-  const newTokens = tokens !== undefined ? tokens : existingPack.tokens;
-  const newPrice = price !== undefined ? price : existingPack.price;
-  
-  if (typeof newTokens !== 'number' || typeof newPrice !== 'number' || newTokens <= 0 || newPrice <= 0) {
-    res.status(400).json({ 
-      success: false,
-      message: 'tokens と price は正の数値である必要があります' 
-    });
-    return;
-  }
-  
-  // GPT-4原価モデルのバリデーション
-  if (!validateTokenPriceRatio(newTokens, newPrice)) {
-    const expectedTokens = Math.floor(newPrice * TOKENS_PER_YEN);
-    res.status(400).json({ 
-      success: false,
-      message: `GPT-4原価モデル違反: ${newPrice}円に対して${newTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン` 
-    });
-    return;
-  }
-  
-  // Check if priceId is being changed and already exists elsewhere
-  if (priceId && priceId !== existingPack.priceId && mockTokenPacks.some(pack => pack.priceId === priceId && pack._id !== id)) {
-    res.status(400).json({ 
-      success: false,
-      message: 'この priceId は既に他のパックで使用されています' 
-    });
-    return;
-  }
-  
-  // Update token pack
-  const updatedPack: TokenPack = {
-    ...existingPack,
-    name: name !== undefined ? name : existingPack.name,
-    description: description !== undefined ? description : existingPack.description,
-    tokens: newTokens,
-    price: newPrice,
-    priceId: priceId !== undefined ? priceId : existingPack.priceId,
-    isActive: isActive !== undefined ? isActive : existingPack.isActive,
-    updatedAt: new Date(),
-    profitMargin: ((newTokens - newPrice * 2) / newTokens * 100),
-    tokenPerYen: newTokens / newPrice
-  };
-  
-  // Update in mock data (in real implementation, update in MongoDB)
-  mockTokenPacks[packIndex] = updatedPack;
-  
-  console.log('✅ Token Pack 更新完了:', {
-    id: updatedPack._id,
-    name: updatedPack.name,
-    profitMargin: updatedPack.profitMargin
-  });
+  try {
+    if (isMongoConnected) {
+      // MongoDB実装
+      console.log('🍃 Using MongoDB for token pack update');
+      
+      // 既存パック取得
+      const existingPack = await TokenPackModel.findById(id);
+      if (!existingPack) {
+        res.status(404).json({ 
+          success: false,
+          message: 'トークンパックが見つかりません' 
+        });
+        return;
+      }
+      
+      // Validate tokens and price if provided
+      const newTokens = tokens !== undefined ? tokens : existingPack.tokens;
+      const newPrice = price !== undefined ? price : existingPack.price;
+      
+      if (typeof newTokens !== 'number' || typeof newPrice !== 'number' || newTokens <= 0 || newPrice <= 0) {
+        res.status(400).json({ 
+          success: false,
+          message: 'tokens と price は正の数値である必要があります' 
+        });
+        return;
+      }
+      
+      // GPT-4原価モデルのバリデーション
+      if (!validateTokenPriceRatio(newTokens, newPrice)) {
+        const expectedTokens = Math.floor(newPrice * TOKENS_PER_YEN);
+        res.status(400).json({ 
+          success: false,
+          message: `GPT-4原価モデル違反: ${newPrice}円に対して${newTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン` 
+        });
+        return;
+      }
+      
+      // priceId重複チェック（MongoDB）
+      if (priceId && priceId !== existingPack.priceId) {
+        const duplicatePack = await TokenPackModel.findOne({ 
+          priceId, 
+          _id: { $ne: id } 
+        });
+        if (duplicatePack) {
+          res.status(400).json({ 
+            success: false,
+            message: 'この priceId は既に他のパックで使用されています' 
+          });
+          return;
+        }
+      }
+      
+      // 更新データ準備
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name;
+      if (description !== undefined) updateData.description = description;
+      if (tokens !== undefined) updateData.tokens = newTokens;
+      if (price !== undefined) updateData.price = newPrice;
+      if (priceId !== undefined) updateData.priceId = priceId;
+      if (isActive !== undefined) updateData.isActive = isActive;
+      
+      // MongoDB更新（pre-saveミドルウェアで利益率等を自動計算）
+      const updatedPack = await TokenPackModel.findByIdAndUpdate(
+        id,
+        updateData,
+        { new: true, runValidators: true }
+      );
+      
+      console.log('✅ MongoDB Token Pack 更新完了:', {
+        id: updatedPack!._id,
+        name: updatedPack!.name,
+        profitMargin: updatedPack!.profitMargin
+      });
 
-  res.json(updatedPack);
+      res.json(updatedPack);
+      
+    } else {
+      // モック実装（従来通り）
+      console.log('🎭 Using mock data for token pack update');
+      
+      const packIndex = mockTokenPacks.findIndex(pack => pack._id === id);
+      if (packIndex === -1) {
+        res.status(404).json({ 
+          success: false,
+          message: 'トークンパックが見つかりません' 
+        });
+        return;
+      }
+      
+      const existingPack = mockTokenPacks[packIndex];
+      
+      // Validate tokens and price if provided
+      const newTokens = tokens !== undefined ? tokens : existingPack.tokens;
+      const newPrice = price !== undefined ? price : existingPack.price;
+      
+      if (typeof newTokens !== 'number' || typeof newPrice !== 'number' || newTokens <= 0 || newPrice <= 0) {
+        res.status(400).json({ 
+          success: false,
+          message: 'tokens と price は正の数値である必要があります' 
+        });
+        return;
+      }
+      
+      // GPT-4原価モデルのバリデーション
+      if (!validateTokenPriceRatio(newTokens, newPrice)) {
+        const expectedTokens = Math.floor(newPrice * TOKENS_PER_YEN);
+        res.status(400).json({ 
+          success: false,
+          message: `GPT-4原価モデル違反: ${newPrice}円に対して${newTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン` 
+        });
+        return;
+      }
+      
+      // Check if priceId is being changed and already exists elsewhere
+      if (priceId && priceId !== existingPack.priceId && mockTokenPacks.some(pack => pack.priceId === priceId && pack._id !== id)) {
+        res.status(400).json({ 
+          success: false,
+          message: 'この priceId は既に他のパックで使用されています' 
+        });
+        return;
+      }
+      
+      // Update token pack
+      const updatedPack: TokenPack = {
+        ...existingPack,
+        name: name !== undefined ? name : existingPack.name,
+        description: description !== undefined ? description : existingPack.description,
+        tokens: newTokens,
+        price: newPrice,
+        priceId: priceId !== undefined ? priceId : existingPack.priceId,
+        isActive: isActive !== undefined ? isActive : existingPack.isActive,
+        updatedAt: new Date(),
+        profitMargin: ((newTokens - newPrice * 2) / newTokens * 100),
+        tokenPerYen: newTokens / newPrice
+      };
+      
+      // Update in mock data
+      mockTokenPacks[packIndex] = updatedPack;
+      
+      console.log('✅ Mock Token Pack 更新完了:', {
+        id: updatedPack._id,
+        name: updatedPack.name,
+        profitMargin: updatedPack.profitMargin
+      });
+
+      res.json(updatedPack);
+    }
+    
+  } catch (error) {
+    console.error('❌ Token Pack 更新エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'トークンパックの更新に失敗しました'
+    });
+  }
 });
 
-app.delete('/api/admin/token-packs/:id', mockAuth, (req: Request, res: Response): void => {
-  console.log(`📦 Token Pack 削除 API called: ID ${req.params.id}`);
+app.delete('/api/admin/token-packs/:id', mockAuth, async (req: Request, res: Response): Promise<void> => {
+  console.log('📦 Token Pack 削除 API called:', { tokenPackId: req.params.id });
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -1324,36 +1868,76 @@ app.delete('/api/admin/token-packs/:id', mockAuth, (req: Request, res: Response)
   }
 
   const { id } = req.params;
-  const packIndex = mockTokenPacks.findIndex(pack => pack._id === id);
   
-  if (packIndex === -1) {
-    res.status(404).json({ 
-      success: false,
-      message: 'トークンパックが見つかりません' 
-    });
-    return;
-  }
-  
-  const deletedPack = mockTokenPacks[packIndex];
-  
-  // Remove from mock data (in real implementation, soft delete or hard delete in MongoDB)
-  mockTokenPacks.splice(packIndex, 1);
-  
-  console.log('✅ Token Pack 削除完了:', deletedPack.name);
+  try {
+    if (isMongoConnected) {
+      // MongoDB実装
+      console.log('🍃 Using MongoDB for token pack deletion');
+      
+      const deletedPack = await TokenPackModel.findByIdAndDelete(id);
+      
+      if (!deletedPack) {
+        res.status(404).json({ 
+          success: false,
+          message: 'トークンパックが見つかりません' 
+        });
+        return;
+      }
+      
+      console.log('✅ MongoDB Token Pack 削除完了:', deletedPack.name);
 
-  res.json({
-    success: true,
-    message: `トークンパック「${deletedPack.name}」を削除しました`,
-    deletedPack: {
-      _id: deletedPack._id,
-      name: deletedPack.name
+      res.json({
+        success: true,
+        message: `トークンパック「${deletedPack.name}」を削除しました`,
+        deletedPack: {
+          _id: deletedPack._id,
+          name: deletedPack.name
+        }
+      });
+      
+    } else {
+      // モック実装（従来通り）
+      console.log('🎭 Using mock data for token pack deletion');
+      
+      const packIndex = mockTokenPacks.findIndex(pack => pack._id === id);
+      
+      if (packIndex === -1) {
+        res.status(404).json({ 
+          success: false,
+          message: 'トークンパックが見つかりません' 
+        });
+        return;
+      }
+      
+      const deletedPack = mockTokenPacks[packIndex];
+      
+      // Remove from mock data
+      mockTokenPacks.splice(packIndex, 1);
+      
+      console.log('✅ Mock Token Pack 削除完了:', deletedPack.name);
+
+      res.json({
+        success: true,
+        message: `トークンパック「${deletedPack.name}」を削除しました`,
+        deletedPack: {
+          _id: deletedPack._id,
+          name: deletedPack.name
+        }
+      });
     }
-  });
+    
+  } catch (error) {
+    console.error('❌ Token Pack 削除エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'トークンパックの削除に失敗しました'
+    });
+  }
 });
 
 // Stripe Price API endpoint
 app.get('/api/admin/stripe/price/:priceId', mockAuth, async (req: Request, res: Response): Promise<void> => {
-  console.log(`💳 Stripe Price 取得 API called: Price ID ${req.params.priceId}`);
+  console.log('💳 Stripe Price 取得 API called:', { priceId: req.params.priceId });
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -1521,6 +2105,385 @@ app.get('/api/admin/stripe/price/:priceId', mockAuth, async (req: Request, res: 
   }
 });
 
+// Stripe Webhook endpoint for payment completion
+app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), async (req: Request, res: Response): Promise<void> => {
+  console.log('🔔 Stripe Webhook received');
+  
+  const sig = req.headers['stripe-signature'] as string;
+  let event: Stripe.Event;
+
+  try {
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    
+    if (USE_MOCK || !stripe || !webhookSecret) {
+      // モック環境では署名検証をスキップ
+      console.log('🎭 モックモード: Webhook署名検証をスキップ');
+      event = JSON.parse(req.body.toString());
+    } else {
+      // 本番環境では署名検証を実行
+      console.log('🔥 本番モード: Stripe署名検証実行');
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      console.log('✅ Stripe signature verified');
+    }
+
+    // Handle different event types
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        console.log('💳 Checkout session completed:', session.id);
+        
+        // Extract metadata
+        const userId = session.metadata?.userId;
+        const priceId = session.metadata?.priceId;
+        
+        if (!userId) {
+          console.error('❌ No userId in session metadata');
+          break;
+        }
+        
+        // Get token pack information
+        let tokenPack: ITokenPack | null = null;
+        if (isMongoConnected && priceId) {
+          tokenPack = await TokenPackModel.findOne({ priceId }).lean();
+        }
+        
+        // Calculate tokens based on amount or token pack
+        let tokensToAdd = 0;
+        if (tokenPack) {
+          tokensToAdd = tokenPack.tokens;
+          console.log('🎁 Using token pack:', { name: tokenPack.name, tokens: tokensToAdd });
+        } else {
+          // Fallback: calculate based on amount using GPT-4 cost model
+          const amountInYen = session.amount_total || 0;
+          tokensToAdd = Math.floor(amountInYen * TOKENS_PER_YEN);
+          console.log('🎁 Calculated tokens from amount:', { amountInYen, tokensToAdd });
+        }
+        
+        if (tokensToAdd > 0) {
+          // Add tokens to user account
+          if (isMongoConnected) {
+            let user = await UserModel.findById(userId);
+            if (!user) {
+              // Create user if doesn't exist
+              user = new UserModel({
+                _id: userId,
+                email: `user_${userId}@example.com`,
+                name: `User ${userId}`,
+                tokenBalance: tokensToAdd
+              });
+            } else {
+              user.tokenBalance += tokensToAdd;
+            }
+            await user.save();
+            
+            console.log('✅ MongoDB: Tokens added successfully', {
+              userId,
+              tokensAdded: tokensToAdd,
+              newBalance: user.tokenBalance
+            });
+          } else {
+            // Mock mode: update mock user
+            mockUser.tokenBalance += tokensToAdd;
+            console.log('✅ Mock: Tokens added successfully', {
+              userId,
+              tokensAdded: tokensToAdd,
+              newBalance: mockUser.tokenBalance
+            });
+          }
+        }
+        
+        break;
+      }
+      
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        console.log('💰 Payment succeeded:', paymentIntent.id);
+        break;
+      }
+      
+      case 'payment_intent.payment_failed': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        console.log('❌ Payment failed:', paymentIntent.id);
+        break;
+      }
+      
+      default:
+        console.log('ℹ️ Unhandled event type:', { eventType: event.type });
+    }
+
+    res.json({ received: true, eventType: event.type });
+    
+  } catch (error) {
+    console.error('❌ Webhook処理エラー:', error);
+    res.status(400).send(`Webhook Error: ${(error as Error).message}`);
+  }
+});
+
+// Stripe Checkout Session作成API
+app.post('/api/purchase/create-checkout-session', mockAuth, async (req: Request, res: Response): Promise<void> => {
+  console.log('🛒 Checkout Session 作成 API called:', req.body);
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { priceId, userId } = req.body;
+  
+  if (!priceId) {
+    res.status(400).json({ 
+      success: false,
+      message: 'Price ID is required' 
+    });
+    return;
+  }
+
+  try {
+    if (USE_MOCK || !stripe) {
+      // モック環境での処理
+      console.log('🎭 モックモード: Checkout Session をシミュレート');
+      
+      const mockSessionUrl = `https://checkout.stripe.com/c/pay/mock_session_${Date.now()}`;
+      
+      res.json({
+        success: true,
+        sessionId: `cs_mock_${Date.now()}`,
+        url: mockSessionUrl
+      });
+      
+    } else {
+      // 実際のStripe API呼び出し
+      console.log('🔥 実際のStripe APIでCheckout Session作成:', priceId);
+      
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/ja/purchase/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/ja/purchase/cancel`,
+        metadata: {
+          userId: userId || req.user._id,
+          priceId: priceId
+        }
+      });
+      
+      console.log('✅ Stripe Checkout Session 作成完了:', {
+        sessionId: session.id,
+        url: session.url
+      });
+
+      res.json({
+        success: true,
+        sessionId: session.id,
+        url: session.url
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Checkout Session 作成エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'チェックアウトセッションの作成に失敗しました'
+    });
+  }
+});
+
+// 開発用：Session IDを使って手動でトークンを付与するAPI
+app.post('/api/user/process-session', mockAuth, async (req: Request, res: Response): Promise<void> => {
+  console.log('🔍 Session処理 API called:', req.body);
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { sessionId } = req.body;
+  
+  if (!sessionId) {
+    res.status(400).json({ 
+      success: false,
+      message: 'Session ID is required' 
+    });
+    return;
+  }
+
+  try {
+    if (stripe && !USE_MOCK) {
+      // 実際のStripe APIでSession情報を取得
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      
+      if (session.payment_status === 'paid') {
+        const priceId = session.metadata?.priceId;
+        let tokensToAdd = 0;
+        
+        // Token packからトークン数を取得
+        if (isMongoConnected && priceId) {
+          const tokenPack = await TokenPackModel.findOne({ priceId }).lean();
+          if (tokenPack) {
+            tokensToAdd = tokenPack.tokens;
+          }
+        }
+        
+        // Fallback: 金額ベースで計算
+        if (tokensToAdd === 0) {
+          const amountInYen = session.amount_total || 0;
+          tokensToAdd = Math.floor(amountInYen * TOKENS_PER_YEN);
+        }
+        
+        // ユーザーにトークンを付与
+        if (isMongoConnected) {
+          let user = await UserModel.findById(req.user._id);
+          if (!user) {
+            user = new UserModel({
+              _id: req.user._id,
+              email: req.user.email,
+              name: req.user.name,
+              tokenBalance: tokensToAdd
+            });
+          } else {
+            user.tokenBalance += tokensToAdd;
+          }
+          await user.save();
+          
+          console.log('✅ MongoDB: Manual token grant successful', {
+            sessionId,
+            tokensAdded: tokensToAdd,
+            newBalance: user.tokenBalance
+          });
+
+          res.json({
+            success: true,
+            tokensAdded: tokensToAdd,
+            newBalance: user.tokenBalance,
+            sessionId
+          });
+        } else {
+          // Mock mode
+          mockUser.tokenBalance += tokensToAdd;
+          
+          console.log('✅ Mock: Manual token grant successful', {
+            sessionId,
+            tokensAdded: tokensToAdd,
+            newBalance: mockUser.tokenBalance
+          });
+
+          res.json({
+            success: true,
+            tokensAdded: tokensToAdd,
+            newBalance: mockUser.tokenBalance,
+            sessionId
+          });
+        }
+      } else {
+        res.status(400).json({
+          success: false,
+          message: 'Payment not completed'
+        });
+      }
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Stripe not available in mock mode'
+      });
+    }
+  } catch (error) {
+    console.error('❌ Session processing error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Session processing failed'
+    });
+  }
+});
+
+// ユーザートークン残高更新API
+app.post('/api/user/add-tokens', mockAuth, async (req: Request, res: Response): Promise<void> => {
+  console.log('💰 ユーザートークン追加 API called:', req.body);
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { tokens, purchaseId, priceId } = req.body;
+  
+  if (!tokens || typeof tokens !== 'number' || tokens <= 0) {
+    res.status(400).json({ 
+      success: false,
+      message: 'Valid token amount is required' 
+    });
+    return;
+  }
+
+  try {
+    if (isMongoConnected) {
+      // MongoDB実装
+      console.log('🍃 Using MongoDB for user token update');
+      
+      // ユーザーを検索または作成
+      let user = await UserModel.findById(req.user._id);
+      if (!user) {
+        // ユーザーが存在しない場合は作成
+        user = new UserModel({
+          _id: req.user._id,
+          email: req.user.email,
+          name: req.user.name,
+          tokenBalance: tokens,
+          selectedCharacter: req.user.selectedCharacter
+        });
+      } else {
+        // 既存ユーザーのトークン残高を更新
+        user.tokenBalance += tokens;
+      }
+      
+      await user.save();
+      
+      console.log('✅ MongoDB User Token 更新完了:', {
+        userId: user._id,
+        newBalance: user.tokenBalance,
+        addedTokens: tokens
+      });
+
+      res.json({
+        success: true,
+        newBalance: user.tokenBalance,
+        addedTokens: tokens,
+        purchaseId
+      });
+      
+    } else {
+      // モック実装
+      console.log('🎭 Using mock data for user token update');
+      
+      mockUser.tokenBalance += tokens;
+      
+      console.log('✅ Mock User Token 更新完了:', {
+        userId: mockUser._id,
+        newBalance: mockUser.tokenBalance,
+        addedTokens: tokens
+      });
+
+      res.json({
+        success: true,
+        newBalance: mockUser.tokenBalance,
+        addedTokens: tokens,
+        purchaseId
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ User Token 更新エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'トークン残高の更新に失敗しました'
+    });
+  }
+});
+
 app.get('/api/debug', (_req: Request, res: Response): void => {
   res.json({
     USE_MOCK: USE_MOCK,
@@ -1535,5 +2498,5 @@ const swaggerDocument = YAML.load(path.resolve(__dirname, '../../docs/openapi.ya
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.listen(PORT, () => {
-  console.log(`✅ Server is running on http://localhost:${PORT}`);
+  console.log('✅ Server is running on:', { port: PORT, url: `http://localhost:${PORT}` });
 });

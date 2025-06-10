@@ -484,7 +484,7 @@ export default function CharacterDetailPage() {
                 </label>
                 <div className="p-4 bg-gray-50 rounded-lg text-center">
                   <div className="flex items-center justify-center space-x-2 mb-2">
-                    <Image className="w-4 h-4 text-gray-400" />
+                    <Image className="w-4 h-4 text-gray-400" alt="" />
                     <span className="text-sm text-gray-600">{character.imageCharacterSelect ? '設定済み' : '未設定'}</span>
                   </div>
                 </div>
@@ -497,7 +497,7 @@ export default function CharacterDetailPage() {
                 </label>
                 <div className="p-4 bg-gray-50 rounded-lg text-center">
                   <div className="flex items-center justify-center space-x-2 mb-2">
-                    <Image className="w-4 h-4 text-gray-400" />
+                    <Image className="w-4 h-4 text-gray-400" alt="" />
                     <span className="text-sm text-gray-600">{character.imageDashboard ? '設定済み' : '未設定'}</span>
                   </div>
                 </div>
@@ -510,7 +510,7 @@ export default function CharacterDetailPage() {
                 </label>
                 <div className="p-4 bg-gray-50 rounded-lg text-center">
                   <div className="flex items-center justify-center space-x-2 mb-2">
-                    <Image className="w-4 h-4 text-gray-400" />
+                    <Image className="w-4 h-4 text-gray-400" alt="" />
                     <span className="text-sm text-gray-600">{character.imageChatBackground ? '設定済み' : '未設定'}</span>
                   </div>
                 </div>
@@ -523,7 +523,7 @@ export default function CharacterDetailPage() {
                 </label>
                 <div className="p-4 bg-gray-50 rounded-lg text-center">
                   <div className="flex items-center justify-center space-x-2 mb-2">
-                    <Image className="w-4 h-4 text-gray-400" />
+                    <Image className="w-4 h-4 text-gray-400" alt="" />
                     <span className="text-sm text-gray-600">{character.imageChatAvatar ? '設定済み' : '未設定'}</span>
                   </div>
                 </div>
@@ -557,7 +557,7 @@ export default function CharacterDetailPage() {
                     <div className="flex items-start space-x-4">
                       <div className="w-16 h-16 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
                         {galleryItem?.file ? (
-                          <Image className="w-6 h-6 text-green-600" />
+                          <Image className="w-6 h-6 text-green-600" alt="" />
                         ) : (
                           <span className="text-gray-400 text-xs">画像{index + 1}</span>
                         )}

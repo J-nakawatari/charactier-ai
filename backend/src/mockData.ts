@@ -1,4 +1,4 @@
-import { CharacterDocument, CharacterTranslation, MockUser } from './types';
+import { CharacterDocument, CharacterTranslation, MockUser, TokenPack } from './types';
 
 // Mock data for testing when MongoDB is not available
 export const mockCharacters: CharacterDocument[] = [
@@ -127,6 +127,75 @@ export const mockCharacterTranslations: CharacterTranslation[] = [
       ja: ['静か', '知的', '大人っぽい'],
       en: ['Quiet', 'Intellectual', 'Mature']
     }
+  }
+];
+
+// Token Pack mock data based on existing TOKEN_PACKAGES
+export const mockTokenPacks: TokenPack[] = [
+  {
+    _id: 'pack_001',
+    name: 'スタンダードパック',
+    description: '最もお得な基本パック。初回購入におすすめです。',
+    tokens: 15000,
+    price: 500,
+    priceId: 'price_1RVCyQ1qmMqgQ3qQkRzWRIQU',
+    isActive: true,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+    updatedAt: new Date('2024-01-01T00:00:00Z'),
+    profitMargin: 50.0, // 50%利益率
+    tokenPerYen: 30.0 // 1円あたり30トークン
+  },
+  {
+    _id: 'pack_002',
+    name: 'バリューパック',
+    description: '人気No.1！バランスの良いトークンパックです。',
+    tokens: 35000,
+    price: 1000,
+    priceId: 'price_1RVCz01qmMqgQ3qQaZWU3IcA',
+    isActive: true,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+    updatedAt: new Date('2024-01-01T00:00:00Z'),
+    profitMargin: 50.0, // 50%利益率
+    tokenPerYen: 35.0 // 1円あたり35トークン
+  },
+  {
+    _id: 'pack_003',
+    name: 'プレミアムパック（旧）',
+    description: '最高のコストパフォーマンス！たくさん話したい方におすすめ。',
+    tokens: 110000,
+    price: 3000,
+    priceId: 'price_1RVENh1qmMqgQ3qQZnVRAgK4_old',
+    isActive: false, // 無効化
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+    updatedAt: new Date('2024-01-01T00:00:00Z'),
+    profitMargin: 50.0, // 50%利益率
+    tokenPerYen: 36.7 // 1円あたり約37トークン
+  },
+  {
+    _id: 'pack_004',
+    name: 'アルティメットパック',
+    description: '最大容量のトークンパック。長期間安心してご利用いただけます。',
+    tokens: 200000,
+    price: 5000,
+    priceId: 'price_1RVEPT1qmMqgQ3qQy3yrfq9V',
+    isActive: true,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+    updatedAt: new Date('2024-01-01T00:00:00Z'),
+    profitMargin: 50.0, // 50%利益率
+    tokenPerYen: 40.0 // 1円あたり40トークン
+  },
+  {
+    _id: 'pack_005',
+    name: '期間限定スペシャル',
+    description: 'キャンペーン中のお得なパック！',
+    tokens: 50000,
+    price: 1200,
+    priceId: 'price_special_campaign',
+    isActive: false, // 非アクティブのテスト用
+    createdAt: new Date('2024-06-01T00:00:00Z'),
+    updatedAt: new Date('2024-06-01T00:00:00Z'),
+    profitMargin: 50.0,
+    tokenPerYen: 41.7
   }
 ];
 

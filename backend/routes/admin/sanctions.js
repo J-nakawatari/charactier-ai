@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const auth = require('../../../data/ai-character-feature-simplify-terms-privacy-pages/backend/middleware/auth');
 const ViolationRecord = require('../../models/ViolationRecord');
@@ -9,6 +10,18 @@ const {
   resetViolations,
   SANCTION_LEVELS 
 } = require('../../utils/sanctionSystem');
+
+// Admin sanctions rate limiting - 1つのIPから1分間に30回まで
+const adminSanctionsRateLimit = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1分
+  max: 30, // 最大30リクエスト
+  message: {
+    error: 'Too many admin sanctions requests',
+    message: '管理者制裁APIへのアクセスが制限されています。1分後に再試行してください。'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // 管理者権限チェックミドルウェア
 const adminAuth = async (req, res, next) => {
@@ -48,7 +61,7 @@ const adminAuth = async (req, res, next) => {
 };
 
 // GET /admin/sanctions/users - 制裁対象ユーザー一覧取得
-router.get('/users', auth, adminAuth, async (req, res) => {
+router.get('/users', adminSanctionsRateLimit, auth, adminAuth, async (req, res) => {
   try {
     const { page = 1, limit = 20, status = 'all' } = req.query;
     const skip = (page - 1) * limit;
@@ -118,7 +131,7 @@ router.get('/users', auth, adminAuth, async (req, res) => {
 });
 
 // GET /admin/sanctions/users/:userId/violations - 特定ユーザーの違反履歴取得
-router.get('/users/:userId/violations', auth, adminAuth, async (req, res) => {
+router.get('/users/:userId/violations', adminSanctionsRateLimit, auth, adminAuth, async (req, res) => {
   try {
     const { userId } = req.params;
     const { page = 1, limit = 50 } = req.query;
@@ -188,7 +201,7 @@ router.get('/users/:userId/violations', auth, adminAuth, async (req, res) => {
 });
 
 // POST /admin/sanctions/users/:userId/lift - 制裁解除
-router.post('/users/:userId/lift', auth, adminAuth, async (req, res) => {
+router.post('/users/:userId/lift', adminSanctionsRateLimit, auth, adminAuth, async (req, res) => {
   try {
     const { userId } = req.params;
     const { reason } = req.body;
@@ -236,7 +249,7 @@ router.post('/users/:userId/lift', auth, adminAuth, async (req, res) => {
 });
 
 // POST /admin/sanctions/users/:userId/reset-violations - 違反記録リセット
-router.post('/users/:userId/reset-violations', auth, adminAuth, async (req, res) => {
+router.post('/users/:userId/reset-violations', adminSanctionsRateLimit, auth, adminAuth, async (req, res) => {
   try {
     const { userId } = req.params;
     const adminId = req.user.id;
@@ -274,7 +287,7 @@ router.post('/users/:userId/reset-violations', auth, adminAuth, async (req, res)
 });
 
 // GET /admin/sanctions/stats - 制裁統計情報取得
-router.get('/stats', auth, adminAuth, async (req, res) => {
+router.get('/stats', adminSanctionsRateLimit, auth, adminAuth, async (req, res) => {
   try {
     const { timeframe = '24h' } = req.query;
     
@@ -371,7 +384,7 @@ router.get('/stats', auth, adminAuth, async (req, res) => {
 });
 
 // GET /admin/sanctions/levels - 制裁レベル情報取得
-router.get('/levels', auth, adminAuth, async (req, res) => {
+router.get('/levels', adminSanctionsRateLimit, auth, adminAuth, async (req, res) => {
   try {
     res.json({
       sanctionLevels: SANCTION_LEVELS,

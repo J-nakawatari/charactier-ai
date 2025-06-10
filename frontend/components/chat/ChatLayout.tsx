@@ -7,6 +7,7 @@ import { AffinityBar } from './AffinityBar';
 import { MoodVisualizer } from './MoodVisualizer';
 import { TokenBar } from './TokenBar';
 import { UnlockPopup } from './UnlockPopup';
+import { TokenPurchaseModal } from './TokenPurchaseModal';
 import ChatSidebar from './ChatSidebar';
 
 interface Character {
@@ -59,6 +60,40 @@ export function ChatLayout({
   const [localMessages, setLocalMessages] = useState<Message[]>(messages);
   const [showUnlockPopup, setShowUnlockPopup] = useState(false);
   const [unlockData, setUnlockData] = useState<{ level: number; illustration: string } | null>(null);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [currentTokens, setCurrentTokens] = useState(tokenStatus.tokensRemaining);
+
+  // 定期的にトークン残高を更新する関数
+  const refreshTokenBalance = async () => {
+    try {
+      const response = await fetch('/api/auth/user');
+      if (response.ok) {
+        const userData = await response.json();
+        setCurrentTokens(userData.tokenBalance);
+      }
+    } catch (error) {
+      console.error('Token balance refresh failed:', error);
+    }
+  };
+
+  // ページがフォーカスされた時（購入完了から戻ってきた時など）にトークン残高を更新
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshTokenBalance();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // 定期的な更新（30秒間隔）
+    const interval = setInterval(refreshTokenBalance, 30000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -146,8 +181,9 @@ export function ChatLayout({
           </div>
 
           <TokenBar 
-            tokensRemaining={tokenStatus.tokensRemaining}
+            tokensRemaining={currentTokens}
             lastMessageCost={tokenStatus.lastMessageCost}
+            onPurchaseClick={() => setShowPurchaseModal(true)}
           />
         </div>
       </header>
@@ -232,6 +268,17 @@ export function ChatLayout({
             onClose={() => setShowUnlockPopup(false)}
           />
         )}
+
+        {/* トークン購入モーダル */}
+        <TokenPurchaseModal
+          isOpen={showPurchaseModal}
+          onClose={() => setShowPurchaseModal(false)}
+          currentTokens={currentTokens}
+          onPurchaseSuccess={(newTokens) => {
+            setCurrentTokens(newTokens);
+            setShowPurchaseModal(false);
+          }}
+        />
       </div>
     </div>
   );

@@ -30,6 +30,9 @@ NEVER:
 * NEVER change token calculation logic (`User.js`, `TokenUsage.js`, etc.)
 * NEVER touch `.env` or credentials
 * NEVER run destructive git or bash commands
+* NEVER edit .env files or environment variables
+* NEVER hardcode or log secret keys, DB passwords, or other sensitive data
+* NEVER start multiple servers without checking for existing processes first
 
 YOU MUST:
 
@@ -37,6 +40,9 @@ YOU MUST:
 * YOU MUST support intimacy level unlocking images at every 10 levels
 * YOU MUST maintain a 50% profit margin in token reward design
 * YOU MUST include comments in complex prompt-related logic
+* YOU MUST check for existing server processes before starting new ones
+* YOU MUST ask permission before modifying any configuration files
+* YOU MUST maintain strict security practices with sensitive data
 
 IMPORTANT:
 
@@ -123,3 +129,45 @@ IMPORTANT:
 * Uses OpenAI API for chat completion
 * Messages consume tokens based on characterPrompt + userMessage
 * Cache character prompts to reduce cost
+
+## 📡 API設計と実装ルール
+
+* すべてのAPIは `docs/openapi.yaml` に記述されている
+* 新しいAPIを追加する前に必ず **既存の定義を確認**
+* ない場合のみ `paths:` に追記し、必要に応じて `components.schemas` も拡張
+* 実装は `backend/src/index.ts` に、型は `types.ts` に追加
+* Claudeが実装する場合もこのルールに従うこと
+
+## 📡 API仕様管理ルール
+
+- 新しく作るAPIは必ず `/docs/openapi.yaml` に定義を追加してください
+- Claudeが自動生成する場合も、まず `openapi.yaml` の `paths:` に追記してから `index.ts` に実装
+- `components.schemas` に型が必要な場合は再利用 or 追加
+
+
+
+## 🧠 Claudeへの指示テンプレート
+
+```plaintext
+この画面に使うAPIを追加したい。
+
+- メソッド：POST
+- パス：/api/user/reset-affinity
+- ボディ：{ "characterId": "string" }
+- 認証：JWT
+- レスポンス：{ "success": true, "message": "リセット完了" }
+
+まず `openapi.yaml` に同じAPIがあるか確認して、
+なければ `paths:` に追加してください。
+
+その上で、型を `types.ts` に、実装を `index.ts` にお願いします。
+
+## 🌊 SSE (Server-Sent Events) システム
+
+購入完了のリアルタイム通知にSSEを使用：
+
+* **Redis**: 一時的な通知データストア (`purchase:${sessionId}`, TTL: 60秒)
+* **バックエンド**: `/api/purchase/events/:sessionId` でSSEストリーム提供
+* **フロントエンド**: EventSource APIでリアルタイム受信
+* **フォールバック**: SSE失敗時は従来のポーリング方式に自動切替
+* **クリーンアップ**: 接続終了時の適切なリソース解放

@@ -1,13 +1,80 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import TokenStats from '@/components/admin/TokenStats';
 import TokenManagementTable from '@/components/admin/TokenManagementTable';
+import TokenPackTable, { TokenPackTableRef } from '@/components/admin/TokenPackTable';
+import TokenPackModal from '@/components/admin/TokenPackModal';
 import { useToast } from '@/contexts/ToastContext';
-import { Search, Filter, Plus, Download, CreditCard } from 'lucide-react';
+import { Search, Filter, Plus, Download, CreditCard, Package, Users } from 'lucide-react';
 import { mockTokenUsage, mockUsers } from '@/mock/adminData';
+
+interface TokenPack {
+  _id?: string;
+  name: string;
+  description: string;
+  tokens: number;
+  price: number;
+  priceId?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  profitMargin?: number;
+  tokenPerYen?: number;
+}
 
 export default function TokensPage() {
   const { success } = useToast();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  // URLクエリパラメータからタブを取得、デフォルトは'users'
+  const getInitialTab = (): 'users' | 'packs' => {
+    const tab = searchParams.get('tab');
+    return tab === 'packs' ? 'packs' : 'users';
+  };
+  
+  const [activeTab, setActiveTab] = useState<'users' | 'packs'>(getInitialTab());
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPack, setEditingPack] = useState<TokenPack | null>(null);
+  const tokenPackTableRef = useRef<TokenPackTableRef>(null);
+
+  // URLクエリパラメータの変更を監視
+  useEffect(() => {
+    setActiveTab(getInitialTab());
+  }, [searchParams]);
+
+  const handleTabChange = (tab: 'users' | 'packs') => {
+    setActiveTab(tab);
+    // URLクエリパラメータを更新
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    router.push(`/admin/tokens?${params.toString()}`);
+  };
+
+  const handleCreatePack = () => {
+    setEditingPack(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditPack = (pack: TokenPack) => {
+    setEditingPack(pack);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setEditingPack(null);
+  };
+
+  const handleModalSave = () => {
+    // Modal will handle the actual save, we just need to trigger refresh
+    if (tokenPackTableRef.current) {
+      tokenPackTableRef.current.refreshTokenPacks();
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col">
       {/* ヘッダー */}
@@ -16,20 +83,22 @@ export default function TokensPage() {
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">トークン管理</h1>
             <p className="text-sm text-gray-500 mt-1">
-              トークン使用状況・売上・残高の管理
+              トークン使用状況・パック管理・ユーザー残高の管理
             </p>
           </div>
           
           <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
-            {/* 検索 */}
-            <div className="relative flex-1 sm:flex-none">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="ユーザー検索..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:w-auto"
-              />
-            </div>
+            {/* 検索（ユーザータブでのみ表示） */}
+            {activeTab === 'users' && (
+              <div className="relative flex-1 sm:flex-none">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="ユーザー検索..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:w-auto"
+                />
+              </div>
+            )}
             
             <div className="flex items-center space-x-2">
               {/* フィルター */}
@@ -43,17 +112,40 @@ export default function TokensPage() {
                 <Download className="w-4 h-4" />
                 <span className="text-sm hidden sm:inline">エクスポート</span>
               </button>
-              
-              {/* トークンパック作成 */}
-              <button 
-                onClick={() => success('トークンパック作成', '新しいトークンパックの作成画面を開きました')}
-                className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex-1 sm:flex-none justify-center"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="text-sm hidden sm:inline">パック作成</span>
-              </button>
             </div>
           </div>
+        </div>
+
+        {/* タブナビゲーション */}
+        <div className="mt-4 border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => handleTabChange('users')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                activeTab === 'users'
+                  ? 'border-purple-500 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <Users className="w-4 h-4" />
+                <span>ユーザー管理</span>
+              </div>
+            </button>
+            <button
+              onClick={() => handleTabChange('packs')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                activeTab === 'packs'
+                  ? 'border-purple-500 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <Package className="w-4 h-4" />
+                <span>パック管理</span>
+              </div>
+            </button>
+          </nav>
         </div>
       </header>
 
@@ -63,10 +155,26 @@ export default function TokensPage() {
           {/* 統計カード */}
           <TokenStats tokenUsage={mockTokenUsage} users={mockUsers} />
           
-          {/* トークン管理テーブル */}
-          <TokenManagementTable users={mockUsers} />
+          {/* タブコンテンツ */}
+          {activeTab === 'users' ? (
+            <TokenManagementTable users={mockUsers} />
+          ) : (
+            <TokenPackTable 
+              ref={tokenPackTableRef}
+              onCreatePack={handleCreatePack}
+              onEditPack={handleEditPack}
+            />
+          )}
         </div>
       </main>
+
+      {/* トークンパック作成・編集モーダル */}
+      <TokenPackModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onSave={handleModalSave}
+        editingPack={editingPack}
+      />
     </div>
   );
 }

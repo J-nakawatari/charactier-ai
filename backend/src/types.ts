@@ -61,3 +61,17 @@ export interface MockUser {
     name: LocalizedString | string;
   } | null;
 }
+
+export interface TokenPack {
+  _id: string;
+  name: string;
+  description: string;
+  tokens: number;
+  price: number;
+  priceId?: string; // Stripe Price ID
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  profitMargin?: number; // 自動計算される利益率
+  tokenPerYen?: number; // 自動計算される1円あたりのトークン数
+}

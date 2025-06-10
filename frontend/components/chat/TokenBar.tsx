@@ -5,9 +5,10 @@ import { Coins, AlertTriangle, Plus } from 'lucide-react';
 interface TokenBarProps {
   tokensRemaining: number;
   lastMessageCost: number;
+  onPurchaseClick?: () => void;
 }
 
-export function TokenBar({ tokensRemaining, lastMessageCost }: TokenBarProps) {
+export function TokenBar({ tokensRemaining, lastMessageCost, onPurchaseClick }: TokenBarProps) {
   const isLowBalance = tokensRemaining < 500;
   const isCriticalBalance = tokensRemaining < 200;
   
@@ -64,8 +65,7 @@ export function TokenBar({ tokensRemaining, lastMessageCost }: TokenBarProps) {
               : 'bg-purple-600 text-white hover:bg-purple-700'
         }`}
         onClick={() => {
-          // TODO: トークン購入ページへのナビゲーション
-          console.log('Navigate to token purchase');
+          onPurchaseClick?.();
         }}
       >
         <Plus className="w-4 h-4" />

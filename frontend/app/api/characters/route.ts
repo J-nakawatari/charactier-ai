@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     console.log('🔗 フロントエンドAPIルート: バックエンドにプロキシ', queryString);
     
     // バックエンドAPIに転送
-    const backendUrl = `http://localhost:3002/api/characters?${queryString}`;
+    const backendUrl = `http://localhost:3004/api/characters?${queryString}`;
     const response = await fetch(backendUrl, {
       method: 'GET',
       headers: {
