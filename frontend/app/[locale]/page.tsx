@@ -83,6 +83,7 @@ export default function HomePage() {
     });
     
     // Don't do switching for now - just show first video
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, isMobile]); // Add dependencies
 
   // Mobile uses static image - no switching needed

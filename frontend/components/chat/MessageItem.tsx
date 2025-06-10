@@ -2,6 +2,7 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import Image from 'next/image';
 import { Coins } from 'lucide-react';
 
 interface Character {
@@ -59,9 +60,11 @@ export function MessageItem({ message, character }: MessageItemProps) {
     <div className="flex items-start space-x-2 sm:space-x-3">
       {/* キャラアイコン - モバイルでも表示 */}
       <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
-        <img 
+        <Image 
           src={character.imageChatAvatar} 
           alt={character.name}
+          width={40}
+          height={40}
           className="w-full h-full object-cover"
         />
       </div>

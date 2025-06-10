@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useToast } from '@/contexts/ToastContext';
 import { getCroppedImg } from '@/utils/cropImage';
 import ImageCropper from '@/components/admin/ImageCropper';

@@ -121,6 +121,7 @@ export default function RegisterPage() {
     return () => {
       clearInterval(interval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, isMobile]);
 
   const validateForm = () => {

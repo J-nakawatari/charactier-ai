@@ -25,13 +25,6 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <head>
-        {/* Google Fonts */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Marvel:wght@400;700&family=Maven+Pro:wght@900&family=Orbitron:wght@400;700&display=swap" 
-          rel="stylesheet" 
-        />
       </head>
       <body className={inter.className}>
         <NextIntlClientProvider messages={messages}>

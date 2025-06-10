@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { MessageItem } from './MessageItem';
 
 interface Character {
@@ -46,9 +47,11 @@ export function MessageList({ messages, character, isLoading }: MessageListProps
         {messages.length === 0 && (
           <div className="text-center py-12">
             <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-lg">
-              <img 
+              <Image 
                 src={character.imageChatAvatar} 
                 alt={character.name}
+                width={80}
+                height={80}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -72,9 +75,11 @@ export function MessageList({ messages, character, isLoading }: MessageListProps
         {isLoading && (
           <div className="flex items-start space-x-2 sm:space-x-3">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
-              <img 
+              <Image 
                 src={character.imageChatAvatar} 
                 alt={character.name}
+                width={40}
+                height={40}
                 className="w-full h-full object-cover"
               />
             </div>

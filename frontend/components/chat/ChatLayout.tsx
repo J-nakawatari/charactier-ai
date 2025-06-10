@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Send, Heart, Zap } from 'lucide-react';
 import { MessageList } from './MessageList';
 import { AffinityBar } from './AffinityBar';
@@ -169,9 +170,11 @@ export function ChatLayout({
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           <div className="flex items-center space-x-2 sm:space-x-3">
             <div className="hidden sm:block w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
-              <img 
+              <Image 
                 src={character.imageChatAvatar} 
                 alt={character.name}
+                width={48}
+                height={48}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -205,11 +208,13 @@ export function ChatLayout({
       <div className="flex-1 relative z-10 overflow-hidden">
         {/* キャラクター画像（真ん中に配置） */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="h-full">
-            <img 
+          <div className="h-full w-auto">
+            <Image 
               src={character.imageChatAvatar}
               alt={character.name}
-              className="h-full object-contain"
+              width={400}
+              height={600}
+              className="h-full w-auto object-contain"
             />
           </div>
         </div>

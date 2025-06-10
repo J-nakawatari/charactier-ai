@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 // import { useTranslations } from 'next-intl';
 import { ChatLayout } from '@/components/chat/ChatLayout';
@@ -53,11 +53,7 @@ export default function ChatPage() {
   const characterId = params.id as string;
   const locale = params.locale as string;
 
-  useEffect(() => {
-    loadChatData();
-  }, [characterId, locale]);
-
-  const loadChatData = async () => {
+  const loadChatData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -146,7 +142,11 @@ export default function ChatPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [characterId]);
+
+  useEffect(() => {
+    loadChatData();
+  }, [loadChatData]);
 
   if (loading) {
     return (

@@ -19,6 +19,7 @@ export default function PurchaseSuccessPage() {
     if (sessionId) {
       processPurchaseWithSSE();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   const processPurchaseWithSSE = async () => {
