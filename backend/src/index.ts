@@ -3,6 +3,7 @@ import YAML from 'yamljs';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import Stripe from 'stripe';
 import mongoose from 'mongoose';
 import OpenAI from 'openai';
@@ -16,6 +17,7 @@ import { CharacterModel, ICharacter } from './models/CharacterModel';
 import { authenticateToken, AuthRequest } from './middleware/auth';
 import authRoutes from './routes/auth';
 import characterRoutes from './routes/characters';
+import { validateMessage } from './utils/contentFilter';
 
 dotenv.config({ path: './.env' });
 
@@ -100,6 +102,13 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
 - 約50-150文字程度で返答してください
 - 絵文字を適度に使用してください`;
 
+      // 実際に生成されたプロンプトをログ出力
+      console.log('🎭 Generated system prompt for character:', character.name.ja);
+      console.log('📝 System prompt content:');
+      console.log('='.repeat(50));
+      console.log(systemPrompt);
+      console.log('='.repeat(50));
+
       const messages = [
         { role: 'system' as const, content: systemPrompt },
         ...conversationHistory,
@@ -165,6 +174,12 @@ app.use(cors({
 
 // 認証ルート
 app.use('/api/auth', authRoutes);
+
+// 静的ファイル配信（アップロードされた画像）
+app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {
+  maxAge: '365d', // 1年キャッシュ
+  etag: true
+}));
 
 // キャラクタールート
 app.use('/api/characters', characterRoutes);
@@ -619,8 +634,11 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
     const localizedCharacter = {
       _id: character._id,
       name: character.name,
+      description: character.description,
       personality: character.personalityPreset,
-      model: character.aiModel
+      model: character.aiModel,
+      imageChatAvatar: character.imageChatAvatar,
+      themeColor: character.themeColor
     };
 
     res.json({
@@ -650,6 +668,15 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
 
   if (!message || typeof message !== 'string') {
     res.status(400).json({ error: 'Message is required' });
+    return;
+  }
+
+  // メッセージ長制限チェック
+  if (message.length > 2000) {
+    res.status(400).json({
+      error: 'Message too long',
+      message: 'メッセージが長すぎます（2000文字以内）'
+    });
     return;
   }
 
@@ -684,6 +711,22 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
     const userTokenBalance = dbUser.tokenBalance;
 
     console.log('💰 Current user token balance:', userTokenBalance);
+
+    // 🔥 禁止用語フィルタリング（メッセージ処理前に実行）
+    console.log('🔍 Content filtering check started');
+    const validation = await validateMessage(req.user._id, message.trim(), req);
+    if (!validation.allowed) {
+      console.log('🚫 Content violation detected:', validation.reason);
+      res.status(403).json({
+        error: validation.reason,
+        code: 'CONTENT_VIOLATION',
+        violationType: validation.violationType,
+        detectedWord: validation.detectedWord,
+        sanctionInfo: validation.sanctionInfo
+      });
+      return;
+    }
+    console.log('✅ Content filtering passed');
 
     // AI応答を生成
     const aiResponse = await generateChatResponse(characterId, message);
@@ -3078,7 +3121,6 @@ app.get('/api/debug', (_req: Request, res: Response): void => {
   });
 });
 
-import path from 'path';
 const swaggerDocument = YAML.load(path.resolve(__dirname, '../../docs/openapi.yaml'));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
