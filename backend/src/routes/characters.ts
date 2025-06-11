@@ -92,8 +92,10 @@ router.post('/', authenticateToken, async (req: Request, res: Response): Promise
       
       if (validationError.errors) {
         Object.keys(validationError.errors).forEach(field => {
-          const fieldError = validationError.errors[field];
-          fieldErrors.push(`${field}: ${fieldError.message}`);
+          const fieldError = validationError.errors?.[field];
+          if (fieldError) {
+            fieldErrors.push(`${field}: ${fieldError.message}`);
+          }
         });
       }
       

@@ -2752,15 +2752,14 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
         ];
       }
       
-      // ステータスフィルター（簡易実装）
-      if (status) {
-        // TODO: ユーザーモデルにstatusフィールドを追加する場合
-        // query.status = status;
+      // ステータスフィルター（管理者は停止ユーザーも含めて表示）
+      if (status && status !== 'all') {
+        query.accountStatus = status;
       }
       
       const totalUsers = await UserModel.countDocuments(query);
       const users = await UserModel.find(query)
-        .select('_id name email tokenBalance createdAt')
+        .select('_id name email tokenBalance accountStatus totalSpent totalChatMessages affinities lastLogin createdAt violationCount isActive')
         .sort({ createdAt: -1 })
         .skip((pageNum - 1) * limitNum)
         .limit(limitNum)
@@ -2773,12 +2772,16 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
         name: user.name || 'Unknown User',
         email: user.email || 'no-email@example.com',
         tokenBalance: user.tokenBalance || 0,
-        totalSpent: 5000, // TODO: 実際の購入履歴から計算
-        chatCount: 0, // TODO: チャット履歴から計算
-        avgIntimacy: 25.0, // TODO: 親密度データから計算
-        lastLogin: user.createdAt || new Date(),
-        status: 'active', // TODO: 実際のステータス管理
-        isTrialUser: false,
+        totalSpent: user.totalSpent || 0,
+        chatCount: user.totalChatMessages || 0,
+        avgIntimacy: user.affinities && user.affinities.length > 0 
+          ? user.affinities.reduce((sum: number, aff: any) => sum + (aff.level || 0), 0) / user.affinities.length 
+          : 0,
+        lastLogin: user.lastLogin || user.createdAt || new Date(),
+        status: user.accountStatus || 'active',
+        isTrialUser: (user.tokenBalance === 10000 && user.totalSpent === 0),
+        violationCount: user.violationCount || 0,
+        isActive: user.isActive !== false,
         createdAt: user.createdAt || new Date()
       }));
       
@@ -2873,6 +2876,194 @@ app.post('/admin/users/:userId/reset-tokens', authenticateToken, async (req: Req
     res.status(500).json({
       success: false,
       message: 'トークンリセットに失敗しました'
+    });
+  }
+});
+
+// 管理者向けユーザー詳細取得
+app.get('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || !(req.user as any).isAdmin) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const { id } = req.params;
+    
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database not connected' });
+      return;
+    }
+
+    const user = await UserModel.findById(id)
+      .select('-password')
+      .populate('selectedCharacter', 'name')
+      .populate('purchasedCharacters', 'name');
+
+    if (!user) {
+      res.status(404).json({
+        error: 'User not found',
+        message: 'ユーザーが見つかりません'
+      });
+      return;
+    }
+
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      tokenBalance: user.tokenBalance,
+      chatCount: user.totalChatMessages,
+      avgIntimacy: user.affinities.length > 0 
+        ? user.affinities.reduce((sum, aff) => sum + aff.level, 0) / user.affinities.length 
+        : 0,
+      totalSpent: user.totalSpent,
+      status: user.accountStatus,
+      isTrialUser: user.tokenBalance === 10000 && user.totalSpent === 0,
+      loginStreak: user.loginStreak,
+      maxLoginStreak: user.maxLoginStreak,
+      violationCount: user.violationCount,
+      registrationDate: user.registrationDate,
+      lastLogin: user.lastLogin,
+      suspensionEndDate: user.suspensionEndDate,
+      banReason: user.banReason,
+      unlockedCharacters: user.purchasedCharacters,
+      affinities: user.affinities.map(aff => ({
+        characterId: aff.character,
+        level: aff.level,
+        totalConversations: aff.totalConversations,
+        relationshipType: aff.relationshipType,
+        trustLevel: aff.trustLevel
+      }))
+    });
+
+  } catch (error) {
+    console.error('❌ User detail fetch error:', error);
+    res.status(500).json({
+      error: 'Server error',
+      message: 'ユーザー詳細の取得に失敗しました'
+    });
+  }
+});
+
+// 管理者向けユーザー停止/復活
+app.put('/api/admin/users/:id/status', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || !(req.user as any).isAdmin) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const { id } = req.params;
+    const { status, banReason } = req.body;
+    
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database not connected' });
+      return;
+    }
+
+    if (!['active', 'suspended', 'banned'].includes(status)) {
+      res.status(400).json({
+        error: 'Invalid status',
+        message: '無効なステータスです'
+      });
+      return;
+    }
+
+    const updateData: any = { 
+      accountStatus: status,
+      ...(status === 'suspended' && { suspensionEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }), // 7日後
+      ...(banReason && { banReason })
+    };
+
+    if (status === 'active') {
+      updateData.suspensionEndDate = undefined;
+      updateData.banReason = undefined;
+    }
+
+    const user = await UserModel.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, select: '-password' }
+    );
+
+    if (!user) {
+      res.status(404).json({
+        error: 'User not found',
+        message: 'ユーザーが見つかりません'
+      });
+      return;
+    }
+
+    console.log('✅ User status updated:', { id, status, banReason });
+
+    res.json({
+      success: true,
+      message: `ユーザーのステータスを${status}に変更しました`,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        status: user.accountStatus,
+        suspensionEndDate: user.suspensionEndDate,
+        banReason: user.banReason
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ User status update error:', error);
+    res.status(500).json({
+      error: 'Server error',
+      message: 'ユーザーステータスの更新に失敗しました'
+    });
+  }
+});
+
+// 管理者向けユーザー削除（論理削除）
+app.delete('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || !(req.user as any).isAdmin) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const { id } = req.params;
+    
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database not connected' });
+      return;
+    }
+
+    const user = await UserModel.findByIdAndUpdate(
+      id,
+      { 
+        isActive: false,
+        accountStatus: 'banned',
+        banReason: '管理者により削除'
+      },
+      { new: true, select: '-password' }
+    );
+
+    if (!user) {
+      res.status(404).json({
+        error: 'User not found',
+        message: 'ユーザーが見つかりません'
+      });
+      return;
+    }
+
+    console.log('✅ User deleted (soft):', { id, name: user.name, email: user.email });
+
+    res.json({
+      success: true,
+      message: `ユーザー ${user.name} を削除しました`
+    });
+
+  } catch (error) {
+    console.error('❌ User deletion error:', error);
+    res.status(500).json({
+      error: 'Server error',
+      message: 'ユーザーの削除に失敗しました'
     });
   }
 });

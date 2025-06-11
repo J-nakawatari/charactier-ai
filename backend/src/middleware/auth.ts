@@ -55,7 +55,7 @@ export const authenticateToken = async (
         name: admin.name,
         email: admin.email,
         role: admin.role
-      } as IUser & { isAdmin: boolean; role: string };
+      } as unknown as IUser & { isAdmin: boolean; role: string };
       next();
       return;
     }
@@ -63,6 +63,17 @@ export const authenticateToken = async (
     // 管理者で見つからない場合は一般ユーザーとして検索
     const user = await UserModel.findById(decoded.userId);
     if (user) {
+      // アカウント状態チェック（停止・削除ユーザーのアクセス拒否）
+      if (!user.isActive || user.accountStatus === 'suspended' || user.accountStatus === 'banned') {
+        res.status(403).json({ 
+          error: 'Account suspended',
+          message: 'アカウントが停止されています。管理者にお問い合わせください。',
+          accountStatus: user.accountStatus,
+          forceLogout: true
+        });
+        return;
+      }
+      
       // 一般ユーザーとして認証成功
       req.user = user;
       next();
