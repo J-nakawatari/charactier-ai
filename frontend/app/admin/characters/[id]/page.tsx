@@ -1,9 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
-import { mockCharacters } from '@/mock/adminData';
+
+// Inline type definitions
+interface Character {
+  id: string;
+  name: { ja: string; en: string };
+  description?: { ja: string; en: string };
+  personalityType: string;
+  personalityPreset?: string;
+  personalityTags?: string[];
+  traits: string[];
+  isActive: boolean;
+  isFree: boolean;
+  price: number;
+  totalChats: number;
+  avgIntimacy: number;
+  createdAt: string;
+  gender?: string;
+  age?: string;
+  occupation?: string;
+  model?: string;
+  characterAccessType?: string;
+  stripePriceId?: string;
+  imageCharacterSelect?: string;
+  imageDashboard?: string;
+  imageChatBackground?: string;
+  imageChatAvatar?: string;
+  galleryImages?: Array<{
+    file: string;
+    title: string;
+    description: string;
+  }>;
+  adminPrompt?: { ja: string; en: string };
+  defaultMessage?: { ja: string; en: string };
+  limitMessage?: { ja: string; en: string };
+  affinitySettings?: {
+    maxLevel: number;
+    experienceMultiplier: number;
+  };
+  levelRewards?: Array<any>;
+}
 import { 
   ArrowLeft, 
   Edit, 
@@ -34,7 +73,73 @@ export default function CharacterDetailPage() {
   const { success, warning } = useToast();
   const [activePromptLanguage, setActivePromptLanguage] = useState<'ja' | 'en'>('ja');
   
-  const character = mockCharacters.find(c => c.id === params.id);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [character, setCharacter] = useState<Character | null>(null);
+
+  useEffect(() => {
+    const fetchCharacter = async () => {
+      try {
+        setLoading(true);
+        
+        // 管理者認証トークンを取得
+        const adminToken = localStorage.getItem('adminAccessToken');
+        if (!adminToken) {
+          throw new Error('管理者認証が必要です');
+        }
+        
+        const response = await fetch(`http://localhost:3004/api/characters/${params.id}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`キャラクターの取得に失敗しました: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setCharacter(data.character || data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'キャラクターデータの読み込みに失敗しました');
+        console.error('Character fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (params.id) {
+      fetchCharacter();
+    }
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">キャラクター情報を読み込んでいます...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            再読み込み
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   if (!character) {
     return (
@@ -186,7 +291,7 @@ export default function CharacterDetailPage() {
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">特徴</h3>
               <div className="flex flex-wrap gap-2">
-                {character.traits.map((trait, index) => (
+                {(character.traits || []).map((trait, index) => (
                   <span 
                     key={index}
                     className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-full"
@@ -206,7 +311,7 @@ export default function CharacterDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">価格</p>
                   <p className="text-xl font-semibold text-gray-900">
-                    {character.isFree ? '無料' : `¥${character.price.toLocaleString()}`}
+                    {character.isFree ? '無料' : `¥${(character.price || 0).toLocaleString()}`}
                   </p>
                   {/* Stripe ID は後で実装 */}
                 </div>
@@ -219,7 +324,7 @@ export default function CharacterDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">総チャット数</p>
                   <p className="text-xl font-semibold text-gray-900">
-                    {character.totalChats.toLocaleString()}
+                    {(character.totalChats || 0).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -231,7 +336,7 @@ export default function CharacterDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">平均親密度</p>
                   <p className="text-xl font-semibold text-gray-900">
-                    {character.avgIntimacy.toFixed(1)}%
+                    {(character.avgIntimacy || 0).toFixed(1)}%
                   </p>
                 </div>
               </div>
@@ -367,7 +472,7 @@ export default function CharacterDetailPage() {
                       >
                         {tag}
                       </span>
-                    )) : character.traits.map((trait, index) => (
+                    )) : (character.traits || []).map((trait, index) => (
                       <span 
                         key={index}
                         className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full"
@@ -425,12 +530,12 @@ export default function CharacterDetailPage() {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-500">親密度レベル</span>
-                  <span className="text-sm font-medium text-gray-900">{character.avgIntimacy.toFixed(1)}%</span>
+                  <span className="text-sm font-medium text-gray-900">{(character.avgIntimacy || 0).toFixed(1)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className="bg-pink-500 h-2 rounded-full transition-all duration-300" 
-                    style={{ width: `${character.avgIntimacy}%` }}
+                    style={{ width: `${character.avgIntimacy || 0}%` }}
                   ></div>
                 </div>
               </div>

@@ -1,7 +1,12 @@
 'use client';
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { UserStats } from '@/mock/adminData';
+
+interface UserStats {
+  month: string;
+  activeUsers: number;
+  newUsers: number;
+}
 
 interface UserChartProps {
   data: UserStats[];

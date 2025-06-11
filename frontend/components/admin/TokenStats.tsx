@@ -1,7 +1,18 @@
 'use client';
 
-import { TokenUsage, UserData } from '@/mock/adminData';
 import { CreditCard, TrendingUp, Users, DollarSign } from 'lucide-react';
+
+interface TokenUsage {
+  date: string;
+  tokensUsed: number;
+  revenue: number;
+}
+
+interface UserData {
+  _id: string;
+  tokenBalance: number;
+  totalSpent: number;
+}
 
 interface TokenStatsProps {
   tokenUsage: TokenUsage[];

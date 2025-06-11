@@ -1,7 +1,15 @@
 'use client';
 
 import { Bell, CheckCircle, AlertTriangle, Info, XCircle } from 'lucide-react';
-import { Notification } from '@/mock/adminData';
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'success' | 'warning' | 'error' | 'info';
+  isRead: boolean;
+  createdAt: string;
+}
 
 interface NotificationListProps {
   notifications: Notification[];

@@ -10,9 +10,10 @@ import { LocalizedString } from './types';
 import { TokenPackModel, ITokenPack } from './models/TokenPackModel';
 import { getRedisClient } from '../lib/redis';
 import { UserModel, IUser } from './models/UserModel';
+import { AdminModel, IAdmin } from './models/AdminModel';
 import { ChatModel, IChat, IMessage } from './models/ChatModel';
 import { CharacterModel, ICharacter } from './models/CharacterModel';
-import { authenticateToken } from './middleware/auth';
+import { authenticateToken, AuthRequest } from './middleware/auth';
 import authRoutes from './routes/auth';
 import characterRoutes from './routes/characters';
 
@@ -1612,11 +1613,11 @@ const validateTokenPriceRatio = (tokens: number, price: number): boolean => {
 };
 
 // Token Packs CRUD API endpoints
-app.get('/api/admin/token-packs', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.get('/api/admin/token-packs', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   console.log('📦 Token Packs 一覧取得 API called');
   
-  if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
     return;
   }
 
@@ -1836,11 +1837,11 @@ app.get('/api/purchase/session/:sessionId', (req: Request, res: Response): void 
   }
 });
 
-app.post('/api/admin/token-packs', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.post('/api/admin/token-packs', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   console.log('📦 Token Pack 作成 API called:', req.body);
   
-  if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
     return;
   }
 
@@ -1979,11 +1980,11 @@ app.post('/api/admin/token-packs', authenticateToken, async (req: Request, res: 
   }
 });
 
-app.get('/api/admin/token-packs/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.get('/api/admin/token-packs/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   console.log('📦 Token Pack 詳細取得 API called:', { tokenPackId: req.params.id });
   
-  if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
     return;
   }
 
@@ -2034,11 +2035,11 @@ app.get('/api/admin/token-packs/:id', authenticateToken, async (req: Request, re
   }
 });
 
-app.put('/api/admin/token-packs/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.put('/api/admin/token-packs/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   console.log('📦 Token Pack 更新 API called:', { tokenPackId: req.params.id, body: req.body });
   
-  if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
     return;
   }
 
@@ -2201,11 +2202,11 @@ app.put('/api/admin/token-packs/:id', authenticateToken, async (req: Request, re
   }
 });
 
-app.delete('/api/admin/token-packs/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.delete('/api/admin/token-packs/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   console.log('📦 Token Pack 削除 API called:', { tokenPackId: req.params.id });
   
-  if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
     return;
   }
 
@@ -2724,11 +2725,11 @@ app.post('/api/user/add-tokens', authenticateToken, async (req: Request, res: Re
 });
 
 // 管理者用：ユーザー一覧取得
-app.get('/admin/users', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   console.log('👥 管理者用ユーザー一覧 API called');
   
-  if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
     return;
   }
 
@@ -2889,6 +2890,181 @@ app.get('/api/debug', (_req: Request, res: Response): void => {
 import path from 'path';
 const swaggerDocument = YAML.load(path.resolve(__dirname, '../../docs/openapi.yaml'));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// 管理者作成API
+app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  console.log('👤 管理者作成 API called:', req.body);
+  
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
+    return;
+  }
+
+  const { name, email, password, role = 'admin', permissions } = req.body;
+
+  // バリデーション
+  if (!name || !email || !password) {
+    res.status(400).json({
+      error: 'Missing required fields',
+      message: '名前、メールアドレス、パスワードは必須です'
+    });
+    return;
+  }
+
+  if (password.length < 6) {
+    res.status(400).json({
+      error: 'Password too short',
+      message: 'パスワードは6文字以上で入力してください'
+    });
+    return;
+  }
+
+  try {
+    if (isMongoConnected) {
+      // 既存の管理者をチェック
+      const existingAdmin = await AdminModel.findOne({ email });
+      if (existingAdmin) {
+        res.status(409).json({
+          error: 'Email already exists',
+          message: 'このメールアドレスは既に登録されています'
+        });
+        return;
+      }
+
+      // パスワードをハッシュ化
+      const bcrypt = require('bcryptjs');
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+      // デフォルト権限
+      const defaultPermissions = permissions || [
+        'users.read',
+        'users.write',
+        'characters.read',
+        'characters.write',
+        'tokens.read',
+        'tokens.write'
+      ];
+
+      // 新しい管理者を作成
+      const newAdmin = new AdminModel({
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        password: hashedPassword,
+        role: role,
+        permissions: defaultPermissions,
+        isActive: true
+      });
+
+      const savedAdmin = await newAdmin.save();
+      console.log('✅ 新しい管理者を作成しました:', { id: savedAdmin._id, email: savedAdmin.email });
+
+      res.status(201).json({
+        success: true,
+        message: '管理者を作成しました',
+        admin: {
+          _id: savedAdmin._id,
+          name: savedAdmin.name,
+          email: savedAdmin.email,
+          role: savedAdmin.role,
+          permissions: savedAdmin.permissions,
+          isActive: savedAdmin.isActive,
+          createdAt: savedAdmin.createdAt
+        }
+      });
+    } else {
+      // モック実装
+      res.status(201).json({
+        success: true,
+        message: '管理者を作成しました（モック）',
+        admin: {
+          _id: 'mock-admin-id',
+          name,
+          email,
+          role,
+          permissions: permissions || ['users.read', 'characters.read'],
+          isActive: true,
+          createdAt: new Date().toISOString()
+        }
+      });
+    }
+  } catch (error) {
+    console.error('❌ 管理者作成エラー:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: '管理者の作成に失敗しました'
+    });
+  }
+});
+
+// 管理者一覧取得API
+app.get('/api/admin/admins', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  console.log('👤 管理者一覧取得 API called');
+  
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
+    return;
+  }
+
+  const { page = 1, limit = 20, search } = req.query;
+  const pageNum = parseInt(page as string);
+  const limitNum = parseInt(limit as string);
+
+  try {
+    if (isMongoConnected) {
+      const query: any = {};
+      
+      // 検索フィルター
+      if (search) {
+        query.$or = [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
+        ];
+      }
+
+      const totalAdmins = await AdminModel.countDocuments(query);
+      const admins = await AdminModel.find(query)
+        .select('-password') // パスワードは除外
+        .sort({ createdAt: -1 })
+        .skip((pageNum - 1) * limitNum)
+        .limit(limitNum)
+        .lean();
+
+      console.log(`📊 Found ${admins.length} admins (total: ${totalAdmins})`);
+
+      res.json({
+        success: true,
+        admins: admins,
+        pagination: {
+          currentPage: pageNum,
+          totalPages: Math.ceil(totalAdmins / limitNum),
+          totalAdmins: totalAdmins,
+          hasNext: pageNum * limitNum < totalAdmins,
+          hasPrev: pageNum > 1
+        }
+      });
+    } else {
+      // モック実装
+      res.json({
+        success: true,
+        admins: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalAdmins: 0,
+          hasNext: false,
+          hasPrev: false
+        }
+      });
+    }
+  } catch (error) {
+    console.error('❌ 管理者一覧取得エラー:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: '管理者一覧の取得に失敗しました'
+    });
+  }
+});
 
 app.listen(PORT, () => {
   console.log('✅ Server is running on:', { port: PORT, url: `http://localhost:${PORT}` });

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import StatsCards from '@/components/admin/StatsCards';
 import UserChart from '@/components/admin/UserChart';
 import TokenChart from '@/components/admin/TokenChart';
@@ -8,16 +9,127 @@ import SecurityAlerts from '@/components/admin/SecurityAlerts';
 import QuickStats from '@/components/admin/QuickStats';
 import CharacterTable from '@/components/admin/CharacterTable';
 import { Search, Bell, Settings } from 'lucide-react';
-import {
-  mockDashboardStats,
-  mockUserStats,
-  mockTokenUsage,
-  mockNotifications,
-  mockSecurityEvents,
-  mockCharacters
-} from '@/mock/adminData';
+
+// Inline type definitions
+interface DashboardStats {
+  totalUsers: number;
+  activeUsers: number;
+  totalTokensUsed: number;
+  totalCharacters: number;
+  apiErrors: number;
+}
+
+interface UserStats {
+  date: string;
+  newUsers: number;
+  activeUsers: number;
+}
+
+interface TokenUsage {
+  date: string;
+  used: number;
+  purchased: number;
+}
+
+interface Notification {
+  id: string;
+  type: 'info' | 'warning' | 'error';
+  title: string;
+  message: string;
+  timestamp: string;
+}
+
+interface SecurityEvent {
+  id: string;
+  type: 'login' | 'api' | 'error';
+  severity: 'low' | 'medium' | 'high';
+  message: string;
+  timestamp: string;
+}
+
+interface Character {
+  id: string;
+  name: { ja: string; en: string };
+  isActive: boolean;
+  totalChats: number;
+  avgIntimacy: number;
+}
 
 export default function AdminDashboard() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [userStats, setUserStats] = useState<UserStats[]>([]);
+  const [tokenUsage, setTokenUsage] = useState<TokenUsage[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
+  const [characters, setCharacters] = useState<Character[]>([]);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        // TODO: Replace with actual API calls
+        // const [statsRes, userRes, tokenRes, notifRes, securityRes, charRes] = await Promise.all([
+        //   fetch('/api/admin/stats'),
+        //   fetch('/api/admin/user-stats'),
+        //   fetch('/api/admin/token-usage'),
+        //   fetch('/api/admin/notifications'),
+        //   fetch('/api/admin/security-events'),
+        //   fetch('/api/admin/characters')
+        // ]);
+        
+        // For now, using empty data until APIs are implemented
+        setDashboardStats({
+          totalUsers: 0,
+          activeUsers: 0,
+          totalTokensUsed: 0,
+          totalCharacters: 0,
+          apiErrors: 0
+        });
+        setUserStats([]);
+        setTokenUsage([]);
+        setNotifications([]);
+        setSecurityEvents([]);
+        setCharacters([]);
+      } catch (err) {
+        setError('ダッシュボードデータの読み込みに失敗しました');
+        console.error('Dashboard data fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">ダッシュボードを読み込んでいます...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            再読み込み
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col">
         {/* ヘッダー */}
@@ -69,25 +181,25 @@ export default function AdminDashboard() {
               {/* 左エリア - メインコンテンツ */}
               <div className="xl:col-span-3 space-y-4 md:space-y-6">
                 {/* 統計カード */}
-                <StatsCards stats={mockDashboardStats} />
+                <StatsCards stats={dashboardStats} />
                 
                 {/* チャートエリア */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                  <UserChart data={mockUserStats} />
-                  <TokenChart data={mockTokenUsage} />
+                  <UserChart data={userStats} />
+                  <TokenChart data={tokenUsage} />
                 </div>
                 
                 {/* キャラクターテーブル */}
-                <CharacterTable characters={mockCharacters} />
+                <CharacterTable characters={characters} />
               </div>
               
               {/* 右エリア - サイドウィジェット */}
               <div className="xl:col-span-1 space-y-4 md:space-y-6">
                 {/* セキュリティアラート */}
-                <SecurityAlerts events={mockSecurityEvents} />
+                <SecurityAlerts events={securityEvents} />
                 
                 {/* 通知リスト */}
-                <NotificationList notifications={mockNotifications} />
+                <NotificationList notifications={notifications} />
                 
                 {/* クイック統計 */}
                 <QuickStats />

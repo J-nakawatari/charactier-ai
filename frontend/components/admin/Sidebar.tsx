@@ -11,26 +11,69 @@ import {
   BarChart3,
   LogOut,
   Menu,
-  X
+  X,
+  UserCog
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 const sidebarItems = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'ダッシュボード' },
   { href: '/admin/users', icon: Users, label: 'ユーザー管理' },
   { href: '/admin/characters', icon: MessageSquare, label: 'キャラクター管理' },
   { href: '/admin/tokens', icon: Coins, label: 'トークチケット管理' },
+  { href: '/admin/admins', icon: UserCog, label: '管理者管理' },
   { href: '/admin/notifications', icon: Bell, label: '通知管理' },
   { href: '/admin/analytics', icon: BarChart3, label: 'アナリティクス' },
   { href: '/admin/security', icon: Shield, label: 'セキュリティ' },
   { href: '/admin/settings', icon: Settings, label: '設定' },
 ];
 
+interface AdminUser {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  permissions: string[];
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
+
+  useEffect(() => {
+    // ローカルストレージから管理者情報を取得
+    const adminUserData = localStorage.getItem('adminUser');
+    if (adminUserData) {
+      try {
+        setAdminUser(JSON.parse(adminUserData));
+      } catch (error) {
+        console.error('Failed to parse admin user data:', error);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    // ローカルストレージから管理者認証情報をクリア
+    localStorage.removeItem('adminAccessToken');
+    localStorage.removeItem('adminRefreshToken');
+    localStorage.removeItem('adminUser');
+    
+    // ログインページにリダイレクト
+    router.push('/admin/login');
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    const roleMap = {
+      'super_admin': 'スーパー管理者',
+      'admin': '管理者',
+      'moderator': 'モデレーター'
+    };
+    return roleMap[role as keyof typeof roleMap] || role;
+  };
 
   return (
     <>
@@ -115,8 +158,31 @@ export default function Sidebar() {
       </nav>
 
       {/* フッター */}
-      <div className="p-4 border-t border-gray-200">
-        <button className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 w-full transition-colors">
+      <div className="p-4 border-t border-gray-200 space-y-3">
+        {/* 管理者情報 */}
+        {adminUser && (
+          <div className="px-3 py-2 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                {adminUser.name.charAt(0)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {adminUser.name}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {getRoleDisplayName(adminUser.role)}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* ログアウトボタン */}
+        <button 
+          onClick={handleLogout}
+          className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 w-full transition-colors"
+        >
           <LogOut className="w-5 h-5 text-gray-400" />
           <span>ログアウト</span>
         </button>

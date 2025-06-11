@@ -11,7 +11,7 @@ import RecentChatHistory from '@/components/user/RecentChatHistory';
 import PurchaseHistorySummary from '@/components/user/PurchaseHistorySummary';
 import BadgeGallery from '@/components/user/BadgeGallery';
 import AnalyticsCharts from '@/components/user/AnalyticsCharts';
-import { getMockDashboardData } from '@/mock/dashboardData';
+// import { getMockDashboardData } from '@/mock/dashboardData'; // モックデータは削除済み
 
 interface DashboardData {
   user: {

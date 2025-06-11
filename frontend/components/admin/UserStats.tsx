@@ -1,6 +1,5 @@
 'use client';
 
-// import { UserData } from '@/mock/adminData'; // モックデータは使用しない
 
 interface UserData {
   id: string;

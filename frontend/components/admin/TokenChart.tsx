@@ -1,7 +1,12 @@
 'use client';
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TokenUsage } from '@/mock/adminData';
+
+interface TokenUsage {
+  date: string;
+  tokensUsed: number;
+  revenue: number;
+}
 
 interface TokenChartProps {
   data: TokenUsage[];

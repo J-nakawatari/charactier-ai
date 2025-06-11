@@ -8,7 +8,7 @@ import TokenPackTable, { TokenPackTableRef } from '@/components/admin/TokenPackT
 import TokenPackModal from '@/components/admin/TokenPackModal';
 import { useToast } from '@/contexts/ToastContext';
 import { Search, Filter, Plus, Download, CreditCard, Package, Users } from 'lucide-react';
-import { mockTokenUsage, mockUsers } from '@/mock/adminData';
+// Mock imports removed - will use actual API data
 
 interface TokenPack {
   _id?: string;
@@ -22,6 +22,21 @@ interface TokenPack {
   updatedAt?: string;
   profitMargin?: number;
   tokenPerYen?: number;
+}
+
+// Inline type definitions for token data
+interface TokenUsageData {
+  date: string;
+  used: number;
+  purchased: number;
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  tokenBalance: number;
+  status: string;
 }
 
 export default function TokensPage() {
@@ -39,11 +54,42 @@ export default function TokensPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPack, setEditingPack] = useState<TokenPack | null>(null);
   const tokenPackTableRef = useRef<TokenPackTableRef>(null);
+  
+  // State for API data
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tokenUsage, setTokenUsage] = useState<TokenUsageData[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   // URLクエリパラメータの変更を監視
   useEffect(() => {
     setActiveTab(getInitialTab());
   }, [searchParams]);
+
+  // データ取得
+  useEffect(() => {
+    const fetchTokenData = async () => {
+      try {
+        setLoading(true);
+        // TODO: Replace with actual API calls
+        // const [tokenRes, usersRes] = await Promise.all([
+        //   fetch('/api/admin/token-usage'),
+        //   fetch('/api/admin/users')
+        // ]);
+        
+        // For now, using empty data until APIs are implemented
+        setTokenUsage([]);
+        setUsers([]);
+      } catch (err) {
+        setError('トークンデータの読み込みに失敗しました');
+        console.error('Token data fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTokenData();
+  }, []);
 
   const handleTabChange = (tab: 'users' | 'packs') => {
     setActiveTab(tab);
@@ -74,6 +120,33 @@ export default function TokensPage() {
       tokenPackTableRef.current.refreshTokenPacks();
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">トークン管理データを読み込んでいます...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            再読み込み
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col">
@@ -153,11 +226,11 @@ export default function TokensPage() {
       <main className="flex-1 p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
           {/* 統計カード */}
-          <TokenStats tokenUsage={mockTokenUsage} users={mockUsers} />
+          <TokenStats tokenUsage={tokenUsage} users={users} />
           
           {/* タブコンテンツ */}
           {activeTab === 'users' ? (
-            <TokenManagementTable users={mockUsers} />
+            <TokenManagementTable users={users} />
           ) : (
             <TokenPackTable 
               ref={tokenPackTableRef}

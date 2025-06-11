@@ -1,8 +1,133 @@
 // 共通型定義
 
+/**
+ * 多言語対応文字列
+ */
 export interface LocalizedString {
   ja: string;
   en: string;
+}
+
+/**
+ * API共通レスポンス型
+ */
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+/**
+ * ページネーション共通型
+ */
+export interface PaginationData {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+/**
+ * キャラクター基本型（フロントエンド・バックエンド共通）
+ */
+export interface BaseCharacter {
+  _id: string;
+  name: LocalizedString;
+  description: LocalizedString;
+  characterAccessType: 'free' | 'token-based' | 'purchaseOnly';
+  aiModel: string;
+  personalityPreset?: string;
+  personalityTags?: string[];
+  themeColor?: string;
+  imageCharacterSelect?: string;
+  isActive: boolean;
+  createdAt: Date | string;
+  updatedAt?: Date | string;
+}
+
+/**
+ * ユーザー基本型
+ */
+export interface BaseUser {
+  _id: string;
+  email: string;
+  name: string;
+  tokenBalance: number;
+  isActive: boolean;
+  createdAt: Date | string;
+  updatedAt?: Date | string;
+}
+
+/**
+ * トークンパック基本型
+ */
+export interface BaseTokenPack {
+  _id: string;
+  name: string;
+  description: string;
+  tokens: number;
+  price: number;
+  isActive: boolean;
+  createdAt: Date | string;
+}
+
+/**
+ * 管理画面統計型
+ */
+export interface AdminStats {
+  totalUsers: number;
+  activeUsers: number;
+  totalRevenue: number;
+  totalTokensUsed: number;
+  totalCharacters: number;
+  apiErrors: number;
+}
+
+/**
+ * セキュリティイベント型
+ */
+export interface SecurityEvent {
+  id: string;
+  type: 'rate_limit' | 'unauthorized' | 'suspicious_activity' | 'blocked_word';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  ipAddress: string;
+  timestamp: string;
+  user?: {
+    id: string;
+    email: string;
+  };
+  userAgent?: string;
+}
+
+/**
+ * 通知型
+ */
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'error' | 'success';
+  isRead: boolean;
+  createdAt: string;
+}
+
+/**
+ * フォームバリデーションエラー型
+ */
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+/**
+ * API呼び出し状態型
+ */
+export interface ApiState<T = any> {
+  data: T | null;
+  loading: boolean;
+  error: string | null;
 }
 
 export interface Character {

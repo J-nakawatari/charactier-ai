@@ -1,8 +1,19 @@
 'use client';
 
-import { UserData } from '@/mock/adminData';
 import { useToast } from '@/contexts/ToastContext';
 import { Eye, Edit, CreditCard, Plus, Minus } from 'lucide-react';
+
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  status: 'active' | 'inactive' | 'suspended';
+  isTrialUser: boolean;
+  tokenBalance: number;
+  totalSpent: number;
+  chatCount: number;
+  lastLogin: string;
+}
 
 interface TokenManagementTableProps {
   users: UserData[];

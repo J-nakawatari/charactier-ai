@@ -72,59 +72,7 @@ export default function PurchaseHistoryPage() {
     fetchPurchaseHistory();
   }, []);
 
-  // モックデータ生成
-  const generateMockData = (): PurchaseHistoryData => {
-    const mockPurchases: PurchaseItem[] = [
-      {
-        _id: 'purchase_001',
-        type: 'token',
-        amount: 5000,
-        price: 1000,
-        currency: 'JPY',
-        status: 'completed',
-        paymentMethod: 'Credit Card',
-        date: new Date('2025-01-05T10:15:00Z'),
-        details: 'トークンパック: 5,000トークン',
-        transactionId: 'txn_1234567890',
-        invoiceUrl: '/invoices/001'
-      },
-      {
-        _id: 'purchase_002',
-        type: 'character',
-        amount: 1,
-        price: 500,
-        currency: 'JPY',
-        status: 'completed',
-        paymentMethod: 'Credit Card',
-        date: new Date('2024-12-20T14:30:00Z'),
-        details: 'キャラクター: ルナ',
-        transactionId: 'txn_1234567891'
-      },
-      {
-        _id: 'purchase_003',
-        type: 'token',
-        amount: 10000,
-        price: 1800,
-        currency: 'JPY',
-        status: 'completed',
-        paymentMethod: 'PayPal',
-        date: new Date('2024-12-01T09:00:00Z'),
-        details: 'トークンパック: 10,000トークン（ボーナス付き）',
-        transactionId: 'txn_1234567892'
-      }
-    ];
-
-    return {
-      purchases: mockPurchases,
-      totalSpent: mockPurchases.reduce((sum, item) => sum + item.price, 0),
-      totalPurchases: mockPurchases.length,
-      summary: {
-        tokens: { count: 2, amount: 2800 },
-        characters: { count: 1, amount: 500 },
-        subscriptions: { count: 0, amount: 0 }
-      }
-    };
-  };
+  // モックデータは削除済み - APIから取得
 
   // フィルタリングとソート
   const getFilteredAndSortedPurchases = () => {

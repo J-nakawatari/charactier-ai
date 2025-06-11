@@ -1,8 +1,36 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
-import { mockUsers } from '@/mock/adminData';
+
+// Inline type definitions
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  tokenBalance: number;
+  chatCount: number;
+  avgIntimacy: number;
+  totalSpent: number;
+  status: string;
+  isTrialUser?: boolean;
+  loginStreak?: number;
+  maxLoginStreak?: number;
+  violationCount?: number;
+  registrationDate: string;
+  lastLogin: string;
+  suspensionEndDate?: string;
+  banReason?: string;
+  unlockedCharacters?: string[];
+  affinities?: Array<{
+    characterId: string;
+    level: number;
+    totalConversations: number;
+    relationshipType: string;
+    trustLevel: number;
+  }>;
+}
 import { 
   ArrowLeft, 
   Ban, 
@@ -24,11 +52,64 @@ import {
 export default function UserDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { success, error } = useToast();
+  const { success, error: showError } = useToast();
   
-  const user = mockUsers.find(u => u.id === params.id);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        // TODO: Replace with actual API call
+        // const response = await fetch(`/api/admin/users/${params.id}`);
+        // const data = await response.json();
+        // setUser(data);
+        
+        // For now, return null until API is implemented
+        setUser(null);
+      } catch (err) {
+        setError('ユーザーデータの読み込みに失敗しました');
+        console.error('User fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (params.id) {
+      fetchUser();
+    }
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">ユーザー情報を読み込んでいます...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            再読み込み
+          </button>
+        </div>
+      </div>
+    );
+  }
   
-  if (!user) {
+  if (!user && !loading && !error) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
@@ -45,12 +126,17 @@ export default function UserDetailPage() {
     );
   }
 
+  // Show loading or error states
+  if (!user) {
+    return null;
+  }
+
 
   const handleBanToggle = () => {
-    if (user.status === 'suspended') {
+    if (user && user.status === 'suspended') {
       success('アカウント復活', `${user.name}のアカウントを復活させました`);
-    } else {
-      error('アカウント停止', `${user.name}のアカウントを停止しました`);
+    } else if (user) {
+      showError('アカウント停止', `${user.name}のアカウントを停止しました`);
     }
   };
 
@@ -129,14 +215,14 @@ export default function UserDetailPage() {
             <button
               onClick={handleBanToggle}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                user.status === 'suspended'
+                user && user.status === 'suspended'
                   ? 'bg-green-600 text-white hover:bg-green-700'
                   : 'bg-red-600 text-white hover:bg-red-700'
               }`}
             >
-              {user.status === 'suspended' ? <Unlock className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
+              {user && user.status === 'suspended' ? <Unlock className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
               <span className="hidden sm:inline">
-                {user.status === 'suspended' ? '復活' : '停止'}
+                {user && user.status === 'suspended' ? '復活' : '停止'}
               </span>
             </button>
           </div>

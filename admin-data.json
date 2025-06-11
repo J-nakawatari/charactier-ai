@@ -1,0 +1,20 @@
+[
+  {
+    "name": "システム管理者",
+    "email": "admin@charactier.com",
+    "password": "$2b$12$VlzGiM92IwoYhHxcjblt3uKyzQd8SwjzKFUJ3VB5.AsMfp9maRMxG",
+    "role": "super_admin",
+    "permissions": ["users.read", "users.write", "characters.read", "characters.write", "tokens.read", "tokens.write", "system.read", "system.write"],
+    "isActive": true,
+    "createdAt": "2025-06-11T03:00:00.000Z"
+  },
+  {
+    "name": "一般管理者",
+    "email": "manager@charactier.com", 
+    "password": "$2b$12$VlzGiM92IwoYhHxcjblt3uKyzQd8SwjzKFUJ3VB5.AsMfp9maRMxG",
+    "role": "admin",
+    "permissions": ["users.read", "characters.read", "characters.write", "tokens.read"],
+    "isActive": true,
+    "createdAt": "2025-06-11T03:30:00.000Z"
+  }
+]

@@ -1,13 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { UserModel, IUser } from '../models/UserModel';
+import { AdminModel, IAdmin } from '../models/AdminModel';
 
 // JWT認証用の拡張Request型
 export interface AuthRequest extends Request {
   user?: IUser;
 }
 
-// JWT認証ミドルウェア
+// 統一JWT認証ミドルウェア（ユーザーと管理者の両方対応）
 export const authenticateToken = async (
   req: AuthRequest, 
   res: Response, 
@@ -40,20 +41,38 @@ export const authenticateToken = async (
     // トークンをデコード
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     
-    // ユーザー情報をデータベースから取得
-    const user = await UserModel.findById(decoded.userId);
-    
-    if (!user) {
-      res.status(401).json({ 
-        error: 'User not found',
-        message: 'ユーザーが見つかりません'
-      });
+    // まず管理者として検索
+    const admin = await AdminModel.findById(decoded.userId);
+    if (admin && admin.isActive) {
+      // 管理者として認証成功
+      (req as any).admin = admin;
+      // req.userに管理者情報とisAdminフラグを確実に設定
+      req.user = {
+        ...admin.toObject(),
+        isAdmin: true,
+        _id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role
+      } as any;
+      next();
       return;
     }
-
-    // リクエストオブジェクトにユーザー情報を追加
-    req.user = user;
-    next();
+    
+    // 管理者で見つからない場合は一般ユーザーとして検索
+    const user = await UserModel.findById(decoded.userId);
+    if (user) {
+      // 一般ユーザーとして認証成功
+      req.user = user;
+      next();
+      return;
+    }
+    
+    // どちらでも見つからない場合
+    res.status(401).json({ 
+      error: 'User not found',
+      message: 'ユーザーが見つかりません'
+    });
 
   } catch (error) {
     console.error('❌ JWT verification failed:', error);

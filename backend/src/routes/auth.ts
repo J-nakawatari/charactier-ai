@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { UserModel } from '../models/UserModel';
+import { AdminModel } from '../models/AdminModel';
 import { generateAccessToken, generateRefreshToken } from '../middleware/auth';
 
 const router = Router();
@@ -363,9 +364,9 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    // ユーザーを検索
-    const user = await UserModel.findOne({ email });
-    if (!user) {
+    // AdminModelから管理者を検索
+    const admin = await AdminModel.findOne({ email });
+    if (!admin) {
       res.status(401).json({
         error: 'Invalid credentials',
         message: 'メールアドレスまたはパスワードが正しくありません'
@@ -373,17 +374,17 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    // 管理者権限チェック
-    if (!user.isAdmin) {
+    // アクティブ管理者かチェック
+    if (!admin.isActive) {
       res.status(403).json({
-        error: 'Access denied',
-        message: '管理者権限が必要です'
+        error: 'Account deactivated',
+        message: '管理者アカウントが無効化されています'
       });
       return;
     }
 
     // パスワード検証
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(password, admin.password);
     if (!isValidPassword) {
       res.status(401).json({
         error: 'Invalid credentials',
@@ -392,11 +393,16 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    // JWTトークン生成
-    const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    // ログイン日時を更新
+    admin.lastLogin = new Date();
+    await admin.save();
 
-    console.log('✅ Admin login successful:', { id: user._id, email: user.email });
+    // JWTトークン生成（管理者専用）
+    const adminId = admin._id as any;
+    const accessToken = generateAccessToken(adminId.toString());
+    const refreshToken = generateRefreshToken(adminId.toString());
+
+    console.log('✅ Admin login successful:', { id: admin._id, email: admin.email, role: admin.role });
 
     res.status(200).json({
       message: '管理者ログインが成功しました',
@@ -405,10 +411,12 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
         refreshToken
       },
       user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        isAdmin: user.isAdmin
+        _id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role,
+        permissions: admin.permissions,
+        isAdmin: true // フロントエンド互換性のため
       }
     });
 
@@ -421,25 +429,18 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
   }
 });
 
-// 管理者ユーザー作成（開発用）
+// 管理者作成（開発用）
 router.post('/create-admin', async (req: Request, res: Response): Promise<void> => {
   try {
-    const adminEmail = 'admin@charactier.ai';
-    const adminPassword = 'admin123';
+    const adminEmail = 'newadmin@charactier.ai';
+    const adminPassword = 'NewSecureAdmin2024';
 
-    // 既存の管理者ユーザーをチェック
-    const existingAdmin = await UserModel.findOne({ email: adminEmail });
+    // 既存の管理者をチェック
+    const existingAdmin = await AdminModel.findOne({ email: adminEmail });
     
     if (existingAdmin) {
-      // 管理者権限を確認・更新
-      if (!existingAdmin.isAdmin) {
-        existingAdmin.isAdmin = true;
-        await existingAdmin.save();
-        console.log('✅ 既存ユーザーに管理者権限を付与しました');
-      }
-      
       res.json({
-        message: '管理者ユーザーは既に存在します',
+        message: '管理者は既に存在します',
         email: adminEmail,
         isExisting: true
       });
@@ -450,22 +451,30 @@ router.post('/create-admin', async (req: Request, res: Response): Promise<void> 
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
 
-    // 管理者ユーザーを作成
-    const adminUser = new UserModel({
-      name: '管理者',
+    // 管理者を作成
+    const adminUser = new AdminModel({
+      name: '新しい管理者',
       email: adminEmail,
       password: hashedPassword,
-      isAdmin: true,
-      tokenBalance: 0,
-      isActive: true,
-      preferredLanguage: 'ja'
+      role: 'admin',
+      permissions: [
+        'users.read',
+        'users.write',
+        'characters.read',
+        'characters.write',
+        'tokens.read',
+        'tokens.write',
+        'system.read',
+        'system.write'
+      ],
+      isActive: true
     });
 
     await adminUser.save();
-    console.log('✅ 管理者ユーザーを作成しました');
+    console.log('✅ 管理者を作成しました');
 
     res.status(201).json({
-      message: '管理者ユーザーを作成しました',
+      message: '管理者を作成しました',
       email: adminEmail,
       password: adminPassword,
       isNew: true
@@ -475,7 +484,7 @@ router.post('/create-admin', async (req: Request, res: Response): Promise<void> 
     console.error('❌ 管理者作成エラー:', error);
     res.status(500).json({
       error: 'Internal server error',
-      message: '管理者ユーザーの作成に失敗しました'
+      message: '管理者の作成に失敗しました'
     });
   }
 });

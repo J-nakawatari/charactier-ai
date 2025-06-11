@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
-import { UserModel } from '../backend/src/models/UserModel';
+import { AdminModel } from '../backend/src/models/AdminModel';
 
-dotenv.config({ path: './.env' });
+dotenv.config({ path: './backend/.env' });
 
 async function createAdminUser() {
   try {
@@ -11,44 +11,61 @@ async function createAdminUser() {
       throw new Error('MONGO_URI is required');
     }
 
-    await mongoose.connect(process.env.MONGO_URI);
+    mongoose.set('bufferCommands', false);
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 30000
+    });
     console.log('🍃 MongoDB connected successfully');
 
-    const adminEmail = 'admin@charactier.ai';
-    const adminPassword = 'admin123';
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
 
-    // 既存の管理者ユーザーをチェック
-    const existingAdmin = await UserModel.findOne({ email: adminEmail });
+    if (!adminEmail || !adminPassword) {
+      throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required');
+    }
+
+    // パスワードをハッシュ化
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
+
+    // 既存の管理者をチェック
+    const existingAdmin = await AdminModel.findOne({ email: adminEmail });
     
     if (existingAdmin) {
-      console.log('⚠️  管理者ユーザーは既に存在します:', adminEmail);
+      console.log('⚠️  管理者は既に存在します:', adminEmail);
       
-      // 管理者権限を確認・更新
-      if (!existingAdmin.isAdmin) {
-        existingAdmin.isAdmin = true;
-        await existingAdmin.save();
-        console.log('✅ 既存ユーザーに管理者権限を付与しました');
-      }
+      // パスワードを新しいものに更新
+      existingAdmin.password = hashedPassword;
+      existingAdmin.isActive = true;
+      
+      await existingAdmin.save();
+      console.log('✅ 管理者パスワードを更新しました');
     } else {
-      // パスワードをハッシュ化
-      const saltRounds = 12;
-      const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
 
-      // 管理者ユーザーを作成
-      const adminUser = new UserModel({
+      // 管理者を作成
+      const adminUser = new AdminModel({
         name: '管理者',
         email: adminEmail,
         password: hashedPassword,
-        isAdmin: true,
-        tokenBalance: 0,
-        isActive: true,
-        preferredLanguage: 'ja'
+        role: 'admin',
+        permissions: [
+          'users.read',
+          'users.write',
+          'characters.read',
+          'characters.write',
+          'tokens.read',
+          'tokens.write',
+          'system.read',
+          'system.write'
+        ],
+        isActive: true
       });
 
       await adminUser.save();
-      console.log('✅ 管理者ユーザーを作成しました');
+      console.log('✅ 管理者を作成しました');
       console.log('📧 Email:', adminEmail);
-      console.log('🔐 Password:', adminPassword);
+      console.log('🔐 Password: [環境変数から設定済み]');
     }
 
     await mongoose.disconnect();

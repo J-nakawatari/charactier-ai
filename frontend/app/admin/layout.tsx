@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/admin/Sidebar';
+import TopBar from '@/components/admin/TopBar';
 
 export default function AdminLayout({
   children,
@@ -70,13 +71,16 @@ export default function AdminLayout({
     return null;
   }
 
-  // 認証済みの場合、サイドバーありレイアウト
+  // 認証済みの場合、サイドバー + トップバーありレイアウト
   return (
     <>
       <Sidebar />
-      <main className="lg:ml-64 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        {children}
-      </main>
+      <div className="lg:ml-64 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <TopBar />
+        <main className="p-6">
+          {children}
+        </main>
+      </div>
     </>
   );
 }

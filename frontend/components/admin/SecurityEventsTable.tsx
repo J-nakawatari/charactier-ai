@@ -1,6 +1,18 @@
 'use client';
 
-import { SecurityEvent } from '@/mock/adminData';
+interface SecurityEvent {
+  id: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  user: {
+    id: string;
+    email: string;
+  };
+  timestamp: string;
+  ipAddress: string;
+  userAgent: string;
+  description: string;
+}
 import { useToast } from '@/contexts/ToastContext';
 import { Eye, Ban, CheckCircle, AlertTriangle, Shield, Lock } from 'lucide-react';
 

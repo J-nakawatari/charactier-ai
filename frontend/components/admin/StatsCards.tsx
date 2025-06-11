@@ -1,18 +1,34 @@
 'use client';
 
 import { Users, MessageSquare, Coins, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
-import { DashboardStats } from '@/mock/adminData';
+
+interface DashboardStats {
+  totalUsers: number;
+  activeUsers: number;
+  totalTokensUsed: number;
+  totalCharacters: number;
+  apiErrors: number;
+}
 
 interface StatsCardsProps {
   stats: DashboardStats;
 }
 
 export default function StatsCards({ stats }: StatsCardsProps) {
+  // statsがundefinedの場合のデフォルト値
+  const safeStats = stats || {
+    totalUsers: 0,
+    activeUsers: 0,
+    totalTokensUsed: 0,
+    totalCharacters: 0,
+    apiErrors: 0
+  };
+
   const cards = [
     {
       title: '総ユーザー数',
-      value: stats.totalUsers.toLocaleString(),
-      subValue: `アクティブ: ${stats.activeUsers.toLocaleString()}`,
+      value: safeStats.totalUsers.toLocaleString(),
+      subValue: `アクティブ: ${safeStats.activeUsers.toLocaleString()}`,
       icon: Users,
       trend: '+12%',
       trendUp: true,
@@ -20,7 +36,7 @@ export default function StatsCards({ stats }: StatsCardsProps) {
     },
     {
       title: 'トークン使用量',
-      value: `${(stats.totalTokensUsed / 1000000).toFixed(1)}M`,
+      value: `${(safeStats.totalTokensUsed / 1000000).toFixed(1)}M`,
       subValue: '今月累計',
       icon: Coins,
       trend: '+8.5%',
@@ -29,7 +45,7 @@ export default function StatsCards({ stats }: StatsCardsProps) {
     },
     {
       title: 'キャラクター数',
-      value: stats.totalCharacters.toString(),
+      value: safeStats.totalCharacters.toString(),
       subValue: 'アクティブ',
       icon: MessageSquare,
       trend: '+2',
@@ -38,7 +54,7 @@ export default function StatsCards({ stats }: StatsCardsProps) {
     },
     {
       title: 'APIエラー',
-      value: stats.apiErrors.toString(),
+      value: safeStats.apiErrors.toString(),
       subValue: '24時間',
       icon: AlertTriangle,
       trend: '-15%',

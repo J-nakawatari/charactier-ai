@@ -1,7 +1,15 @@
 'use client';
 
-import { SecurityEvent } from '@/mock/adminData';
 import { Shield, AlertTriangle, Lock, Eye } from 'lucide-react';
+
+interface SecurityEvent {
+  id: string;
+  type: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  description: string;
+  ipAddress: string;
+  timestamp: string;
+}
 
 interface SecurityStatsProps {
   events: SecurityEvent[];

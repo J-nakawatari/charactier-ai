@@ -151,36 +151,26 @@ export default function ChatPage() {
 
         const characterData = getCharacterData(characterId);
 
-        const mockData: ChatLayoutData = {
+        // フォールバック用の基本データ（モックは削除済み）
+        const fallbackData: ChatLayoutData = {
           character: {
             _id: characterId,
             ...characterData
           },
           affinity: {
-            level: 12,
-            currentExp: 385,
-            nextLevelExp: 500,
-            unlockedIllustrations: ['basic_smile', 'wink', 'happy']
+            level: 0,
+            currentExp: 0,
+            nextLevelExp: 100,
+            unlockedIllustrations: []
           },
           tokenStatus: {
             tokensRemaining: 0,
-            lastMessageCost: 200
+            lastMessageCost: 0
           },
-          messages: [
-            {
-              id: '1',
-              role: 'assistant',
-              content: 'こんにちは！今日はどんなお話をしましょうか？',
-              timestamp: new Date(Date.now() - 60000),
-              tokens: 180
-            }
-          ]
+          messages: []
         };
-
-        // API遅延をシミュレート（モックデータ使用時のみ）
-        await new Promise(resolve => setTimeout(resolve, 500));
         
-        setChatData(mockData);
+        setChatData(fallbackData);
       }
     } catch (err) {
       console.error('Chat data loading error:', err);
