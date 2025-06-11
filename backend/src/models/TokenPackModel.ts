@@ -66,8 +66,6 @@ TokenPackSchema.index({ priceId: 1 }, { unique: true, sparse: true });
 TokenPackSchema.pre('save', function(next) {
   // GPT-4原価モデルに基づく計算
   const TOKEN_COST_PER_UNIT = 0.003;
-  const COST_RATIO = 0.5;
-  const TOKENS_PER_YEN = 1 / (TOKEN_COST_PER_UNIT / COST_RATIO);
   
   // 自動計算フィールドを更新
   const totalCost = (this.tokens as number) * TOKEN_COST_PER_UNIT;

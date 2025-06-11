@@ -5,7 +5,8 @@ import { AdminModel, IAdmin } from '../models/AdminModel';
 
 // JWT認証用の拡張Request型
 export interface AuthRequest extends Request {
-  user?: IUser;
+  user?: IUser & { isAdmin?: boolean; role?: string };
+  admin?: IAdmin;
 }
 
 // 統一JWT認証ミドルウェア（ユーザーと管理者の両方対応）
@@ -45,7 +46,7 @@ export const authenticateToken = async (
     const admin = await AdminModel.findById(decoded.userId);
     if (admin && admin.isActive) {
       // 管理者として認証成功
-      (req as any).admin = admin;
+      req.admin = admin;
       // req.userに管理者情報とisAdminフラグを確実に設定
       req.user = {
         ...admin.toObject(),
@@ -54,7 +55,7 @@ export const authenticateToken = async (
         name: admin.name,
         email: admin.email,
         role: admin.role
-      } as any;
+      } as IUser & { isAdmin: boolean; role: string };
       next();
       return;
     }

@@ -87,7 +87,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response): Promise
     
     if (error instanceof Error && error.name === 'ValidationError') {
       // Mongooseのバリデーションエラーの詳細を解析
-      const validationError = error as any;
+      const validationError = error as Error & { errors?: Record<string, { message: string }> };
       const fieldErrors: string[] = [];
       
       if (validationError.errors) {
@@ -122,7 +122,19 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
     const keyword = (req.query.keyword as string) || '';
     
     // Build query
-    let query: any = { isActive: true };
+    interface QueryFilter {
+      isActive: boolean;
+      characterAccessType?: string;
+      $or?: Array<{
+        'name.ja'?: { $regex: string; $options: string };
+        'name.en'?: { $regex: string; $options: string };
+        'description.ja'?: { $regex: string; $options: string };
+        'description.en'?: { $regex: string; $options: string };
+        personalityTags?: { $in: RegExp[] };
+        personalityPreset?: { $regex: string; $options: string };
+      }>;
+    }
+    const query: QueryFilter = { isActive: true };
     
     if (characterType === 'initial') {
       query.characterAccessType = 'initial';
@@ -143,7 +155,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
     }
     
     // Build sort
-    let sortQuery: any = {};
+    let sortQuery: Record<string, 1 | -1> = {};
     switch (sort) {
       case 'popular':
         sortQuery = { totalConversations: -1 };

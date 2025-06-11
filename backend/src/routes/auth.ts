@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import bcrypt from 'bcryptjs';
 import { UserModel } from '../models/UserModel';
 import { AdminModel } from '../models/AdminModel';
@@ -221,7 +222,7 @@ router.put('/user/profile', async (req: Request, res: Response): Promise<void> =
     }
 
     // JWTからユーザーIDを取得（authenticateTokenミドルウェアで設定）
-    const authReq = req as any;
+    const authReq = req as AuthRequest;
     const userId = authReq.user?._id;
 
     if (!userId) {
@@ -292,7 +293,7 @@ router.post('/user/setup-complete', async (req: Request, res: Response): Promise
     }
 
     // JWTからユーザーIDを取得
-    const authReq = req as any;
+    const authReq = req as AuthRequest;
     const userId = authReq.user?._id;
 
     if (!userId) {
@@ -398,7 +399,7 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
     await admin.save();
 
     // JWTトークン生成（管理者専用）
-    const adminId = admin._id as any;
+    const adminId = admin._id as string;
     const accessToken = generateAccessToken(adminId.toString());
     const refreshToken = generateRefreshToken(adminId.toString());
 
