@@ -2880,73 +2880,7 @@ app.post('/admin/users/:userId/reset-tokens', authenticateToken, async (req: Req
   }
 });
 
-// 管理者向けユーザー詳細取得
-app.get('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    if (!req.user || !(req.user as any).isAdmin) {
-      res.status(403).json({ error: 'Admin access required' });
-      return;
-    }
-
-    const { id } = req.params;
-    
-    if (!isMongoConnected) {
-      res.status(500).json({ error: 'Database not connected' });
-      return;
-    }
-
-    const user = await UserModel.findById(id)
-      .select('-password')
-      .populate('selectedCharacter', 'name')
-      .populate('purchasedCharacters', 'name');
-
-    if (!user) {
-      res.status(404).json({
-        error: 'User not found',
-        message: 'ユーザーが見つかりません'
-      });
-      return;
-    }
-
-    res.json({
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      tokenBalance: user.tokenBalance,
-      chatCount: user.totalChatMessages,
-      avgIntimacy: user.affinities.length > 0 
-        ? user.affinities.reduce((sum, aff) => sum + aff.level, 0) / user.affinities.length 
-        : 0,
-      totalSpent: user.totalSpent,
-      status: user.accountStatus,
-      isTrialUser: user.tokenBalance === 10000 && user.totalSpent === 0,
-      loginStreak: user.loginStreak,
-      maxLoginStreak: user.maxLoginStreak,
-      violationCount: user.violationCount,
-      registrationDate: user.registrationDate,
-      lastLogin: user.lastLogin,
-      suspensionEndDate: user.suspensionEndDate,
-      banReason: user.banReason,
-      unlockedCharacters: user.purchasedCharacters,
-      affinities: user.affinities.map(aff => ({
-        characterId: aff.character,
-        level: aff.level,
-        totalConversations: aff.totalConversations,
-        relationshipType: aff.relationshipType,
-        trustLevel: aff.trustLevel
-      }))
-    });
-
-  } catch (error) {
-    console.error('❌ User detail fetch error:', error);
-    res.status(500).json({
-      error: 'Server error',
-      message: 'ユーザー詳細の取得に失敗しました'
-    });
-  }
-});
-
-// 管理者向けユーザー停止/復活
+// 管理者向けユーザー停止/復活（より具体的なルートを先に定義）
 app.put('/api/admin/users/:id/status', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user || !(req.user as any).isAdmin) {
@@ -3064,6 +2998,72 @@ app.delete('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, r
     res.status(500).json({
       error: 'Server error',
       message: 'ユーザーの削除に失敗しました'
+    });
+  }
+});
+
+// 管理者向けユーザー詳細取得（一般的なルートを最後に定義）
+app.get('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || !(req.user as any).isAdmin) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const { id } = req.params;
+    
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database not connected' });
+      return;
+    }
+
+    const user = await UserModel.findById(id)
+      .select('-password')
+      .populate('selectedCharacter', 'name')
+      .populate('purchasedCharacters', 'name');
+
+    if (!user) {
+      res.status(404).json({
+        error: 'User not found',
+        message: 'ユーザーが見つかりません'
+      });
+      return;
+    }
+
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      tokenBalance: user.tokenBalance,
+      chatCount: user.totalChatMessages,
+      avgIntimacy: user.affinities.length > 0 
+        ? user.affinities.reduce((sum, aff) => sum + aff.level, 0) / user.affinities.length 
+        : 0,
+      totalSpent: user.totalSpent,
+      status: user.accountStatus,
+      isTrialUser: user.tokenBalance === 10000 && user.totalSpent === 0,
+      loginStreak: user.loginStreak,
+      maxLoginStreak: user.maxLoginStreak,
+      violationCount: user.violationCount,
+      registrationDate: user.registrationDate,
+      lastLogin: user.lastLogin,
+      suspensionEndDate: user.suspensionEndDate,
+      banReason: user.banReason,
+      unlockedCharacters: user.purchasedCharacters,
+      affinities: user.affinities.map(aff => ({
+        characterId: aff.character,
+        level: aff.level,
+        totalConversations: aff.totalConversations,
+        relationshipType: aff.relationshipType,
+        trustLevel: aff.trustLevel
+      }))
+    });
+
+  } catch (error) {
+    console.error('❌ User detail fetch error:', error);
+    res.status(500).json({
+      error: 'Server error',
+      message: 'ユーザー詳細の取得に失敗しました'
     });
   }
 });

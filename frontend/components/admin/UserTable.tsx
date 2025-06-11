@@ -58,11 +58,50 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
     window.location.href = `/admin/users/${user.id}`;
   };
 
-  const handleBanUser = (user: UserData) => {
-    if (user.status === 'suspended') {
-      success('アカウント復活', `${user.name}のアカウントを復活させました`);
-    } else {
-      error('アカウント停止', `${user.name}のアカウントを停止しました`);
+  const handleBanUser = async (user: UserData) => {
+    const newStatus = user.status === 'suspended' ? 'active' : 'suspended';
+    const action = newStatus === 'active' ? '復活' : '停止';
+    
+    if (!confirm(`${user.name}のアカウントを${action}しますか？`)) {
+      return;
+    }
+    
+    try {
+      const adminToken = localStorage.getItem('adminAccessToken');
+      
+      if (!adminToken) {
+        error('認証エラー', '管理者認証が必要です');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3004/api/admin/users/${user.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          banReason: newStatus === 'suspended' ? '管理者による停止' : undefined
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('ステータス更新に失敗しました');
+      }
+
+      if (newStatus === 'active') {
+        success('アカウント復活', `${user.name}のアカウントを復活させました`);
+      } else {
+        error('アカウント停止', `${user.name}のアカウントを停止しました`);
+      }
+      
+      // ユーザー一覧を更新
+      onUserUpdate?.();
+      
+    } catch (err) {
+      error('エラー', 'ステータスの変更に失敗しました');
+      console.error('Status update error:', err);
     }
   };
 
@@ -114,18 +153,23 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
       {/* モバイル用カードビュー */}
       <div className="block lg:hidden p-4 space-y-4">
         {users.map((user) => (
-          <div key={user.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <div key={user.id} className={`border border-gray-200 rounded-lg p-4 ${user.status === 'suspended' ? 'bg-red-50 border-red-200' : 'bg-gray-50'}`}>
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <div className="flex items-center mb-1">
-                  <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                  <div className={`text-sm font-medium ${user.status === 'suspended' ? 'text-red-700' : 'text-gray-900'}`}>{user.name}</div>
+                  {user.status === 'suspended' && (
+                    <span className="ml-2 px-2 py-1 text-xs font-medium bg-red-200 text-red-800 rounded-full">
+                      停止中
+                    </span>
+                  )}
                   {user.isTrialUser && (
                     <span className="ml-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
                       トライアル
                     </span>
                   )}
                 </div>
-                <div className="text-sm text-gray-500 mb-2">{user.email}</div>
+                <div className={`text-sm mb-2 ${user.status === 'suspended' ? 'text-red-600' : 'text-gray-500'}`}>{user.email}</div>
                 {getStatusBadge(user.status)}
               </div>
               <div className="flex items-center space-x-3">
@@ -220,18 +264,23 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={user.id} className={`hover:bg-gray-50 transition-colors ${user.status === 'suspended' ? 'bg-red-50' : ''}`}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className={`text-sm font-medium ${user.status === 'suspended' ? 'text-red-700' : 'text-gray-900'}`}>
                       {user.name}
+                      {user.status === 'suspended' && (
+                        <span className="ml-2 px-2 py-1 text-xs font-medium bg-red-200 text-red-800 rounded-full">
+                          停止中
+                        </span>
+                      )}
                       {user.isTrialUser && (
                         <span className="ml-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
                           トライアル
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-gray-500">{user.email}</div>
+                    <div className={`text-sm ${user.status === 'suspended' ? 'text-red-600' : 'text-gray-500'}`}>{user.email}</div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">

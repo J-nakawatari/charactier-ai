@@ -46,7 +46,8 @@ import {
   Target,
   TrendingUp,
   AlertTriangle,
-  Gift
+  Gift,
+  Trash2
 } from 'lucide-react';
 
 export default function UserDetailPage() {
@@ -62,13 +63,26 @@ export default function UserDetailPage() {
     const fetchUser = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API call
-        // const response = await fetch(`/api/admin/users/${params.id}`);
-        // const data = await response.json();
-        // setUser(data);
+        const adminToken = localStorage.getItem('adminAccessToken');
         
-        // For now, return null until API is implemented
-        setUser(null);
+        if (!adminToken) {
+          setError('管理者認証が必要です');
+          return;
+        }
+
+        const response = await fetch(`http://localhost:3004/api/admin/users/${params.id}`, {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setUser(data);
       } catch (err) {
         setError('ユーザーデータの読み込みに失敗しました');
         console.error('User fetch error:', err);
@@ -132,11 +146,92 @@ export default function UserDetailPage() {
   }
 
 
-  const handleBanToggle = () => {
-    if (user && user.status === 'suspended') {
-      success('アカウント復活', `${user.name}のアカウントを復活させました`);
-    } else if (user) {
-      showError('アカウント停止', `${user.name}のアカウントを停止しました`);
+  const handleBanToggle = async () => {
+    if (!user) return;
+    
+    const newStatus = user.status === 'suspended' ? 'active' : 'suspended';
+    const action = newStatus === 'active' ? '復活' : '停止';
+    
+    if (!confirm(`${user.name}のアカウントを${action}しますか？`)) {
+      return;
+    }
+    
+    try {
+      const adminToken = localStorage.getItem('adminAccessToken');
+      
+      if (!adminToken) {
+        showError('認証エラー', '管理者認証が必要です');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3004/api/admin/users/${user.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          banReason: newStatus === 'suspended' ? '管理者による停止' : undefined
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('ステータス更新に失敗しました');
+      }
+
+      const result = await response.json();
+      
+      // ユーザー情報を更新
+      setUser(prev => prev ? { ...prev, status: newStatus } : null);
+      
+      if (newStatus === 'active') {
+        success('アカウント復活', `${user.name}のアカウントを復活させました`);
+      } else {
+        showError('アカウント停止', `${user.name}のアカウントを停止しました`);
+      }
+      
+    } catch (err) {
+      showError('エラー', 'ステータスの変更に失敗しました');
+      console.error('Status update error:', err);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!user) return;
+    
+    if (!confirm(`⚠️ ${user.name}のアカウントを完全に削除しますか？\n\nこの操作は取り消すことができません。`)) {
+      return;
+    }
+    
+    try {
+      const adminToken = localStorage.getItem('adminAccessToken');
+      
+      if (!adminToken) {
+        showError('認証エラー', '管理者認証が必要です');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3004/api/admin/users/${user.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('ユーザー削除に失敗しました');
+      }
+
+      success('ユーザー削除', `${user.name}のアカウントを削除しました`);
+      
+      // ユーザー一覧に戻る
+      router.push('/admin/users');
+      
+    } catch (err) {
+      showError('エラー', 'ユーザーの削除に失敗しました');
+      console.error('User deletion error:', err);
     }
   };
 
@@ -212,6 +307,16 @@ export default function UserDetailPage() {
           </div>
           
           <div className="flex items-center space-x-3">
+            {user && user.status === 'suspended' && (
+              <button
+                onClick={handleDeleteUser}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-600 text-white hover:bg-gray-700 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden sm:inline">削除</span>
+              </button>
+            )}
+            
             <button
               onClick={handleBanToggle}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
