@@ -531,8 +531,6 @@ export default function CacheManagementPage() {
           </div>
         </div>
       )}
-      </>
-      )}
 
       {/* アナリティクスタブ */}
       {activeTab === 'analytics' && metrics && (
