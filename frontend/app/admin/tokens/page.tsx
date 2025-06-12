@@ -6,8 +6,9 @@ import TokenStats from '@/components/admin/TokenStats';
 import TokenManagementTable from '@/components/admin/TokenManagementTable';
 import TokenPackTable, { TokenPackTableRef } from '@/components/admin/TokenPackTable';
 import TokenPackModal from '@/components/admin/TokenPackModal';
+import TokenAnalyticsDashboard from '@/components/admin/TokenAnalyticsDashboard';
 import { useToast } from '@/contexts/ToastContext';
-import { Search, Filter, Plus, Download, CreditCard, Package, Users } from 'lucide-react';
+import { Search, Filter, Plus, Download, CreditCard, Package, Users, BarChart3, TrendingUp } from 'lucide-react';
 // Mock imports removed - will use actual API data
 
 interface TokenPack {
@@ -45,12 +46,14 @@ export default function TokensPage() {
   const router = useRouter();
   
   // URLクエリパラメータからタブを取得、デフォルトは'users'
-  const getInitialTab = (): 'users' | 'packs' => {
+  const getInitialTab = (): 'users' | 'packs' | 'analytics' => {
     const tab = searchParams.get('tab');
-    return tab === 'packs' ? 'packs' : 'users';
+    if (tab === 'packs') return 'packs';
+    if (tab === 'analytics') return 'analytics';
+    return 'users';
   };
   
-  const [activeTab, setActiveTab] = useState<'users' | 'packs'>(getInitialTab());
+  const [activeTab, setActiveTab] = useState<'users' | 'packs' | 'analytics'>(getInitialTab());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPack, setEditingPack] = useState<TokenPack | null>(null);
   const tokenPackTableRef = useRef<TokenPackTableRef>(null);
@@ -91,7 +94,7 @@ export default function TokensPage() {
     fetchTokenData();
   }, []);
 
-  const handleTabChange = (tab: 'users' | 'packs') => {
+  const handleTabChange = (tab: 'users' | 'packs' | 'analytics') => {
     setActiveTab(tab);
     // URLクエリパラメータを更新
     const params = new URLSearchParams(searchParams.toString());
@@ -218,6 +221,19 @@ export default function TokensPage() {
                 <span>パック管理</span>
               </div>
             </button>
+            <button
+              onClick={() => handleTabChange('analytics')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                activeTab === 'analytics'
+                  ? 'border-purple-500 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <BarChart3 className="w-4 h-4" />
+                <span>詳細分析</span>
+              </div>
+            </button>
           </nav>
         </div>
       </header>
@@ -225,18 +241,22 @@ export default function TokensPage() {
       {/* メインコンテンツ */}
       <main className="flex-1 p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
-          {/* 統計カード */}
-          <TokenStats tokenUsage={tokenUsage} users={users} />
+          {/* 統計カード（詳細分析タブ以外） */}
+          {activeTab !== 'analytics' && (
+            <TokenStats tokenUsage={tokenUsage} users={users} />
+          )}
           
           {/* タブコンテンツ */}
           {activeTab === 'users' ? (
             <TokenManagementTable users={users} />
-          ) : (
+          ) : activeTab === 'packs' ? (
             <TokenPackTable 
               ref={tokenPackTableRef}
               onCreatePack={handleCreatePack}
               onEditPack={handleEditPack}
             />
+          ) : (
+            <TokenAnalyticsDashboard />
           )}
         </div>
       </main>

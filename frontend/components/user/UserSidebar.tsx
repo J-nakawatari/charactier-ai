@@ -18,6 +18,7 @@ import { usePathname, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { logout } from '../../utils/auth';
+import { TokenPurchaseModal } from '../chat/TokenPurchaseModal';
 
 interface UserSidebarProps {
   locale?: string;
@@ -39,13 +40,32 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const t = useTranslations('sidebar');
 
   // ユーザーデータの取得
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // 新しい認証システムからユーザー情報を取得
+        // 最新のユーザー情報をAPIから取得
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+          const response = await fetch('/api/user/profile', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // APIから取得できない場合はlocalStorageのデータを使用
         const userStr = localStorage.getItem('user');
         if (userStr) {
           const userData = JSON.parse(userStr);
@@ -54,7 +74,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           return;
         }
         
-        console.log('❌ No user data found in localStorage');
+        console.log('❌ No user data found');
         setLoading(false);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -82,11 +102,11 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
   };
 
   const sidebarItems = [
-    { id: 'home', href: `/${currentLocale}`, icon: Home, label: t('home') },
+    { id: 'home', href: `/${currentLocale}/dashboard`, icon: Home, label: t('home') },
     { id: 'characters', href: `/${currentLocale}/characters`, icon: Users, label: t('characters') },
     { id: 'chat', href: getChatHref(), icon: MessageSquare, label: t('chatHistory') },
     { id: 'favorites', href: `/${currentLocale}/favorites`, icon: Heart, label: t('favorites') },
-    { id: 'tokens', href: `/${currentLocale}/tokens`, icon: Coins, label: t('tokens') },
+    { id: 'tokens', href: null, icon: Coins, label: t('tokens'), onClick: () => setShowPurchaseModal(true) },
     { id: 'purchase-history', href: `/${currentLocale}/purchase-history`, icon: ShoppingCart, label: t('purchaseHistory') },
     { id: 'settings', href: `/${currentLocale}/settings`, icon: Settings, label: t('settings') },
   ];
@@ -167,6 +187,26 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
               isActive = isCharacterPage;
             }
             
+            if (item.onClick) {
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setIsOpen(false);
+                    item.onClick();
+                  }}
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors w-full text-left ${
+                    isActive
+                      ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-700'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <item.icon className={`w-5 h-5 ${isActive ? 'text-purple-700' : 'text-gray-400'}`} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            }
+            
             return (
               <Link
                 key={item.id}
@@ -189,6 +229,27 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           </div>
           {sidebarItems.slice(4).map((item) => {
             const isActive = pathname === item.href;
+            
+            if (item.onClick) {
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setIsOpen(false);
+                    item.onClick();
+                  }}
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors w-full text-left ${
+                    isActive
+                      ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-700'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <item.icon className={`w-5 h-5 ${isActive ? 'text-purple-700' : 'text-gray-400'}`} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            }
+            
             return (
               <Link
                 key={item.id}
@@ -218,6 +279,17 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           </button>
         </div>
       </div>
+
+      {/* トークン購入モーダル */}
+      <TokenPurchaseModal
+        isOpen={showPurchaseModal}
+        onClose={() => setShowPurchaseModal(false)}
+        currentTokens={user?.tokenBalance || 0}
+        onPurchaseSuccess={(newTokens) => {
+          setUser(prev => prev ? { ...prev, tokenBalance: newTokens } : null);
+          setShowPurchaseModal(false);
+        }}
+      />
     </>
   );
 }

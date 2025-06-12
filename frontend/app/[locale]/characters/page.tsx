@@ -16,7 +16,7 @@ interface Character {
   personalityPreset: string;
   personalityTags: string[];
   gender: string;
-  characterAccessType: 'initial' | 'premium';
+  characterAccessType: 'free' | 'token-based' | 'premium';
   imageCharacterSelect?: string;
   affinityStats?: {
     totalUsers: number;
@@ -26,7 +26,7 @@ interface Character {
 
 interface FilterState {
   keyword: string;
-  characterType: 'all' | 'initial' | 'purchased' | 'unpurchased';
+  characterType: 'all' | 'free' | 'purchased' | 'unpurchased';
   sort: 'popular' | 'newest' | 'oldest' | 'name' | 'affinity';
 }
 

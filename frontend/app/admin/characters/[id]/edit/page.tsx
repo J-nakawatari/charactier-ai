@@ -103,7 +103,13 @@ export default function CharacterEditPage() {
     imageDashboard: null as File | null,
     imageChatBackground: null as File | null,
     imageChatAvatar: null as File | null,
-    galleryImages: [] as { file: File; unlockLevel: number; title: string; description: string }[],
+    galleryImages: [] as { file: File; imageUrl?: string; unlockLevel: number; title: string; description: string }[],
+    
+    // 画像URL（アップロード済み画像）
+    imageCharacterSelectUrl: '',
+    imageDashboardUrl: '',
+    imageChatBackgroundUrl: '',
+    imageChatAvatarUrl: '',
     
     // その他
     isActive: false
@@ -115,6 +121,7 @@ export default function CharacterEditPage() {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
   const [currentImageType, setCurrentImageType] = useState<string>('');
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState<number>(-1);
+  const [isUploading, setIsUploading] = useState(false);
 
   // 既存データの読み込み
   useEffect(() => {
@@ -123,7 +130,13 @@ export default function CharacterEditPage() {
         setIsLoading(true);
         
         // 基本キャラクター情報を取得
-        const characterResponse = await fetch(`http://localhost:3002/api/characters/${characterId}`);
+        const adminToken = localStorage.getItem('adminAccessToken');
+        const characterResponse = await fetch(`http://localhost:3004/api/characters/${characterId}`, {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
         if (characterResponse.ok) {
           const character = await characterResponse.json();
           
@@ -136,15 +149,33 @@ export default function CharacterEditPage() {
             model: character.model || 'gpt-3.5-turbo',
             characterAccessType: character.characterAccessType || 'initial',
             stripeProductId: character.stripeProductId || '',
-            isActive: character.isActive || false
+            isActive: character.isActive || false,
+            
+            // 既存の画像URLを設定
+            imageCharacterSelectUrl: character.imageCharacterSelect || '',
+            imageDashboardUrl: character.imageDashboard || '',
+            imageChatBackgroundUrl: character.imageChatBackground || '',
+            imageChatAvatarUrl: character.imageChatAvatar || ''
           }));
         }
         
         // 翻訳データを取得
-        const translationsResponse = await fetch(`http://localhost:3002/api/characters/${characterId}/translations`);
-        if (translationsResponse.ok) {
-          const translations = await translationsResponse.json();
-          setTranslationData(translations);
+        try {
+          const translationResponse = await fetch(`http://localhost:3004/api/characters/${characterId}/translations`, {
+            headers: {
+              'Authorization': `Bearer ${adminToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          if (translationResponse.ok) {
+            const translationData = await translationResponse.json();
+            setTranslationData(translationData);
+            console.log('✅ 翻訳データを取得しました:', translationData);
+          } else {
+            console.warn('⚠️ 翻訳データの取得に失敗しました:', translationResponse.status);
+          }
+        } catch (translationErr) {
+          console.error('❌ 翻訳データ取得エラー:', translationErr);
         }
       } catch (err) {
         console.error('データの読み込みに失敗しました:', err);
@@ -171,20 +202,54 @@ export default function CharacterEditPage() {
     try {
       setIsSaving(true);
       
-      // 翻訳データを保存
-      const translationsResponse = await fetch(`http://localhost:3002/api/characters/${characterId}/translations`, {
+      const adminToken = localStorage.getItem('adminAccessToken');
+      
+      // 1. 翻訳データを保存
+      const translationSaveResponse = await fetch(`http://localhost:3004/api/characters/${characterId}/translations`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(translationData)
       });
       
-      if (translationsResponse.ok) {
-        success('保存完了', 'キャラクター情報を正常に保存しました！');
+      if (!translationSaveResponse.ok) {
+        const errorData = await translationSaveResponse.json();
+        console.error('❌ 翻訳データ保存エラー:', errorData);
+        error('翻訳データ保存エラー', errorData.message || '翻訳データの保存に失敗しました');
+        return;
+      }
+      
+      // 2. 基本情報を保存（画像以外）
+      const basicData = {
+        personalityPreset: formData.personalityPreset,
+        personalityTags: formData.personalityTags,
+        gender: formData.gender,
+        age: formData.age,
+        occupation: formData.occupation,
+        model: formData.model,
+        characterAccessType: formData.characterAccessType,
+        stripeProductId: formData.stripeProductId,
+        isActive: formData.isActive
+      };
+      
+      const basicSaveResponse = await fetch(`http://localhost:3004/api/characters/${characterId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(basicData)
+      });
+      
+      if (basicSaveResponse.ok) {
+        console.log('✅ 基本情報と翻訳データを保存しました');
+        success('保存完了', 'キャラクター情報を保存しました（画像アップロード機能は今後実装予定）');
       } else {
-        const errorData = await translationsResponse.json();
-        error('保存エラー', `保存に失敗しました: ${errorData.msg || 'Unknown error'}`);
+        const errorData = await basicSaveResponse.json();
+        console.error('❌ 基本情報保存エラー:', errorData);
+        error('基本情報保存エラー', errorData.message || '基本情報の保存に失敗しました');
       }
     } catch (err) {
       console.error('❌ 保存処理中にエラーが発生しました:', err);
@@ -243,40 +308,105 @@ export default function CharacterEditPage() {
         return;
       }
       
+      setIsUploading(true);
+      
       const croppedImage = await getCroppedImg(cropperImageSrc, croppedAreaPixels);
       const croppedFile = new File([croppedImage], `${currentImageType}.jpg`, {
         type: 'image/jpeg',
       });
+      
+      // バックエンドに画像をアップロード
+      const formDataForUpload = new FormData();
+      formDataForUpload.append('image', croppedFile);
+      
+      const adminToken = localStorage.getItem('adminAccessToken');
+      if (!adminToken) {
+        error('認証エラー', '管理者トークンが見つかりません。再ログインしてください。');
+        return;
+      }
+      
+      const uploadResponse = await fetch('http://localhost:3004/api/characters/upload/image', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: formDataForUpload
+      });
+      
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json();
+        console.error('Upload failed:', errorData);
+        error('アップロードエラー', errorData.message || '画像のアップロードに失敗しました');
+        return;
+      }
+      
+      const uploadResult = await uploadResponse.json();
+      const imageUrl = uploadResult.imageUrl;
       
       if (currentImageType === 'gallery' && currentGalleryIndex >= 0) {
         // ギャラリー画像の場合
         const newGalleryImages = [...formData.galleryImages];
         if (newGalleryImages[currentGalleryIndex]) {
           newGalleryImages[currentGalleryIndex].file = croppedFile;
+          newGalleryImages[currentGalleryIndex].imageUrl = imageUrl;
         } else {
           newGalleryImages[currentGalleryIndex] = {
             file: croppedFile,
+            imageUrl: imageUrl,
             unlockLevel: (currentGalleryIndex + 1) * 10,
             title: '',
             description: ''
           };
         }
         setFormData(prev => ({ ...prev, galleryImages: newGalleryImages }));
+        success('ギャラリー画像アップロード', 'ギャラリー画像がアップロードされました');
       } else {
-        // その他の画像の場合
-        setFormData(prev => ({ 
-          ...prev, 
-          [currentImageType]: croppedFile 
-        }));
+        // その他の画像の場合 - キャラクターデータに直接保存
+        const imageFieldMap: Record<string, string> = {
+          'imageCharacterSelect': 'imageCharacterSelect',
+          'imageDashboard': 'imageDashboard',
+          'imageChatBackground': 'imageChatBackground',
+          'imageChatAvatar': 'imageChatAvatar'
+        };
+        
+        const updateField = imageFieldMap[currentImageType];
+        if (updateField) {
+          // キャラクターデータを即座に更新
+          const updateResponse = await fetch(`http://localhost:3004/api/characters/${characterId}`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${adminToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              [updateField]: imageUrl
+            })
+          });
+          
+          if (updateResponse.ok) {
+            setFormData(prev => ({ 
+              ...prev, 
+              [currentImageType]: croppedFile,
+              [`${currentImageType}Url`]: imageUrl
+            }));
+            success('画像アップロード', '画像がアップロードされ、キャラクターデータに保存されました');
+          } else {
+            const errorData = await updateResponse.json();
+            console.error('Character update failed:', errorData);
+            error('保存エラー', errorData.message || 'キャラクターデータの更新に失敗しました');
+            return;
+          }
+        }
       }
       
       setShowCropper(false);
       setCurrentImageType('');
       setCurrentGalleryIndex(-1);
-      success('画像トリミング', '画像のトリミングが完了しました');
     } catch (err) {
-      console.error('Crop failed:', err);
-      error('画像エラー', '画像の処理に失敗しました');
+      console.error('Crop and upload failed:', err);
+      error('画像エラー', '画像の処理またはアップロードに失敗しました');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -294,7 +424,11 @@ export default function CharacterEditPage() {
       newGalleryImages.splice(galleryIndex, 1);
       setFormData(prev => ({ ...prev, galleryImages: newGalleryImages }));
     } else {
-      setFormData(prev => ({ ...prev, [imageType]: null }));
+      setFormData(prev => ({ 
+        ...prev, 
+        [imageType]: null,
+        [`${imageType}Url`]: ''
+      }));
     }
   };
 
@@ -526,11 +660,14 @@ export default function CharacterEditPage() {
                     キャラクター選択画像
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
-                    {formData.imageCharacterSelect ? (
+                    {formData.imageCharacterSelect || formData.imageCharacterSelectUrl ? (
                       <div className="space-y-2">
                         <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                           <img 
-                            src={URL.createObjectURL(formData.imageCharacterSelect)} 
+                            src={formData.imageCharacterSelect 
+                              ? URL.createObjectURL(formData.imageCharacterSelect) 
+                              : formData.imageCharacterSelectUrl
+                            } 
                             alt="キャラクター選択" 
                             className="w-full h-full object-cover"
                           />
@@ -565,11 +702,14 @@ export default function CharacterEditPage() {
                     ダッシュボード画像
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
-                    {formData.imageDashboard ? (
+                    {formData.imageDashboard || formData.imageDashboardUrl ? (
                       <div className="space-y-2">
                         <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                           <img 
-                            src={URL.createObjectURL(formData.imageDashboard)} 
+                            src={formData.imageDashboard 
+                              ? URL.createObjectURL(formData.imageDashboard) 
+                              : formData.imageDashboardUrl
+                            } 
                             alt="ダッシュボード" 
                             className="w-full h-full object-cover"
                           />
@@ -604,11 +744,14 @@ export default function CharacterEditPage() {
                     チャット背景画像
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
-                    {formData.imageChatBackground ? (
+                    {formData.imageChatBackground || formData.imageChatBackgroundUrl ? (
                       <div className="space-y-2">
                         <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                           <img 
-                            src={URL.createObjectURL(formData.imageChatBackground)} 
+                            src={formData.imageChatBackground 
+                              ? URL.createObjectURL(formData.imageChatBackground) 
+                              : formData.imageChatBackgroundUrl
+                            } 
                             alt="チャット背景" 
                             className="w-full h-full object-cover"
                           />
@@ -643,11 +786,14 @@ export default function CharacterEditPage() {
                     チャットアバター画像
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
-                    {formData.imageChatAvatar ? (
+                    {formData.imageChatAvatar || formData.imageChatAvatarUrl ? (
                       <div className="space-y-2">
                         <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
                           <img 
-                            src={URL.createObjectURL(formData.imageChatAvatar)} 
+                            src={formData.imageChatAvatar 
+                              ? URL.createObjectURL(formData.imageChatAvatar) 
+                              : formData.imageChatAvatarUrl
+                            } 
                             alt="チャットアバター" 
                             className="w-full h-full object-cover"
                           />
@@ -803,6 +949,7 @@ export default function CharacterEditPage() {
           onCropComplete={handleCropComplete}
           onCancel={handleCropCancel}
           onSave={handleCropSave}
+          isLoading={isUploading}
         />
       )}
     </div>

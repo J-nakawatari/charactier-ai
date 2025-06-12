@@ -24,6 +24,7 @@ interface MessageListProps {
   onLoadMore?: () => Promise<void>;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  showAdvanced?: boolean; // 高度情報表示フラグ
 }
 
 export function MessageList({ 
@@ -32,7 +33,8 @@ export function MessageList({
   isLoading, 
   onLoadMore, 
   hasMore = false, 
-  isLoadingMore = false 
+  isLoadingMore = false,
+  showAdvanced = false
 }: MessageListProps) {
   const [isNearTop, setIsNearTop] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -131,6 +133,7 @@ export function MessageList({
             key={message.id}
             message={message}
             character={character}
+            showAdvanced={showAdvanced}
           />
         ))}
 

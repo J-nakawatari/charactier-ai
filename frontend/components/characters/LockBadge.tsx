@@ -5,7 +5,7 @@ import { Lock, Unlock, Gift, Zap, DollarSign } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface LockBadgeProps {
-  accessType: 'initial' | 'premium';
+  accessType: 'free' | 'token-based' | 'premium';
   isLocked: boolean;
   price?: number;
   size?: 'sm' | 'md';
@@ -35,12 +35,22 @@ export default function LockBadge({
 
   const sizes = getSizeClasses(size);
 
-  // ベースキャラクターの場合（新規登録の30,000トークンで利用可能）
-  if (accessType === 'initial') {
+  // 無料キャラクターの場合
+  if (accessType === 'free') {
     return (
       <div className={`inline-flex items-center space-x-1 bg-green-100 text-green-700 rounded-full font-medium ${sizes.badge}`}>
         <Gift className={sizes.icon} />
-        <span>{t('characterTypes.initial')}</span>
+        <span>{t('characterTypes.free')}</span>
+      </div>
+    );
+  }
+
+  // トークン制キャラクターの場合
+  if (accessType === 'token-based') {
+    return (
+      <div className={`inline-flex items-center space-x-1 bg-blue-100 text-blue-700 rounded-full font-medium ${sizes.badge}`}>
+        <Zap className={sizes.icon} />
+        <span>{t('characterTypes.tokenBased')}</span>
       </div>
     );
   }

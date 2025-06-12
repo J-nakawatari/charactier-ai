@@ -21,11 +21,11 @@ interface AnalyticsChartsProps {
 export default function AnalyticsCharts({ analytics, locale }: AnalyticsChartsProps) {
   const [activeChart, setActiveChart] = useState<'chats' | 'tokens' | 'affinity'>('chats');
 
-  // チャート用の統計計算
-  const totalChats = analytics.chatCountPerDay.reduce((sum, item) => sum + item.count, 0);
-  const totalTokens = analytics.tokenUsagePerDay.reduce((sum, item) => sum + item.amount, 0);
-  const averageChatsPerDay = Math.round(totalChats / Math.max(analytics.chatCountPerDay.length, 1));
-  const averageTokensPerDay = Math.round(totalTokens / Math.max(analytics.tokenUsagePerDay.length, 1));
+  // チャート用の統計計算（undefinedチェック付き）
+  const totalChats = analytics?.chatCountPerDay?.reduce((sum, item) => sum + item.count, 0) || 0;
+  const totalTokens = analytics?.tokenUsagePerDay?.reduce((sum, item) => sum + item.amount, 0) || 0;
+  const averageChatsPerDay = Math.round(totalChats / Math.max(analytics?.chatCountPerDay?.length || 1, 1));
+  const averageTokensPerDay = Math.round(totalTokens / Math.max(analytics?.tokenUsagePerDay?.length || 1, 1));
 
   // 日付フォーマット
   const formatDate = (dateString: string) => {
@@ -126,10 +126,10 @@ export default function AnalyticsCharts({ analytics, locale }: AnalyticsChartsPr
               </div>
             </div>
             <SimpleBarChart
-              data={analytics.chatCountPerDay}
+              data={analytics?.chatCountPerDay || []}
               valueKey="count"
               color="#6366f1"
-              maxValue={getMaxValue(analytics.chatCountPerDay)}
+              maxValue={getMaxValue(analytics?.chatCountPerDay || [])}
             />
           </div>
         )}
@@ -143,10 +143,10 @@ export default function AnalyticsCharts({ analytics, locale }: AnalyticsChartsPr
               </div>
             </div>
             <SimpleBarChart
-              data={analytics.tokenUsagePerDay}
+              data={analytics?.tokenUsagePerDay || []}
               valueKey="amount"
               color="#f59e0b"
-              maxValue={getMaxValue(analytics.tokenUsagePerDay)}
+              maxValue={getMaxValue(analytics?.tokenUsagePerDay || [])}
             />
           </div>
         )}
@@ -156,13 +156,13 @@ export default function AnalyticsCharts({ analytics, locale }: AnalyticsChartsPr
             <div className="flex items-center justify-between mb-4">
               <h4 className="font-medium text-gray-900">キャラクター別親密度</h4>
               <div className="text-sm text-gray-600">
-                最高レベル: Lv.{Math.max(...analytics.affinityProgress.map(a => a.level))}
+                最高レベル: Lv.{analytics?.affinityProgress?.length > 0 ? Math.max(...(analytics?.affinityProgress || []).map(a => a.level)) : 0}
               </div>
             </div>
             
             {/* 親密度バーチャート */}
             <div className="space-y-4">
-              {analytics.affinityProgress.map((character, index) => (
+              {(analytics?.affinityProgress || []).map((character, index) => (
                 <div key={index} className="flex items-center space-x-4">
                   <div className="w-20 text-sm font-medium text-gray-700 truncate">
                     {character.characterName}
@@ -202,7 +202,7 @@ export default function AnalyticsCharts({ analytics, locale }: AnalyticsChartsPr
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-gray-900">
-              {analytics.affinityProgress.length}
+              {(analytics?.affinityProgress || []).length}
             </div>
             <div className="text-sm text-gray-600">交流キャラ数</div>
           </div>

@@ -11,7 +11,7 @@
     },
     "filters": {
       "all": "全て表示",
-      "initial": "ベースキャラのみ", 
+      "free": "無料キャラのみ", 
       "purchased": "購入済みキャラのみ",
       "unpurchased": "未購入キャラのみ"
     },
@@ -29,7 +29,8 @@
       "viewAll": "全部見る"
     },
     "characterTypes": {
-      "initial": "ベースキャラ",
+      "free": "無料",
+      "tokenBased": "トークン制",
       "premium": "プレミアム",
       "locked": "ロック中"
     },

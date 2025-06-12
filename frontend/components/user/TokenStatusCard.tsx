@@ -21,8 +21,8 @@ export default function TokenStatusCard({
   const remainingPercentage = 100 - usagePercentage;
   
   // 直近7日間の平均使用量
-  const averageDailyUsage = recentUsage.length > 0 
-    ? recentUsage.reduce((sum, item) => sum + item.amount, 0) / recentUsage.length 
+  const averageDailyUsage = (recentUsage || []).length > 0 
+    ? (recentUsage || []).reduce((sum, item) => sum + item.amount, 0) / (recentUsage || []).length 
     : 0;
   
   // 予想残り日数

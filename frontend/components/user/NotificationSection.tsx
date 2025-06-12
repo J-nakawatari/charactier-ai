@@ -23,7 +23,7 @@ interface NotificationSectionProps {
 }
 
 export default function NotificationSection({ notifications, locale }: NotificationSectionProps) {
-  const [localNotifications, setLocalNotifications] = useState(notifications);
+  const [localNotifications, setLocalNotifications] = useState(notifications || []);
   
   const unreadCount = localNotifications.filter(n => !n.isRead).length;
 

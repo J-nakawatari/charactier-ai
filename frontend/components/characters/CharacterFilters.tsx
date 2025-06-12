@@ -6,7 +6,7 @@ import { Search, Filter, SortAsc, X } from 'lucide-react';
 
 interface FilterState {
   keyword: string;
-  characterType: 'all' | 'initial' | 'purchased' | 'unpurchased'; // キャラクター種別フィルター
+  characterType: 'all' | 'free' | 'purchased' | 'unpurchased'; // キャラクター種別フィルター
   sort: 'popular' | 'newest' | 'oldest' | 'name' | 'affinity';
 }
 
@@ -57,7 +57,7 @@ export default function CharacterFilters({
 
   const characterTypeOptions = [
     { value: 'all', label: t('filters.all') },
-    { value: 'initial', label: t('filters.initial') },
+    { value: 'free', label: t('filters.free') },
     { value: 'purchased', label: t('filters.purchased') },
     { value: 'unpurchased', label: t('filters.unpurchased') }
   ];

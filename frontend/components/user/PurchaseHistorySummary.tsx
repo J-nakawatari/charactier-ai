@@ -19,7 +19,7 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
   const [isExpanded, setIsExpanded] = useState(false);
   
   // 最新3件を表示（展開時は全件）
-  const displayItems = isExpanded ? purchaseHistory : purchaseHistory.slice(0, 3);
+  const displayItems = isExpanded ? (purchaseHistory || []) : (purchaseHistory || []).slice(0, 3);
   
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString(locale, {
@@ -50,15 +50,15 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
   };
 
   // 統計計算
-  const totalSpent = purchaseHistory.reduce((sum, item) => {
+  const totalSpent = (purchaseHistory || []).reduce((sum, item) => {
     return sum + (item.type === 'character' ? item.amount : 0);
   }, 0);
   
-  const totalTokensPurchased = purchaseHistory.reduce((sum, item) => {
+  const totalTokensPurchased = (purchaseHistory || []).reduce((sum, item) => {
     return sum + (item.type === 'token' ? item.amount : 0);
   }, 0);
 
-  if (purchaseHistory.length === 0) {
+  if ((purchaseHistory || []).length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center space-x-2 mb-4">

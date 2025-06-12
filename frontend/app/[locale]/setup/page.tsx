@@ -125,15 +125,16 @@ export default function SetupPage() {
 
   const fetchCharacters = async () => {
     try {
-      const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'}/api/characters?locale=${locale}&characterType=initial`);
+      const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'}/api/characters?locale=${locale}`);
       
       if (response.ok) {
         const data = await response.json();
         // 無料キャラクターのみをフィルタリング（初回セットアップ用）
         const freeCharacters = (data.characters || []).filter((char: any) => 
-          char.characterAccessType === 'initial' || char.characterAccessType === 'free'
+          char.characterAccessType === 'free'
         );
         setCharacters(freeCharacters);
+        console.log('✅ セットアップ用キャラクター取得:', freeCharacters.length, '個');
       } else {
         setError('キャラクター情報の取得に失敗しました');
       }

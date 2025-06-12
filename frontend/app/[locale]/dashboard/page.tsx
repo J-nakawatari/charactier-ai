@@ -11,6 +11,8 @@ import RecentChatHistory from '@/components/user/RecentChatHistory';
 import PurchaseHistorySummary from '@/components/user/PurchaseHistorySummary';
 import BadgeGallery from '@/components/user/BadgeGallery';
 import AnalyticsCharts from '@/components/user/AnalyticsCharts';
+import EnhancedAnalyticsSection from '@/components/user/EnhancedAnalyticsSection';
+import AchievementSystem from '@/components/user/AchievementSystem';
 // import { getMockDashboardData } from '@/mock/dashboardData'; // モックデータは削除済み
 
 interface DashboardData {
@@ -50,10 +52,18 @@ export default function DashboardPage() {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
+        // 認証ヘッダーを取得
+        const token = localStorage.getItem('accessToken');
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+        };
+        
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
         const response = await fetch('/api/user/dashboard', {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers
         });
 
         if (!response.ok) {
@@ -64,8 +74,34 @@ export default function DashboardPage() {
         setDashboardData(data);
       } catch (error) {
         console.error('Dashboard data fetch error:', error);
-        // フォールバック: モックデータを使用
-        setDashboardData(getMockDashboardData());
+        // フォールバック: 基本的なデータ構造を設定
+        setDashboardData({
+          user: {
+            _id: 'unknown',
+            name: 'ユーザー',
+            email: '',
+            createdAt: new Date(),
+            lastLoginAt: new Date()
+          },
+          tokens: {
+            balance: 0,
+            totalPurchased: 0,
+            totalUsed: 0,
+            recentUsage: []
+          },
+          affinities: [],
+          recentChats: [],
+          purchaseHistory: [],
+          loginHistory: [],
+          notifications: [],
+          badges: [],
+          analytics: {
+            chatCountPerDay: [],
+            tokenUsagePerDay: [],
+            affinityProgress: [],
+            characterInteractions: []
+          }
+        });
       } finally {
         setIsLoading(false);
       }
@@ -193,6 +229,20 @@ export default function DashboardPage() {
                   <AnalyticsCharts 
                     analytics={dashboardData.analytics}
                     locale={locale}
+                  />
+                </div>
+
+                {/* 🎯 AI駆動インサイト */}
+                <div className="md:col-span-2 lg:col-span-3">
+                  <EnhancedAnalyticsSection 
+                    userId={dashboardData.user._id}
+                  />
+                </div>
+
+                {/* 🏆 実績システム */}
+                <div className="md:col-span-2 lg:col-span-3">
+                  <AchievementSystem 
+                    userId={dashboardData.user._id}
                   />
                 </div>
               </div>

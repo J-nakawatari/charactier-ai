@@ -16,13 +16,15 @@ interface ImageCropperProps {
   onCropComplete: (croppedArea: Area, croppedAreaPixels: Area) => void;
   onCancel: () => void;
   onSave: () => void;
+  isLoading?: boolean;
 }
 
 export default function ImageCropper({ 
   imageSrc, 
   onCropComplete, 
   onCancel, 
-  onSave 
+  onSave,
+  isLoading = false
 }: ImageCropperProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -122,7 +124,8 @@ export default function ImageCropper({
           <div className="flex items-center justify-end space-x-3 pt-2">
             <button
               onClick={onCancel}
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              disabled={isLoading}
+              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <X className="w-4 h-4" />
               <span>キャンセル</span>
@@ -130,10 +133,14 @@ export default function ImageCropper({
             
             <button
               onClick={onSave}
-              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              disabled={isLoading}
+              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              {isLoading && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              )}
               <Save className="w-4 h-4" />
-              <span>保存</span>
+              <span>{isLoading ? 'アップロード中...' : '保存'}</span>
             </button>
           </div>
         </div>

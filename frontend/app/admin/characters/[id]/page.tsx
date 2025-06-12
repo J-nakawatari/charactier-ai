@@ -6,7 +6,7 @@ import { useToast } from '@/contexts/ToastContext';
 
 // Inline type definitions
 interface Character {
-  id: string;
+  _id: string;
   name: { ja: string; en: string };
   description?: { ja: string; en: string };
   personalityType: string;
@@ -159,7 +159,7 @@ export default function CharacterDetailPage() {
   }
 
   const handleEdit = () => {
-    router.push(`/admin/characters/${character.id}/edit`);
+    router.push(`/admin/characters/${character._id}/edit`);
   };
 
   const handleToggleStatus = () => {

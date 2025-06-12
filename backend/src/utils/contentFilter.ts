@@ -1,5 +1,6 @@
 import { OpenAI } from 'openai';
 import { Request } from 'express';
+import { publishSecurityEvent } from '../../lib/redis';
 
 // 禁止用語リスト
 const BLOCKED_WORDS = {
@@ -121,12 +122,27 @@ export async function validateMessage(userId: string, message: string, req: Requ
       // 2. 禁止用語チェック
       const blockedCheck = checkBlockedWords(message);
       if (blockedCheck.isBlocked) {
-        await recordViolation(userId, 'blocked_word', {
+        const violationData = {
           detectedWord: blockedCheck.detectedWord,
           reason: blockedCheck.reason,
           messageContent: message,
           ipAddress: req.ip || req.connection?.remoteAddress || 'unknown',
           userAgent: req.get('User-Agent') || 'unknown'
+        };
+
+        await recordViolation(userId, 'blocked_word', violationData);
+        
+        // 🛡️ リアルタイムセキュリティイベント発行
+        await publishSecurityEvent({
+          type: 'content_violation',
+          severity: 'medium',
+          userId,
+          violationType: 'blocked_word',
+          detectedWord: blockedCheck.detectedWord,
+          messageContent: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
+          ipAddress: violationData.ipAddress,
+          userAgent: violationData.userAgent,
+          action: 'recorded_violation'
         });
         
         await applySanction(userId);
@@ -142,12 +158,27 @@ export async function validateMessage(userId: string, message: string, req: Requ
       // 3. OpenAI Moderationチェック（フォールバック対応）
       const moderationCheck = await checkOpenAIModeration(message);
       if (moderationCheck.isFlagged) {
-        await recordViolation(userId, 'openai_moderation', {
+        const violationData = {
           reason: moderationCheck.reason,
           messageContent: message,
           ipAddress: req.ip || req.connection?.remoteAddress || 'unknown',
           userAgent: req.get('User-Agent') || 'unknown',
           moderationCategories: moderationCheck.categories
+        };
+
+        await recordViolation(userId, 'openai_moderation', violationData);
+        
+        // 🛡️ リアルタイムセキュリティイベント発行
+        await publishSecurityEvent({
+          type: 'ai_moderation',
+          severity: 'high',
+          userId,
+          violationType: 'openai_moderation',
+          messageContent: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
+          ipAddress: violationData.ipAddress,
+          userAgent: violationData.userAgent,
+          moderationCategories: moderationCheck.categories,
+          action: 'recorded_violation'
         });
         
         await applySanction(userId);

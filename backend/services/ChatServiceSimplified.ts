@@ -7,9 +7,8 @@ import {
   ToneResult,
   MoodModifier 
 } from '../utils/toneSystem';
-import User from '../models/User';
-import Character from '../models/Character';
-import CharacterPromptCache from '../models/CharacterPromptCache';
+import { UserModel } from '../src/models/UserModel';
+import { CharacterModel } from '../src/models/CharacterModel';
 import { OpenAI } from 'openai';
 const TokenService = require('../services/tokenService');
 

@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { TokenPurchaseModal } from './TokenPurchaseModal';
 
 interface ChatSidebarProps {
   locale?: string;
@@ -35,50 +36,40 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const t = useTranslations('sidebar');
 
   // ユーザーデータの取得
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        let token = localStorage.getItem('token');
-        
-        // localStorageにない場合はクッキーから取得を試みる
-        if (!token && typeof document !== 'undefined') {
-          const cookies = document.cookie.split(';');
-          const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
-          if (tokenCookie) {
-            token = tokenCookie.split('=')[1];
+        // 最新のユーザー情報をAPIから取得
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+          console.log('🔄 ChatSidebar: Fetching user data...');
+          const response = await fetch('/api/user/profile', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            console.log('✅ ChatSidebar: User data updated:', {
+              name: userData.name,
+              tokenBalance: userData.tokenBalance
+            });
+            setUser(userData);
+            setLoading(false);
+            return;
           }
         }
         
-        if (!token) {
-          console.log('❌ No token found in localStorage or cookies');
-          setLoading(false);
-          return;
-        }
-
-        console.log('🔄 ChatSidebar: Fetching user data...');
-        const response = await fetch('/api/auth/user', {
-          headers: {
-            'x-auth-token': token,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          console.log('✅ ChatSidebar: User data updated:', {
-            name: userData.name,
-            selectedCharacter: userData.selectedCharacter?.name || 'None'
-          });
-          setUser(userData);
-        } else {
-          console.error('Failed to fetch user data:', response.status);
-        }
+        console.log('❌ No access token found');
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching user data:', error);
-      } finally {
         setLoading(false);
       }
     };
@@ -96,10 +87,10 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
   };
 
   const sidebarItems = [
-    { id: 'home', href: `/${currentLocale}`, icon: Home, label: t('home') },
+    { id: 'home', href: `/${currentLocale}/dashboard`, icon: Home, label: t('home') },
     { id: 'characters', href: `/${currentLocale}/characters`, icon: Users, label: t('characters') },
     { id: 'chat', href: getChatHref(), icon: MessageSquare, label: t('chatHistory') },
-    { id: 'tokens', href: `/${currentLocale}/tokens`, icon: Coins, label: t('tokens') },
+    { id: 'tokens', href: null, icon: Coins, label: t('tokens'), onClick: () => setShowPurchaseModal(true) },
   ];
 
   return (
@@ -178,6 +169,30 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
               isActive = isCharacterPage;
             }
             
+            if (item.onClick) {
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setIsOpen(false);
+                    item.onClick();
+                  }}
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors w-full text-left ${
+                    isActive
+                      ? 'bg-purple-50 border-l-4 border-purple-700'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                  style={isActive ? { color: 'rgb(147, 51, 234)' } : {}}
+                >
+                  <item.icon 
+                    className="w-5 h-5" 
+                    style={isActive ? { color: 'rgb(147, 51, 234)' } : { color: '#9CA3AF' }}
+                  />
+                  <span>{item.label}</span>
+                </button>
+              );
+            }
+            
             return (
               <Link
                 key={item.id}
@@ -207,6 +222,17 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
           </div>
         </div>
       </div>
+
+      {/* トークン購入モーダル */}
+      <TokenPurchaseModal
+        isOpen={showPurchaseModal}
+        onClose={() => setShowPurchaseModal(false)}
+        currentTokens={user?.tokenBalance || 0}
+        onPurchaseSuccess={(newTokens) => {
+          setUser(prev => prev ? { ...prev, tokenBalance: newTokens } : null);
+          setShowPurchaseModal(false);
+        }}
+      />
     </>
   );
 }

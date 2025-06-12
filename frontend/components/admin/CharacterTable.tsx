@@ -8,7 +8,7 @@ interface Character {
   description: { ja: string; en: string };
   personalityPreset: string;
   personalityTags: string[];
-  characterAccessType: 'initial' | 'premium';
+  characterAccessType: 'free' | 'token-based' | 'premium';
   isActive: boolean;
   imageCharacterSelect?: string;
   totalConversations?: number;
@@ -177,7 +177,7 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
                 </td>
                 <td className="py-4 px-2">
                   <div className="text-sm text-gray-900">
-                    {character.characterAccessType === 'initial' ? (
+                    {character.characterAccessType === 'free' ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         無料
                       </span>

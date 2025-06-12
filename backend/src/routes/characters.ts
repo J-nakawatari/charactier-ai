@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { CharacterModel } from '../models/CharacterModel';
 import { authenticateToken } from '../middleware/auth';
+import { uploadImage, optimizeImage } from '../utils/fileUpload';
 
 const router = Router();
 
@@ -198,6 +199,133 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
   }
 });
 
+// 翻訳データ取得（/:idより前に定義する必要あり）
+router.get('/:id/translations', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const character = await CharacterModel.findById(req.params.id);
+    
+    if (!character || !character.isActive) {
+      res.status(404).json({
+        error: 'Character not found',
+        message: 'キャラクターが見つかりません'
+      });
+      return;
+    }
+    
+    // 翻訳データを抽出
+    const translationData = {
+      name: character.name,
+      description: character.description,
+      personalityPreset: {
+        ja: character.personalityPreset,
+        en: character.personalityPreset // 現在は多言語対応していないため、同じ値を返す
+      },
+      personalityTags: {
+        ja: character.personalityTags,
+        en: character.personalityTags // 現在は多言語対応していないため、同じ値を返す
+      },
+      adminPrompt: character.adminPrompt,
+      defaultMessage: character.defaultMessage,
+      limitMessage: character.limitMessage
+    };
+    
+    res.json(translationData);
+
+  } catch (error) {
+    console.error('❌ Error fetching character translations:', error);
+    res.status(500).json({
+      error: 'Database error',
+      message: '翻訳データの取得に失敗しました'
+    });
+  }
+});
+
+// 翻訳データ保存（/:idより前に定義する必要あり）
+router.put('/:id/translations', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, description, personalityPreset, personalityTags, adminPrompt, defaultMessage, limitMessage } = req.body;
+    
+    // バリデーション
+    if (!name || !name.ja || !name.en) {
+      res.status(400).json({
+        error: 'Name is required in both languages',
+        message: 'キャラクター名は日本語と英語の両方が必要です'
+      });
+      return;
+    }
+    
+    if (!description || !description.ja || !description.en) {
+      res.status(400).json({
+        error: 'Description is required in both languages',
+        message: '説明は日本語と英語の両方が必要です'
+      });
+      return;
+    }
+    
+    // キャラクターの存在確認
+    const character = await CharacterModel.findById(req.params.id);
+    if (!character) {
+      res.status(404).json({
+        error: 'Character not found',
+        message: 'キャラクターが見つかりません'
+      });
+      return;
+    }
+    
+    // 翻訳データを更新
+    const updateData: any = {
+      name,
+      description,
+      adminPrompt,
+      defaultMessage,
+      limitMessage
+    };
+    
+    // personalityPresetは現在多言語対応していないため、jaの値を使用
+    if (personalityPreset && personalityPreset.ja) {
+      updateData.personalityPreset = personalityPreset.ja;
+    }
+    
+    // personalityTagsも現在多言語対応していないため、jaの値を使用
+    if (personalityTags && personalityTags.ja) {
+      updateData.personalityTags = personalityTags.ja;
+    }
+    
+    const updatedCharacter = await CharacterModel.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+    
+    console.log('✅ Character translations updated:', updatedCharacter?._id);
+    res.json({
+      message: '翻訳データが更新されました',
+      translations: {
+        name: updatedCharacter?.name,
+        description: updatedCharacter?.description,
+        personalityPreset: {
+          ja: updatedCharacter?.personalityPreset,
+          en: updatedCharacter?.personalityPreset
+        },
+        personalityTags: {
+          ja: updatedCharacter?.personalityTags,
+          en: updatedCharacter?.personalityTags
+        },
+        adminPrompt: updatedCharacter?.adminPrompt,
+        defaultMessage: updatedCharacter?.defaultMessage,
+        limitMessage: updatedCharacter?.limitMessage
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Character translation update error:', error);
+    res.status(500).json({
+      error: 'Update failed',
+      message: '翻訳データの更新に失敗しました'
+    });
+  }
+});
+
 // 個別キャラクター取得
 router.get('/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
@@ -281,6 +409,46 @@ router.delete('/:id', authenticateToken, async (req: Request, res: Response): Pr
     res.status(500).json({
       error: 'Deletion failed',
       message: 'キャラクターの削除に失敗しました'
+    });
+  }
+});
+
+// 画像アップロードAPI（管理者のみ）
+router.post('/upload/image', authenticateToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({
+        error: 'No image file',
+        message: '画像ファイルがアップロードされていません'
+      });
+      return;
+    }
+    
+    // 管理者権限チェック
+    const authReq = req as any;
+    if (!authReq.user?.isAdmin) {
+      res.status(403).json({
+        error: 'Admin access required',
+        message: '管理者権限が必要です'
+      });
+      return;
+    }
+    
+    const imageUrl = `/uploads/images/${req.file.filename}`;
+    console.log('✅ Image uploaded successfully:', imageUrl);
+    
+    res.json({
+      message: '画像アップロードが完了しました',
+      imageUrl,
+      filename: req.file.filename,
+      size: req.file.size
+    });
+    
+  } catch (error) {
+    console.error('❌ Image upload error:', error);
+    res.status(500).json({
+      error: 'Upload failed',
+      message: '画像アップロードに失敗しました'
     });
   }
 });

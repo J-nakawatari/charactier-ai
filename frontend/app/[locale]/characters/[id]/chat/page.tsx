@@ -24,7 +24,6 @@ interface ChatLayoutCharacter {
   name: string; // 文字列に変換済み
   description: string; // 文字列に変換済み
   imageChatAvatar: string;
-  imageChatBackground: string;
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
 }
@@ -73,7 +72,6 @@ export default function ChatPage() {
             name: getLocalizedString(apiData.character.name, locale),
             description: getLocalizedString(apiData.character.description, locale),
             imageChatAvatar: apiData.character.imageChatAvatar || '/characters/luna.png',
-            imageChatBackground: apiData.character.imageChatBackground || '',
             currentMood: 'happy', // TODO: バックエンドから取得
             themeColor: apiData.character.themeColor || '#8B5CF6'
           },
@@ -115,7 +113,6 @@ export default function ChatPage() {
                 name: 'ルナ',
                 description: '明るく元気な女の子',
                 imageChatAvatar: '/characters/00009-3823393646_cleanup.png',
-                imageChatBackground: '', // 背景画像なし
                 currentMood: 'happy' as const,
                 themeColor: '#8B5CF6'
               };
@@ -124,7 +121,6 @@ export default function ChatPage() {
                 name: 'ミコ',
                 description: '神秘的な巫女さん',
                 imageChatAvatar: '/characters/00010-3296923052.png',
-                imageChatBackground: '', // 背景画像なし
                 currentMood: 'shy' as const,
                 themeColor: '#EC4899'
               };
@@ -133,7 +129,6 @@ export default function ChatPage() {
                 name: 'ゼン',
                 description: 'クールな武士',
                 imageChatAvatar: '/characters/00012-2372329152.png',
-                imageChatBackground: '', // 背景画像なし
                 currentMood: 'excited' as const,
                 themeColor: '#0EA5E9'
               };
@@ -142,7 +137,6 @@ export default function ChatPage() {
                 name: 'ルナ',
                 description: '明るく元気な女の子',
                 imageChatAvatar: '/characters/00009-3823393646_cleanup.png',
-                imageChatBackground: '',
                 currentMood: 'happy' as const,
                 themeColor: '#8B5CF6'
               };

@@ -9,7 +9,7 @@ interface Character {
   description: { ja: string; en: string };
   personalityPreset: string;
   personalityTags: string[];
-  characterAccessType: 'initial' | 'premium';
+  characterAccessType: 'free' | 'token-based' | 'premium';
   isActive: boolean;
   imageCharacterSelect?: string;
   totalConversations?: number;
@@ -101,7 +101,7 @@ export default function CharacterManagementTable({ characters }: CharacterManage
                 <div className="ml-3 flex-1">
                   <div className="text-sm font-medium text-gray-900 mb-1">{character.name?.ja || 'N/A'}</div>
                   <div className="text-xs text-gray-500 mb-2">ID: {character._id ? character._id.slice(-8) : 'N/A'}</div>
-                  {getStatusBadge(character.isActive, character.characterAccessType === 'initial')}
+                  {getStatusBadge(character.isActive, character.characterAccessType === 'free')}
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -156,7 +156,7 @@ export default function CharacterManagementTable({ characters }: CharacterManage
               <div>
                 <div className="text-xs text-gray-500">タイプ</div>
                 <div className="text-sm font-medium text-gray-900">
-                  {character.characterAccessType === 'initial' ? '無料' : 'プレミアム'}
+                  {character.characterAccessType === 'free' ? '無料' : character.characterAccessType === 'token-based' ? 'トークン制' : 'プレミアム'}
                 </div>
               </div>
               <div>
@@ -256,10 +256,10 @@ export default function CharacterManagementTable({ characters }: CharacterManage
                   </div>
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap">
-                  {getStatusBadge(character.isActive, character.characterAccessType === 'initial')}
+                  {getStatusBadge(character.isActive, character.characterAccessType === 'free')}
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {character.characterAccessType === 'initial' ? '無料' : 'プレミアム'}
+                  {character.characterAccessType === 'free' ? '無料' : character.characterAccessType === 'token-based' ? 'トークン制' : 'プレミアム'}
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {(character.totalConversations || 0).toLocaleString()}

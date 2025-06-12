@@ -12,7 +12,7 @@ interface Character {
   description: { ja: string; en: string };
   personalityPreset: string;
   personalityTags: string[];
-  characterAccessType: 'initial' | 'premium';
+  characterAccessType: 'free' | 'token-based' | 'premium';
   isActive: boolean;
   imageCharacterSelect?: string;
   totalConversations?: number;

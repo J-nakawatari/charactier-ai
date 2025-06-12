@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Send, Heart, Zap } from 'lucide-react';
+import { Send, Heart, Zap, Settings, Eye, EyeOff } from 'lucide-react';
 import { MessageList } from './MessageList';
 import { AffinityBar } from './AffinityBar';
 import { MoodVisualizer } from './MoodVisualizer';
@@ -12,6 +12,7 @@ import { TokenPurchaseModal } from './TokenPurchaseModal';
 import ChatSidebar from './ChatSidebar';
 import { TypingIndicator } from './TypingIndicator';
 import { ConnectionIndicator } from './ConnectionIndicator';
+import AdvancedChatIndicators from './AdvancedChatIndicators';
 import { useRealtimeChat, useTypingDebounce, useChatConnectionStatus } from '@/hooks/useRealtimeChat';
 
 interface Character {
@@ -77,6 +78,7 @@ export function ChatLayout({
   const [unlockData, setUnlockData] = useState<{ level: number; illustration: string } | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [currentTokens, setCurrentTokens] = useState(tokenStatus.tokensRemaining);
+  const [showAdvanced, setShowAdvanced] = useState(false); // 🎯 高度機能表示切り替え
   
   // リアルタイムチャット機能
   const realtimeChat = useRealtimeChat(character._id);
@@ -176,9 +178,7 @@ export function ChatLayout({
       <div 
         className="flex-1 flex flex-col relative lg:ml-64"
         style={{
-          backgroundImage: character.imageChatBackground 
-            ? `url(${character.imageChatBackground})` 
-            : 'linear-gradient(to bottom right, #faf5ff, #f3e8ff, #ddd6fe)',
+          backgroundImage: 'linear-gradient(to bottom right, #faf5ff, #f3e8ff, #ddd6fe)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
@@ -202,14 +202,35 @@ export function ChatLayout({
             </div>
             <div className="hidden sm:block">
               <h1 className="font-semibold text-gray-900 text-base">{character.name}</h1>
+              {/* 🎭 高度機能表示 */}
+              <AdvancedChatIndicators 
+                characterId={character._id}
+                affinityLevel={affinity.level}
+                className="mt-1"
+              />
             </div>
           </div>
 
-          <TokenBar 
-            lastMessageCost={tokenStatus.lastMessageCost}
-            onPurchaseClick={() => setShowPurchaseModal(true)}
-            onTokenUpdate={(newTokens) => setCurrentTokens(newTokens)}
-          />
+          <div className="flex items-center space-x-2">
+            {/* 🎯 高度機能表示切り替え */}
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className={`p-2 rounded-lg transition-colors ${
+                showAdvanced 
+                  ? 'bg-purple-100 text-purple-600 hover:bg-purple-200' 
+                  : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+              }`}
+              title={showAdvanced ? '高度表示オフ' : '高度表示オン'}
+            >
+              {showAdvanced ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </button>
+
+            <TokenBar 
+              lastMessageCost={tokenStatus.lastMessageCost}
+              onPurchaseClick={() => setShowPurchaseModal(true)}
+              onTokenUpdate={(newTokens) => setCurrentTokens(newTokens)}
+            />
+          </div>
         </div>
       </header>
 
@@ -252,6 +273,7 @@ export function ChatLayout({
           onLoadMore={onLoadMore}
           hasMore={hasMore}
           isLoadingMore={isLoadingMore}
+          showAdvanced={showAdvanced}
         />
       </div>
 

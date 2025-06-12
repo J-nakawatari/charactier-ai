@@ -46,7 +46,7 @@ export default function RecentChatHistory({ recentChats, locale }: RecentChatHis
     console.log(`Navigate to chat: ${chatId} with character: ${characterId}`);
   };
 
-  if (recentChats.length === 0) {
+  if ((recentChats || []).length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center space-x-2 mb-4">
@@ -83,7 +83,7 @@ export default function RecentChatHistory({ recentChats, locale }: RecentChatHis
 
       {/* チャット履歴リスト */}
       <div className="space-y-3">
-        {recentChats.map((chat) => (
+        {(recentChats || []).map((chat) => (
           <div
             key={chat._id}
             onClick={() => handleChatClick(chat._id, chat.character._id)}

@@ -3,35 +3,75 @@
 import { useState, useEffect } from 'react';
 import SecurityStats from '@/components/admin/SecurityStats';
 import SecurityEventsTable from '@/components/admin/SecurityEventsTable';
+import RealtimeSecurityMonitor from '@/components/admin/RealtimeSecurityMonitor';
 import { Search, Filter, Download, Shield, AlertTriangle } from 'lucide-react';
 
-// Inline type definitions
+// 🛡️ セキュリティイベント型定義（ViolationRecordベース）
 interface SecurityEvent {
   id: string;
-  type: 'login' | 'api' | 'error' | 'suspicious';
+  type: 'content_violation' | 'ai_moderation';
   severity: 'low' | 'medium' | 'high';
   message: string;
   timestamp: string;
   ipAddress?: string;
   userAgent?: string;
   userId?: string;
+  userEmail?: string;
+  detectedWord?: string;
+  messageContent?: string;
+  isResolved: boolean;
+  resolvedBy?: string;
+  resolvedAt?: string;
+}
+
+interface SecurityStats {
+  total: number;
+  last24h: number;
+  last7d: number;
+  unresolved: number;
+  resolvedRate: string;
 }
 
 export default function SecurityPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
+  const [securityStats, setSecurityStats] = useState<SecurityStats | null>(null);
 
   useEffect(() => {
     const fetchSecurityData = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/admin/security-events');
-        // const data = await response.json();
         
-        // For now, using empty data until API is implemented
-        setSecurityEvents([]);
+        // 🚀 実際のセキュリティイベントAPIを呼び出し
+        const [eventsResponse, statsResponse] = await Promise.all([
+          fetch('/api/admin/security-events', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          }),
+          fetch('/api/admin/security-stats', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          })
+        ]);
+
+        if (!eventsResponse.ok || !statsResponse.ok) {
+          throw new Error('API request failed');
+        }
+
+        const eventsData = await eventsResponse.json();
+        const statsData = await statsResponse.json();
+        
+        console.log('🛡️ Security data loaded:', {
+          eventsCount: eventsData.events?.length || 0,
+          stats: statsData
+        });
+        
+        setSecurityEvents(eventsData.events || []);
+        setSecurityStats(statsData);
+        
       } catch (err) {
         setError('セキュリティデータの読み込みに失敗しました');
         console.error('Security data fetch error:', err);
@@ -42,6 +82,38 @@ export default function SecurityPage() {
 
     fetchSecurityData();
   }, []);
+
+  // 🔧 違反解決ハンドラー
+  const handleResolveViolation = async (eventId: string, notes?: string) => {
+    try {
+      const response = await fetch(`/api/admin/resolve-violation/${eventId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ notes })
+      });
+
+      if (!response.ok) {
+        throw new Error('Resolve violation failed');
+      }
+
+      // イベントリストを更新
+      setSecurityEvents(prev => 
+        prev.map(event => 
+          event.id === eventId 
+            ? { ...event, isResolved: true, resolvedAt: new Date().toISOString() }
+            : event
+        )
+      );
+
+      console.log('✅ Violation resolved:', eventId);
+      
+    } catch (err) {
+      console.error('❌ Resolve violation error:', err);
+    }
+  };
 
   if (loading) {
     return (
@@ -119,11 +191,24 @@ export default function SecurityPage() {
       {/* メインコンテンツ */}
       <main className="flex-1 p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
-          {/* 統計カード */}
-          <SecurityStats events={securityEvents} />
+          {/* リアルタイム監視とサマリーのレイアウト */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+            {/* 統計カード */}
+            <div className="lg:col-span-2">
+              <SecurityStats events={securityEvents} />
+            </div>
+            
+            {/* リアルタイム監視 */}
+            <div className="lg:col-span-1">
+              <RealtimeSecurityMonitor maxEvents={20} />
+            </div>
+          </div>
           
           {/* セキュリティイベントテーブル */}
-          <SecurityEventsTable events={securityEvents} />
+          <SecurityEventsTable 
+            events={securityEvents} 
+            onResolveViolation={handleResolveViolation}
+          />
         </div>
       </main>
     </div>

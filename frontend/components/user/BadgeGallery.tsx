@@ -27,10 +27,10 @@ interface BadgeGalleryProps {
 export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
   const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
   
-  const unlockedCount = badges.filter(badge => badge.isUnlocked).length;
-  const totalCount = badges.length;
+  const unlockedCount = (badges || []).filter(badge => badge.isUnlocked).length;
+  const totalCount = (badges || []).length;
   
-  const filteredBadges = badges.filter(badge => {
+  const filteredBadges = (badges || []).filter(badge => {
     switch (filter) {
       case 'unlocked':
         return badge.isUnlocked;
@@ -202,7 +202,7 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
       </div>
 
       {/* 空の状態 */}
-      {filteredBadges.length === 0 && (
+      {(filteredBadges || []).length === 0 && (
         <div className="text-center py-8">
           <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500">

@@ -12,7 +12,8 @@ import {
   LogOut,
   Menu,
   X,
-  UserCog
+  UserCog,
+  Database
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -23,6 +24,7 @@ const sidebarItems = [
   { href: '/admin/users', icon: Users, label: 'ユーザー管理' },
   { href: '/admin/characters', icon: MessageSquare, label: 'キャラクター管理' },
   { href: '/admin/tokens', icon: Coins, label: 'トークチケット管理' },
+  { href: '/admin/cache', icon: Database, label: 'キャッシュ管理' },
   { href: '/admin/admins', icon: UserCog, label: '管理者管理' },
   { href: '/admin/notifications', icon: Bell, label: '通知管理' },
   { href: '/admin/analytics', icon: BarChart3, label: 'アナリティクス' },
@@ -115,7 +117,7 @@ export default function Sidebar() {
         <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
           一般
         </div>
-        {sidebarItems.slice(0, 4).map((item) => {
+        {sidebarItems.slice(0, 5).map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
@@ -137,7 +139,7 @@ export default function Sidebar() {
         <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 mt-6">
           ツール
         </div>
-        {sidebarItems.slice(4).map((item) => {
+        {sidebarItems.slice(5).map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link

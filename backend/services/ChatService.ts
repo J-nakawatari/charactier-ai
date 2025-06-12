@@ -7,8 +7,8 @@ import {
   ToneResult,
   MoodModifier 
 } from '../utils/toneSystem';
-import User from '../models/User';
-import Character from '../models/Character';
+import { UserModel } from '../src/models/UserModel';
+import { CharacterModel } from '../src/models/CharacterModel';
 import CharacterPromptCache from '../models/CharacterPromptCache';
 import TokenUsage from '../models/TokenUsage';
 import { OpenAI } from 'openai';
@@ -52,8 +52,8 @@ export class ChatService {
     try {
       // 1. ユーザーとキャラクター情報取得
       const [user, character] = await Promise.all([
-        User.findById(userId).populate('affinities'),
-        Character.findById(characterId)
+        UserModel.findById(userId),
+        CharacterModel.findById(characterId)
       ]);
 
       if (!user || !character) {

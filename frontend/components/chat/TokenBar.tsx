@@ -82,7 +82,9 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
   const isLowBalance = currentTokens < 500;
   const isCriticalBalance = currentTokens < 200;
   
-  const remainingMessages = lastMessageCost > 0 ? Math.floor(currentTokens / lastMessageCost) : 0;
+  // 最後のメッセージコストが0の場合は平均的なコスト(100トークン)を使用
+  const estimatedMessageCost = lastMessageCost > 0 ? lastMessageCost : 100;
+  const remainingMessages = Math.floor(currentTokens / estimatedMessageCost);
 
   return (
     <div className="flex items-center space-x-4">

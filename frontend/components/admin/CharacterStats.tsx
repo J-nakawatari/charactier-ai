@@ -8,7 +8,7 @@ interface Character {
   description: { ja: string; en: string };
   personalityPreset: string;
   personalityTags: string[];
-  characterAccessType: 'initial' | 'premium';
+  characterAccessType: 'free' | 'token-based' | 'premium';
   isActive: boolean;
   imageCharacterSelect?: string;
   totalConversations?: number;
@@ -25,7 +25,7 @@ export default function CharacterStats({ characters }: CharacterStatsProps) {
   const stats = {
     total: characters.length,
     active: characters.filter(c => c.isActive).length,
-    free: characters.filter(c => c.characterAccessType === 'initial').length,
+    free: characters.filter(c => c.characterAccessType === 'free').length,
     totalChats: characters.reduce((sum, c) => sum + (c.totalConversations || 0), 0),
     avgIntimacy: characters.length > 0 ? characters.reduce((sum, c) => sum + (c.averageAffinity || 0), 0) / characters.length : 0,
     premium: characters.filter(c => c.characterAccessType === 'premium').length

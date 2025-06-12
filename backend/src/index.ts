@@ -18,6 +18,16 @@ import { authenticateToken, AuthRequest } from './middleware/auth';
 import authRoutes from './routes/auth';
 import characterRoutes from './routes/characters';
 import { validateMessage } from './utils/contentFilter';
+import TokenUsage from '../models/TokenUsage';
+import CharacterPromptCache from '../models/CharacterPromptCache';
+import {
+  getCachePerformanceMetrics,
+  getCacheStatsByCharacter,
+  getTopPerformingCaches,
+  getCacheInvalidationStats,
+  performCacheCleanup,
+  invalidateCharacterCache
+} from './utils/cacheAnalytics';
 
 dotenv.config({ path: './.env' });
 
@@ -76,8 +86,10 @@ if (process.env.OPENAI_API_KEY) {
 
 console.log('🚀 PORT:', PORT);
 
-// チャット用のヘルパー関数
-const generateChatResponse = async (characterId: string, userMessage: string, conversationHistory: any[] = []): Promise<{ content: string; tokensUsed: number }> => {
+// 🚀 プロンプトキャッシュ対応チャット応答生成関数
+const generateChatResponse = async (characterId: string, userMessage: string, conversationHistory: any[] = [], userId?: string): Promise<{ content: string; tokensUsed: number; systemPrompt: string; cacheHit: boolean }> => {
+  const startTime = Date.now();
+  
   // キャラクター情報を取得
   const character = await CharacterModel.findById(characterId);
   if (!character || !character.isActive) {
@@ -85,14 +97,63 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
   }
 
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  let systemPrompt = '';
+  let cacheHit = false;
 
-  if (openai) {
-    // 実際のOpenAI API呼び出し
+  // 🔧 プロンプトキャッシュシステムの実装
+  if (userId && isMongoConnected) {
     try {
-      console.log('🤖 Using OpenAI API:', model);
+      console.log('🔍 Checking CharacterPromptCache...');
       
-      // システムプロンプトの構築
-      const systemPrompt = `あなたは${character.name.ja}というキャラクターです。
+      // キャッシュ検索（親密度レベル±5で検索）
+      const baseAffinityLevel = 50; // デフォルト親密度（実際のユーザー親密度に後で置き換え）
+      const affinityRange = 5;
+      
+      const cachedPrompt = await CharacterPromptCache.findOne({
+        userId: userId,
+        characterId: characterId,
+        'promptConfig.affinityLevel': {
+          $gte: Math.max(0, baseAffinityLevel - affinityRange),
+          $lte: Math.min(100, baseAffinityLevel + affinityRange)
+        },
+        'promptConfig.languageCode': 'ja',
+        ttl: { $gt: new Date() }, // TTL未期限切れ
+        characterVersion: '1.0.0'
+      }).sort({ 
+        useCount: -1, // 使用回数順
+        lastUsed: -1  // 最終使用日順
+      });
+
+      if (cachedPrompt) {
+        // 🎯 キャッシュヒット！
+        console.log('✅ CharacterPromptCache HIT:', {
+          cacheId: cachedPrompt._id,
+          useCount: cachedPrompt.useCount,
+          affinityLevel: cachedPrompt.promptConfig.affinityLevel,
+          generationTime: cachedPrompt.generationTime
+        });
+        
+        systemPrompt = cachedPrompt.systemPrompt;
+        cacheHit = true;
+        
+        // キャッシュ使用統計を更新
+        cachedPrompt.lastUsed = new Date();
+        cachedPrompt.useCount += 1;
+        await cachedPrompt.save();
+        
+      } else {
+        console.log('❌ CharacterPromptCache MISS - generating new prompt...');
+      }
+    } catch (cacheError) {
+      console.error('⚠️ CharacterPromptCache error (non-critical):', cacheError);
+    }
+  }
+
+  // キャッシュがない場合は新規生成
+  if (!systemPrompt) {
+    console.log('🔨 Generating new system prompt...');
+    
+    systemPrompt = `あなたは${character.name.ja}というキャラクターです。
 性格: ${character.personalityPreset || '優しい'}
 特徴: ${character.personalityTags?.join(', ') || '親しみやすい'}
 説明: ${character.description.ja}
@@ -102,6 +163,50 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
 - 約50-150文字程度で返答してください
 - 絵文字を適度に使用してください`;
 
+    // 新規プロンプトをキャッシュに保存
+    if (userId && isMongoConnected) {
+      try {
+        const generationTime = Date.now() - startTime;
+        
+        const newCache = new CharacterPromptCache({
+          userId: userId,
+          characterId: characterId,
+          systemPrompt: systemPrompt,
+          promptConfig: {
+            affinityLevel: 50, // デフォルト親密度
+            personalityTags: character.personalityTags || [],
+            toneStyle: 'friendly',
+            moodModifiers: [],
+            languageCode: 'ja'
+          },
+          createdAt: new Date(),
+          lastUsed: new Date(),
+          useCount: 1,
+          ttl: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30日後
+          characterVersion: '1.0.0',
+          promptVersion: '1.0.0',
+          generationTime: generationTime,
+          promptLength: systemPrompt.length,
+          compressionRatio: 1.0
+        });
+        
+        await newCache.save();
+        console.log('💾 New prompt cached:', {
+          promptLength: systemPrompt.length,
+          generationTime: generationTime
+        });
+        
+      } catch (saveError) {
+        console.error('⚠️ Failed to save prompt cache (non-critical):', saveError);
+      }
+    }
+  }
+
+  if (openai) {
+    // 実際のOpenAI API呼び出し
+    try {
+      console.log('🤖 Using OpenAI API:', model, cacheHit ? '(Cache HIT)' : '(Cache MISS)');
+      
       // 実際に生成されたプロンプトをログ出力
       console.log('🎭 Generated system prompt for character:', character.name.ja);
       console.log('📝 System prompt content:');
@@ -133,7 +238,9 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
 
       return {
         content: responseContent,
-        tokensUsed
+        tokensUsed,
+        systemPrompt,
+        cacheHit
       };
 
     } catch (error) {
@@ -728,8 +835,8 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
     }
     console.log('✅ Content filtering passed');
 
-    // AI応答を生成
-    const aiResponse = await generateChatResponse(characterId, message);
+    // 🚀 プロンプトキャッシュ対応AI応答を生成
+    const aiResponse = await generateChatResponse(characterId, message, [], req.user._id);
     
     // トークン消費量の確認
     if (userTokenBalance < aiResponse.tokensUsed) {
@@ -823,8 +930,94 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           tokensUsed: aiResponse.tokensUsed,
           newBalance,
           affinityIncrease,
-          totalMessages: updatedChat.messages.length
+          totalMessages: updatedChat.messages.length,
+          cacheHit: aiResponse.cacheHit
         });
+
+        // 🚀 詳細TokenUsage記録（仕様書に基づく高度トラッキング）
+        try {
+          console.log('📊 Recording detailed TokenUsage tracking...');
+          
+          // API費用計算
+          const model = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
+          const inputTokens = Math.floor(aiResponse.tokensUsed * 0.6); // 推定入力トークン
+          const outputTokens = Math.floor(aiResponse.tokensUsed * 0.4); // 推定出力トークン
+          
+          // GPTモデル別の料金計算（USD）
+          let apiCost = 0;
+          if (model === 'gpt-4') {
+            apiCost = (inputTokens * 0.03 + outputTokens * 0.06) / 1000;
+          } else if (model === 'gpt-3.5-turbo') {
+            apiCost = (inputTokens * 0.0015 + outputTokens * 0.002) / 1000;
+          } else {
+            apiCost = (inputTokens * 0.01 + outputTokens * 0.03) / 1000; // デフォルト
+          }
+          
+          const apiCostYen = apiCost * 150; // USD→JPY換算（150円/ドル想定）
+          const sessionId = `chat_${req.user._id}_${characterId}_${Date.now()}`;
+          
+          // 利益分析計算
+          const tokenPrice = userTokenBalance > 0 ? (500 / 15000) : 0; // 500円で15000トークンの想定
+          const grossRevenue = aiResponse.tokensUsed * tokenPrice;
+          const grossProfit = grossRevenue - apiCostYen;
+          const profitMargin = grossRevenue > 0 ? (grossProfit / grossRevenue) * 100 : 0;
+          
+          const tokenUsageRecord = new TokenUsage({
+            // 基本情報
+            userId: req.user._id,
+            characterId: characterId,
+            sessionId: sessionId,
+            
+            // 使用量詳細
+            tokensUsed: aiResponse.tokensUsed,
+            tokenType: 'chat_message',
+            messageContent: message.substring(0, 2000), // 2000文字制限
+            responseContent: aiResponse.content.substring(0, 2000),
+            
+            // AI API詳細
+            model: model,
+            inputTokens: inputTokens,
+            outputTokens: outputTokens,
+            apiCost: apiCost,
+            apiCostYen: apiCostYen,
+            
+            // 原価・利益分析
+            stripeFee: 0, // チャットメッセージは直接課金なし
+            grossProfit: grossProfit,
+            profitMargin: profitMargin,
+            
+            // 親密度変化
+            intimacyBefore: Math.max(0, newAffinity - affinityIncrease),
+            intimacyAfter: newAffinity,
+            affinityChange: affinityIncrease,
+            experienceGained: affinityIncrease,
+            
+            // メタデータ
+            userAgent: req.get('User-Agent') || 'unknown',
+            ipAddress: req.ip || req.connection?.remoteAddress || 'unknown',
+            platform: 'web',
+            
+            // タイムスタンプ
+            createdAt: new Date(),
+            processedAt: new Date()
+          });
+          
+          await tokenUsageRecord.save();
+          
+          console.log('✅ Detailed TokenUsage recorded:', {
+            tokensUsed: aiResponse.tokensUsed,
+            apiCostYen: Math.round(apiCostYen * 100) / 100,
+            profitMargin: Math.round(profitMargin * 100) / 100,
+            model: model,
+            sessionId: sessionId,
+            cacheHit: aiResponse.cacheHit,
+            promptLength: aiResponse.systemPrompt.length
+          });
+          
+        } catch (tokenUsageError) {
+          console.error('⚠️ Failed to record TokenUsage (non-critical):', tokenUsageError);
+          // TokenUsage記録の失敗はチャット機能に影響させない
+        }
 
         res.json({
           userMessage,
@@ -3295,6 +3488,1476 @@ app.get('/api/admin/admins', authenticateToken, async (req: AuthRequest, res: Re
     res.status(500).json({
       error: 'Internal server error',
       message: '管理者一覧の取得に失敗しました'
+    });
+  }
+});
+
+
+// 🔄 リアルタイムセキュリティイベントストリーム（SSE）
+app.get('/api/admin/security/events-stream', async (req: Request, res: Response): Promise<void> => {
+  try {
+    // クエリパラメータから認証トークンを取得
+    const token = req.query.token as string;
+    if (!token) {
+      res.status(401).json({ error: 'Authentication token required' });
+      return;
+    }
+
+    // JWT認証
+    const jwt = require('jsonwebtoken');
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      res.status(401).json({ error: 'Invalid authentication token' });
+      return;
+    }
+
+    console.log('🛡️ リアルタイムセキュリティストリーム開始');
+
+    // SSEヘッダー設定
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Cache-Control'
+    });
+
+    // 初期接続確認
+    res.write('data: {"type":"connected","message":"セキュリティイベントストリーム接続済み"}\n\n');
+
+    // Redis Subscriber取得
+    const { getRedisSubscriber } = require('../lib/redis');
+    const subscriber = await getRedisSubscriber();
+
+    // セキュリティイベント購読
+    const handleSecurityEvent = (message: string, channel: string) => {
+      try {
+        const eventData = JSON.parse(message);
+        console.log('🛡️ セキュリティイベント受信:', eventData.type);
+        
+        // SSEフォーマットで送信
+        res.write(`data: ${JSON.stringify({
+          type: 'security_event',
+          event: eventData,
+          timestamp: new Date().toISOString()
+        })}\n\n`);
+      } catch (error) {
+        console.error('SSE security event error:', error);
+      }
+    };
+
+    await subscriber.subscribe('security:events', handleSecurityEvent);
+    console.log('📡 セキュリティイベント購読開始');
+
+    // 接続終了時のクリーンアップ
+    req.on('close', async () => {
+      try {
+        await subscriber.unsubscribe('security:events', handleSecurityEvent);
+        console.log('🛡️ セキュリティストリーム終了');
+      } catch (error) {
+        console.error('Security stream cleanup error:', error);
+      }
+    });
+
+    // 30秒ごとのハートビート
+    const heartbeat = setInterval(() => {
+      res.write('data: {"type":"heartbeat","timestamp":"' + new Date().toISOString() + '"}\n\n');
+    }, 30000);
+
+    req.on('close', () => {
+      clearInterval(heartbeat);
+    });
+
+  } catch (error) {
+    console.error('❌ セキュリティストリームエラー:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'セキュリティストリームの開始に失敗しました'
+    });
+  }
+});
+
+// 🛡️ セキュリティ管理API（管理者専用）
+app.get('/api/admin/security-events', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database connection required' });
+      return;
+    }
+
+    // ViolationRecordから最新のセキュリティイベントを取得
+    const ViolationRecord = require('../models/ViolationRecord');
+    
+    const events = await ViolationRecord.find()
+      .sort({ timestamp: -1 })
+      .limit(50)
+      .populate('userId', 'email name')
+      .lean();
+
+    // フロントエンド用フォーマットに変換
+    const formattedEvents = events.map((event: any) => ({
+      id: event._id.toString(),
+      type: event.violationType === 'blocked_word' ? 'content_violation' : 'ai_moderation',
+      severity: event.severityLevel === 3 ? 'high' : event.severityLevel === 2 ? 'medium' : 'low',
+      message: event.reason,
+      timestamp: event.timestamp.toISOString(),
+      ipAddress: event.ipAddress,
+      userAgent: event.userAgent,
+      userId: event.userId?._id?.toString(),
+      userEmail: event.userId?.email,
+      detectedWord: event.detectedWord,
+      messageContent: event.messageContent?.substring(0, 100) + '...',
+      isResolved: event.isResolved,
+      resolvedBy: event.resolvedBy,
+      resolvedAt: event.resolvedAt
+    }));
+
+    console.log('📊 Security events API called:', { eventsCount: formattedEvents.length });
+    
+    res.json({
+      events: formattedEvents,
+      totalCount: events.length,
+      stats: {
+        high: formattedEvents.filter((e: any) => e.severity === 'high').length,
+        medium: formattedEvents.filter((e: any) => e.severity === 'medium').length,
+        low: formattedEvents.filter((e: any) => e.severity === 'low').length,
+        unresolved: formattedEvents.filter((e: any) => !e.isResolved).length
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Security events API error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'セキュリティイベントの取得に失敗しました'
+    });
+  }
+});
+
+// 🔧 違反解決API
+app.post('/api/admin/resolve-violation/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database connection required' });
+      return;
+    }
+
+    const { id } = req.params;
+    const { notes } = req.body;
+    
+    const ViolationRecord = require('../models/ViolationRecord');
+    
+    const violation = await ViolationRecord.findByIdAndUpdate(
+      id,
+      {
+        isResolved: true,
+        resolvedBy: req.user?._id,
+        resolvedAt: new Date(),
+        adminNotes: notes || '管理者により解決済み'
+      },
+      { new: true }
+    );
+
+    if (!violation) {
+      res.status(404).json({ error: 'Violation record not found' });
+      return;
+    }
+
+    console.log('✅ Violation resolved:', { violationId: id, resolvedBy: req.user?._id });
+    
+    res.json({
+      success: true,
+      message: '違反記録が解決済みになりました',
+      violation: {
+        id: violation._id.toString(),
+        isResolved: violation.isResolved,
+        resolvedAt: violation.resolvedAt,
+        resolvedBy: violation.resolvedBy
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Resolve violation API error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: '違反の解決処理に失敗しました'
+    });
+  }
+});
+
+// 📊 セキュリティ統計API
+app.get('/api/admin/security-stats', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database connection required' });
+      return;
+    }
+
+    const ViolationRecord = require('../models/ViolationRecord');
+    
+    const now = new Date();
+    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const [total, last24hCount, last7dCount, unresolvedCount] = await Promise.all([
+      ViolationRecord.countDocuments(),
+      ViolationRecord.countDocuments({ timestamp: { $gte: last24h } }),
+      ViolationRecord.countDocuments({ timestamp: { $gte: last7d } }),
+      ViolationRecord.countDocuments({ isResolved: false })
+    ]);
+
+    res.json({
+      total,
+      last24h: last24hCount,
+      last7d: last7dCount,
+      unresolved: unresolvedCount,
+      resolvedRate: total > 0 ? ((total - unresolvedCount) / total * 100).toFixed(1) : '0'
+    });
+
+  } catch (error) {
+    console.error('❌ Security stats API error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'セキュリティ統計の取得に失敗しました'
+    });
+  }
+});
+
+// 📊 トークン使用量分析API群
+// =================================
+
+// 📈 包括的トークン使用量統計API
+app.get('/api/admin/token-analytics/overview', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database connection required' });
+      return;
+    }
+
+    const { days = 30, granularity = 'daily' } = req.query;
+    const daysNumber = parseInt(days as string);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysNumber);
+
+    // 集計クエリを実行
+    const [
+      overallStats,
+      dailyBreakdown,
+      modelBreakdown,
+      profitAnalysis,
+      topUsers,
+      topCharacters
+    ] = await Promise.all([
+      // 1. 全体統計
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: null,
+            totalTokensUsed: { $sum: '$tokensUsed' },
+            totalInputTokens: { $sum: '$inputTokens' },
+            totalOutputTokens: { $sum: '$outputTokens' },
+            totalApiCost: { $sum: '$apiCost' },
+            totalApiCostYen: { $sum: '$apiCostYen' },
+            totalGrossProfit: { $sum: '$grossProfit' },
+            totalMessages: { $sum: 1 },
+            avgTokensPerMessage: { $avg: '$tokensUsed' },
+            avgProfitMargin: { $avg: '$profitMargin' },
+            maxTokensInMessage: { $max: '$tokensUsed' },
+            minTokensInMessage: { $min: '$tokensUsed' }
+          }
+        }
+      ]),
+
+      // 2. 日別内訳
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: {
+              year: { $year: '$createdAt' },
+              month: { $month: '$createdAt' },
+              day: { $dayOfMonth: '$createdAt' }
+            },
+            tokensUsed: { $sum: '$tokensUsed' },
+            apiCostYen: { $sum: '$apiCostYen' },
+            grossProfit: { $sum: '$grossProfit' },
+            messageCount: { $sum: 1 },
+            avgProfitMargin: { $avg: '$profitMargin' },
+            uniqueUsers: { $addToSet: '$userId' }
+          }
+        },
+        {
+          $addFields: {
+            uniqueUserCount: { $size: '$uniqueUsers' },
+            date: {
+              $dateFromParts: {
+                year: '$_id.year',
+                month: '$_id.month',
+                day: '$_id.day'
+              }
+            }
+          }
+        },
+        { $sort: { date: 1 } }
+      ]),
+
+      // 3. モデル別内訳
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: '$model',
+            tokensUsed: { $sum: '$tokensUsed' },
+            inputTokens: { $sum: '$inputTokens' },
+            outputTokens: { $sum: '$outputTokens' },
+            apiCostYen: { $sum: '$apiCostYen' },
+            grossProfit: { $sum: '$grossProfit' },
+            messageCount: { $sum: 1 },
+            avgProfitMargin: { $avg: '$profitMargin' },
+            avgTokensPerMessage: { $avg: '$tokensUsed' }
+          }
+        },
+        { $sort: { tokensUsed: -1 } }
+      ]),
+
+      // 4. 利益分析
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$grossProfit' },
+            totalCost: { $sum: '$apiCostYen' },
+            profitableMessages: {
+              $sum: { $cond: [{ $gte: ['$profitMargin', 0.5] }, 1, 0] }
+            },
+            lowProfitMessages: {
+              $sum: { $cond: [{ $lt: ['$profitMargin', 0.5] }, 1, 0] }
+            },
+            highCostMessages: {
+              $sum: { $cond: [{ $gt: ['$apiCostYen', 50] }, 1, 0] }
+            }
+          }
+        }
+      ]),
+
+      // 5. トップユーザー（トークン消費量）
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: '$userId',
+            tokensUsed: { $sum: '$tokensUsed' },
+            apiCostYen: { $sum: '$apiCostYen' },
+            grossProfit: { $sum: '$grossProfit' },
+            messageCount: { $sum: 1 },
+            avgTokensPerMessage: { $avg: '$tokensUsed' }
+          }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        {
+          $project: {
+            userId: '$_id',
+            userName: { $ifNull: [{ $arrayElemAt: ['$user.name', 0] }, 'Unknown'] },
+            userEmail: { $ifNull: [{ $arrayElemAt: ['$user.email', 0] }, 'Unknown'] },
+            tokensUsed: 1,
+            apiCostYen: 1,
+            grossProfit: 1,
+            messageCount: 1,
+            avgTokensPerMessage: 1
+          }
+        },
+        { $sort: { tokensUsed: -1 } },
+        { $limit: 10 }
+      ]),
+
+      // 6. トップキャラクター（利用頻度）
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: '$characterId',
+            tokensUsed: { $sum: '$tokensUsed' },
+            apiCostYen: { $sum: '$apiCostYen' },
+            grossProfit: { $sum: '$grossProfit' },
+            messageCount: { $sum: 1 },
+            uniqueUsers: { $addToSet: '$userId' },
+            avgTokensPerMessage: { $avg: '$tokensUsed' }
+          }
+        },
+        {
+          $addFields: {
+            uniqueUserCount: { $size: '$uniqueUsers' }
+          }
+        },
+        {
+          $lookup: {
+            from: 'characters',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'character'
+          }
+        },
+        {
+          $project: {
+            characterId: '$_id',
+            characterName: { $ifNull: [{ $arrayElemAt: ['$character.name.ja', 0] }, 'Unknown'] },
+            tokensUsed: 1,
+            apiCostYen: 1,
+            grossProfit: 1,
+            messageCount: 1,
+            uniqueUserCount: 1,
+            avgTokensPerMessage: 1
+          }
+        },
+        { $sort: { tokensUsed: -1 } },
+        { $limit: 10 }
+      ])
+    ]);
+
+    // レスポンスデータの構築
+    const stats = overallStats[0] || {
+      totalTokensUsed: 0,
+      totalInputTokens: 0,
+      totalOutputTokens: 0,
+      totalApiCost: 0,
+      totalApiCostYen: 0,
+      totalGrossProfit: 0,
+      totalMessages: 0,
+      avgTokensPerMessage: 0,
+      avgProfitMargin: 0,
+      maxTokensInMessage: 0,
+      minTokensInMessage: 0
+    };
+
+    const profit = profitAnalysis[0] || {
+      totalRevenue: 0,
+      totalCost: 0,
+      profitableMessages: 0,
+      lowProfitMessages: 0,
+      highCostMessages: 0
+    };
+
+    const netProfit = profit.totalRevenue - profit.totalCost;
+    const netProfitMargin = profit.totalRevenue > 0 ? (netProfit / profit.totalRevenue) : 0;
+
+    res.json({
+      period: `${daysNumber}日間`,
+      overview: {
+        totalTokensUsed: stats.totalTokensUsed,
+        totalInputTokens: stats.totalInputTokens,
+        totalOutputTokens: stats.totalOutputTokens,
+        totalMessages: stats.totalMessages,
+        avgTokensPerMessage: parseFloat(stats.avgTokensPerMessage?.toFixed(2) || '0'),
+        maxTokensInMessage: stats.maxTokensInMessage,
+        minTokensInMessage: stats.minTokensInMessage
+      },
+      financial: {
+        totalApiCostUsd: parseFloat(stats.totalApiCost?.toFixed(4) || '0'),
+        totalApiCostYen: parseFloat(stats.totalApiCostYen?.toFixed(2) || '0'),
+        totalGrossProfit: parseFloat(stats.totalGrossProfit?.toFixed(2) || '0'),
+        netProfit: parseFloat(netProfit.toFixed(2)),
+        netProfitMargin: parseFloat((netProfitMargin * 100).toFixed(2)),
+        avgProfitMargin: parseFloat((stats.avgProfitMargin * 100).toFixed(2) || '0'),
+        profitableMessageRate: stats.totalMessages > 0 ? parseFloat(((profit.profitableMessages / stats.totalMessages) * 100).toFixed(2)) : 0,
+        highCostMessageCount: profit.highCostMessages
+      },
+      breakdown: {
+        daily: dailyBreakdown.map(day => ({
+          date: day.date.toISOString().split('T')[0],
+          tokensUsed: day.tokensUsed,
+          apiCostYen: parseFloat(day.apiCostYen.toFixed(2)),
+          grossProfit: parseFloat(day.grossProfit.toFixed(2)),
+          messageCount: day.messageCount,
+          uniqueUsers: day.uniqueUserCount,
+          avgProfitMargin: parseFloat((day.avgProfitMargin * 100).toFixed(2))
+        })),
+        byModel: modelBreakdown.map(model => ({
+          model: model._id,
+          tokensUsed: model.tokensUsed,
+          inputTokens: model.inputTokens,
+          outputTokens: model.outputTokens,
+          apiCostYen: parseFloat(model.apiCostYen.toFixed(2)),
+          grossProfit: parseFloat(model.grossProfit.toFixed(2)),
+          messageCount: model.messageCount,
+          avgProfitMargin: parseFloat((model.avgProfitMargin * 100).toFixed(2)),
+          avgTokensPerMessage: parseFloat(model.avgTokensPerMessage.toFixed(2))
+        }))
+      },
+      topUsers: topUsers.map(user => ({
+        userId: user.userId,
+        userName: user.userName,
+        userEmail: user.userEmail,
+        tokensUsed: user.tokensUsed,
+        apiCostYen: parseFloat(user.apiCostYen.toFixed(2)),
+        grossProfit: parseFloat(user.grossProfit.toFixed(2)),
+        messageCount: user.messageCount,
+        avgTokensPerMessage: parseFloat(user.avgTokensPerMessage.toFixed(2))
+      })),
+      topCharacters: topCharacters.map(char => ({
+        characterId: char.characterId,
+        characterName: char.characterName,
+        tokensUsed: char.tokensUsed,
+        apiCostYen: parseFloat(char.apiCostYen.toFixed(2)),
+        grossProfit: parseFloat(char.grossProfit.toFixed(2)),
+        messageCount: char.messageCount,
+        uniqueUsers: char.uniqueUserCount,
+        avgTokensPerMessage: parseFloat(char.avgTokensPerMessage.toFixed(2))
+      }))
+    });
+
+  } catch (error) {
+    console.error('❌ Token analytics overview API error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'トークン分析データの取得に失敗しました'
+    });
+  }
+});
+
+// 📊 利益分析詳細API
+app.get('/api/admin/token-analytics/profit-analysis', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database connection required' });
+      return;
+    }
+
+    const { days = 30, minProfitMargin = 0 } = req.query;
+    const daysNumber = parseInt(days as string);
+    const minMargin = parseFloat(minProfitMargin as string);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysNumber);
+
+    const [
+      profitDistribution,
+      modelProfitability,
+      lowProfitMessages,
+      highCostAnalysis,
+      timeBasedProfits
+    ] = await Promise.all([
+      // 利益率分布
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $bucket: {
+            groupBy: '$profitMargin',
+            boundaries: [0, 0.3, 0.5, 0.7, 0.9, 1.0],
+            default: 'above_100%',
+            output: {
+              count: { $sum: 1 },
+              avgApiCost: { $avg: '$apiCostYen' },
+              avgGrossProfit: { $avg: '$grossProfit' },
+              totalTokens: { $sum: '$tokensUsed' }
+            }
+          }
+        }
+      ]),
+
+      // モデル別利益性
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: '$model',
+            avgProfitMargin: { $avg: '$profitMargin' },
+            totalApiCost: { $sum: '$apiCostYen' },
+            totalGrossProfit: { $sum: '$grossProfit' },
+            messageCount: { $sum: 1 },
+            avgInputTokens: { $avg: '$inputTokens' },
+            avgOutputTokens: { $avg: '$outputTokens' },
+            costPerToken: { $avg: { $divide: ['$apiCostYen', '$tokensUsed'] } }
+          }
+        },
+        { $sort: { avgProfitMargin: -1 } }
+      ]),
+
+      // 低利益メッセージ分析
+      TokenUsage.aggregate([
+        { 
+          $match: { 
+            createdAt: { $gte: startDate },
+            profitMargin: { $lt: 0.5 }
+          } 
+        },
+        {
+          $group: {
+            _id: '$characterId',
+            count: { $sum: 1 },
+            avgProfitMargin: { $avg: '$profitMargin' },
+            avgTokensUsed: { $avg: '$tokensUsed' },
+            avgApiCost: { $avg: '$apiCostYen' }
+          }
+        },
+        {
+          $lookup: {
+            from: 'characters',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'character'
+          }
+        },
+        {
+          $project: {
+            characterName: { $ifNull: [{ $arrayElemAt: ['$character.name.ja', 0] }, 'Unknown'] },
+            count: 1,
+            avgProfitMargin: 1,
+            avgTokensUsed: 1,
+            avgApiCost: 1
+          }
+        },
+        { $sort: { count: -1 } },
+        { $limit: 10 }
+      ]),
+
+      // 高コストメッセージ分析
+      TokenUsage.aggregate([
+        { 
+          $match: { 
+            createdAt: { $gte: startDate },
+            apiCostYen: { $gt: 50 }
+          } 
+        },
+        {
+          $group: {
+            _id: {
+              model: '$model',
+              costRange: {
+                $switch: {
+                  branches: [
+                    { case: { $lte: ['$apiCostYen', 100] }, then: '50-100円' },
+                    { case: { $lte: ['$apiCostYen', 200] }, then: '100-200円' },
+                    { case: { $lte: ['$apiCostYen', 500] }, then: '200-500円' }
+                  ],
+                  default: '500円以上'
+                }
+              }
+            },
+            count: { $sum: 1 },
+            avgTokensUsed: { $avg: '$tokensUsed' },
+            avgApiCost: { $avg: '$apiCostYen' },
+            avgProfitMargin: { $avg: '$profitMargin' }
+          }
+        },
+        { $sort: { '_id.model': 1, '_id.costRange': 1 } }
+      ]),
+
+      // 時間別利益推移
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: {
+              hour: { $hour: '$createdAt' }
+            },
+            avgProfitMargin: { $avg: '$profitMargin' },
+            totalApiCost: { $sum: '$apiCostYen' },
+            totalGrossProfit: { $sum: '$grossProfit' },
+            messageCount: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id.hour': 1 } }
+      ])
+    ]);
+
+    res.json({
+      period: `${daysNumber}日間`,
+      profitDistribution: profitDistribution.map(bucket => ({
+        marginRange: bucket._id === 'above_100%' ? '100%以上' : `${(bucket._id * 100).toFixed(0)}%以上`,
+        messageCount: bucket.count,
+        avgApiCost: parseFloat(bucket.avgApiCost.toFixed(2)),
+        avgGrossProfit: parseFloat(bucket.avgGrossProfit.toFixed(2)),
+        totalTokens: bucket.totalTokens
+      })),
+      modelProfitability: modelProfitability.map(model => ({
+        model: model._id,
+        avgProfitMargin: parseFloat((model.avgProfitMargin * 100).toFixed(2)),
+        totalApiCost: parseFloat(model.totalApiCost.toFixed(2)),
+        totalGrossProfit: parseFloat(model.totalGrossProfit.toFixed(2)),
+        netProfit: parseFloat((model.totalGrossProfit - model.totalApiCost).toFixed(2)),
+        messageCount: model.messageCount,
+        avgInputTokens: parseFloat(model.avgInputTokens.toFixed(1)),
+        avgOutputTokens: parseFloat(model.avgOutputTokens.toFixed(1)),
+        costPerToken: parseFloat(model.costPerToken.toFixed(6))
+      })),
+      lowProfitAnalysis: lowProfitMessages.map(char => ({
+        characterName: char.characterName,
+        lowProfitCount: char.count,
+        avgProfitMargin: parseFloat((char.avgProfitMargin * 100).toFixed(2)),
+        avgTokensUsed: parseFloat(char.avgTokensUsed.toFixed(1)),
+        avgApiCost: parseFloat(char.avgApiCost.toFixed(2))
+      })),
+      highCostAnalysis: highCostAnalysis.map(item => ({
+        model: item._id.model,
+        costRange: item._id.costRange,
+        count: item.count,
+        avgTokensUsed: parseFloat(item.avgTokensUsed.toFixed(1)),
+        avgApiCost: parseFloat(item.avgApiCost.toFixed(2)),
+        avgProfitMargin: parseFloat((item.avgProfitMargin * 100).toFixed(2))
+      })),
+      hourlyProfitTrends: timeBasedProfits.map(hour => ({
+        hour: hour._id.hour,
+        avgProfitMargin: parseFloat((hour.avgProfitMargin * 100).toFixed(2)),
+        totalApiCost: parseFloat(hour.totalApiCost.toFixed(2)),
+        totalGrossProfit: parseFloat(hour.totalGrossProfit.toFixed(2)),
+        netProfit: parseFloat((hour.totalGrossProfit - hour.totalApiCost).toFixed(2)),
+        messageCount: hour.messageCount
+      }))
+    });
+
+  } catch (error) {
+    console.error('❌ Profit analysis API error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: '利益分析データの取得に失敗しました'
+    });
+  }
+});
+
+// 📈 トークン使用量トレンドAPI
+app.get('/api/admin/token-analytics/usage-trends', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database connection required' });
+      return;
+    }
+
+    const { days = 30, granularity = 'daily' } = req.query;
+    const daysNumber = parseInt(days as string);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysNumber);
+
+    let groupBy: any;
+    let sortBy: any;
+
+    // 粒度に応じてグループ化を変更
+    if (granularity === 'hourly' && daysNumber <= 7) {
+      groupBy = {
+        year: { $year: '$createdAt' },
+        month: { $month: '$createdAt' },
+        day: { $dayOfMonth: '$createdAt' },
+        hour: { $hour: '$createdAt' }
+      };
+      sortBy = { '_id.year': 1, '_id.month': 1, '_id.day': 1, '_id.hour': 1 };
+    } else if (granularity === 'weekly' || daysNumber > 90) {
+      groupBy = {
+        year: { $year: '$createdAt' },
+        week: { $week: '$createdAt' }
+      };
+      sortBy = { '_id.year': 1, '_id.week': 1 };
+    } else {
+      groupBy = {
+        year: { $year: '$createdAt' },
+        month: { $month: '$createdAt' },
+        day: { $dayOfMonth: '$createdAt' }
+      };
+      sortBy = { '_id.year': 1, '_id.month': 1, '_id.day': 1 };
+    }
+
+    const [
+      usageTrends,
+      tokenTypeBreakdown,
+      platformBreakdown,
+      peakUsageAnalysis
+    ] = await Promise.all([
+      // 使用量トレンド
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: groupBy,
+            totalTokens: { $sum: '$tokensUsed' },
+            inputTokens: { $sum: '$inputTokens' },
+            outputTokens: { $sum: '$outputTokens' },
+            messageCount: { $sum: 1 },
+            uniqueUsers: { $addToSet: '$userId' },
+            uniqueCharacters: { $addToSet: '$characterId' },
+            avgTokensPerMessage: { $avg: '$tokensUsed' },
+            maxTokensInPeriod: { $max: '$tokensUsed' },
+            apiCost: { $sum: '$apiCostYen' }
+          }
+        },
+        {
+          $addFields: {
+            uniqueUserCount: { $size: '$uniqueUsers' },
+            uniqueCharacterCount: { $size: '$uniqueCharacters' }
+          }
+        },
+        { $sort: sortBy }
+      ]),
+
+      // トークンタイプ別内訳
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: '$tokenType',
+            totalTokens: { $sum: '$tokensUsed' },
+            messageCount: { $sum: 1 },
+            avgTokensPerMessage: { $avg: '$tokensUsed' },
+            apiCost: { $sum: '$apiCostYen' }
+          }
+        },
+        { $sort: { totalTokens: -1 } }
+      ]),
+
+      // プラットフォーム別内訳
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: '$platform',
+            totalTokens: { $sum: '$tokensUsed' },
+            messageCount: { $sum: 1 },
+            uniqueUsers: { $addToSet: '$userId' },
+            avgTokensPerMessage: { $avg: '$tokensUsed' },
+            apiCost: { $sum: '$apiCostYen' }
+          }
+        },
+        {
+          $addFields: {
+            uniqueUserCount: { $size: '$uniqueUsers' }
+          }
+        },
+        { $sort: { totalTokens: -1 } }
+      ]),
+
+      // ピーク使用量分析
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: {
+              hour: { $hour: '$createdAt' },
+              dayOfWeek: { $dayOfWeek: '$createdAt' }
+            },
+            totalTokens: { $sum: '$tokensUsed' },
+            messageCount: { $sum: 1 },
+            avgTokensPerMessage: { $avg: '$tokensUsed' }
+          }
+        },
+        { $sort: { totalTokens: -1 } },
+        { $limit: 20 }
+      ])
+    ]);
+
+    // トレンドデータの整形
+    const trends = usageTrends.map(item => {
+      let timeLabel: string;
+      
+      if (item._id.hour !== undefined) {
+        timeLabel = `${item._id.year}-${String(item._id.month).padStart(2, '0')}-${String(item._id.day).padStart(2, '0')} ${String(item._id.hour).padStart(2, '0')}:00`;
+      } else if (item._id.week !== undefined) {
+        timeLabel = `${item._id.year}年第${item._id.week}週`;
+      } else {
+        timeLabel = `${item._id.year}-${String(item._id.month).padStart(2, '0')}-${String(item._id.day).padStart(2, '0')}`;
+      }
+
+      return {
+        period: timeLabel,
+        totalTokens: item.totalTokens,
+        inputTokens: item.inputTokens,
+        outputTokens: item.outputTokens,
+        messageCount: item.messageCount,
+        uniqueUsers: item.uniqueUserCount,
+        uniqueCharacters: item.uniqueCharacterCount,
+        avgTokensPerMessage: parseFloat(item.avgTokensPerMessage.toFixed(2)),
+        maxTokensInPeriod: item.maxTokensInPeriod,
+        apiCost: parseFloat(item.apiCost.toFixed(2)),
+        tokensPerUser: item.uniqueUserCount > 0 ? parseFloat((item.totalTokens / item.uniqueUserCount).toFixed(2)) : 0
+      };
+    });
+
+    // 曜日名マッピング
+    const dayNames = ['', '日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
+
+    res.json({
+      period: `${daysNumber}日間`,
+      granularity,
+      trends,
+      breakdown: {
+        byTokenType: tokenTypeBreakdown.map(type => ({
+          tokenType: type._id,
+          totalTokens: type.totalTokens,
+          messageCount: type.messageCount,
+          avgTokensPerMessage: parseFloat(type.avgTokensPerMessage.toFixed(2)),
+          apiCost: parseFloat(type.apiCost.toFixed(2)),
+          sharePercentage: parseFloat(((type.totalTokens / usageTrends.reduce((sum, t) => sum + t.totalTokens, 0)) * 100).toFixed(2))
+        })),
+        byPlatform: platformBreakdown.map(platform => ({
+          platform: platform._id,
+          totalTokens: platform.totalTokens,
+          messageCount: platform.messageCount,
+          uniqueUsers: platform.uniqueUserCount,
+          avgTokensPerMessage: parseFloat(platform.avgTokensPerMessage.toFixed(2)),
+          apiCost: parseFloat(platform.apiCost.toFixed(2)),
+          tokensPerUser: platform.uniqueUserCount > 0 ? parseFloat((platform.totalTokens / platform.uniqueUserCount).toFixed(2)) : 0
+        }))
+      },
+      peakUsage: peakUsageAnalysis.map(peak => ({
+        hour: peak._id.hour,
+        dayOfWeek: dayNames[peak._id.dayOfWeek],
+        totalTokens: peak.totalTokens,
+        messageCount: peak.messageCount,
+        avgTokensPerMessage: parseFloat(peak.avgTokensPerMessage.toFixed(2))
+      })),
+      summary: {
+        totalPeriods: trends.length,
+        avgTokensPerPeriod: trends.length > 0 ? parseFloat((trends.reduce((sum, t) => sum + t.totalTokens, 0) / trends.length).toFixed(2)) : 0,
+        peakTokensInPeriod: Math.max(...trends.map(t => t.totalTokens)),
+        mostActiveDay: peakUsageAnalysis[0] ? `${dayNames[peakUsageAnalysis[0]._id.dayOfWeek]} ${peakUsageAnalysis[0]._id.hour}時` : 'N/A'
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Usage trends API error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: '使用量トレンドデータの取得に失敗しました'
+    });
+  }
+});
+
+// 🔍 異常使用検知API
+app.get('/api/admin/token-analytics/anomaly-detection', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database connection required' });
+      return;
+    }
+
+    const { hours = 24 } = req.query;
+    const hoursNumber = parseInt(hours as string);
+    const startDate = new Date();
+    startDate.setHours(startDate.getHours() - hoursNumber);
+
+    const [
+      suspiciousUsers,
+      abnormalMessages,
+      costAnomalies,
+      frequencyAnomalies
+    ] = await Promise.all([
+      // 疑わしいユーザー（異常な使用量）
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: '$userId',
+            totalTokens: { $sum: '$tokensUsed' },
+            messageCount: { $sum: 1 },
+            totalCost: { $sum: '$apiCostYen' },
+            avgTokensPerMessage: { $avg: '$tokensUsed' },
+            maxTokensInMessage: { $max: '$tokensUsed' },
+            distinctCharacters: { $addToSet: '$characterId' },
+            firstMessage: { $min: '$createdAt' },
+            lastMessage: { $max: '$createdAt' }
+          }
+        },
+        {
+          $addFields: {
+            characterCount: { $size: '$distinctCharacters' },
+            timeSpanHours: { $divide: [{ $subtract: ['$lastMessage', '$firstMessage'] }, 3600000] }
+          }
+        },
+        {
+          $match: {
+            $or: [
+              { totalTokens: { $gt: 20000 } }, // 24時間で20k tokens以上
+              { avgTokensPerMessage: { $gt: 3000 } }, // 1メッセージ3k tokens以上
+              { totalCost: { $gt: 1000 } }, // 24時間で1000円以上
+              { messageCount: { $gt: 200 } } // 24時間で200メッセージ以上
+            ]
+          }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        {
+          $project: {
+            userId: '$_id',
+            userName: { $ifNull: [{ $arrayElemAt: ['$user.name', 0] }, 'Unknown'] },
+            userEmail: { $ifNull: [{ $arrayElemAt: ['$user.email', 0] }, 'Unknown'] },
+            totalTokens: 1,
+            messageCount: 1,
+            totalCost: 1,
+            avgTokensPerMessage: 1,
+            maxTokensInMessage: 1,
+            characterCount: 1,
+            timeSpanHours: 1,
+            anomalyScore: {
+              $add: [
+                { $cond: [{ $gt: ['$totalTokens', 20000] }, 3, 0] },
+                { $cond: [{ $gt: ['$avgTokensPerMessage', 3000] }, 3, 0] },
+                { $cond: [{ $gt: ['$totalCost', 1000] }, 2, 0] },
+                { $cond: [{ $gt: ['$messageCount', 200] }, 2, 0] }
+              ]
+            }
+          }
+        },
+        { $sort: { anomalyScore: -1, totalTokens: -1 } },
+        { $limit: 20 }
+      ]),
+
+      // 異常メッセージ（高トークン使用）
+      TokenUsage.aggregate([
+        { 
+          $match: { 
+            createdAt: { $gte: startDate },
+            tokensUsed: { $gt: 2000 }
+          } 
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        {
+          $lookup: {
+            from: 'characters',
+            localField: 'characterId',
+            foreignField: '_id',
+            as: 'character'
+          }
+        },
+        {
+          $project: {
+            userId: 1,
+            userName: { $ifNull: [{ $arrayElemAt: ['$user.name', 0] }, 'Unknown'] },
+            characterName: { $ifNull: [{ $arrayElemAt: ['$character.name.ja', 0] }, 'Unknown'] },
+            tokensUsed: 1,
+            inputTokens: 1,
+            outputTokens: 1,
+            apiCostYen: 1,
+            model: 1,
+            createdAt: 1,
+            messageLength: { $strLenCP: '$messageContent' },
+            responseLength: { $strLenCP: '$responseContent' }
+          }
+        },
+        { $sort: { tokensUsed: -1 } },
+        { $limit: 50 }
+      ]),
+
+      // コスト異常（高額API使用）
+      TokenUsage.aggregate([
+        { 
+          $match: { 
+            createdAt: { $gte: startDate },
+            apiCostYen: { $gt: 100 }
+          } 
+        },
+        {
+          $group: {
+            _id: {
+              userId: '$userId',
+              model: '$model'
+            },
+            totalCost: { $sum: '$apiCostYen' },
+            messageCount: { $sum: 1 },
+            avgCost: { $avg: '$apiCostYen' },
+            maxCost: { $max: '$apiCostYen' },
+            totalTokens: { $sum: '$tokensUsed' }
+          }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: '_id.userId',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        {
+          $project: {
+            userId: '$_id.userId',
+            model: '$_id.model',
+            userName: { $ifNull: [{ $arrayElemAt: ['$user.name', 0] }, 'Unknown'] },
+            totalCost: 1,
+            messageCount: 1,
+            avgCost: 1,
+            maxCost: 1,
+            totalTokens: 1
+          }
+        },
+        { $sort: { totalCost: -1 } },
+        { $limit: 20 }
+      ]),
+
+      // 頻度異常（短時間での大量使用）
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: {
+              userId: '$userId',
+              hour: { $hour: '$createdAt' },
+              day: { $dayOfMonth: '$createdAt' }
+            },
+            messageCount: { $sum: 1 },
+            totalTokens: { $sum: '$tokensUsed' },
+            totalCost: { $sum: '$apiCostYen' }
+          }
+        },
+        {
+          $match: {
+            $or: [
+              { messageCount: { $gt: 50 } }, // 1時間で50メッセージ以上
+              { totalTokens: { $gt: 5000 } } // 1時間で5k tokens以上
+            ]
+          }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: '_id.userId',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        {
+          $project: {
+            userId: '$_id.userId',
+            hour: '$_id.hour',
+            day: '$_id.day',
+            userName: { $ifNull: [{ $arrayElemAt: ['$user.name', 0] }, 'Unknown'] },
+            messageCount: 1,
+            totalTokens: 1,
+            totalCost: 1
+          }
+        },
+        { $sort: { messageCount: -1 } },
+        { $limit: 30 }
+      ])
+    ]);
+
+    res.json({
+      period: `過去${hoursNumber}時間`,
+      suspiciousUsers: suspiciousUsers.map(user => ({
+        userId: user.userId,
+        userName: user.userName,
+        userEmail: user.userEmail,
+        totalTokens: user.totalTokens,
+        messageCount: user.messageCount,
+        totalCost: parseFloat(user.totalCost.toFixed(2)),
+        avgTokensPerMessage: parseFloat(user.avgTokensPerMessage.toFixed(2)),
+        maxTokensInMessage: user.maxTokensInMessage,
+        characterCount: user.characterCount,
+        timeSpanHours: parseFloat(user.timeSpanHours.toFixed(2)),
+        anomalyScore: user.anomalyScore,
+        riskLevel: user.anomalyScore >= 5 ? 'high' : user.anomalyScore >= 3 ? 'medium' : 'low'
+      })),
+      abnormalMessages: abnormalMessages.map(msg => ({
+        userId: msg.userId,
+        userName: msg.userName,
+        characterName: msg.characterName,
+        tokensUsed: msg.tokensUsed,
+        inputTokens: msg.inputTokens,
+        outputTokens: msg.outputTokens,
+        apiCostYen: parseFloat(msg.apiCostYen.toFixed(2)),
+        model: msg.model,
+        messageLength: msg.messageLength,
+        responseLength: msg.responseLength,
+        createdAt: msg.createdAt,
+        efficiency: msg.messageLength > 0 ? parseFloat((msg.tokensUsed / msg.messageLength).toFixed(3)) : 0
+      })),
+      costAnomalies: costAnomalies.map(item => ({
+        userId: item.userId,
+        userName: item.userName,
+        model: item.model,
+        totalCost: parseFloat(item.totalCost.toFixed(2)),
+        messageCount: item.messageCount,
+        avgCost: parseFloat(item.avgCost.toFixed(2)),
+        maxCost: parseFloat(item.maxCost.toFixed(2)),
+        totalTokens: item.totalTokens,
+        costPerToken: parseFloat((item.totalCost / item.totalTokens).toFixed(6))
+      })),
+      frequencyAnomalies: frequencyAnomalies.map(item => ({
+        userId: item.userId,
+        userName: item.userName,
+        timeSlot: `${item.day}日 ${item.hour}時台`,
+        messageCount: item.messageCount,
+        totalTokens: item.totalTokens,
+        totalCost: parseFloat(item.totalCost.toFixed(2)),
+        messagesPerMinute: parseFloat((item.messageCount / 60).toFixed(2))
+      })),
+      summary: {
+        totalSuspiciousUsers: suspiciousUsers.length,
+        totalAbnormalMessages: abnormalMessages.length,
+        totalCostAnomalies: costAnomalies.length,
+        totalFrequencyAnomalies: frequencyAnomalies.length,
+        highRiskUsers: suspiciousUsers.filter(u => u.anomalyScore >= 5).length,
+        mediumRiskUsers: suspiciousUsers.filter(u => u.anomalyScore >= 3 && u.anomalyScore < 5).length
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Anomaly detection API error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: '異常検知データの取得に失敗しました'
+    });
+  }
+});
+
+// ================================
+// 🎯 CharacterPromptCache Performance API Endpoints
+// ================================
+
+/**
+ * 📊 キャッシュパフォーマンス総合メトリクス取得
+ */
+app.get('/api/admin/cache/performance', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('📊 Cache performance metrics requested by admin:', req.user?._id);
+    
+    const timeframe = parseInt(req.query.timeframe as string) || 30; // デフォルト30日
+    
+    if (!isMongoConnected) {
+      res.status(503).json({
+        error: 'Database not connected',
+        message: 'データベース接続が必要です'
+      });
+      return;
+    }
+
+    const metrics = await getCachePerformanceMetrics(timeframe);
+    
+    console.log('✅ Cache performance metrics retrieved:', {
+      totalCaches: metrics.totalCaches,
+      hitRatio: metrics.hitRatio,
+      charactersAnalyzed: metrics.cachesByCharacter.length
+    });
+
+    res.json({
+      success: true,
+      data: metrics,
+      timestamp: new Date(),
+      timeframe: timeframe
+    });
+
+  } catch (error) {
+    console.error('❌ Cache performance metrics error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'キャッシュパフォーマンス取得に失敗しました'
+    });
+  }
+});
+
+/**
+ * 📈 キャラクター別キャッシュ統計取得
+ */
+app.get('/api/admin/cache/characters', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('📈 Character cache stats requested by admin:', req.user?._id);
+    
+    const timeframe = parseInt(req.query.timeframe as string) || 30;
+    
+    if (!isMongoConnected) {
+      res.status(503).json({
+        error: 'Database not connected',
+        message: 'データベース接続が必要です'
+      });
+      return;
+    }
+
+    const characters = await CharacterModel.find({ isActive: true });
+    const characterStats = await getCacheStatsByCharacter(characters, timeframe);
+    
+    console.log('✅ Character cache stats retrieved for', characterStats.length, 'characters');
+
+    res.json({
+      success: true,
+      data: characterStats,
+      timestamp: new Date(),
+      timeframe: timeframe
+    });
+
+  } catch (error) {
+    console.error('❌ Character cache stats error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'キャラクター別キャッシュ統計取得に失敗しました'
+    });
+  }
+});
+
+/**
+ * 🏆 トップパフォーマンスキャッシュ取得
+ */
+app.get('/api/admin/cache/top-performing', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('🏆 Top performing caches requested by admin:', req.user?._id);
+    
+    const limit = parseInt(req.query.limit as string) || 20;
+    
+    if (!isMongoConnected) {
+      res.status(503).json({
+        error: 'Database not connected',
+        message: 'データベース接続が必要です'
+      });
+      return;
+    }
+
+    const characters = await CharacterModel.find({ isActive: true });
+    const topCaches = await getTopPerformingCaches(characters, limit);
+    
+    console.log('✅ Top performing caches retrieved:', topCaches.length);
+
+    res.json({
+      success: true,
+      data: topCaches,
+      timestamp: new Date(),
+      limit: limit
+    });
+
+  } catch (error) {
+    console.error('❌ Top performing caches error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'トップパフォーマンスキャッシュ取得に失敗しました'
+    });
+  }
+});
+
+/**
+ * 🗑️ キャッシュ無効化統計取得
+ */
+app.get('/api/admin/cache/invalidation-stats', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('🗑️ Cache invalidation stats requested by admin:', req.user?._id);
+    
+    const timeframe = parseInt(req.query.timeframe as string) || 30;
+    
+    if (!isMongoConnected) {
+      res.status(503).json({
+        error: 'Database not connected',
+        message: 'データベース接続が必要です'
+      });
+      return;
+    }
+
+    const invalidationStats = await getCacheInvalidationStats(timeframe);
+    
+    console.log('✅ Cache invalidation stats retrieved');
+
+    res.json({
+      success: true,
+      data: invalidationStats,
+      timestamp: new Date(),
+      timeframe: timeframe
+    });
+
+  } catch (error) {
+    console.error('❌ Cache invalidation stats error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'キャッシュ無効化統計取得に失敗しました'
+    });
+  }
+});
+
+/**
+ * 🧹 キャッシュクリーンアップ実行
+ */
+app.post('/api/admin/cache/cleanup', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('🧹 Cache cleanup requested by admin:', req.user?._id);
+    
+    if (!isMongoConnected) {
+      res.status(503).json({
+        error: 'Database not connected',
+        message: 'データベース接続が必要です'
+      });
+      return;
+    }
+
+    const cleanupResult = await performCacheCleanup();
+    
+    console.log('✅ Cache cleanup completed:', cleanupResult);
+
+    res.json({
+      success: true,
+      data: cleanupResult,
+      message: `${cleanupResult.deletedCount}個のキャッシュを削除し、${Math.round(cleanupResult.memoryFreed / 1024)}KBのメモリを解放しました`,
+      timestamp: new Date()
+    });
+
+  } catch (error) {
+    console.error('❌ Cache cleanup error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'キャッシュクリーンアップに失敗しました'
+    });
+  }
+});
+
+/**
+ * 🎯 特定キャラクターのキャッシュ無効化
+ */
+app.delete('/api/admin/cache/character/:characterId', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { characterId } = req.params;
+    const reason = req.body.reason || 'manual_admin_action';
+    
+    console.log('🎯 Character cache invalidation requested:', {
+      characterId,
+      reason,
+      adminId: req.user?._id
+    });
+    
+    if (!isMongoConnected) {
+      res.status(503).json({
+        error: 'Database not connected',
+        message: 'データベース接続が必要です'
+      });
+      return;
+    }
+
+    // キャラクターの存在確認
+    const character = await CharacterModel.findById(characterId);
+    if (!character) {
+      res.status(404).json({
+        error: 'Character not found',
+        message: 'キャラクターが見つかりません'
+      });
+      return;
+    }
+
+    const invalidationResult = await invalidateCharacterCache(characterId, reason);
+    
+    console.log('✅ Character cache invalidation completed:', invalidationResult);
+
+    res.json({
+      success: true,
+      data: invalidationResult,
+      message: `${character.name?.ja || character.name}のキャッシュ${invalidationResult.deletedCount}個を無効化しました`,
+      timestamp: new Date()
+    });
+
+  } catch (error) {
+    console.error('❌ Character cache invalidation error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'キャラクターキャッシュ無効化に失敗しました'
     });
   }
 });

@@ -11,6 +11,12 @@ interface IMessage {
     model?: string;
     temperature?: number;
     maxTokens?: number;
+    apiCost?: number;
+    toneStyle?: string;
+    relationshipStatus?: string;
+    intimacyChange?: number;
+    moodModifiers?: any[];
+    uiColor?: string;
   };
 }
 

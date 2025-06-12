@@ -51,7 +51,7 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
 
       {/* 親密度リスト */}
       <div className="space-y-4">
-        {affinities.map((affinity) => (
+        {(affinities || []).map((affinity) => (
           <div
             key={affinity.character._id}
             className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
