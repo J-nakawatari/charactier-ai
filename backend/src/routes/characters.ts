@@ -273,7 +273,13 @@ router.put('/:id/translations', authenticateToken, async (req: Request, res: Res
     }
     
     // 翻訳データを更新
-    const updateData: any = {
+    const updateData: Partial<{
+      name: string;
+      description: string;
+      adminPrompt: string;
+      voiceSettings: Record<string, unknown>;
+      isActive: boolean;
+    }> = {
       name,
       description,
       adminPrompt,
@@ -339,6 +345,13 @@ router.get('/:id', authenticateToken, async (req: Request, res: Response): Promi
       return;
     }
     
+    console.log('🔍 Character data being returned:', {
+      id: character._id,
+      model: character.model,
+      aiModel: character.aiModel,
+      name: character.name?.ja
+    });
+    
     res.json(character);
 
   } catch (error) {
@@ -353,6 +366,11 @@ router.get('/:id', authenticateToken, async (req: Request, res: Response): Promi
 // キャラクター更新（管理者のみ）
 router.put('/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('📝 Character update request:', {
+      id: req.params.id,
+      body: req.body
+    });
+
     const updatedCharacter = await CharacterModel.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -360,6 +378,7 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response): Promi
     );
     
     if (!updatedCharacter) {
+      console.error('❌ Character not found:', req.params.id);
       res.status(404).json({
         error: 'Character not found',
         message: 'キャラクターが見つかりません'
@@ -367,14 +386,19 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response): Promi
       return;
     }
     
-    console.log('✅ Character updated:', updatedCharacter._id);
+    console.log('✅ Character updated successfully:', updatedCharacter._id);
     res.json({
       message: 'キャラクターが更新されました',
       character: updatedCharacter
     });
 
   } catch (error) {
-    console.error('❌ Character update error:', error);
+    console.error('❌ Character update error details:', {
+      id: req.params.id,
+      body: req.body,
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined
+    });
     res.status(500).json({
       error: 'Update failed',
       message: 'キャラクターの更新に失敗しました'
@@ -425,7 +449,7 @@ router.post('/upload/image', authenticateToken, uploadImage.single('image'), opt
     }
     
     // 管理者権限チェック
-    const authReq = req as any;
+    const authReq = req as AuthRequest;
     if (!authReq.user?.isAdmin) {
       res.status(403).json({
         error: 'Admin access required',

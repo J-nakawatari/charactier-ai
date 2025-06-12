@@ -17,13 +17,19 @@ export interface IPurchaseHistory extends Document {
     tokenPackId?: mongoose.Types.ObjectId;
     characterId?: mongoose.Types.ObjectId;
     subscriptionPlanId?: mongoose.Types.ObjectId;
-    [key: string]: any;
+    profitMargin?: number;
+    originalAmount?: number;
+    grantedTokens?: number;
+    [key: string]: unknown;
   };
   stripeData?: {
     customer?: string;
     invoice?: string;
     subscription?: string;
-    [key: string]: any;
+    sessionId?: string;
+    paymentIntentId?: string;
+    mode?: string;
+    [key: string]: unknown;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -44,7 +50,12 @@ export interface IPurchaseHistoryModel extends Model<IPurchaseHistory> {
   
   getUserPurchaseStats(
     userId: mongoose.Types.ObjectId
-  ): Promise<any[]>;
+  ): Promise<Array<{
+    _id: string;
+    count: number;
+    totalAmount: number;
+    totalPrice: number;
+  }>>;
   
   createFromStripeSession(sessionData: {
     userId: mongoose.Types.ObjectId;
@@ -58,8 +69,8 @@ export interface IPurchaseHistoryModel extends Model<IPurchaseHistory> {
     paymentMethod: string;
     details: string;
     description?: string;
-    metadata?: any;
-    stripeData?: any;
+    metadata?: Record<string, unknown>;
+    stripeData?: Record<string, unknown>;
   }): Promise<IPurchaseHistory>;
   
   findByStripeSessionId(stripeSessionId: string): Promise<IPurchaseHistory | null>;
@@ -165,7 +176,7 @@ PurchaseHistorySchema.statics.getUserPurchaseHistory = function(
     sortOrder = 'desc'
   } = options;
 
-  const filter: any = { userId };
+  const filter: Record<string, unknown> = { userId };
   
   if (type && type !== 'all') {
     filter.type = type;
@@ -175,7 +186,7 @@ PurchaseHistorySchema.statics.getUserPurchaseHistory = function(
     filter.status = status;
   }
 
-  const sort: any = {};
+  const sort: Record<string, 1 | -1> = {};
   sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
   return this.find(filter)
@@ -221,8 +232,8 @@ PurchaseHistorySchema.statics.createFromStripeSession = function(
     paymentMethod: string;
     details: string;
     description?: string;
-    metadata?: any;
-    stripeData?: any;
+    metadata?: Record<string, unknown>;
+    stripeData?: Record<string, unknown>;
   }
 ) {
   return this.create({

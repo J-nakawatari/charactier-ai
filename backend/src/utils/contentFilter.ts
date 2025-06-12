@@ -47,7 +47,7 @@ export function checkBlockedWords(message: string) {
   const normalizedMessage = message.toLowerCase();
   const allWords = [...BLOCKED_WORDS.japanese, ...BLOCKED_WORDS.english];
   
-  for (let word of allWords) {
+  for (const word of allWords) {
     if (normalizedMessage.includes(word.toLowerCase())) {
       return {
         isBlocked: true,
@@ -190,7 +190,7 @@ export async function validateMessage(userId: string, message: string, req: Requ
           categories: moderationCheck.categories
         };
       }
-    } catch (sanctionError) {
+    } catch {
       console.log('Sanction system not available, using basic content filtering only');
       
       // 制裁システムがない場合は基本的なチェックのみ

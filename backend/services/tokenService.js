@@ -1,29 +1,32 @@
 const { UserModel: User } = require('../src/models/UserModel');
 const UserTokenPack = require('../models/UserTokenPack');
 const TokenUsage = require('../models/TokenUsage');
+const { calcTokensToGive, validateModel, logTokenConfig } = require('../src/config/tokenConfig');
 
 /**
- * トークンサービス（簡素化版）
- * 50%利益保証を確実に実現するシンプルなトークン管理システム
+ * トークンサービス（利益率90%）
+ * 90%利益保証を確実に実現するシンプルなトークン管理システム
  */
 class TokenService {
   
   /**
-   * トークン付与数の計算（為替考慮版）
+   * トークン付与数の計算（モデル別対応版）
    * @param {number} purchaseAmountYen - 購入金額（円）
+   * @param {string} model - 使用モデル名
    * @returns {number} 付与トークン数
    */
-  static calculateTokensToGive(purchaseAmountYen) {
-    const GPT4_COST_PER_TOKEN_YEN = parseFloat(process.env.GPT4_COST_PER_TOKEN_YEN || '0.216');  // $0.00144 × 150円 = 0.216円
-    const PROFIT_MARGIN = parseFloat(process.env.PROFIT_MARGIN || '0.5');              // 50%利益確保
+  static calculateTokensToGive(purchaseAmountYen, model = 'o4-mini') {
+    // モデルの妥当性チェック
+    if (!validateModel(model)) {
+      throw new Error(`Invalid model: ${model}`);
+    }
     
-    const apiCostLimit = purchaseAmountYen * PROFIT_MARGIN;
-    const tokensToGive = Math.floor(apiCostLimit / GPT4_COST_PER_TOKEN_YEN);
+    const tokensToGive = calcTokensToGive(purchaseAmountYen, model);
     
     console.log(`💰 購入金額: ${purchaseAmountYen}円`);
-    console.log(`💰 API原価上限: ${apiCostLimit}円`);
+    console.log(`🤖 使用モデル: ${model}`);
     console.log(`🎁 付与トークン数: ${tokensToGive}トークン`);
-    console.log(`📊 利益率: ${PROFIT_MARGIN * 100}%保証`);
+    console.log(`📊 利益率: 90%保証`);
     
     return tokensToGive;
   }
@@ -33,12 +36,13 @@ class TokenService {
    * @param {string} userId - ユーザーID
    * @param {string} stripeSessionId - StripeセッションID
    * @param {number} purchaseAmountYen - 購入金額（円）
+   * @param {string} model - 使用モデル名
    * @returns {Promise<Object>} 付与結果
    */
-  static async grantTokens(userId, stripeSessionId, purchaseAmountYen) {
+  static async grantTokens(userId, stripeSessionId, purchaseAmountYen, model = 'o4-mini') {
     try {
       // 1. 付与トークン数を計算
-      const tokensToGive = this.calculateTokensToGive(purchaseAmountYen);
+      const tokensToGive = this.calculateTokensToGive(purchaseAmountYen, model);
       
       // 2. 重複チェック（同じセッションIDでの二重付与防止）
       const existingPack = await UserTokenPack.findOne({ stripeSessionId });
@@ -79,7 +83,8 @@ class TokenService {
         tokensGranted: tokensToGive,
         newBalance: await this.getUserTokenBalance(userId),
         purchaseAmountYen,
-        profitMargin: parseFloat(process.env.PROFIT_MARGIN || '0.5')
+        profitMargin: 0.90,
+        model: model
       };
       
     } catch (error) {
@@ -288,7 +293,7 @@ class TokenService {
       const tokensUsed = totalTokensUsed[0]?.total || 0;
       
       // 利益計算
-      const estimatedCost = tokensUsed * parseFloat(process.env.GPT4_COST_PER_TOKEN_YEN || '0.216');
+      const estimatedCost = tokensUsed * parseFloat(process.env.TOKEN_COST_PER_UNIT || '0.0003');
       const estimatedProfit = revenue - estimatedCost;
       const profitMargin = revenue > 0 ? (estimatedProfit / revenue * 100).toFixed(2) : '0.00';
       
@@ -321,8 +326,8 @@ class TokenService {
    * @returns {Array} 料金プラン配列
    */
   static getTokenPlans() {
-    const gpt4CostPerToken = parseFloat(process.env.GPT4_COST_PER_TOKEN_YEN || '0.216');
-    const profitMargin = parseFloat(process.env.PROFIT_MARGIN || '0.5');
+    const tokenCostPerUnit = parseFloat(process.env.TOKEN_COST_PER_UNIT || '0.0003');
+    const profitMargin = parseFloat(process.env.PROFIT_MARGIN || '0.8');
     
     const plans = [
       { priceYen: 500, name: 'スターター', description: '軽くチャットを楽しみたい方向け' },

@@ -15,7 +15,11 @@ interface IMessage {
     toneStyle?: string;
     relationshipStatus?: string;
     intimacyChange?: number;
-    moodModifiers?: any[];
+    moodModifiers?: Array<{
+      type: string;
+      value: number;
+      trigger?: string;
+    }>;
     uiColor?: string;
   };
 }

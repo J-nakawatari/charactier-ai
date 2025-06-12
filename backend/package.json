@@ -6,7 +6,8 @@
         "dev": "ts-node src/index.ts",
         "lint": "eslint src/**/*.ts",
         "lint:fix": "eslint src/**/*.ts --fix",
-        "type-check": "tsc --noEmit"
+        "type-check": "tsc --noEmit",
+        "test:mood": "ts-node src/scripts/testMoodEngine.ts"
     },
     "devDependencies": {
         "@types/express": "^5.0.3",
@@ -28,6 +29,7 @@
         "axios": "^1.9.0",
         "bcryptjs": "^3.0.2",
         "cors": "^2.8.5",
+        "dayjs": "^1.11.13",
         "dotenv": "^16.3.1",
         "escape-string-regexp": "^5.0.0",
         "eventsource": "^4.0.0",
@@ -37,6 +39,7 @@
         "mongodb": "^6.17.0",
         "mongoose": "^8.15.1",
         "multer": "^2.0.1",
+        "node-cron": "^4.1.0",
         "openai": "^4.104.0",
         "redis": "^5.5.6",
         "sharp": "^0.34.2",

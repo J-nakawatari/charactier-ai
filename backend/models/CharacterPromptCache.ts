@@ -437,4 +437,10 @@ CharacterPromptCacheSchema.pre('save', async function(next) {
   next();
 });
 
+// インデックス最適化
+CharacterPromptCacheSchema.index({ userId: 1, characterId: 1, promptVersion: 1, characterVersion: 1 });
+CharacterPromptCacheSchema.index({ ttl: 1 }, { expireAfterSeconds: 0 });
+CharacterPromptCacheSchema.index({ useCount: -1 });
+CharacterPromptCacheSchema.index({ languageCode: 1 });
+
 export default mongoose.model<ICharacterPromptCache>('CharacterPromptCache', CharacterPromptCacheSchema);

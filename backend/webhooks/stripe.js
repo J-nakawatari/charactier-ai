@@ -2,6 +2,38 @@ const express = require('express');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const TokenService = require('../services/tokenService');
 const { validatePricingConfig } = require('../config/pricing');
+// const { getRedisClient } = require('../lib/redis');
+const mongoose = require('mongoose');
+
+// PurchaseHistoryModel の遅延インポート（Runtime時に実行）
+let PurchaseHistoryModel = null;
+
+// モデルを遅延で取得する関数
+const getPurchaseHistoryModel = () => {
+  if (!PurchaseHistoryModel) {
+    try {
+      // TypeScriptコンパイル後のモジュールパスで試行
+      const modelModule = require('../src/models/PurchaseHistoryModel');
+      PurchaseHistoryModel = modelModule.PurchaseHistoryModel;
+      console.log('✅ PurchaseHistoryModel インポート成功');
+      return PurchaseHistoryModel;
+    } catch (tsError) {
+      console.error('❌ TypeScript モジュールインポートエラー:', tsError.message);
+      try {
+        // JSコンパイル済みファイルで試行
+        const compiledModule = require('../dist/src/models/PurchaseHistoryModel');
+        PurchaseHistoryModel = compiledModule.PurchaseHistoryModel;
+        console.log('✅ PurchaseHistoryModel（コンパイル済み）インポート成功');
+        return PurchaseHistoryModel;
+      } catch (jsError) {
+        console.error('❌ 全てのPurchaseHistoryModelインポートが失敗:', jsError.message);
+        console.error('⚠️ 購入履歴記録機能は無効化されます');
+        return null;
+      }
+    }
+  }
+  return PurchaseHistoryModel;
+};
 
 const router = express.Router();
 
@@ -206,6 +238,62 @@ async function handleCheckoutSessionCompleted(event) {
         profitMargin: `${(grantResult.profitMargin * 100)}%`,
         timestamp: new Date().toISOString()
       });
+      
+      // 🌊 SSE用購入完了データをRedis/メモリに保存
+      // TODO: Redis処理を一時的にコメントアウト（Webhook成功確認のため）
+      console.log('⚠️ SSE用データ保存はスキップ（デバッグ中）');
+      
+      // 📝 購入履歴をデータベースに記録
+      const PurchaseModel = getPurchaseHistoryModel();
+      if (PurchaseModel) {
+        try {
+          console.log('📝 購入履歴記録処理開始...');
+        
+        const purchaseRecord = await PurchaseModel.createFromStripeSession({
+          userId: new mongoose.Types.ObjectId(userId),
+          stripeSessionId: sessionId,
+          stripePaymentIntentId: session.payment_intent,
+          type: 'token', // トークン購入として記録
+          amount: grantResult.tokensGranted,
+          price: purchaseAmountYen,
+          currency: session.currency || 'jpy',
+          status: 'completed',
+          paymentMethod: session.payment_method_types?.[0] || 'card',
+          details: `${grantResult.tokensGranted}トークン購入`,
+          description: `Stripe経由でのトークン購入 - ${grantResult.tokensGranted}トークン`,
+          metadata: {
+            profitMargin: grantResult.profitMargin,
+            originalAmount: purchaseAmountYen,
+            grantedTokens: grantResult.tokensGranted
+          },
+          stripeData: {
+            sessionId: sessionId,
+            paymentIntentId: session.payment_intent,
+            customerId: session.customer,
+            mode: session.mode
+          }
+        });
+        
+        console.log('✅ 購入履歴記録成功:', {
+          recordId: purchaseRecord._id,
+          userId: userId,
+          type: 'token',
+          amount: grantResult.tokensGranted,
+          price: purchaseAmountYen
+        });
+        
+        } catch (purchaseHistoryError) {
+          // 購入履歴記録エラーはWebhook処理全体を失敗させない
+          console.error('⚠️ 購入履歴記録エラー（トークン付与は成功）:', purchaseHistoryError);
+          console.error('🔍 購入履歴エラー詳細:', {
+            userId: userId,
+            sessionId: sessionId,
+            error: purchaseHistoryError.message
+          });
+        }
+      } else {
+        console.log('⚠️ PurchaseHistoryModel が利用できません - 購入履歴記録をスキップ');
+      }
       
       // TODO: 必要に応じてユーザーへの通知メール送信
       // await sendPurchaseConfirmationEmail(userId, grantResult);

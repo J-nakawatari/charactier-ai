@@ -19,7 +19,8 @@ const imageStorage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + '.webp');
+    // 透過情報を保持するためPNG形式を使用
+    cb(null, file.fieldname + '-' + uniqueSuffix + '.png');
   }
 });
 
@@ -47,12 +48,17 @@ export const optimizeImage = (width: number = 800, height: number = 800, quality
 
       const tmpPath = req.file.path + '.tmp';
       
+      // 透過情報を保持するためPNG形式で処理
       await sharp(req.file.path)
         .resize(width, height, { 
           fit: 'inside',
           withoutEnlargement: true 
         })
-        .webp({ quality })
+        .png({ 
+          quality,
+          compressionLevel: 6, // 圧縮レベル（0-9）
+          adaptiveFiltering: true // アダプティブフィルタリングで透過部分を最適化
+        })
         .toFile(tmpPath);
         
       await fs.promises.rename(tmpPath, req.file.path);

@@ -1,5 +1,21 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+// 気分修飾子データ
+interface IMoodModifier {
+  type: string; // 'excited', 'melancholic', etc.
+  strength: number; // 0-1
+  expiresAt: Date;
+}
+
+// 気分履歴データ
+interface IMoodHistory {
+  mood: string;
+  intensity: number;
+  triggeredBy: string;
+  duration: number;
+  createdAt: Date;
+}
+
 // 親密度・関係性データ
 interface IAffinity {
   character: string; // ObjectId
@@ -10,7 +26,7 @@ interface IAffinity {
   experienceToNext: number;
   
   // 関係性状態
-  emotionalState: 'happy' | 'excited' | 'calm' | 'sad' | 'angry' | 'neutral';
+  emotionalState: 'happy' | 'excited' | 'calm' | 'sad' | 'angry' | 'neutral' | 'melancholic';
   relationshipType: 'stranger' | 'acquaintance' | 'friend' | 'close_friend' | 'lover';
   trustLevel: number; // 0-100
   intimacyLevel: number; // 0-100
@@ -49,19 +65,9 @@ interface IAffinity {
   unlockedRewards: string[]; // 解放済み報酬ID
   nextRewardLevel: number;
   
-  // 感情変化・状態遷移
-  moodHistory: {
-    mood: string;
-    intensity: number; // 1-10
-    triggeredBy: 'user_message' | 'gift' | 'level_up' | 'time_decay';
-    duration: number; // 分
-    createdAt: Date;
-  }[];
-  currentMoodModifiers: {
-    type: string; // 'excited' | 'shy' | 'playful' | 'melancholic'
-    strength: number; // 0-1
-    expiresAt: Date;
-  }[];
+  // 感情変化・状態遷移（MoodEngine用）
+  moodHistory: IMoodHistory[];
+  currentMoodModifiers: IMoodModifier[];
 }
 
 export interface IUser extends Document {
@@ -111,6 +117,51 @@ export interface IUser extends Document {
   updatedAt: Date;
 }
 
+// 気分修飾子サブスキーマ
+const MoodModifierSchema = new Schema({
+  type: {
+    type: String,
+    required: true
+  },
+  strength: {
+    type: Number,
+    default: 1,
+    min: 0,
+    max: 1
+  },
+  expiresAt: {
+    type: Date,
+    required: true,
+    index: true // Cronジョブ用インデックス
+  }
+}, { _id: false });
+
+// 気分履歴サブスキーマ
+const MoodHistorySchema = new Schema({
+  mood: {
+    type: String,
+    required: true
+  },
+  intensity: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 10
+  },
+  triggeredBy: {
+    type: String,
+    required: true
+  },
+  duration: {
+    type: Number,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+}, { _id: false });
+
 // 親密度サブスキーマ
 const AffinitySchema = new Schema({
   character: {
@@ -139,7 +190,7 @@ const AffinitySchema = new Schema({
   // 関係性状態
   emotionalState: {
     type: String,
-    enum: ['happy', 'excited', 'calm', 'sad', 'angry', 'neutral'],
+    enum: ['happy', 'excited', 'calm', 'sad', 'angry', 'neutral', 'melancholic'],
     default: 'neutral'
   },
   relationshipType: {
@@ -228,33 +279,9 @@ const AffinitySchema = new Schema({
     default: 10
   },
   
-  // 感情変化・状態遷移
-  moodHistory: [{
-    mood: String,
-    intensity: {
-      type: Number,
-      min: 1,
-      max: 10
-    },
-    triggeredBy: {
-      type: String,
-      enum: ['user_message', 'gift', 'level_up', 'time_decay']
-    },
-    duration: Number, // 分
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  currentMoodModifiers: [{
-    type: String,
-    strength: {
-      type: Number,
-      min: 0,
-      max: 1
-    },
-    expiresAt: Date
-  }]
+  // 感情変化・状態遷移（MoodEngine用）
+  moodHistory: [MoodHistorySchema],
+  currentMoodModifiers: [MoodModifierSchema]
 }, { _id: false });
 
 const UserSchema: Schema = new Schema({
