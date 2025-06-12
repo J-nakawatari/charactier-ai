@@ -30,7 +30,7 @@ interface ITokenUsage extends Document {
   responseContent: string;
 
   // AI API詳細
-  model: string;
+  aiModel: string;
   inputTokens: number;
   outputTokens: number;
   apiCost: number; // USD
@@ -103,7 +103,7 @@ const TokenUsageSchema = new Schema<ITokenUsage>({
   },
 
   // AI API詳細
-  model: {
+  aiModel: {
     type: String,
     required: true,
     enum: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o'],
