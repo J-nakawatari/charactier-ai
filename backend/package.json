@@ -10,7 +10,7 @@
     },
     "devDependencies": {
         "@types/express": "^5.0.3",
-        "@types/node": "^20.0.0",
+        "@types/node": "^24.0.1",
         "@types/swagger-ui-express": "^4.1.8",
         "@types/yamljs": "^0.2.34",
         "@typescript-eslint/eslint-plugin": "^8.34.0",
