@@ -14,9 +14,11 @@ import { UserModel, IUser } from './models/UserModel';
 import { AdminModel, IAdmin } from './models/AdminModel';
 import { ChatModel, IChat, IMessage } from './models/ChatModel';
 import { CharacterModel, ICharacter } from './models/CharacterModel';
+import { PurchaseHistoryModel } from './models/PurchaseHistoryModel';
 import { authenticateToken, AuthRequest } from './middleware/auth';
 import authRoutes from './routes/auth';
 import characterRoutes from './routes/characters';
+import modelRoutes from './routes/modelSettings';
 import { validateMessage } from './utils/contentFilter';
 import TokenUsage from '../models/TokenUsage';
 import CharacterPromptCache from '../models/CharacterPromptCache';
@@ -28,18 +30,15 @@ import {
   performCacheCleanup,
   invalidateCharacterCache
 } from './utils/cacheAnalytics';
+import { applyMoodTrigger } from './services/moodEngine';
+import { startAllMoodJobs } from './scripts/moodDecay';
+import { calcTokensToGive, logTokenConfig } from './config/tokenConfig';
+const TokenService = require('../services/tokenService');
 
 dotenv.config({ path: './.env' });
 
 const app = express();
 const PORT = process.env.PORT || 3004;
-
-
-// GPT-4.1 mini原価モデル定数（利益率80%設計）
-const TOKEN_COST_PER_UNIT = 0.0003; // 1トークンあたり¥0.0003の原価（GPT-4.1 mini）
-const PROFIT_MARGIN = 0.8; // 利益率80%
-const COST_RATIO = 1 - PROFIT_MARGIN; // 原価率20%
-const TOKENS_PER_YEN = 1 / (TOKEN_COST_PER_UNIT / COST_RATIO); // 約666.67トークン/円
 
 // MongoDB接続
 let isMongoConnected = false;
@@ -153,15 +152,57 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
   if (!systemPrompt) {
     console.log('🔨 Generating new system prompt...');
     
+    // 🎭 現在の気分状態を取得してプロンプトに反映
+    let moodInstruction = '';
+    if (userId) {
+      try {
+        const user = await UserModel.findById(userId);
+        if (user) {
+          const affinity = user.affinities.find(
+            aff => aff.character.toString() === characterId
+          );
+          
+          if (affinity && affinity.emotionalState) {
+            const moodToneMap: Record<string, string> = {
+              excited: 'より元気で弾むような口調に',
+              melancholic: '少し寂しげで静かな口調に',
+              happy: '明るく楽しげな口調に',
+              sad: 'やや控えめで優しい口調に',
+              angry: '少し感情的でエネルギッシュな口調に',
+              neutral: '通常のトーンで'
+            };
+            
+            moodInstruction = `
+
+現在このキャラクターのムードは「${affinity.emotionalState}」です。
+${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
+            
+            console.log(`🎭 Mood applied to system prompt: ${affinity.emotionalState}`);
+          }
+        }
+      } catch (moodError) {
+        console.error('❌ Failed to apply mood to system prompt:', moodError);
+      }
+    }
+    
     systemPrompt = `あなたは${character.name.ja}というキャラクターです。
 性格: ${character.personalityPreset || '優しい'}
 特徴: ${character.personalityTags?.join(', ') || '親しみやすい'}
-説明: ${character.description.ja}
+説明: ${character.description.ja}${moodInstruction}
+
+【会話スタンス】
+あなたは相手の話し相手として会話します。アドバイスや解決策を提示するのではなく、人間らしい自然な反応や共感を示してください。相手の感情や状況に寄り添い、「そうなんだ」「大変だったね」「わかる」といった、友達同士のような気持ちの共有を大切にしてください。
 
 以下の特徴に従って、一人称と話し方でユーザーと自然な会話をしてください：
 - ${character.personalityTags?.join('\n- ') || '優しく親しみやすい会話'}
 - 約50-150文字程度で返答してください
 - 絵文字を適度に使用してください`;
+
+    // キャッシュサイズ制限（8000文字超の場合は要約）
+    if (systemPrompt.length > 8000) {
+      console.log(`⚠️ System prompt too long (${systemPrompt.length} chars), truncating to 8000`);
+      systemPrompt = systemPrompt.substring(0, 8000) + '...';
+    }
 
     // 新規プロンプトをキャッシュに保存
     if (userId && isMongoConnected) {
@@ -267,20 +308,175 @@ console.log('✅ All required environment variables are set');
 // MongoDB接続を初期化
 connectMongoDB();
 
-// JSON body parser
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// CORS設定
+// CORS設定（Webhookの前に設定）
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:3001'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'x-auth-token']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'x-auth-token', 'stripe-signature']
 }));
+
+// ⚠️ IMPORTANT: Stripe webhook MUST come BEFORE express.json()
+// Stripe webhook endpoint (needs raw body)
+app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req: Request, res: Response): Promise<void> => {
+  console.log('🔔 Stripe Webhook received (CLI)');
+  
+  const sig = req.headers['stripe-signature'] as string;
+  let event: Stripe.Event;
+
+  try {
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    
+    if (!stripe || !webhookSecret) {
+      console.error('❌ Stripe or webhook secret not configured');
+      res.status(500).json({ error: 'Stripe not configured' });
+      return;
+    }
+    
+    console.log('🔥 Stripe signature verification');
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    console.log('✅ Stripe signature verified');
+
+    // Handle different event types
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        console.log('💳 チェックアウトセッション完了:', session.id);
+        
+        const userId = session.metadata?.userId;
+        const purchaseAmountYen = session.amount_total;
+        const sessionId = session.id;
+        
+        if (!userId || !purchaseAmountYen) {
+          console.error('❌ 必要な購入データが不足:', { userId, purchaseAmountYen });
+          break;
+        }
+        
+        // 現在の使用モデルを取得（環境変数 or デフォルト）
+        const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+        
+        // トークン付与処理
+        const grantResult = await TokenService.grantTokens(userId, sessionId, purchaseAmountYen, currentModel);
+        
+        if (grantResult.success) {
+          console.log('✅ トークン付与完了:', grantResult.tokensGranted);
+          
+          // 🎭 購入金額に基づいてGIFTムードトリガーを適用
+          if (purchaseAmountYen >= 500) {
+            try {
+              const user = await UserModel.findById(userId);
+              if (user?.selectedCharacter) {
+                await applyMoodTrigger(
+                  userId,
+                  user.selectedCharacter.toString(),
+                  { kind: 'GIFT', value: purchaseAmountYen }
+                );
+                console.log('🎭 GIFT ムードトリガー適用完了');
+              }
+            } catch (moodError) {
+              console.error('⚠️ ムードトリガー適用失敗:', moodError);
+            }
+          }
+          
+          // 📝 購入履歴をデータベースに記録
+          try {
+            console.log('📝 購入履歴記録処理開始...');
+            
+            const purchaseRecord = await PurchaseHistoryModel.createFromStripeSession({
+              userId: new mongoose.Types.ObjectId(userId),
+              stripeSessionId: sessionId,
+              stripePaymentIntentId: typeof session.payment_intent === 'string' ? session.payment_intent : undefined,
+              type: 'token',
+              amount: grantResult.tokensGranted,
+              price: purchaseAmountYen,
+              currency: session.currency || 'jpy',
+              status: 'completed',
+              paymentMethod: session.payment_method_types?.[0] || 'card',
+              details: `${grantResult.tokensGranted}トークン購入`,
+              description: `Stripe経由でのトークン購入 - ${grantResult.tokensGranted}トークン`,
+              metadata: {
+                profitMargin: grantResult.profitMargin,
+                originalAmount: purchaseAmountYen,
+                grantedTokens: grantResult.tokensGranted
+              },
+              stripeData: {
+                sessionId: sessionId,
+                paymentIntentId: typeof session.payment_intent === 'string' ? session.payment_intent : undefined,
+                customerId: session.customer,
+                mode: session.mode
+              }
+            });
+            
+            console.log('✅ 購入履歴記録成功:', {
+              recordId: purchaseRecord._id,
+              userId: userId,
+              type: 'token',
+              amount: grantResult.tokensGranted,
+              price: purchaseAmountYen
+            });
+            
+          } catch (purchaseHistoryError) {
+            console.error('⚠️ 購入履歴記録エラー（トークン付与は成功）:', purchaseHistoryError);
+            console.error('🔍 購入履歴エラー詳細:', {
+              userId: userId,
+              sessionId: sessionId,
+              error: purchaseHistoryError instanceof Error ? purchaseHistoryError.message : String(purchaseHistoryError)
+            });
+          }
+
+          // SSE用購入完了データをRedis/メモリに保存
+          try {
+            const redis = await getRedisClient();
+            const purchaseCompleteData = {
+              success: true,
+              addedTokens: grantResult.tokensGranted,
+              newBalance: grantResult.newBalance,
+              purchaseAmountYen,
+              timestamp: new Date().toISOString()
+            };
+            
+            // SSE用データを保存（60秒で自動削除）
+            await redis.set(`purchase:${sessionId}`, JSON.stringify(purchaseCompleteData), { EX: 60 });
+            console.log('✅ SSE用購入完了データ保存:', sessionId);
+          } catch (sseError) {
+            console.error('⚠️ SSE用データ保存失敗:', sseError);
+          }
+        }
+        break;
+      }
+      
+      default:
+        console.log(`⚠️ 未処理のWebhookイベント: ${event.type}`);
+    }
+
+    res.status(200).json({ received: true });
+    
+  } catch (error) {
+    console.error('❌ Webhook処理エラー:', error);
+    console.error('❌ エラー詳細:', {
+      message: (error as Error).message,
+      stack: (error as Error).stack
+    });
+    res.status(400).json({ error: 'Webhook processing failed' });
+  }
+});
+
+// JSON body parser (AFTER Stripe webhook)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // 認証ルート
 app.use('/api/auth', authRoutes);
+
+// 管理者ルート - モデル設定
+app.use('/api/admin', modelRoutes);
+
+// デバッグ: 登録されたルートを出力
+console.log('🔧 Registered model routes:');
+console.log('  GET /api/admin/models');
+console.log('  GET /api/admin/models/current');
+console.log('  POST /api/admin/models/set-model');
+console.log('  POST /api/admin/models/simulate');
 
 // 静的ファイル配信（アップロードされた画像）
 app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {
@@ -419,171 +615,6 @@ app.post('/api/user/setup-complete', authenticateToken, async (req: Request, res
 });
 
 // Stripe Webhook endpoints (must be before express.json())
-app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req: Request, res: Response): Promise<void> => {
-  console.log('🔔 Stripe Webhook received (CLI)');
-  
-  const sig = req.headers['stripe-signature'] as string;
-  let event: Stripe.Event;
-
-  try {
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    
-    if (!stripe || !webhookSecret) {
-      console.error('❌ Stripe or webhook secret not configured');
-      res.status(500).json({ error: 'Stripe not configured' });
-      return;
-    }
-    
-    console.log('🔥 Stripe signature verification');
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    console.log('✅ Stripe signature verified');
-
-    // Handle different event types
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        console.log('💳 Checkout session completed:', session.id);
-        
-        const userId = session.metadata?.userId;
-        const priceId = session.metadata?.priceId;
-        
-        if (!userId) {
-          console.error('❌ No userId in session metadata');
-          break;
-        }
-        
-        let tokenPack: ITokenPack | null = null;
-        if (isMongoConnected && priceId) {
-          tokenPack = await TokenPackModel.findOne({ priceId }).lean();
-          console.log('🔍 MongoDB TokenPack lookup:', {
-            priceId,
-            found: !!tokenPack,
-            tokenPack: tokenPack ? {
-              _id: tokenPack._id,
-              name: tokenPack.name,
-              tokens: tokenPack.tokens,
-              price: tokenPack.price,
-              priceId: tokenPack.priceId
-            } : null
-          });
-        }
-        
-        let tokensToAdd = 0;
-        if (tokenPack) {
-          tokensToAdd = tokenPack.tokens;
-          console.log('🎁 Using token pack from MongoDB:', { 
-            name: tokenPack.name, 
-            tokens: tokensToAdd,
-            priceId: tokenPack.priceId,
-            price: tokenPack.price 
-          });
-        } else {
-          const amountInYen = session.amount_total || 0;
-          tokensToAdd = Math.floor(amountInYen * TOKENS_PER_YEN);
-          console.log('🎁 Calculated tokens from session amount:', { 
-            sessionId: session.id,
-            amountTotal: session.amount_total,
-            amountInYen, 
-            tokensToAdd,
-            TOKENS_PER_YEN,
-            priceId: priceId || 'not found'
-          });
-        }
-        
-        if (tokensToAdd > 0) {
-          if (!isMongoConnected) {
-            console.error('❌ MongoDB not connected');
-            break;
-          }
-          
-          {
-            // MongoDB ObjectIDとして有効かチェック
-            const mongoose = require('mongoose');
-            const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
-            
-            let user;
-            if (isValidObjectId) {
-              user = await UserModel.findById(userId);
-            } else {
-              // 無効なObjectIDの場合は、文字列検索で代替
-              user = await UserModel.findOne({ email: `user_${userId}@example.com` });
-            }
-            
-            if (!user) {
-              // 新しいユーザーを作成（有効なObjectIDを生成）
-              const newObjectId = isValidObjectId ? userId : new mongoose.Types.ObjectId();
-              user = new UserModel({
-                _id: newObjectId,
-                email: `user_${userId}@example.com`,
-                name: `User ${userId}`,
-                tokenBalance: tokensToAdd
-              });
-            } else {
-              user.tokenBalance += tokensToAdd;
-            }
-            await user.save();
-            
-            console.log('✅ MongoDB: Tokens added successfully', {
-              userId,
-              isValidObjectId,
-              actualUserId: user._id,
-              tokensAdded: tokensToAdd,
-              newBalance: user.tokenBalance
-            });
-            
-            // Redisに購入完了通知を保存（SSE用）
-            try {
-              const redis = await getRedisClient();
-              const purchaseData = {
-                addedTokens: tokensToAdd,
-                newBalance: user.tokenBalance,
-                timestamp: new Date().toISOString()
-              };
-              
-              await redis.set(
-                `purchase:${session.id}`, 
-                JSON.stringify(purchaseData), 
-                { EX: 60 } // 60秒で期限切れ
-              );
-              
-              console.log('🔔 通知保存成功 (Redis/Memory):', {
-                sessionId: session.id,
-                data: purchaseData
-              });
-            } catch (redisError) {
-              console.error('❌ 通知保存エラー:', redisError);
-            }
-          }
-        }
-        break;
-      }
-      
-      case 'payment_intent.succeeded': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('💰 Payment succeeded:', paymentIntent.id);
-        break;
-      }
-      
-      case 'payment_intent.payment_failed': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('❌ Payment failed:', paymentIntent.id);
-        break;
-      }
-      
-      default:
-        console.log('ℹ️ Unhandled event type:', { eventType: event.type });
-    }
-
-    res.json({ received: true, eventType: event.type });
-    
-  } catch (error) {
-    console.error('❌ Webhook処理エラー:', error);
-    res.status(400).send(`Webhook Error: ${(error as Error).message}`);
-  }
-});
-
-// 通常のJSONミドルウェア（Webhookの後に配置）
-app.use(express.json());
 
 // Extend Request interface
 declare module 'express-serve-static-core' {
@@ -765,7 +796,8 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
       tokenBalance: user.tokenBalance || 0,
       affinity: {
         level: characterAffinity?.level || chatData.currentAffinity || 0,
-        experience: characterAffinity?.experience || chatData.totalTokensUsed || 0
+        experience: characterAffinity?.experience || chatData.totalTokensUsed || 0,
+        mood: characterAffinity?.emotionalState || 'neutral'
       },
       unlockedGalleryImages: characterAffinity?.unlockedRewards || []
     };
@@ -947,6 +979,7 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
 
         const affinityIncrease = Math.floor(Math.random() * 3) + 1;
         const newAffinity = Math.min(100, updatedChat.currentAffinity);
+        const previousAffinity = newAffinity - affinityIncrease;
 
         console.log('✅ Chat messages saved to MongoDB:', {
           character: character.name.ja,
@@ -956,6 +989,52 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           totalMessages: updatedChat.messages.length,
           cacheHit: aiResponse.cacheHit
         });
+
+        // 🎭 レベルアップ検出とムードトリガー適用
+        try {
+          const previousLevel = Math.floor(previousAffinity / 10);
+          const currentLevel = Math.floor(newAffinity / 10);
+          
+          if (currentLevel > previousLevel) {
+            // レベルアップが発生
+            await applyMoodTrigger(
+              req.user._id.toString(),
+              characterId,
+              { kind: 'LEVEL_UP', newLevel: currentLevel }
+            );
+            console.log(`📈 Level up mood trigger applied: level ${previousLevel} → ${currentLevel}`);
+          }
+        } catch (levelUpMoodError) {
+          console.error('❌ Failed to apply level up mood trigger:', levelUpMoodError);
+        }
+
+        // 🎭 ネガティブ感情検出とムードトリガー適用
+        try {
+          if (openai) {
+            // OpenAI moderation APIでネガティブ感情を検出
+            const moderationResponse = await openai.moderations.create({
+              input: message
+            });
+            
+            const moderation = moderationResponse.results[0];
+            const isNegative = moderation.flagged || 
+                              moderation.categories.harassment ||
+                              moderation.categories.hate ||
+                              moderation.categories['self-harm'] ||
+                              moderation.categories.violence;
+            
+            if (isNegative) {
+              await applyMoodTrigger(
+                req.user._id.toString(),
+                characterId,
+                { kind: 'USER_SENTIMENT', sentiment: 'neg' }
+              );
+              console.log('😞 Negative sentiment mood trigger applied');
+            }
+          }
+        } catch (sentimentMoodError) {
+          console.error('❌ Failed to apply sentiment mood trigger:', sentimentMoodError);
+        }
 
         // 🚀 詳細TokenUsage記録（仕様書に基づく高度トラッキング）
         try {
@@ -1195,7 +1274,7 @@ app.get('/api/analytics/tokens', authenticateToken, (req: Request, res: Response
 });
 
 // Purchase History API
-app.get('/api/user/purchase-history', authenticateToken, (req: Request, res: Response): void => {
+app.get('/api/user/purchase-history', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   console.log('📋 Purchase History API called');
   
   if (!req.user) {
@@ -1203,18 +1282,86 @@ app.get('/api/user/purchase-history', authenticateToken, (req: Request, res: Res
     return;
   }
 
-  // TODO: Implement proper purchase history with real database queries
-  // For now, return empty data
-  const purchaseHistory = {
-    purchases: [],
-    summary: {
-      totalSpent: 0,
-      totalPurchases: 0
-    }
-  };
+  try {
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+    
+    // クエリパラメータから フィルター・ソート設定を取得
+    const {
+      type = 'all',
+      status = 'all',
+      limit = 50,
+      skip = 0,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
 
-  res.json(purchaseHistory);
+    // 購入履歴を取得
+    const purchases = await PurchaseHistoryModel.getUserPurchaseHistory(userId, {
+      type: type as string,
+      status: status as string,
+      limit: parseInt(limit as string),
+      skip: parseInt(skip as string),
+      sortBy: sortBy as string,
+      sortOrder: sortOrder as 'asc' | 'desc'
+    });
+
+    // 統計情報を取得
+    const stats = await PurchaseHistoryModel.getUserPurchaseStats(userId);
+    
+    // 統計データを整形
+    const summary = {
+      totalSpent: 0,
+      totalPurchases: 0,
+      tokens: { count: 0, amount: 0 },
+      characters: { count: 0, amount: 0 },
+      subscriptions: { count: 0, amount: 0 }
+    };
+
+    stats.forEach((stat: any) => {
+      summary.totalSpent += stat.totalPrice;
+      summary.totalPurchases += stat.count;
+      
+      if (stat._id === 'token') {
+        summary.tokens = { count: stat.count, amount: stat.totalPrice };
+      } else if (stat._id === 'character') {
+        summary.characters = { count: stat.count, amount: stat.totalPrice };
+      } else if (stat._id === 'subscription') {
+        summary.subscriptions = { count: stat.count, amount: stat.totalPrice };
+      }
+    });
+
+    const response = {
+      purchases: purchases.map((purchase: any) => ({
+        _id: purchase._id,
+        type: purchase.type,
+        amount: purchase.amount,
+        price: purchase.price,
+        currency: purchase.currency,
+        status: purchase.status,
+        paymentMethod: purchase.paymentMethod,
+        date: purchase.createdAt,
+        details: purchase.details,
+        description: purchase.description,
+        transactionId: purchase.transactionId,
+        stripeSessionId: purchase.stripeSessionId
+      })),
+      summary,
+      totalSpent: summary.totalSpent,
+      totalPurchases: summary.totalPurchases
+    };
+
+    console.log(`✅ Purchase history retrieved: ${purchases.length} items`);
+    res.json(response);
+
+  } catch (error) {
+    console.error('🚨 Purchase history API error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'Failed to retrieve purchase history'
+    });
+  }
 });
+
 
 // Token Pack Management APIs
 app.get('/api/token-packs', authenticateToken, async (req: Request, res: Response): Promise<void> => {
@@ -1863,10 +2010,10 @@ app.get('/api/user/purchase-history', authenticateToken, (req: Request, res: Res
   res.json(purchaseHistoryData);
 });
 
-// GPT-4.1 mini原価モデルバリデーション関数（利益率80%）
+// 新トークン計算モデルバリデーション関数（利益率90%）
 const validateTokenPriceRatio = (tokens: number, price: number): boolean => {
-  // GPT-4.1 mini原価モデル: 1円あたり約666.67トークンが基準（利益率80%）
-  const expectedTokens = Math.floor(price * TOKENS_PER_YEN);
+  const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+  const expectedTokens = calcTokensToGive(price, currentModel);
   const tolerance = 0.05; // 5%の許容範囲
   const minTokens = expectedTokens * (1 - tolerance);
   const maxTokens = expectedTokens * (1 + tolerance);
@@ -2140,12 +2287,13 @@ app.post('/api/admin/token-packs', authenticateToken, async (req: AuthRequest, r
     return;
   }
   
-  // GPT-4.1 mini原価モデルのバリデーション（利益率80%）
+  // 新トークン計算モデルのバリデーション（利益率90%）
   if (!validateTokenPriceRatio(finalTokens, finalPrice)) {
-    const expectedTokens = Math.floor(finalPrice * TOKENS_PER_YEN);
+    const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+    const expectedTokens = calcTokensToGive(finalPrice, currentModel);
     res.status(400).json({ 
       success: false,
-      message: `GPT-4.1 mini原価モデル違反: ${finalPrice}円に対して${finalTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン（利益率80%設計）` 
+      message: `${currentModel}モデル違反: ${finalPrice}円に対して${finalTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン（利益率90%設計）` 
     });
     return;
   }
@@ -2335,12 +2483,13 @@ app.put('/api/admin/token-packs/:id', authenticateToken, async (req: AuthRequest
         return;
       }
       
-      // GPT-4.1 mini原価モデルのバリデーション（利益率80%）
+      // 新トークン計算モデルのバリデーション（利益率90%）
       if (!validateTokenPriceRatio(newTokens, newPrice)) {
-        const expectedTokens = Math.floor(newPrice * TOKENS_PER_YEN);
+        const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+        const expectedTokens = calcTokensToGive(newPrice, currentModel);
         res.status(400).json({ 
           success: false,
-          message: `GPT-4.1 mini原価モデル違反: ${newPrice}円に対して${newTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン（利益率80%設計）` 
+          message: `${currentModel}モデル違反: ${newPrice}円に対して${newTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン（利益率90%設計）` 
         });
         return;
       }
@@ -2409,12 +2558,13 @@ app.put('/api/admin/token-packs/:id', authenticateToken, async (req: AuthRequest
         return;
       }
       
-      // GPT-4.1 mini原価モデルのバリデーション（利益率80%）
+      // 新トークン計算モデルのバリデーション（利益率90%）
       if (!validateTokenPriceRatio(newTokens, newPrice)) {
-        const expectedTokens = Math.floor(newPrice * TOKENS_PER_YEN);
+        const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+        const expectedTokens = calcTokensToGive(newPrice, currentModel);
         res.status(400).json({ 
           success: false,
-          message: `GPT-4.1 mini原価モデル違反: ${newPrice}円に対して${newTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン（利益率80%設計）` 
+          message: `${currentModel}モデル違反: ${newPrice}円に対して${newTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン（利益率90%設計）` 
         });
         return;
       }
@@ -2593,13 +2743,13 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
         converted_amount: priceInMainUnit
       });
       
-      // GPT-4.1 mini原価モデルに基づくトークン数計算（利益率80%）
-      const calculatedTokens = Math.floor(priceInMainUnit * TOKENS_PER_YEN);
+      // 新トークン計算システムに基づくトークン数計算（利益率90%）
+      const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+      const calculatedTokens = calcTokensToGive(priceInMainUnit, currentModel);
       
-      // 実際の利益率計算
-      const totalCost = calculatedTokens * TOKEN_COST_PER_UNIT; // 総原価
-      const profitMargin = ((priceInMainUnit - totalCost) / priceInMainUnit) * 100; // 実際の利益率
-      const tokenPerYen = TOKENS_PER_YEN; // 166.66トークン/円
+      // 実際の利益率は90%固定
+      const profitMargin = 90;
+      const tokenPerYen = calcTokensToGive(1, currentModel); // 1円あたりのトークン数
       
       // Product名を安全に取得
       const productName = price.product && typeof price.product === 'object' && 'name' in price.product 
@@ -2644,110 +2794,6 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
   }
 });
 
-// Stripe Webhook endpoint for payment completion
-app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), async (req: Request, res: Response): Promise<void> => {
-  console.log('🔔 Stripe Webhook received');
-  
-  const sig = req.headers['stripe-signature'] as string;
-  let event: Stripe.Event;
-
-  try {
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    
-    if (!stripe || !webhookSecret) {
-      console.error('❌ Stripe or webhook secret not configured');
-      res.status(500).json({ error: 'Stripe not configured' });
-      return;
-    }
-    
-    console.log('🔥 Stripe signature verification');
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    console.log('✅ Stripe signature verified');
-
-    // Handle different event types
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        console.log('💳 Checkout session completed:', session.id);
-        
-        // Extract metadata
-        const userId = session.metadata?.userId;
-        const priceId = session.metadata?.priceId;
-        
-        if (!userId) {
-          console.error('❌ No userId in session metadata');
-          break;
-        }
-        
-        // Get token pack information
-        let tokenPack: ITokenPack | null = null;
-        if (isMongoConnected && priceId) {
-          tokenPack = await TokenPackModel.findOne({ priceId }).lean();
-        }
-        
-        // Calculate tokens based on amount or token pack
-        let tokensToAdd = 0;
-        if (tokenPack) {
-          tokensToAdd = tokenPack.tokens;
-          console.log('🎁 Using token pack:', { name: tokenPack.name, tokens: tokensToAdd });
-        } else {
-          // Fallback: calculate based on amount using GPT-4 cost model
-          const amountInYen = session.amount_total || 0;
-          tokensToAdd = Math.floor(amountInYen * TOKENS_PER_YEN);
-          console.log('🎁 Calculated tokens from amount:', { amountInYen, tokensToAdd });
-        }
-        
-        if (tokensToAdd > 0) {
-          // Add tokens to user account
-          if (isMongoConnected) {
-            let user = await UserModel.findById(userId);
-            if (!user) {
-              // Create user if doesn't exist
-              user = new UserModel({
-                _id: userId,
-                email: `user_${userId}@example.com`,
-                name: `User ${userId}`,
-                tokenBalance: tokensToAdd
-              });
-            } else {
-              user.tokenBalance += tokensToAdd;
-            }
-            await user.save();
-            
-            console.log('✅ MongoDB: Tokens added successfully', {
-              userId,
-              tokensAdded: tokensToAdd,
-              newBalance: user.tokenBalance
-            });
-          }
-        }
-        
-        break;
-      }
-      
-      case 'payment_intent.succeeded': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('💰 Payment succeeded:', paymentIntent.id);
-        break;
-      }
-      
-      case 'payment_intent.payment_failed': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('❌ Payment failed:', paymentIntent.id);
-        break;
-      }
-      
-      default:
-        console.log('ℹ️ Unhandled event type:', { eventType: event.type });
-    }
-
-    res.json({ received: true, eventType: event.type });
-    
-  } catch (error) {
-    console.error('❌ Webhook処理エラー:', error);
-    res.status(400).send(`Webhook Error: ${(error as Error).message}`);
-  }
-});
 
 // Stripe Checkout Session作成API
 app.post('/api/purchase/create-checkout-session', authenticateToken, async (req: Request, res: Response): Promise<void> => {
@@ -2858,7 +2904,8 @@ app.post('/api/user/process-session', authenticateToken, async (req: Request, re
         // Fallback: 金額ベースで計算
         if (tokensToAdd === 0) {
           const amountInYen = session.amount_total || 0;
-          tokensToAdd = Math.floor(amountInYen * TOKENS_PER_YEN);
+          const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+          tokensToAdd = calcTokensToGive(amountInYen, currentModel);
         }
         
         // ユーザーにトークンを付与
@@ -5008,4 +5055,7 @@ app.delete('/api/admin/cache/character/:characterId', authenticateToken, async (
 
 app.listen(PORT, () => {
   console.log('✅ Server is running on:', { port: PORT, url: `http://localhost:${PORT}` });
+  
+  // 🎭 MoodEngine Cronジョブを開始
+  startAllMoodJobs();
 });

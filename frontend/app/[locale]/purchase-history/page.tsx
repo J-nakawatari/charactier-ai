@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { getAuthHeaders } from '@/utils/auth';
 import { ShoppingCart, Calendar, CreditCard, Package, Filter, Download, RefreshCw } from 'lucide-react';
 import UserSidebar from '@/components/user/UserSidebar';
 
@@ -49,9 +50,7 @@ export default function PurchaseHistoryPage() {
       try {
         setIsLoading(true);
         const response = await fetch('/api/user/purchase-history', {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: getAuthHeaders(),
         });
 
         if (!response.ok) {
@@ -62,8 +61,17 @@ export default function PurchaseHistoryPage() {
         setHistoryData(data);
       } catch (error) {
         console.error('Purchase history fetch error:', error);
-        // フォールバック: モックデータを使用
-        setHistoryData(generateMockData());
+        // API未実装の場合は空データを設定
+        setHistoryData({
+          purchases: [],
+          totalSpent: 0,
+          totalPurchases: 0,
+          summary: {
+            tokens: { count: 0, amount: 0 },
+            characters: { count: 0, amount: 0 },
+            subscriptions: { count: 0, amount: 0 }
+          }
+        });
       } finally {
         setIsLoading(false);
       }
@@ -72,7 +80,6 @@ export default function PurchaseHistoryPage() {
     fetchPurchaseHistory();
   }, []);
 
-  // モックデータは削除済み - APIから取得
 
   // フィルタリングとソート
   const getFilteredAndSortedPurchases = () => {
@@ -175,7 +182,7 @@ export default function PurchaseHistoryPage() {
                     <h3 className="font-medium text-gray-900 text-sm truncate">{t('summary.totalSpent')}</h3>
                   </div>
                   <p className="text-2xl font-bold text-gray-900 mt-2">
-                    ¥{historyData.totalSpent.toLocaleString()}
+                    ¥{(historyData.totalSpent || 0).toLocaleString()}
                   </p>
                 </div>
                 
@@ -185,10 +192,10 @@ export default function PurchaseHistoryPage() {
                     <h3 className="font-medium text-gray-900 text-sm truncate">{t('summary.tokens')}</h3>
                   </div>
                   <p className="text-2xl font-bold text-gray-900 mt-2">
-                    {t('summary.count', { count: historyData.summary.tokens.count })}
+                    {(historyData.summary?.tokens?.count || 0).toLocaleString()}回
                   </p>
                   <p className="text-sm text-gray-600">
-                    ¥{historyData.summary.tokens.amount.toLocaleString()}
+                    ¥{(historyData.summary?.tokens?.amount || 0).toLocaleString()}
                   </p>
                 </div>
                 
@@ -198,10 +205,10 @@ export default function PurchaseHistoryPage() {
                     <h3 className="font-medium text-gray-900 text-sm truncate">{t('summary.characters')}</h3>
                   </div>
                   <p className="text-2xl font-bold text-gray-900 mt-2">
-                    {t('summary.characterCount', { count: historyData.summary.characters.count })}
+                    {(historyData.summary?.characters?.count || 0).toLocaleString()}回
                   </p>
                   <p className="text-sm text-gray-600">
-                    ¥{historyData.summary.characters.amount.toLocaleString()}
+                    ¥{(historyData.summary?.characters?.amount || 0).toLocaleString()}
                   </p>
                 </div>
                 
@@ -211,7 +218,7 @@ export default function PurchaseHistoryPage() {
                     <h3 className="font-medium text-gray-900 text-sm truncate">{t('summary.totalTransactions')}</h3>
                   </div>
                   <p className="text-2xl font-bold text-gray-900 mt-2">
-                    {t('summary.count', { count: historyData.totalPurchases })}
+                    {(historyData.totalPurchases || 0).toLocaleString()}回
                   </p>
                 </div>
               </div>
@@ -310,7 +317,7 @@ export default function PurchaseHistoryPage() {
                                 {purchase.details}
                               </div>
                               <div className="text-sm text-gray-500">
-                                {purchase.type === 'token' ? `${purchase.amount.toLocaleString()}トークン` : 
+                                {purchase.type === 'token' ? `${(purchase.amount || 0).toLocaleString()}トークン` : 
                                  purchase.type === 'character' ? '1キャラクター' : 
                                  'サブスクリプション'}
                               </div>
@@ -321,7 +328,7 @@ export default function PurchaseHistoryPage() {
                           {formatDate(purchase.date)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          ¥{purchase.price.toLocaleString()}
+                          ¥{(purchase.price || 0).toLocaleString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {purchase.paymentMethod}
@@ -367,9 +374,9 @@ export default function PurchaseHistoryPage() {
                               {purchase.details}
                             </h3>
                             <p className="text-xs text-gray-500 mt-1">
-                              {purchase.type === 'token' ? t('types.token', { amount: purchase.amount.toLocaleString() }) : 
-                               purchase.type === 'character' ? t('types.character') : 
-                               t('types.subscription')}
+                              {purchase.type === 'token' ? `${(purchase.amount || 0).toLocaleString()}トークン` : 
+                               purchase.type === 'character' ? '1キャラクター' : 
+                               'サブスクリプション'}
                             </p>
                           </div>
                           <div className="flex-shrink-0 ml-2">
@@ -382,7 +389,7 @@ export default function PurchaseHistoryPage() {
                           <div>
                             <span className="text-gray-500">{t('details.amount')}</span>
                             <span className="font-medium text-gray-900 ml-1">
-                              ¥{purchase.price.toLocaleString()}
+                              ¥{(purchase.price || 0).toLocaleString()}
                             </span>
                           </div>
                           <div>
@@ -418,10 +425,10 @@ export default function PurchaseHistoryPage() {
                 <div className="text-center py-8 sm:py-12 px-4">
                   <ShoppingCart className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
-                    {t('empty.title')}
+                    購入履歴がありません
                   </h3>
                   <p className="text-sm sm:text-base text-gray-500">
-                    {t('empty.description')}
+                    まだ購入がありません。トークンやキャラクターを購入すると、ここに履歴が表示されます。
                   </p>
                 </div>
               )}
