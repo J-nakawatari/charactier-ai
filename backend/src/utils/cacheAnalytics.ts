@@ -7,6 +7,28 @@ import { CharacterModel } from '../models/CharacterModel';
  * 高度なキャッシュパフォーマンス分析とメトリクス計算
  */
 
+// MongoDB集約結果の型定義
+
+interface CharacterData {
+  _id: string;
+  name: {
+    ja: string;
+    en?: string;
+  };
+  [key: string]: unknown;
+}
+
+interface CacheDocument {
+  _id: string;
+  characterId: string;
+  hits: number;
+  lastAccessed: Date;
+  generationTime: number;
+  memoryUsage: number;
+  affinityLevel?: number;
+  [key: string]: unknown;
+}
+
 export interface CachePerformanceMetrics {
   totalCaches: number;
   totalHits: number;
@@ -147,7 +169,7 @@ export async function getCachePerformanceMetrics(
  * キャラクター別キャッシュ統計取得
  */
 export async function getCacheStatsByCharacter(
-  characters: any[],
+  characters: CharacterData[],
   timeframe: number = 30
 ): Promise<CharacterCacheStats[]> {
   const startDate = new Date(Date.now() - timeframe * 24 * 60 * 60 * 1000);
@@ -198,7 +220,7 @@ export async function getCacheStatsByCharacter(
 /**
  * 親密度レベル分布計算
  */
-function getAffinityDistribution(caches: any[]): AffinityDistribution[] {
+function getAffinityDistribution(caches: CacheDocument[]): AffinityDistribution[] {
   const distributions = [
     { range: '0-20', min: 0, max: 20 },
     { range: '21-40', min: 21, max: 40 },
@@ -228,7 +250,7 @@ function getAffinityDistribution(caches: any[]): AffinityDistribution[] {
 /**
  * キャッシュ効率性計算
  */
-function calculateCacheEfficiency(caches: any[]): number {
+function calculateCacheEfficiency(caches: CacheDocument[]): number {
   if (caches.length === 0) return 0;
 
   const totalScore = caches.reduce((score, cache) => {
@@ -277,7 +299,7 @@ function calculateOverallEfficiencyScore(characterStats: CharacterCacheStats[]):
  * トップパフォーマンスキャッシュ取得
  */
 export async function getTopPerformingCaches(
-  characters: any[],
+  characters: CharacterData[],
   limit: number = 10
 ): Promise<CacheEntry[]> {
   const topCaches = await CharacterPromptCache.find({
@@ -294,7 +316,7 @@ export async function getTopPerformingCaches(
     );
 
     return {
-      _id: (cache._id as any).toString(),
+      _id: cache._id.toString(),
       characterId: cache.characterId.toString(),
       characterName: character?.name?.ja || character?.name || 'Unknown',
       affinityLevel: cache.promptConfig.affinityLevel,
