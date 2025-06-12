@@ -29,8 +29,11 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // メールアドレスの重複チェック
-    const existingUser = await UserModel.findOne({ email });
+    // メールアドレスの重複チェック（アクティブユーザーのみ）
+    const existingUser = await UserModel.findOne({ 
+      email, 
+      isActive: { $ne: false } 
+    });
     if (existingUser) {
       res.status(409).json({
         error: 'Email already exists',
@@ -49,7 +52,8 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       email,
       password: hashedPassword,
       tokenBalance: 10000, // 新規ユーザーには10,000トークンを付与
-      isActive: true
+      isActive: true,
+      isSetupComplete: false // 初回セットアップ未完了
     });
 
     const savedUser = await newUser.save();
@@ -66,7 +70,8 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
         _id: savedUser._id,
         name: savedUser.name,
         email: savedUser.email,
-        tokenBalance: savedUser.tokenBalance
+        tokenBalance: savedUser.tokenBalance,
+        isSetupComplete: savedUser.isSetupComplete
       },
       tokens: {
         accessToken,
@@ -131,16 +136,25 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     const refreshToken = generateRefreshToken(user._id.toString());
 
     console.log('✅ User logged in:', { id: user._id, email: user.email });
+    console.log('🔍 Raw user object fields:', Object.keys(user.toObject()));
+    console.log('🔍 User isSetupComplete raw:', user.isSetupComplete);
+    console.log('🔍 User isSetupComplete type:', typeof user.isSetupComplete);
+    console.log('🔍 User full object:', JSON.stringify(user.toObject(), null, 2));
 
     // ログイン成功レスポンス
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      tokenBalance: user.tokenBalance,
+      isSetupComplete: user.isSetupComplete
+    };
+    
+    console.log('🔍 Sending user response:', JSON.stringify(userResponse, null, 2));
+    
     res.json({
       message: 'ログインしました',
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        tokenBalance: user.tokenBalance
-      },
+      user: userResponse,
       tokens: {
         accessToken,
         refreshToken

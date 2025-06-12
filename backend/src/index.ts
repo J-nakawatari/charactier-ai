@@ -737,6 +737,13 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
       return;
     }
 
+    // ユーザー情報を取得
+    const user = await UserModel.findById(req.user._id);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
     // キャラクター情報を多言語対応で返す
     const localizedCharacter = {
       _id: character._id,
@@ -748,12 +755,28 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
       themeColor: character.themeColor
     };
 
+    // キャラクターに対する親密度情報を取得
+    const characterAffinity = user.affinities.find(
+      aff => aff.character.toString() === characterId
+    );
+
+    // ユーザー状態情報を構築
+    const userState = {
+      tokenBalance: user.tokenBalance || 0,
+      affinity: {
+        level: characterAffinity?.level || chatData.currentAffinity || 0,
+        experience: characterAffinity?.experience || chatData.totalTokensUsed || 0
+      },
+      unlockedGalleryImages: characterAffinity?.unlockedRewards || []
+    };
+
     res.json({
       chat: {
         _id: chatData._id,
         messages: chatData.messages
       },
-      character: localizedCharacter
+      character: localizedCharacter,
+      userState: userState
     });
 
   } catch (error) {
@@ -1120,6 +1143,9 @@ app.get('/api/user/dashboard', authenticateToken, async (req: Request, res: Resp
         _id: user._id,
         name: user.name,
         email: user.email,
+        tokenBalance: user.tokenBalance,
+        selectedCharacter: user.selectedCharacter,
+        isSetupComplete: user.isSetupComplete,
         createdAt: user.createdAt || new Date(),
         lastLoginAt: new Date()
       },
@@ -2978,7 +3004,9 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
       // MongoDB実装
       console.log('🍃 Using MongoDB for admin users list');
       
-      const query: any = {};
+      const query: any = {
+        isActive: { $ne: false } // 論理削除されたユーザーを除外
+      };
       
       // 検索フィルター
       if (search) {
@@ -3204,16 +3232,8 @@ app.delete('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, r
       return;
     }
 
-    const user = await UserModel.findByIdAndUpdate(
-      id,
-      { 
-        isActive: false,
-        accountStatus: 'banned',
-        banReason: '管理者により削除'
-      },
-      { new: true, select: '-password' }
-    );
-
+    // 関連データも含めて完全削除
+    const user = await UserModel.findById(id);
     if (!user) {
       res.status(404).json({
         error: 'User not found',
@@ -3222,18 +3242,42 @@ app.delete('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, r
       return;
     }
 
-    console.log('✅ User deleted (soft):', { id, name: user.name, email: user.email });
+    // 関連データを削除
+    try {
+      // チャット履歴を削除
+      if (ChatModel) {
+        const deletedChats = await ChatModel.deleteMany({ userId: id });
+        console.log('✅ Deleted chats:', deletedChats.deletedCount);
+      }
+      
+      // トークン使用履歴を削除
+      if (TokenUsage) {
+        const deletedTokenUsage = await TokenUsage.deleteMany({ userId: id });
+        console.log('✅ Deleted token usage records:', deletedTokenUsage.deletedCount);
+      }
+    } catch (relatedDataError) {
+      console.warn('⚠️ Warning: Failed to delete some related data:', relatedDataError);
+      // 関連データの削除に失敗してもユーザー削除は続行
+    }
+    
+    // ユーザーを物理削除
+    await UserModel.findByIdAndDelete(id);
+
+    console.log('✅ User completely deleted:', { id, name: user.name, email: user.email });
 
     res.json({
       success: true,
-      message: `ユーザー ${user.name} を削除しました`
+      message: `ユーザー ${user.name} を完全に削除しました`
     });
 
   } catch (error) {
     console.error('❌ User deletion error:', error);
+    console.error('❌ Error details:', error instanceof Error ? error.message : error);
+    console.error('❌ Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
     res.status(500).json({
       error: 'Server error',
-      message: 'ユーザーの削除に失敗しました'
+      message: 'ユーザーの削除に失敗しました',
+      details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
