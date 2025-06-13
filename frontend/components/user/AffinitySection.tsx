@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Heart, Star, Lock, Unlock } from 'lucide-react';
 import Image from 'next/image';
+import AffinityDetailModal from './AffinityDetailModal';
 
 interface LocalizedString {
   ja: string;
@@ -30,6 +31,7 @@ interface AffinitySectionProps {
 }
 
 export default function AffinitySection({ affinities, locale }: AffinitySectionProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const getProgressPercentage = (experience: number, maxExperience: number) => {
     return maxExperience > 0 ? (experience / maxExperience) * 100 : 0;
@@ -158,11 +160,22 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
           <p className="text-sm text-gray-600 mb-2">
             キャラクターとの会話で親密度がアップします
           </p>
-          <button className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors"
+          >
             親密度について詳しく見る
           </button>
         </div>
       </div>
+
+      {/* 親密度詳細モーダル */}
+      <AffinityDetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        affinities={affinities || []}
+        locale={locale}
+      />
     </div>
   );
 }

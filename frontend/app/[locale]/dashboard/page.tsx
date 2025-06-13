@@ -13,7 +13,6 @@ import BadgeGallery from '@/components/user/BadgeGallery';
 import AnalyticsCharts from '@/components/user/AnalyticsCharts';
 import EnhancedAnalyticsSection from '@/components/user/EnhancedAnalyticsSection';
 import AchievementSystem from '@/components/user/AchievementSystem';
-// import { getMockDashboardData } from '@/mock/dashboardData'; // モックデータは削除済み
 
 interface DashboardData {
   user: {
@@ -74,34 +73,9 @@ export default function DashboardPage() {
         setDashboardData(data);
       } catch (error) {
         console.error('Dashboard data fetch error:', error);
-        // フォールバック: 基本的なデータ構造を設定
-        setDashboardData({
-          user: {
-            _id: 'unknown',
-            name: 'ユーザー',
-            email: '',
-            createdAt: new Date(),
-            lastLoginAt: new Date()
-          },
-          tokens: {
-            balance: 0,
-            totalPurchased: 0,
-            totalUsed: 0,
-            recentUsage: []
-          },
-          affinities: [],
-          recentChats: [],
-          purchaseHistory: [],
-          loginHistory: [],
-          notifications: [],
-          badges: [],
-          analytics: {
-            chatCountPerDay: [],
-            tokenUsagePerDay: [],
-            affinityProgress: [],
-            characterInteractions: []
-          }
-        });
+        // エラー時は認証が必要であることを明確に表示
+        console.error('Dashboard data fetch failed - authentication required');
+        router.push(`/${locale}/login`);
       } finally {
         setIsLoading(false);
       }

@@ -3,6 +3,7 @@
 import React from 'react';
 import { MessageSquare, Clock, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 interface LocalizedString {
   ja: string;
@@ -27,6 +28,7 @@ interface RecentChatHistoryProps {
 }
 
 export default function RecentChatHistory({ recentChats, locale }: RecentChatHistoryProps) {
+  const router = useRouter();
   
   const formatRelativeTime = (date: Date) => {
     const now = new Date();
@@ -42,8 +44,13 @@ export default function RecentChatHistory({ recentChats, locale }: RecentChatHis
   };
 
   const handleChatClick = (chatId: string, characterId: string) => {
-    // チャット画面への遷移ロジック
-    console.log(`Navigate to chat: ${chatId} with character: ${characterId}`);
+    // キャラクターのチャット画面に遷移
+    router.push(`/${locale}/characters/${characterId}/chat`);
+  };
+
+  const handleNewChatClick = () => {
+    // キャラクター一覧画面に遷移
+    router.push(`/${locale}/characters`);
   };
 
   if ((recentChats || []).length === 0) {
@@ -58,7 +65,10 @@ export default function RecentChatHistory({ recentChats, locale }: RecentChatHis
         <div className="text-center py-8">
           <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 mb-3">まだチャット履歴がありません</p>
-          <button className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors">
+          <button 
+            onClick={handleNewChatClick}
+            className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors"
+          >
             キャラクターと話してみる
           </button>
         </div>
@@ -76,7 +86,10 @@ export default function RecentChatHistory({ recentChats, locale }: RecentChatHis
           </div>
           <h3 className="text-lg font-semibold text-gray-900">最近のチャット</h3>
         </div>
-        <button className="text-sm text-blue-600 hover:text-blue-700 transition-colors">
+        <button 
+          onClick={handleNewChatClick}
+          className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
+        >
           すべて見る
         </button>
       </div>
@@ -138,7 +151,10 @@ export default function RecentChatHistory({ recentChats, locale }: RecentChatHis
       {/* フッター */}
       <div className="mt-4 pt-4 border-t border-gray-100">
         <div className="text-center">
-          <button className="w-full py-2 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
+          <button 
+            onClick={handleNewChatClick}
+            className="w-full py-2 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+          >
             新しいチャットを開始
           </button>
         </div>

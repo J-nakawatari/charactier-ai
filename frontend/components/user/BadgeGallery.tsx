@@ -28,7 +28,7 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
   const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
   
   const unlockedCount = (badges || []).filter(badge => badge.isUnlocked).length;
-  const totalCount = (badges || []).length;
+  const totalCount = Math.max((badges || []).length, 1); // 0で除算を防ぐ
   
   const filteredBadges = (badges || []).filter(badge => {
     switch (filter) {
@@ -79,7 +79,7 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
           <div>
             <h3 className="text-lg font-semibold text-gray-900">バッジコレクション</h3>
             <p className="text-sm text-gray-600">
-              {unlockedCount} / {totalCount} 獲得済み
+              {unlockedCount} / {(badges || []).length} 獲得済み
             </p>
           </div>
         </div>
@@ -87,7 +87,7 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
         {/* 達成率 */}
         <div className="text-right">
           <div className="text-2xl font-bold text-gray-900">
-            {Math.round((unlockedCount / totalCount) * 100)}%
+            {(badges || []).length === 0 ? '0' : Math.round((unlockedCount / (badges || []).length) * 100)}%
           </div>
           <div className="text-sm text-gray-500">達成率</div>
         </div>
@@ -98,7 +98,9 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
             className="h-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-300"
-            style={{ width: `${(unlockedCount / totalCount) * 100}%` }}
+            style={{ 
+              width: `${(badges || []).length === 0 ? 0 : (unlockedCount / (badges || []).length) * 100}%` 
+            }}
           />
         </div>
       </div>
@@ -206,7 +208,8 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
         <div className="text-center py-8">
           <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500">
-            {filter === 'unlocked' ? '獲得済みのバッジがありません' : 
+            {(badges || []).length === 0 ? 'バッジシステムを準備中です...' : 
+             filter === 'unlocked' ? '獲得済みのバッジがありません' : 
              filter === 'locked' ? 'すべてのバッジを獲得済みです！' : 
              'バッジがありません'}
           </p>
