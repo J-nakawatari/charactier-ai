@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   UserCog,
-  Database
+  Database,
+  Cpu
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -24,6 +25,7 @@ const sidebarItems = [
   { href: '/admin/users', icon: Users, label: 'ユーザー管理' },
   { href: '/admin/characters', icon: MessageSquare, label: 'キャラクター管理' },
   { href: '/admin/tokens', icon: Coins, label: 'トークチケット管理' },
+  { href: '/admin/models', icon: Cpu, label: 'AIモデル管理' },
   { href: '/admin/cache', icon: Database, label: 'キャッシュ管理' },
   { href: '/admin/admins', icon: UserCog, label: '管理者管理' },
   { href: '/admin/notifications', icon: Bell, label: '通知管理' },

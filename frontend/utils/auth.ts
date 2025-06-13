@@ -8,6 +8,7 @@ export interface AuthUser {
   name: string;
   email: string;
   tokenBalance?: number;
+  isSetupComplete?: boolean;
 }
 
 export interface AuthState {

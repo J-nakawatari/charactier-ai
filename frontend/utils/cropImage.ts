@@ -61,6 +61,6 @@ export const getCroppedImg = async (
       } else {
         reject(new Error('Canvas is empty'));
       }
-    }, 'image/jpeg', 0.9);
+    }, 'image/png', 1.0);
   });
 };

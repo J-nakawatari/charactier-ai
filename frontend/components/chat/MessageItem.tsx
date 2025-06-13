@@ -3,8 +3,10 @@
 import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import Image from 'next/image';
-import { Coins, Database, Clock, Zap } from 'lucide-react';
+import { Coins, Database, Clock } from 'lucide-react';
 import { Message } from '@/types/common';
+import { useCharacterState } from '@/hooks/useCharacterState';
+import { getMoodIcon, getMoodIconColor, getMoodLabel } from '@/utils/moodUtils';
 
 // ChatLayout向けの文字列ベースCharacter型
 interface Character {
@@ -21,28 +23,18 @@ interface MessageItemProps {
   message: Message;
   character: Character;
   showAdvanced?: boolean; // 高度情報表示フラグ
+  affinityLevel?: number; // 親密度レベル（ムード情報のため）
 }
 
-export function MessageItem({ message, character, showAdvanced = false }: MessageItemProps) {
+export function MessageItem({ message, character, showAdvanced = false, affinityLevel = 0 }: MessageItemProps) {
   const isUser = message.role === 'user';
   const timeAgo = formatDistanceToNow(message.timestamp, { 
     addSuffix: true, 
     locale: ja 
   });
 
-  // 🎯 高度情報のモック生成（実際のメッセージに基づく）
-  const getAdvancedInfo = () => {
-    if (isUser || !showAdvanced) return null;
-    
-    return {
-      cacheHit: Math.random() > 0.3, // 70%でキャッシュヒット
-      responseTime: Math.floor(Math.random() * 800) + 100, // 100-900ms
-      modelUsed: Math.random() > 0.5 ? 'gpt-4' : 'gpt-3.5-turbo',
-      processingTime: Math.floor(Math.random() * 200) + 50 // 50-250ms
-    };
-  };
-
-  const advancedInfo = getAdvancedInfo();
+  // 共通のキャラクター状態を取得
+  const { characterState } = useCharacterState(character._id, affinityLevel);
 
   if (isUser) {
     return (
@@ -104,27 +96,34 @@ export function MessageItem({ message, character, showAdvanced = false }: Messag
             )}
             
             {/* 🎯 高度情報表示 */}
-            {advancedInfo && (
+            {showAdvanced && characterState && (
               <>
+                {/* ムード状態 */}
+                <div className="flex items-center space-x-1">
+                  {(() => {
+                    const IconComponent = getMoodIcon(characterState.mood);
+                    const colorClass = getMoodIconColor(characterState.mood);
+                    return <IconComponent className={`w-3 h-3 ${colorClass}`} />;
+                  })()}
+                  <span className="text-xs">
+                    {getMoodLabel(characterState.mood)}
+                  </span>
+                </div>
+                
                 {/* キャッシュ状態 */}
                 <div className="flex items-center space-x-1">
-                  <Database className={`w-3 h-3 ${advancedInfo.cacheHit ? 'text-green-500' : 'text-red-500'}`} />
-                  <span className={advancedInfo.cacheHit ? 'text-green-600' : 'text-red-600'}>
-                    {advancedInfo.cacheHit ? 'キャッシュ' : 'ライブ'}
+                  <Database className={`w-3 h-3 ${characterState.cacheStatus.isHit ? 'text-green-500' : 'text-red-500'}`} />
+                  <span className={characterState.cacheStatus.isHit ? 'text-green-600' : 'text-red-600'}>
+                    {characterState.cacheStatus.isHit ? 'キャッシュ' : 'ライブ'}
                   </span>
                 </div>
                 
                 {/* 応答時間 */}
                 <div className="flex items-center space-x-1">
                   <Clock className="w-3 h-3 text-blue-500" />
-                  <span>{advancedInfo.responseTime}ms</span>
+                  <span>{characterState.cacheStatus.responseTime}ms</span>
                 </div>
                 
-                {/* AIモデル */}
-                <div className="flex items-center space-x-1">
-                  <Zap className="w-3 h-3 text-purple-500" />
-                  <span className="font-mono text-xs">{advancedInfo.modelUsed}</span>
-                </div>
               </>
             )}
           </div>

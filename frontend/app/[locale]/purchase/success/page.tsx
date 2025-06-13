@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, Coins, ArrowLeft } from 'lucide-react';
+import { getAuthHeaders } from '@/utils/auth';
 
-export default function PurchaseSuccessPage() {
+function PurchaseSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [processing, setProcessing] = useState(true);
@@ -29,8 +30,8 @@ export default function PurchaseSuccessPage() {
       let eventSource: EventSource | null = null;
       let fallbackTimeout: NodeJS.Timeout;
       
-      // SSEでリアルタイム通知を受信
-      eventSource = new EventSource(`/api/purchase/events/${sessionId}`);
+      // SSEでリアルタイム通知を受信（バックエンドに直接接続）
+      eventSource = new EventSource(`http://localhost:3004/api/purchase/events/${sessionId}`);
       
       eventSource.onmessage = (event) => {
         try {
@@ -97,7 +98,9 @@ export default function PurchaseSuccessPage() {
       console.log('🔄 フォールバック処理開始（従来のポーリング方式）');
       
       // Stripe Session情報から購入トークン数を取得
-      const sessionResponse = await fetch(`/api/purchase/session/${sessionId}`);
+      const sessionResponse = await fetch(`/api/purchase/session/${sessionId}`, {
+        headers: getAuthHeaders()
+      });
       let purchasedTokens = null;
       
       if (sessionResponse.ok) {
@@ -107,7 +110,9 @@ export default function PurchaseSuccessPage() {
       }
       
       // 初期ユーザー情報取得
-      const userResponse = await fetch('/api/auth/user');
+      const userResponse = await fetch('/api/auth/user', {
+        headers: getAuthHeaders()
+      });
       if (!userResponse.ok) {
         throw new Error('ユーザー情報の取得に失敗しました');
       }
@@ -124,7 +129,9 @@ export default function PurchaseSuccessPage() {
         const waitTime = 2000 + (retryCount * 1000);
         await new Promise(resolve => setTimeout(resolve, waitTime));
         
-        const updatedUserResponse = await fetch('/api/auth/user');
+        const updatedUserResponse = await fetch('/api/auth/user', {
+          headers: getAuthHeaders()
+        });
         if (!updatedUserResponse.ok) {
           throw new Error('更新されたユーザー情報の取得に失敗しました');
         }
@@ -169,7 +176,19 @@ export default function PurchaseSuccessPage() {
   };
 
   const handleBackToChat = () => {
-    router.push('/ja/characters/3/chat');
+    // localStorageから元のチャット画面情報を取得
+    const returnCharacterId = localStorage.getItem('returnToCharacterId');
+    const returnLocale = localStorage.getItem('returnToLocale') || 'ja';
+    
+    if (returnCharacterId) {
+      // 保存されたキャラクターIDに戻る
+      localStorage.removeItem('returnToCharacterId');
+      localStorage.removeItem('returnToLocale');
+      router.push(`/${returnLocale}/characters/${returnCharacterId}/chat`);
+    } else {
+      // フォールバック: デフォルトのチャット画面
+      router.push('/ja/characters/3/chat');
+    }
   };
 
   return (
@@ -248,5 +267,20 @@ export default function PurchaseSuccessPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function PurchaseSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">決済情報を確認中...</p>
+        </div>
+      </div>
+    }>
+      <PurchaseSuccessContent />
+    </Suspense>
   );
 }

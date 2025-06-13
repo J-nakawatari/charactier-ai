@@ -6,7 +6,8 @@ import {
   Coins, 
   Menu,
   X,
-  Home
+  Home,
+  Images
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
@@ -90,6 +91,7 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
     { id: 'home', href: `/${currentLocale}/dashboard`, icon: Home, label: t('home') },
     { id: 'characters', href: `/${currentLocale}/characters`, icon: Users, label: t('characters') },
     { id: 'chat', href: getChatHref(), icon: MessageSquare, label: t('chatHistory') },
+    { id: 'library', href: `/${currentLocale}/library`, icon: Images, label: t('library') },
     { id: 'tokens', href: null, icon: Coins, label: t('tokens'), onClick: () => setShowPurchaseModal(true) },
   ];
 

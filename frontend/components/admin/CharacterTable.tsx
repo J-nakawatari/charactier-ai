@@ -1,21 +1,7 @@
 'use client';
 
 import { Eye, Edit, MoreHorizontal, Heart } from 'lucide-react';
-
-interface Character {
-  _id: string;
-  name: { ja: string; en: string };
-  description: { ja: string; en: string };
-  personalityPreset: string;
-  personalityTags: string[];
-  characterAccessType: 'free' | 'token-based' | 'premium';
-  isActive: boolean;
-  imageCharacterSelect?: string;
-  totalConversations?: number;
-  averageAffinity?: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Character } from '@/types/common';
 
 interface CharacterTableProps {
   characters: Character[];
@@ -76,24 +62,24 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
               <div>
                 <div className="text-xs text-gray-500">価格</div>
                 <div className="text-sm font-medium text-gray-900">
-                  {character.isFree ? (
+                  {character.characterAccessType === 'free' ? (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                       無料
                     </span>
                   ) : (
-                    `¥${character.price}`
+                    `¥${character.price || 0}`
                   )}
                 </div>
               </div>
               <div>
                 <div className="text-xs text-gray-500">チャット数</div>
-                <div className="text-sm font-medium text-gray-900">{character.totalChats.toLocaleString()}</div>
+                <div className="text-sm font-medium text-gray-900">{character.totalChats?.toLocaleString() || 0}</div>
               </div>
               <div>
                 <div className="text-xs text-gray-500">平均親密度</div>
                 <div className="flex items-center">
                   <Heart className="w-3 h-3 text-red-400 mr-1" />
-                  <span className="text-sm font-medium text-gray-900">{character.avgIntimacy.toFixed(1)}</span>
+                  <span className="text-sm font-medium text-gray-900">{character.avgIntimacy?.toFixed(1) || '0.0'}</span>
                 </div>
               </div>
               <div>
@@ -109,7 +95,7 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
             </div>
             
             <div className="text-xs text-gray-500">
-              特徴: {character.traits.slice(0, 2).join(', ')}
+              特徴: {character.personalityTags?.slice(0, 2).join(', ') || 'N/A'}
             </div>
           </div>
         ))}
@@ -190,14 +176,14 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
                 </td>
                 <td className="py-4 px-2">
                   <div className="text-sm text-gray-900">
-                    {(character.totalConversations || 0).toLocaleString()}
+                    {(character.totalChats || 0).toLocaleString()}
                   </div>
                 </td>
                 <td className="py-4 px-2">
                   <div className="flex items-center space-x-2">
                     <Heart className="w-4 h-4 text-red-400" />
                     <span className="text-sm text-gray-900">
-                      {(character.averageAffinity || 0).toFixed(1)}
+                      {(character.avgIntimacy || 0).toFixed(1)}
                     </span>
                   </div>
                 </td>

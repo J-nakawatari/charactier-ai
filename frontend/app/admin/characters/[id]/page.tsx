@@ -23,6 +23,7 @@ interface Character {
   age?: string;
   occupation?: string;
   model?: string;
+  aiModel?: string;
   characterAccessType?: string;
   stripePriceId?: string;
   imageCharacterSelect?: string;
@@ -194,6 +195,16 @@ export default function CharacterDetailPage() {
       'purchaseOnly': '買い切り'
     };
     return typeMap[type as keyof typeof typeMap] || type;
+  };
+
+  const getModelText = (model: string) => {
+    const modelMap = {
+      'o4-mini': 'OpenAI o4-mini',
+      'gpt-3.5-turbo': 'GPT-3.5 Turbo',
+      'gpt-4o-mini': 'GPT-4o Mini',
+      'gpt-4': 'GPT-4'
+    };
+    return modelMap[model as keyof typeof modelMap] || model || 'o4-mini';
   };
 
   const getStatusBadge = (isActive: boolean, isFree: boolean) => {
@@ -372,7 +383,7 @@ export default function CharacterDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">AIモデル</p>
                   <p className="text-xl font-semibold text-gray-900">
-                    GPT-3.5
+                    {getModelText(character.model || character.aiModel || '')}
                   </p>
                 </div>
               </div>
@@ -494,7 +505,12 @@ export default function CharacterDetailPage() {
                 <Zap className="w-5 h-5 text-gray-400 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-500">AIモデル</p>
-                  <p className="text-gray-900 font-medium">{character.model || 'GPT-3.5'}</p>
+                  <p className="text-gray-900 font-medium">
+                    {getModelText(character.model || character.aiModel || '')}
+                    <span className="text-xs text-gray-400 ml-2">
+                      (Debug: model={character.model}, aiModel={character.aiModel})
+                    </span>
+                  </p>
                 </div>
               </div>
               
@@ -589,7 +605,7 @@ export default function CharacterDetailPage() {
                 </label>
                 <div className="p-4 bg-gray-50 rounded-lg text-center">
                   <div className="flex items-center justify-center space-x-2 mb-2">
-                    <Image className="w-4 h-4 text-gray-400" alt="" />
+                    <Image className="w-4 h-4 text-gray-400" />
                     <span className="text-sm text-gray-600">{character.imageCharacterSelect ? '設定済み' : '未設定'}</span>
                   </div>
                 </div>
@@ -602,7 +618,7 @@ export default function CharacterDetailPage() {
                 </label>
                 <div className="p-4 bg-gray-50 rounded-lg text-center">
                   <div className="flex items-center justify-center space-x-2 mb-2">
-                    <Image className="w-4 h-4 text-gray-400" alt="" />
+                    <Image className="w-4 h-4 text-gray-400" />
                     <span className="text-sm text-gray-600">{character.imageDashboard ? '設定済み' : '未設定'}</span>
                   </div>
                 </div>
@@ -615,7 +631,7 @@ export default function CharacterDetailPage() {
                 </label>
                 <div className="p-4 bg-gray-50 rounded-lg text-center">
                   <div className="flex items-center justify-center space-x-2 mb-2">
-                    <Image className="w-4 h-4 text-gray-400" alt="" />
+                    <Image className="w-4 h-4 text-gray-400" />
                     <span className="text-sm text-gray-600">{character.imageChatBackground ? '設定済み' : '未設定'}</span>
                   </div>
                 </div>
@@ -628,7 +644,7 @@ export default function CharacterDetailPage() {
                 </label>
                 <div className="p-4 bg-gray-50 rounded-lg text-center">
                   <div className="flex items-center justify-center space-x-2 mb-2">
-                    <Image className="w-4 h-4 text-gray-400" alt="" />
+                    <Image className="w-4 h-4 text-gray-400" />
                     <span className="text-sm text-gray-600">{character.imageChatAvatar ? '設定済み' : '未設定'}</span>
                   </div>
                 </div>
@@ -662,7 +678,7 @@ export default function CharacterDetailPage() {
                     <div className="flex items-start space-x-4">
                       <div className="w-16 h-16 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
                         {galleryItem?.file ? (
-                          <Image className="w-6 h-6 text-green-600" alt="" />
+                          <Image className="w-6 h-6 text-green-600" />
                         ) : (
                           <span className="text-gray-400 text-xs">画像{index + 1}</span>
                         )}

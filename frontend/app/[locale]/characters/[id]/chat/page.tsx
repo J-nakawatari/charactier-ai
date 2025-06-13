@@ -24,6 +24,7 @@ interface ChatLayoutCharacter {
   name: string; // 文字列に変換済み
   description: string; // 文字列に変換済み
   imageChatAvatar: string;
+  imageChatBackground: string;
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
 }
@@ -64,6 +65,8 @@ export default function ChatPage() {
         }
         
         const apiData = await response.json();
+        console.log('🔍 Chat API Response:', apiData);
+        console.log('🔍 Messages from API:', apiData.chat?.messages);
         
         // API レスポンスを ChatLayoutData 形式に変換
         const chatData: ChatLayoutData = {
@@ -72,25 +75,27 @@ export default function ChatPage() {
             name: getLocalizedString(apiData.character.name, locale),
             description: getLocalizedString(apiData.character.description, locale),
             imageChatAvatar: apiData.character.imageChatAvatar || '/characters/luna.png',
-            currentMood: 'happy', // TODO: バックエンドから取得
+            imageChatBackground: apiData.character.imageChatBackground || '/backgrounds/default.jpg',
+            currentMood: apiData.userState?.affinity?.mood || 'neutral', // 統一: affinityのmoodを使用
             themeColor: apiData.character.themeColor || '#8B5CF6'
           },
           affinity: {
             level: apiData.userState?.affinity?.level || 0,
             currentExp: apiData.userState?.affinity?.experience || 0,
             nextLevelExp: 1000, // TODO: バックエンドから計算
-            unlockedIllustrations: apiData.userState?.unlockedGalleryImages || []
+            unlockedIllustrations: apiData.userState?.unlockedGalleryImages || [],
+            currentMood: apiData.userState?.affinity?.mood || 'neutral'
           },
           tokenStatus: {
             tokensRemaining: apiData.userState?.tokenBalance || 0,
             lastMessageCost: 0 // 最後のメッセージコストは別途管理
           },
           messages: (apiData.chat?.messages || []).map((msg: any) => ({
-            id: msg.id,
-            role: msg.type === 'user' ? 'user' : 'assistant',
+            id: msg._id,
+            role: msg.role,
             content: msg.content,
             timestamp: new Date(msg.timestamp),
-            tokens: msg.metadata?.tokensUsed
+            tokens: msg.tokensUsed
           }))
         };
         
@@ -113,6 +118,7 @@ export default function ChatPage() {
                 name: 'ルナ',
                 description: '明るく元気な女の子',
                 imageChatAvatar: '/characters/00009-3823393646_cleanup.png',
+                imageChatBackground: '/backgrounds/default.jpg',
                 currentMood: 'happy' as const,
                 themeColor: '#8B5CF6'
               };
@@ -121,6 +127,7 @@ export default function ChatPage() {
                 name: 'ミコ',
                 description: '神秘的な巫女さん',
                 imageChatAvatar: '/characters/00010-3296923052.png',
+                imageChatBackground: '/backgrounds/default.jpg',
                 currentMood: 'shy' as const,
                 themeColor: '#EC4899'
               };
@@ -129,6 +136,7 @@ export default function ChatPage() {
                 name: 'ゼン',
                 description: 'クールな武士',
                 imageChatAvatar: '/characters/00012-2372329152.png',
+                imageChatBackground: '/backgrounds/default.jpg',
                 currentMood: 'excited' as const,
                 themeColor: '#0EA5E9'
               };
@@ -137,6 +145,7 @@ export default function ChatPage() {
                 name: 'ルナ',
                 description: '明るく元気な女の子',
                 imageChatAvatar: '/characters/00009-3823393646_cleanup.png',
+                imageChatBackground: '/backgrounds/default.jpg',
                 currentMood: 'happy' as const,
                 themeColor: '#8B5CF6'
               };
@@ -321,6 +330,7 @@ export default function ChatPage() {
       tokenStatus={chatData.tokenStatus}
       messages={chatData.messages}
       onSendMessage={handleSendMessage}
+      onTokenPurchaseSuccess={loadChatData}
     />
   );
 }

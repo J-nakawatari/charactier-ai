@@ -27,7 +27,7 @@ interface SecurityEvent {
   messageContent?: string;
   ipAddress?: string;
   userAgent?: string;
-  moderationCategories?: any;
+  moderationCategories?: Record<string, any>;
   action: string;
   timestamp: string;
 }

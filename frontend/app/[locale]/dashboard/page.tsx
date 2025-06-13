@@ -125,7 +125,7 @@ export default function DashboardPage() {
   };
 
   const isLowTokenWarning = () => {
-    return dashboardData && dashboardData.tokens.balance <= (dashboardData.tokens.totalPurchased * 0.2);
+    return !!(dashboardData && dashboardData.tokens.balance <= (dashboardData.tokens.totalPurchased * 0.2));
   };
 
   return (

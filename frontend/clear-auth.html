@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Authentication Data</title>
+</head>
+<body>
+    <h1>Clear Authentication Data</h1>
+    <p>This page will clear all stored authentication data to fix setup screen issues.</p>
+    <button onclick="clearAuth()">Clear Auth Data</button>
+    <div id="status"></div>
+    
+    <script>
+        function clearAuth() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            
+            document.getElementById('status').innerHTML = '<p style="color: green;">✅ Authentication data cleared successfully!</p><p>Please go back to the login page and log in again.</p>';
+        }
+    </script>
+</body>
+</html>

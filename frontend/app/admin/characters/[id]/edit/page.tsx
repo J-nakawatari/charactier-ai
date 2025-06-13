@@ -46,10 +46,11 @@ const ACCESS_TYPES = [
   { value: 'premium', label: 'プレミアムキャラ', description: '購入が必要なプレミアムキャラクター' }
 ];
 
-// AIモデル
-const AI_MODELS = [
+// AIモデル（初期値、APIから動的取得）
+const DEFAULT_AI_MODELS = [
   { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: '高速で経済的なモデル' },
-  { value: 'gpt-4', label: 'GPT-4', description: 'より高性能で詳細な応答が可能' }
+  { value: 'o4-mini', label: 'OpenAI o4-mini', description: '本番推奨モデル - 高品質・低コスト' },
+  { value: 'gpt-4o-mini', label: 'GPT-4o Mini', description: 'バランス型 - 中コスト' }
 ];
 
 // 性別
@@ -64,6 +65,9 @@ export default function CharacterEditPage() {
   const router = useRouter();
   const { success, error } = useToast();
   const characterId = params.id as string;
+  
+  const [availableModels, setAvailableModels] = useState(DEFAULT_AI_MODELS);
+  const [currentSystemModel, setCurrentSystemModel] = useState('');
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -128,9 +132,17 @@ export default function CharacterEditPage() {
     const loadCharacterData = async () => {
       try {
         setIsLoading(true);
+        const adminToken = localStorage.getItem('adminAccessToken');
+        
+        // モデル情報を並行して取得
+        const modelPromise = fetch('/api/admin/models', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
         
         // 基本キャラクター情報を取得
-        const adminToken = localStorage.getItem('adminAccessToken');
         const characterResponse = await fetch(`http://localhost:3004/api/characters/${characterId}`, {
           headers: {
             'Authorization': `Bearer ${adminToken}`,
@@ -140,13 +152,22 @@ export default function CharacterEditPage() {
         if (characterResponse.ok) {
           const character = await characterResponse.json();
           
+          // 既存のギャラリー画像を変換
+          const existingGalleryImages = character.galleryImages ? character.galleryImages.map((img: any) => ({
+            file: null, // 既存画像はFileオブジェクトではない
+            imageUrl: img.url,
+            unlockLevel: img.unlockLevel,
+            title: img.title?.ja || '',
+            description: img.description?.ja || ''
+          })) : [];
+
           // 基本情報をフォームに反映
           setFormData(prev => ({
             ...prev,
             personalityPreset: character.personalityPreset || '',
             personalityTags: character.personalityTags || [],
             gender: character.gender || 'female',
-            model: character.model || 'gpt-3.5-turbo',
+            model: character.model || character.aiModel || 'o4-mini',
             characterAccessType: character.characterAccessType || 'initial',
             stripeProductId: character.stripeProductId || '',
             isActive: character.isActive || false,
@@ -155,7 +176,10 @@ export default function CharacterEditPage() {
             imageCharacterSelectUrl: character.imageCharacterSelect || '',
             imageDashboardUrl: character.imageDashboard || '',
             imageChatBackgroundUrl: character.imageChatBackground || '',
-            imageChatAvatarUrl: character.imageChatAvatar || ''
+            imageChatAvatarUrl: character.imageChatAvatar || '',
+            
+            // 既存のギャラリー画像を設定
+            galleryImages: existingGalleryImages
           }));
         }
         
@@ -176,6 +200,24 @@ export default function CharacterEditPage() {
           }
         } catch (translationErr) {
           console.error('❌ 翻訳データ取得エラー:', translationErr);
+        }
+
+        // モデル情報を取得
+        try {
+          const modelResponse = await modelPromise;
+          if (modelResponse.ok) {
+            const modelData = await modelResponse.json();
+            const modelsForSelect = modelData.models.map((model: any) => ({
+              value: model.id,
+              label: model.name,
+              description: model.description
+            }));
+            setAvailableModels(modelsForSelect);
+            setCurrentSystemModel(modelData.currentModel);
+            console.log('✅ モデル情報を取得しました:', modelData);
+          }
+        } catch (modelErr) {
+          console.warn('⚠️ モデル情報の取得に失敗:', modelErr);
         }
       } catch (err) {
         console.error('データの読み込みに失敗しました:', err);
@@ -221,17 +263,37 @@ export default function CharacterEditPage() {
         return;
       }
       
-      // 2. 基本情報を保存（画像以外）
+      // 2. 基本情報とギャラリー画像を保存
+      const galleryImagesForSave = formData.galleryImages
+        .filter(item => item.imageUrl) // 画像URLがあるもの（新規・既存問わず）
+        .map(item => ({
+          url: item.imageUrl,
+          unlockLevel: item.unlockLevel,
+          title: { 
+            ja: item.title || `レベル${item.unlockLevel}解放画像`, 
+            en: item.title || `Level ${item.unlockLevel} Unlock Image`
+          },
+          description: { 
+            ja: item.description || '親密度解放画像です', 
+            en: item.description || 'Affinity unlock image'
+          },
+          rarity: 'common' as const, // デフォルト値
+          tags: [], // デフォルト値
+          isDefault: false,
+          order: item.unlockLevel / 10 - 1 // インデックスとして使用
+        }));
+
       const basicData = {
         personalityPreset: formData.personalityPreset,
         personalityTags: formData.personalityTags,
         gender: formData.gender,
         age: formData.age,
         occupation: formData.occupation,
-        model: formData.model,
+        aiModel: formData.model,
         characterAccessType: formData.characterAccessType,
         stripeProductId: formData.stripeProductId,
-        isActive: formData.isActive
+        isActive: formData.isActive,
+        galleryImages: galleryImagesForSave
       };
       
       const basicSaveResponse = await fetch(`http://localhost:3004/api/characters/${characterId}`, {
@@ -244,8 +306,9 @@ export default function CharacterEditPage() {
       });
       
       if (basicSaveResponse.ok) {
-        console.log('✅ 基本情報と翻訳データを保存しました');
-        success('保存完了', 'キャラクター情報を保存しました（画像アップロード機能は今後実装予定）');
+        console.log('✅ 基本情報、翻訳データ、ギャラリー画像を保存しました');
+        const galleryCount = galleryImagesForSave.length;
+        success('保存完了', `キャラクター情報を保存しました${galleryCount > 0 ? `（ギャラリー画像${galleryCount}枚を含む）` : ''}`);
       } else {
         const errorData = await basicSaveResponse.json();
         console.error('❌ 基本情報保存エラー:', errorData);
@@ -345,18 +408,21 @@ export default function CharacterEditPage() {
       
       if (currentImageType === 'gallery' && currentGalleryIndex >= 0) {
         // ギャラリー画像の場合
+        const unlockLevel = (currentGalleryIndex + 1) * 10;
         const newGalleryImages = [...formData.galleryImages];
-        if (newGalleryImages[currentGalleryIndex]) {
-          newGalleryImages[currentGalleryIndex].file = croppedFile;
-          newGalleryImages[currentGalleryIndex].imageUrl = imageUrl;
+        const existingIndex = newGalleryImages.findIndex(item => item.unlockLevel === unlockLevel);
+        
+        if (existingIndex >= 0) {
+          newGalleryImages[existingIndex].file = croppedFile;
+          newGalleryImages[existingIndex].imageUrl = imageUrl;
         } else {
-          newGalleryImages[currentGalleryIndex] = {
+          newGalleryImages.push({
             file: croppedFile,
             imageUrl: imageUrl,
-            unlockLevel: (currentGalleryIndex + 1) * 10,
+            unlockLevel: unlockLevel,
             title: '',
             description: ''
-          };
+          });
         }
         setFormData(prev => ({ ...prev, galleryImages: newGalleryImages }));
         success('ギャラリー画像アップロード', 'ギャラリー画像がアップロードされました');
@@ -418,10 +484,9 @@ export default function CharacterEditPage() {
     setCurrentGalleryIndex(-1);
   };
 
-  const removeImage = (imageType: string, galleryIndex?: number) => {
-    if (imageType === 'gallery' && galleryIndex !== undefined) {
-      const newGalleryImages = [...formData.galleryImages];
-      newGalleryImages.splice(galleryIndex, 1);
+  const removeImage = (imageType: string, unlockLevel?: number) => {
+    if (imageType === 'gallery' && unlockLevel !== undefined) {
+      const newGalleryImages = formData.galleryImages.filter(item => item.unlockLevel !== unlockLevel);
       setFormData(prev => ({ ...prev, galleryImages: newGalleryImages }));
     } else {
       setFormData(prev => ({ 
@@ -432,12 +497,23 @@ export default function CharacterEditPage() {
     }
   };
 
-  const updateGalleryInfo = (index: number, field: 'title' | 'description', value: string) => {
+  const updateGalleryInfo = (unlockLevel: number, field: 'title' | 'description', value: string) => {
     const newGalleryImages = [...formData.galleryImages];
-    if (newGalleryImages[index]) {
-      newGalleryImages[index][field] = value;
-      setFormData(prev => ({ ...prev, galleryImages: newGalleryImages }));
+    const existingIndex = newGalleryImages.findIndex(item => item.unlockLevel === unlockLevel);
+    
+    if (existingIndex >= 0) {
+      newGalleryImages[existingIndex][field] = value;
+    } else {
+      // 新しいアイテムを作成
+      newGalleryImages.push({
+        file: new File([], ''),
+        imageUrl: '',
+        unlockLevel,
+        title: field === 'title' ? value : '',
+        description: field === 'description' ? value : ''
+      });
     }
+    setFormData(prev => ({ ...prev, galleryImages: newGalleryImages }));
   };
 
   if (isLoading) {
@@ -624,9 +700,10 @@ export default function CharacterEditPage() {
                     onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
                   >
-                    {AI_MODELS.map(model => (
+                    {availableModels.map(model => (
                       <option key={model.value} value={model.value} className="text-gray-900">
                         {model.label} - {model.description}
+                        {model.value === currentSystemModel ? ' (システム推奨)' : ''}
                       </option>
                     ))}
                   </select>
@@ -834,8 +911,8 @@ export default function CharacterEditPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {Array.from({ length: 10 }, (_, index) => {
-                  const galleryItem = formData.galleryImages?.[index];
                   const unlockLevel = (index + 1) * 10;
+                  const galleryItem = formData.galleryImages?.find(item => item.unlockLevel === unlockLevel);
                   
                   return (
                     <div key={index} className="border border-gray-200 rounded-lg p-4">
@@ -853,6 +930,12 @@ export default function CharacterEditPage() {
                           {galleryItem?.file ? (
                             <img 
                               src={URL.createObjectURL(galleryItem.file)} 
+                              alt={`ギャラリー ${index + 1}`} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : galleryItem?.imageUrl ? (
+                            <img 
+                              src={galleryItem.imageUrl} 
                               alt={`ギャラリー ${index + 1}`} 
                               className="w-full h-full object-cover"
                             />
@@ -877,10 +960,10 @@ export default function CharacterEditPage() {
                               <Upload className="w-3 h-3" />
                               <span>画像選択</span>
                             </label>
-                            {galleryItem?.file && (
+                            {(galleryItem?.file || galleryItem?.imageUrl) && (
                               <button
                                 type="button"
-                                onClick={() => removeImage('gallery', index)}
+                                onClick={() => removeImage('gallery', unlockLevel)}
                                 className="ml-2 text-xs text-red-600 hover:text-red-800"
                               >
                                 削除
@@ -892,7 +975,7 @@ export default function CharacterEditPage() {
                             <input
                               type="text"
                               value={galleryItem?.title || ''}
-                              onChange={(e) => updateGalleryInfo(index, 'title', e.target.value)}
+                              onChange={(e) => updateGalleryInfo(unlockLevel, 'title', e.target.value)}
                               className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-purple-500 transition-colors"
                               placeholder="画像タイトル"
                             />
@@ -901,7 +984,7 @@ export default function CharacterEditPage() {
                           <div>
                             <textarea
                               value={galleryItem?.description || ''}
-                              onChange={(e) => updateGalleryInfo(index, 'description', e.target.value)}
+                              onChange={(e) => updateGalleryInfo(unlockLevel, 'description', e.target.value)}
                               className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-purple-500 transition-colors"
                               rows={2}
                               placeholder="画像説明"

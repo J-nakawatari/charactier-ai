@@ -25,6 +25,7 @@ interface MessageListProps {
   hasMore?: boolean;
   isLoadingMore?: boolean;
   showAdvanced?: boolean; // 高度情報表示フラグ
+  affinityLevel?: number; // 親密度レベル（ムード情報のため）
 }
 
 export function MessageList({ 
@@ -34,7 +35,8 @@ export function MessageList({
   onLoadMore, 
   hasMore = false, 
   isLoadingMore = false,
-  showAdvanced = false
+  showAdvanced = false,
+  affinityLevel = 0
 }: MessageListProps) {
   const [isNearTop, setIsNearTop] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -90,6 +92,18 @@ export function MessageList({
     }
   }, []);
 
+  // ユーザーメッセージの数をカウント
+  const userMessageCount = messages.filter(msg => msg.role === 'user').length;
+  const shouldShowWelcome = userMessageCount === 0;
+
+  // デバッグログ
+  console.log('🔍 MessageList Debug:', {
+    totalMessages: messages.length,
+    userMessages: userMessageCount,
+    character: character?.name,
+    showWelcome: shouldShowWelcome
+  });
+
   return (
     <div className="relative h-full">
       <div 
@@ -108,8 +122,8 @@ export function MessageList({
         )}
         
         <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {messages.length === 0 && (
-          <div className="text-center py-12">
+        {shouldShowWelcome && (
+          <div className="text-center py-12 bg-white/85 backdrop-blur-sm rounded-2xl mx-auto max-w-md shadow-lg border border-white/50 relative z-30">
             <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-lg">
               <Image 
                 src={character.imageChatAvatar} 
@@ -122,7 +136,7 @@ export function MessageList({
             <h3 className="text-lg font-semibold text-gray-800 mb-2">
               {character.name}との会話を始めよう
             </h3>
-            <p className="text-gray-600 text-sm max-w-sm mx-auto">
+            <p className="text-gray-600 text-sm">
               {character.description}
             </p>
           </div>
@@ -134,6 +148,7 @@ export function MessageList({
             message={message}
             character={character}
             showAdvanced={showAdvanced}
+            affinityLevel={affinityLevel}
           />
         ))}
 

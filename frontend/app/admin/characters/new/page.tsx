@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { getCroppedImg } from '@/utils/cropImage';
@@ -44,10 +44,10 @@ const ACCESS_TYPES = [
   { value: 'purchaseOnly', label: 'プレミアム', description: '購入が必要なキャラクター' }
 ];
 
-// AIモデル
-const AI_MODELS = [
+// AIモデル（初期値、APIから動的取得）
+const DEFAULT_AI_MODELS = [
   { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: '高速で経済的なモデル' },
-  { value: 'gpt-4', label: 'GPT-4', description: 'より高性能で詳細な応答が可能' }
+  { value: 'o4-mini', label: 'OpenAI o4-mini', description: '本番推奨モデル - 高品質・低コスト' }
 ];
 
 // 性別
@@ -65,6 +65,8 @@ export default function CharacterNewPage() {
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
+  const [availableModels, setAvailableModels] = useState(DEFAULT_AI_MODELS);
+  const [currentModel, setCurrentModel] = useState('');
 
   // フィールドエラーのスタイルを取得する関数
   const getFieldErrorClass = (fieldName: string) => {
@@ -85,6 +87,42 @@ export default function CharacterNewPage() {
     return null;
   };
 
+  // APIから利用可能なモデルを取得
+  useEffect(() => {
+    const fetchAvailableModels = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/admin/models', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const modelsForSelect = data.models.map((model: any) => ({
+            value: model.id,
+            label: model.name,
+            description: model.description
+          }));
+          setAvailableModels(modelsForSelect);
+          setCurrentModel(data.currentModel);
+          
+          // フォームのデフォルト値を現在のモデルに設定
+          setFormData(prev => ({
+            ...prev,
+            model: data.currentModel
+          }));
+        }
+      } catch (err) {
+        console.warn('モデル情報の取得に失敗:', err);
+      }
+    };
+    
+    fetchAvailableModels();
+  }, []);
+
   const [formData, setFormData] = useState({
     // 基本情報
     name: { ja: '', en: '' },
@@ -98,7 +136,7 @@ export default function CharacterNewPage() {
     occupation: '',
     
     // AI設定
-    model: 'gpt-3.5-turbo',
+    model: 'o4-mini', // デフォルトを現在の推奨モデルに
     characterAccessType: 'free',
     stripePriceId: '',
     displayPrice: 0,
@@ -780,9 +818,10 @@ export default function CharacterNewPage() {
                     onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 text-gray-900"
                   >
-                    {AI_MODELS.map(model => (
+                    {availableModels.map(model => (
                       <option key={model.value} value={model.value} className="text-gray-900">
                         {model.label} - {model.description}
+                        {model.value === currentModel ? ' (現在設定中)' : ''}
                       </option>
                     ))}
                   </select>

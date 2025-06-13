@@ -610,7 +610,7 @@ export default function TokenAnalyticsDashboard({ defaultDays = 30 }: TokenAnaly
           ].map(({ key, label, icon: Icon }) => (
             <button
               key={key}
-              onClick={() => setActiveSection(key as any)}
+              onClick={() => setActiveSection(key as 'overview' | 'profit' | 'anomalies')}
               className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeSection === key
                   ? 'border-purple-500 text-purple-600'

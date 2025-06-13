@@ -15,7 +15,7 @@ interface Character {
   description: { ja: string; en: string } | string;
   personalityPreset: string;
   personalityTags: string[];
-  gender: string;
+  gender?: string;
   characterAccessType: 'free' | 'token-based' | 'premium';
   imageCharacterSelect?: string;
   imageChatAvatar?: string;
@@ -126,7 +126,7 @@ export default function CharacterCard({
     }
   };
 
-  const getGenderIcon = (gender: string) => {
+  const getGenderIcon = (gender: string | undefined) => {
     switch (gender) {
       case 'male':
         return '♂';

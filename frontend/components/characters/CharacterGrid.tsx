@@ -3,17 +3,13 @@
 import React from 'react';
 import CharacterCard from './CharacterCard';
 import { User, Search } from 'lucide-react';
+import type { Character } from '@/types/common';
 
-interface Character {
-  _id: string;
+// CharacterGrid用の拡張型定義（ユーザー向け表示用）
+interface GridCharacter extends Omit<Character, 'name' | 'description' | 'characterAccessType'> {
   name: string;
   description: string;
-  personalityPreset: string;
-  personalityTags: string[];
-  gender: string;
   characterAccessType: 'free' | 'token-based' | 'premium';
-  imageCharacterSelect?: string;
-  imageChatAvatar?: string;
   affinityStats?: {
     totalUsers: number;
     averageLevel: number;
@@ -26,11 +22,11 @@ interface UserAffinity {
 }
 
 interface CharacterGridProps {
-  characters: Character[];
+  characters: GridCharacter[];
   userAffinities?: UserAffinity[];
   userTokenBalance?: number;
   userPurchasedCharacters?: string[];
-  onCharacterClick?: (character: Character) => void;
+  onCharacterClick?: (character: GridCharacter) => void;
   isLoading?: boolean;
   filterKey?: string; // アニメーション用のキー
 }
@@ -46,7 +42,7 @@ export default function CharacterGrid({
 }: CharacterGridProps) {
   
   // キャラクターのロック状態とアクセス権限を判定
-  const getCharacterAccess = (character: Character) => {
+  const getCharacterAccess = (character: GridCharacter) => {
     switch (character.characterAccessType) {
       case 'free':
         // 無料キャラ: 誰でも利用可能
@@ -148,10 +144,17 @@ export default function CharacterGrid({
             }}
           >
             <CharacterCard
-              character={character}
+              character={{
+                ...character,
+                name: character.name,
+                description: character.description,
+                personalityPreset: character.personalityPreset || '',
+                personalityTags: character.personalityTags || [],
+                gender: 'unknown'
+              }}
               currentAffinity={currentAffinity}
               isLocked={isLocked}
-              onClick={onCharacterClick}
+              onClick={onCharacterClick ? (char) => onCharacterClick(character) : undefined}
             />
           </div>
         );

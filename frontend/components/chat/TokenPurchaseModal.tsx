@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Coins, Zap, CreditCard, Loader2 } from 'lucide-react';
-import { getCurrentUser } from '@/utils/auth';
+import { getCurrentUser, getAuthHeaders } from '@/utils/auth';
 
 interface TokenPack {
   _id: string;
@@ -44,14 +44,7 @@ export function TokenPurchaseModal({
       setLoading(true);
       
       // 認証ヘッダーを取得
-      const token = localStorage.getItem('accessToken');
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      const headers = getAuthHeaders();
       
       const response = await fetch('/api/token-packs?isActive=true', {
         headers
@@ -75,13 +68,21 @@ export function TokenPurchaseModal({
 
       console.log('🛒 購入開始:', pack.name, pack.priceId);
 
+      // 現在のチャット画面のキャラクターIDを保存
+      const currentPath = window.location.pathname;
+      const characterMatch = currentPath.match(/\/characters\/([^\/]+)\/chat/);
+      if (characterMatch) {
+        localStorage.setItem('returnToCharacterId', characterMatch[1]);
+        localStorage.setItem('returnToLocale', currentPath.split('/')[1] || 'ja');
+      }
+
       // Stripe Checkout Session作成
       const response = await fetch('/api/purchase/create-checkout-session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ 
           priceId: pack.priceId,
-          userId: getCurrentUser().id
+          userId: getCurrentUser()?._id
         })
       });
 

@@ -41,15 +41,25 @@ export default function SetupPage() {
   // 認証チェック
   useEffect(() => {
     const user = getCurrentUser();
+    console.log('🔍 Setup page - Current user:', user);
+    console.log('🔍 Setup page - user.isSetupComplete:', user?.isSetupComplete);
+    console.log('🔍 Setup page - typeof user.isSetupComplete:', typeof user?.isSetupComplete);
+    
     if (!user) {
+      console.log('❌ No user found, redirecting to login');
       router.push(`/${locale}/login`);
       return;
     }
     
     // セットアップ済みの場合はホームへ
-    if (user.isSetupComplete) {
+    // isSetupComplete === true の場合のみセットアップ完了とみなす
+    if (user.isSetupComplete === true) {
+      console.log('✅ Setup complete, redirecting to characters');
       router.push(`/${locale}/characters`);
       return;
+    } else {
+      console.log('⚠️ Setup incomplete, staying on setup page');
+      console.log('⚠️ Reason: isSetupComplete =', user.isSetupComplete);
     }
   }, [locale, router]);
 
@@ -185,7 +195,7 @@ export default function SetupPage() {
         localStorage.setItem('user', JSON.stringify(data.user));
         
         console.log('✅ セットアップ完了');
-        router.push(`/${locale}/characters`);
+        router.push(`/${locale}/characters?newUser=true`);
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'セットアップに失敗しました');
@@ -282,7 +292,7 @@ export default function SetupPage() {
                       onChange={(e) => setName(e.target.value)}
                       placeholder="例：太郎"
                       className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg outline-none text-gray-900 focus:ring-2"
-                      style={{ focusRingColor: '#E91E63' }}
+                      style={{ '--tw-ring-color': '#E91E63' } as React.CSSProperties}
                       autoFocus
                     />
                   </div>

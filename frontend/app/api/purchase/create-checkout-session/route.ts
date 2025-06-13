@@ -13,13 +13,23 @@ export async function POST(request: NextRequest) {
 
     console.log('🔗 Checkout Session API: バックエンドにプロキシ', { priceId, userId });
     
+    // 認証ヘッダーを取得
+    const authHeader = request.headers.get('Authorization');
+    
     // バックエンドAPIに転送
     const backendUrl = `http://localhost:3004/api/purchase/create-checkout-session`;
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    // 認証ヘッダーがある場合は転送
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+    
     const response = await fetch(backendUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({ priceId, userId })
     });
 

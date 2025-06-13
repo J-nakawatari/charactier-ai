@@ -11,7 +11,8 @@ import {
   X,
   Home,
   ShoppingCart,
-  History
+  History,
+  Images
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
@@ -59,7 +60,10 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           
           if (response.ok) {
             const userData = await response.json();
-            setUser(userData);
+            console.log('✅ API user data received:', userData);
+            // APIレスポンスからユーザー情報を取得
+            const user = userData.user || userData;
+            setUser(user);
             setLoading(false);
             return;
           }
@@ -94,18 +98,28 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
 
   // selectedCharacterに基づく動的なチャットリンク
   const getChatHref = () => {
+    console.log('🔍 Chat href generation:', {
+      user: user,
+      selectedCharacter: user?.selectedCharacter,
+      currentLocale: currentLocale
+    });
+    
     if (user?.selectedCharacter) {
-      return `/${currentLocale}/characters/${user.selectedCharacter}/chat`;
+      const chatUrl = `/${currentLocale}/characters/${user.selectedCharacter}/chat`;
+      console.log('✅ Chat URL generated:', chatUrl);
+      return chatUrl;
     }
     // キャラクター未選択の場合は一覧へ（重複を避けるため特別な処理）
-    return `/${currentLocale}/characters?from=chat`;
+    const fallbackUrl = `/${currentLocale}/characters?from=chat`;
+    console.log('⚠️ No selected character, fallback URL:', fallbackUrl);
+    return fallbackUrl;
   };
 
   const sidebarItems = [
     { id: 'home', href: `/${currentLocale}/dashboard`, icon: Home, label: t('home') },
     { id: 'characters', href: `/${currentLocale}/characters`, icon: Users, label: t('characters') },
     { id: 'chat', href: getChatHref(), icon: MessageSquare, label: t('chatHistory') },
-    { id: 'favorites', href: `/${currentLocale}/favorites`, icon: Heart, label: t('favorites') },
+    { id: 'library', href: `/${currentLocale}/library`, icon: Images, label: t('library') },
     { id: 'tokens', href: null, icon: Coins, label: t('tokens'), onClick: () => setShowPurchaseModal(true) },
     { id: 'purchase-history', href: `/${currentLocale}/purchase-history`, icon: ShoppingCart, label: t('purchaseHistory') },
     { id: 'settings', href: `/${currentLocale}/settings`, icon: Settings, label: t('settings') },

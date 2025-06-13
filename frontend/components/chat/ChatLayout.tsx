@@ -9,11 +9,14 @@ import { MoodVisualizer } from './MoodVisualizer';
 import { TokenBar } from './TokenBar';
 import { UnlockPopup } from './UnlockPopup';
 import { TokenPurchaseModal } from './TokenPurchaseModal';
-import ChatSidebar from './ChatSidebar';
+import UserSidebar from '../user/UserSidebar';
 import { TypingIndicator } from './TypingIndicator';
 import { ConnectionIndicator } from './ConnectionIndicator';
 import AdvancedChatIndicators from './AdvancedChatIndicators';
 import { useRealtimeChat, useTypingDebounce, useChatConnectionStatus } from '@/hooks/useRealtimeChat';
+import { useAffinityStore } from '@/store/affinityStore';
+import { getMoodBackgroundGradient } from '@/utils/moodUtils';
+import { getAuthHeaders } from '@/utils/auth';
 
 interface Character {
   _id: string;
@@ -54,6 +57,7 @@ interface ChatLayoutProps {
   onLoadMore?: () => Promise<void>;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  onTokenPurchaseSuccess?: () => void;
 }
 
 export function ChatLayout({ 
@@ -64,7 +68,8 @@ export function ChatLayout({
   onSendMessage,
   onLoadMore,
   hasMore = false,
-  isLoadingMore = false
+  isLoadingMore = false,
+  onTokenPurchaseSuccess
 }: ChatLayoutProps) {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -79,6 +84,13 @@ export function ChatLayout({
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [currentTokens, setCurrentTokens] = useState(tokenStatus.tokensRemaining);
   const [showAdvanced, setShowAdvanced] = useState(false); // 🎯 高度機能表示切り替え
+  
+  // 🎭 親密度ストアの初期化
+  const { updateAffinity } = useAffinityStore();
+  
+  // 🎨 感情に基づく背景スタイル
+  const currentMood = (affinity as any).currentMood || 'neutral';
+  const moodGradient = getMoodBackgroundGradient(currentMood);
   
   // リアルタイムチャット機能
   const realtimeChat = useRealtimeChat(character._id);
@@ -96,11 +108,22 @@ export function ChatLayout({
     setCurrentTokens(tokenStatus.tokensRemaining);
   }, [tokenStatus.tokensRemaining]);
 
+  // 🎭 初期データでAffinityStoreを更新
+  useEffect(() => {
+    updateAffinity({
+      level: affinity.level,
+      experience: affinity.currentExp,
+      mood: (affinity as any).currentMood || 'neutral'
+    });
+  }, [affinity.level, affinity.currentExp, (affinity as any).currentMood, updateAffinity]);
+
   // 定期的にトークン残高を更新する関数
   const refreshTokenBalance = async () => {
     try {
       // TODO: 適切なユーザー情報取得APIに変更
-      const response = await fetch('/api/user/profile');
+      const response = await fetch('/api/user/profile', {
+        headers: getAuthHeaders()
+      });
       if (response.ok) {
         const userData = await response.json();
         setCurrentTokens(userData.tokenBalance || userData.user?.tokenBalance || currentTokens);
@@ -172,20 +195,20 @@ export function ChatLayout({
   return (
     <div className="flex h-screen">
       {/* サイドバー */}
-      <ChatSidebar />
+      <UserSidebar locale="ja" />
       
       {/* メインチャットエリア */}
       <div 
-        className="flex-1 flex flex-col relative lg:ml-64"
+        className="flex-1 flex flex-col relative lg:ml-64 transition-all duration-1000 ease-in-out"
         style={{
-          backgroundImage: 'linear-gradient(to bottom right, #faf5ff, #f3e8ff, #ddd6fe)',
+          backgroundImage: moodGradient.background,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
         }}
       >
-        {/* 背景オーバーレイ */}
-        <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
+        {/* 感情に基づく背景オーバーレイ */}
+        <div className={`absolute inset-0 backdrop-blur-sm transition-all duration-1000 ease-in-out ${moodGradient.overlay}`}></div>
       
       {/* ヘッダー */}
       <header className="relative z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200/50 p-3 sm:p-4">
@@ -206,6 +229,7 @@ export function ChatLayout({
               <AdvancedChatIndicators 
                 characterId={character._id}
                 affinityLevel={affinity.level}
+                currentMood={(affinity as any).currentMood || 'neutral'}
                 className="mt-1"
               />
             </div>
@@ -235,14 +259,14 @@ export function ChatLayout({
       </header>
 
       {/* 親密度バー */}
-      <div className="relative z-10 bg-white/80 backdrop-blur-sm border-b border-gray-200/50">
+      <div className={`relative z-10 bg-white/75 backdrop-blur-sm border-b border-gray-200/50 transition-all duration-1000 ease-in-out`}>
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <AffinityBar 
             level={affinity.level}
             currentExp={affinity.currentExp}
             nextLevelExp={affinity.nextLevelExp}
             themeColor={character.themeColor}
-            mood={character.currentMood}
+            mood={(affinity as any).currentMood || 'neutral'}
             characterId={character._id}
             onAffinityUpdate={(newAffinity) => {
               console.log('Affinity updated:', newAffinity);
@@ -274,6 +298,7 @@ export function ChatLayout({
           hasMore={hasMore}
           isLoadingMore={isLoadingMore}
           showAdvanced={showAdvanced}
+          affinityLevel={affinity.level}
         />
       </div>
 
@@ -333,6 +358,10 @@ export function ChatLayout({
           onPurchaseSuccess={(newTokens) => {
             setCurrentTokens(newTokens);
             setShowPurchaseModal(false);
+            // チャットデータを再読み込み
+            if (onTokenPurchaseSuccess) {
+              onTokenPurchaseSuccess();
+            }
           }}
         />
       </div>

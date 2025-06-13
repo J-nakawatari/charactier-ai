@@ -25,20 +25,7 @@ interface TokenPack {
   tokenPerYen?: number;
 }
 
-// Inline type definitions for token data
-interface TokenUsageData {
-  date: string;
-  used: number;
-  purchased: number;
-}
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  tokenBalance: number;
-  status: string;
-}
+import type { TokenUsage, UserData } from '@/types/common';
 
 export default function TokensPage() {
   const { success } = useToast();
@@ -61,8 +48,8 @@ export default function TokensPage() {
   // State for API data
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tokenUsage, setTokenUsage] = useState<TokenUsageData[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [tokenUsage, setTokenUsage] = useState<TokenUsage[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]);
 
   // URLクエリパラメータの変更を監視
   useEffect(() => {
@@ -248,7 +235,11 @@ export default function TokensPage() {
           
           {/* タブコンテンツ */}
           {activeTab === 'users' ? (
-            <TokenManagementTable users={users} />
+            <TokenManagementTable users={users.map(user => ({
+              ...user,
+              id: user.id || user._id,
+              status: user.status || (user.isActive ? 'active' : 'inactive')
+            }))} />
           ) : activeTab === 'packs' ? (
             <TokenPackTable 
               ref={tokenPackTableRef}

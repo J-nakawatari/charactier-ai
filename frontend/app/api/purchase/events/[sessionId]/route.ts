@@ -9,15 +9,25 @@ export async function GET(
   console.log('🌊 フロントエンド SSE プロキシ:', sessionId);
   
   try {
+    // 認証ヘッダーを取得
+    const authHeader = req.headers.get('Authorization');
+    
     // バックエンドのSSEエンドポイントにプロキシ
     const backendUrl = `http://localhost:3004/api/purchase/events/${sessionId}`;
     
+    const headers: HeadersInit = {
+      'Accept': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+    };
+    
+    // 認証ヘッダーがある場合は転送
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+    
     const response = await fetch(backendUrl, {
       method: 'GET',
-      headers: {
-        'Accept': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-      },
+      headers,
     });
 
     if (!response.ok) {

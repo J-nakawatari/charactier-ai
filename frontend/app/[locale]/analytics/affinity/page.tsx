@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { getAuthHeaders } from '@/utils/auth';
 import UserSidebar from '@/components/user/UserSidebar';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area, ScatterChart, Scatter, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { Heart, TrendingUp, Gift, Star, Calendar, Users, Award, Target } from 'lucide-react';
@@ -82,9 +83,7 @@ export default function AffinityAnalyticsPage() {
       try {
         setIsLoading(true);
         const response = await fetch(`/api/analytics/affinity?range=${timeRange}&character=${selectedCharacter}`, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: getAuthHeaders(),
         });
 
         if (!response.ok) {
@@ -463,7 +462,7 @@ export default function AffinityAnalyticsPage() {
                           value + '%', 
                           name === 'trust' ? '信頼度' : name === 'intimacy' ? '親密度' : 'レベル'
                         ]}
-                        labelFormatter={(label, payload) => 
+                        labelFormatter={(label: any, payload: any) => 
                           payload && payload[0] ? payload[0].payload.characterName : ''
                         }
                       />

@@ -2,13 +2,14 @@
 
 import { Heart, Star } from 'lucide-react';
 import { useMemo, useEffect, useState } from 'react';
+import { getMoodIcon, getMoodIconColor, getMoodLabel, getMoodAccentColor } from '@/utils/moodUtils';
 
 interface AffinityBarProps {
   level: number;
   currentExp: number;
   nextLevelExp: number;
   themeColor: string;
-  mood?: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
+  mood?: 'excited' | 'melancholic' | 'happy' | 'sad' | 'angry' | 'neutral';
   characterId?: string;
   onAffinityUpdate?: (newAffinity: { level: number; experience: number }) => void;
 }
@@ -18,7 +19,7 @@ export function AffinityBar({
   currentExp, 
   nextLevelExp, 
   themeColor, 
-  mood = 'happy',
+  mood = 'neutral',
   characterId,
   onAffinityUpdate
 }: AffinityBarProps) {
@@ -61,59 +62,56 @@ export function AffinityBar({
   const isExpGaining = animatingIncrease && currentExp > lastExp;
 
   const moodConfig = useMemo(() => {
+    const moodLabel = getMoodLabel(mood);
+    const accentColor = getMoodAccentColor(mood);
+    
     switch (mood) {
       case 'happy':
         return {
-          emoji: '😊',
-          text: '楽しい',
-          color: '#10B981',
+          text: moodLabel,
+          color: accentColor,
           bgColor: '#D1FAE5',
-          heartRate: [16, 16, 28, 70, 16, 16, 45, 16, 16, 35, 16, 16],
-          speed: 2000
+          heartRate: [20, 25, 35, 65, 25, 30, 50, 25, 28, 45, 22, 35], // 穏やかで安定
+          speed: 1800
         };
       case 'excited':
         return {
-          emoji: '🤗',
-          text: 'ワクワク',
-          color: '#F59E0B',
+          text: moodLabel,
+          color: accentColor,
           bgColor: '#FEF3C7',
-          heartRate: [20, 20, 35, 75, 20, 20, 60, 20, 20, 50, 20, 20],
-          speed: 1200
+          heartRate: [25, 45, 20, 75, 30, 80, 35, 70, 25, 65, 30, 75], // 激しいスパイク
+          speed: 1000
         };
-      case 'shy':
+      case 'melancholic':
         return {
-          emoji: '😳',
-          text: '恥ずかしい',
-          color: '#EF4444',
-          bgColor: '#FEE2E2',
-          heartRate: [18, 18, 30, 65, 18, 18, 40, 18, 18, 35, 18, 18],
-          speed: 1800
+          text: moodLabel,
+          color: accentColor,
+          bgColor: '#DBEAFE',
+          heartRate: [10, 12, 8, 18, 12, 15, 10, 16, 11, 14, 9, 13], // 平坦で低い
+          speed: 3000
         };
       case 'sad':
         return {
-          emoji: '😢',
-          text: '悲しい',
-          color: '#6B7280',
+          text: moodLabel,
+          color: accentColor,
           bgColor: '#F3F4F6',
-          heartRate: [14, 14, 20, 45, 14, 14, 25, 14, 14, 22, 14, 14],
-          speed: 3000
+          heartRate: [15, 18, 12, 22, 16, 20, 14, 24, 17, 21, 13, 19], // 低く緩やか
+          speed: 2800
         };
       case 'angry':
         return {
-          emoji: '😤',
-          text: '怒ってる',
-          color: '#DC2626',
+          text: moodLabel,
+          color: accentColor,
           bgColor: '#FEE2E2',
-          heartRate: [25, 25, 40, 80, 25, 25, 70, 25, 25, 60, 25, 25],
-          speed: 800
+          heartRate: [35, 80, 40, 85, 45, 90, 38, 88, 35, 85, 42, 87], // 高く不規則
+          speed: 700
         };
       default:
         return {
-          emoji: '😊',
-          text: '普通',
-          color: '#6B7280',
+          text: moodLabel,
+          color: accentColor,
           bgColor: '#F3F4F6',
-          heartRate: [16, 16, 28, 65, 16, 16, 40, 16, 16, 30, 16, 16],
+          heartRate: [20, 28, 18, 38, 22, 35, 20, 40, 24, 32, 19, 36], // 標準的
           speed: 2000
         };
     }
@@ -188,7 +186,11 @@ export function AffinityBar({
       <div className="flex items-center space-x-4">
         {/* 気分表示 */}
         <div className="flex items-center space-x-2">
-          <span className="text-lg sm:text-xl">{moodConfig.emoji}</span>
+          {(() => {
+            const IconComponent = getMoodIcon(mood);
+            const colorClass = getMoodIconColor(mood);
+            return <IconComponent className={`w-5 h-5 sm:w-6 sm:h-6 ${colorClass}`} />;
+          })()}
           <span 
             className="hidden sm:inline-block text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-full font-medium"
             style={{ 

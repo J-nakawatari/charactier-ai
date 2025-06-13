@@ -9,13 +9,23 @@ export async function GET(
     
     console.log('🔍 Session情報取得API:', sessionId);
     
+    // 認証ヘッダーを取得
+    const authHeader = req.headers.get('Authorization');
+    
     // バックエンドAPIからセッション情報を取得
     const backendUrl = `http://localhost:3004/api/purchase/session/${sessionId}`;
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    // 認証ヘッダーがある場合は転送
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+    
     const response = await fetch(backendUrl, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     if (!response.ok) {

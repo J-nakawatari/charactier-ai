@@ -5,21 +5,16 @@ import SecurityStats from '@/components/admin/SecurityStats';
 import SecurityEventsTable from '@/components/admin/SecurityEventsTable';
 import RealtimeSecurityMonitor from '@/components/admin/RealtimeSecurityMonitor';
 import { Search, Filter, Download, Shield, AlertTriangle } from 'lucide-react';
+import type { SecurityEvent } from '@/types/common';
 
-// 🛡️ セキュリティイベント型定義（ViolationRecordベース）
-interface SecurityEvent {
-  id: string;
-  type: 'content_violation' | 'ai_moderation';
-  severity: 'low' | 'medium' | 'high';
-  message: string;
-  timestamp: string;
-  ipAddress?: string;
-  userAgent?: string;
+// 🛡️ 追加のセキュリティイベント型（ViolationRecordベース）
+interface ExtendedSecurityEvent extends SecurityEvent {
+  message?: string;
   userId?: string;
   userEmail?: string;
   detectedWord?: string;
   messageContent?: string;
-  isResolved: boolean;
+  isResolved?: boolean;
   resolvedBy?: string;
   resolvedAt?: string;
 }
@@ -35,7 +30,7 @@ interface SecurityStats {
 export default function SecurityPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
+  const [securityEvents, setSecurityEvents] = useState<ExtendedSecurityEvent[]>([]);
   const [securityStats, setSecurityStats] = useState<SecurityStats | null>(null);
 
   useEffect(() => {
@@ -195,7 +190,14 @@ export default function SecurityPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             {/* 統計カード */}
             <div className="lg:col-span-2">
-              <SecurityStats events={securityEvents} />
+              <SecurityStats events={securityEvents.map(event => ({
+                id: event.id,
+                type: event.type,
+                severity: event.severity,
+                description: event.description || event.message || '',
+                ipAddress: event.ipAddress || '',
+                timestamp: event.timestamp
+              }))} />
             </div>
             
             {/* リアルタイム監視 */}
@@ -206,7 +208,22 @@ export default function SecurityPage() {
           
           {/* セキュリティイベントテーブル */}
           <SecurityEventsTable 
-            events={securityEvents} 
+            events={securityEvents.map(event => ({
+              id: event.id,
+              type: (event.type === 'content_violation' || event.type === 'ai_moderation') ? event.type : 'content_violation',
+              severity: (event.severity === 'high' || event.severity === 'medium' || event.severity === 'low') ? event.severity : 'low',
+              message: event.message || event.description || '',
+              timestamp: event.timestamp,
+              ipAddress: event.ipAddress,
+              userAgent: event.userAgent,
+              userId: event.userId,
+              userEmail: event.userEmail,
+              detectedWord: event.detectedWord,
+              messageContent: event.messageContent,
+              isResolved: event.isResolved || false,
+              resolvedBy: event.resolvedBy,
+              resolvedAt: event.resolvedAt
+            }))} 
             onResolveViolation={handleResolveViolation}
           />
         </div>

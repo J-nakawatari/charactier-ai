@@ -139,17 +139,30 @@ export default function LoginPage() {
         throw new Error(data.message || 'ログインに失敗しました');
       }
       
+      console.log('🔍 Login response data:', data);
+      console.log('🔍 User data from server:', data.user);
+      console.log('🔍 Server isSetupComplete:', data.user.isSetupComplete);
+      console.log('🔍 Server isSetupComplete type:', typeof data.user.isSetupComplete);
+      
       // JWTトークンを保存
       localStorage.setItem('accessToken', data.tokens.accessToken);
       localStorage.setItem('refreshToken', data.tokens.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.user));
       
+      // 保存後に確認
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('🔍 Stored user in localStorage:', storedUser);
+      console.log('🔍 Stored isSetupComplete:', storedUser.isSetupComplete);
+      
       console.log('✅ ログイン成功:', data.user.name || 'ユーザー');
       
-      // 初回セットアップが完了していない場合（名前が空 または isSetupCompleteがfalse）はセットアップ画面へ
-      if (!data.user.isSetupComplete || !data.user.name || data.user.name.trim() === '') {
+      // 初回セットアップが完了していない場合のみセットアップ画面へ
+      // 厳密にtrueかどうかをチェック
+      if (data.user.isSetupComplete !== true) {
+        console.log('🔄 Redirecting to setup - isSetupComplete:', data.user.isSetupComplete);
         router.push(`/${locale}/setup`);
       } else {
+        console.log('🔄 Redirecting to characters - setup complete');
         router.push(`/${locale}/characters`);
       }
       
