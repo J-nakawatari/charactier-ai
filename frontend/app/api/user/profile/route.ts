@@ -46,7 +46,10 @@ export async function GET(request: NextRequest) {
     
     // ユーザープロファイル形式に整形
     const userProfile = {
-      user: data.user,
+      user: {
+        ...data.user,
+        selectedCharacter: data.user?.selectedCharacter
+      },
       tokenBalance: data.tokens?.balance || data.user?.tokenBalance || 0,
       totalPurchased: data.tokens?.totalPurchased || 0,
       totalUsed: data.tokens?.totalUsed || 0,

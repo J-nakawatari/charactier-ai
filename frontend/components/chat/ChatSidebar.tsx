@@ -47,7 +47,6 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
         // 最新のユーザー情報をAPIから取得
         const token = localStorage.getItem('accessToken');
         if (token) {
-          console.log('🔄 ChatSidebar: Fetching user data...');
           const response = await fetch('/api/user/profile', {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -57,17 +56,20 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
           
           if (response.ok) {
             const userData = await response.json();
-            console.log('✅ ChatSidebar: User data updated:', {
-              name: userData.name,
-              tokenBalance: userData.tokenBalance
-            });
-            setUser(userData);
+            
+            // ユーザー情報を正しく取得（UserSidebarと同じロジック）
+            const user = userData.user || userData;
+            const userWithTokenBalance = {
+              ...user,
+              tokenBalance: userData.tokenBalance || user.tokenBalance || 0
+            };
+            
+            setUser(userWithTokenBalance);
             setLoading(false);
             return;
           }
         }
         
-        console.log('❌ No access token found');
         setLoading(false);
       } catch (error) {
         console.error('Error fetching user data:', error);

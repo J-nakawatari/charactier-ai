@@ -60,9 +60,14 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           
           if (response.ok) {
             const userData = await response.json();
-            console.log('✅ API user data received:', userData);
             // APIレスポンスからユーザー情報を取得
-            const user = userData.user || userData;
+            let user = userData.user || userData;
+            
+            // selectedCharacterがない場合、affinitiesから最初のキャラクターを使用
+            if (!user.selectedCharacter && userData.affinities && userData.affinities.length > 0) {
+              user.selectedCharacter = userData.affinities[0].character._id;
+            }
+            
             setUser(user);
             setLoading(false);
             return;
@@ -98,21 +103,12 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
 
   // selectedCharacterに基づく動的なチャットリンク
   const getChatHref = () => {
-    console.log('🔍 Chat href generation:', {
-      user: user,
-      selectedCharacter: user?.selectedCharacter,
-      currentLocale: currentLocale
-    });
-    
     if (user?.selectedCharacter) {
-      const chatUrl = `/${currentLocale}/characters/${user.selectedCharacter}/chat`;
-      console.log('✅ Chat URL generated:', chatUrl);
-      return chatUrl;
+      return `/${currentLocale}/characters/${user.selectedCharacter}/chat`;
     }
-    // キャラクター未選択の場合は一覧へ（重複を避けるため特別な処理）
-    const fallbackUrl = `/${currentLocale}/characters?from=chat`;
-    console.log('⚠️ No selected character, fallback URL:', fallbackUrl);
-    return fallbackUrl;
+    
+    // キャラクター未選択の場合は一覧へ
+    return `/${currentLocale}/characters?from=chat`;
   };
 
   const sidebarItems = [
