@@ -66,7 +66,6 @@ const AdminSchema: Schema = new Schema(
 );
 
 // インデックス設定
-AdminSchema.index({ email: 1 }, { unique: true });
 AdminSchema.index({ role: 1 });
 AdminSchema.index({ isActive: 1 });
 

@@ -399,7 +399,6 @@ const UserSchema: Schema = new Schema({
 });
 
 // インデックス設定
-UserSchema.index({ email: 1 }, { unique: true });
 UserSchema.index({ createdAt: -1 });
 
 export const UserModel = mongoose.model<IUser>('User', UserSchema);

@@ -138,8 +138,7 @@ const CharacterPromptCacheSchema = new Schema<ICharacterPromptCache>({
     default: function() {
       return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30日後
     },
-    required: true,
-    index: { expireAfterSeconds: 0 } // MongoDB TTL
+    required: true
   },
 
   // バージョン管理

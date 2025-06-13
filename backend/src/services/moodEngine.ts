@@ -127,7 +127,7 @@ export async function applyMoodTrigger(
     // emotionalStateを更新
     if (affinity.emotionalState !== newEmotionalState) {
       console.log(`🎭 Emotional state changed: ${affinity.emotionalState} → ${newEmotionalState}`);
-      affinity.emotionalState = newEmotionalState as 'happy' | 'sad' | 'excited' | 'angry' | 'neutral' | 'loving' | 'playful' | 'mysterious';
+      affinity.emotionalState = newEmotionalState as 'happy' | 'excited' | 'calm' | 'sad' | 'angry' | 'neutral' | 'melancholic';
     }
 
     // 履歴を最新50件に制限

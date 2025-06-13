@@ -28,6 +28,7 @@ export const authenticateToken = async (
       return;
     }
 
+
     // JWT を検証
     const JWT_SECRET = process.env.JWT_SECRET;
     if (!JWT_SECRET) {

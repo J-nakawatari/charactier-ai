@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { CharacterModel } from '../models/CharacterModel';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { uploadImage, optimizeImage } from '../utils/fileUpload';
 
 const router = Router();
@@ -277,6 +277,10 @@ router.put('/:id/translations', authenticateToken, async (req: Request, res: Res
       name: string;
       description: string;
       adminPrompt: string;
+      defaultMessage: string;
+      limitMessage: string;
+      personalityPreset: string;
+      personalityTags: string[];
       voiceSettings: Record<string, unknown>;
       isActive: boolean;
     }> = {

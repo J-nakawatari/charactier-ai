@@ -11,7 +11,7 @@ import { CharacterModel } from '../models/CharacterModel';
 
 interface CharacterData {
   _id: string;
-  name: {
+  name: string | {
     ja: string;
     en?: string;
   };
@@ -19,14 +19,18 @@ interface CharacterData {
 }
 
 interface CacheDocument {
-  _id: string;
+  _id: any;
   characterId: string;
-  hits: number;
+  useCount: number;
   lastAccessed: Date;
-  generationTime: number;
-  memoryUsage: number;
-  affinityLevel?: number;
-  [key: string]: unknown;
+  lastUsed: Date;
+  createdAt: Date;
+  promptConfig: {
+    affinityLevel: number;
+    [key: string]: any;
+  };
+  promptLength: number;
+  [key: string]: any;
 }
 
 export interface CachePerformanceMetrics {
@@ -134,7 +138,10 @@ export async function getCachePerformanceMetrics(
       timestamp: cache.lastUsed,
       action: 'hit' as const,
       characterId: cache.characterId.toString(),
-      characterName: characters.find(c => c._id.toString() === cache.characterId.toString())?.name?.ja || 'Unknown',
+      characterName: (() => {
+        const char = characters.find(c => c._id.toString() === cache.characterId.toString());
+        return typeof char?.name === 'object' ? char?.name?.ja : char?.name || 'Unknown';
+      })(),
       affinityLevel: cache.promptConfig.affinityLevel,
       generationTime: cache.generationTime,
       userId: cache.userId.toString()
@@ -169,7 +176,7 @@ export async function getCachePerformanceMetrics(
  * キャラクター別キャッシュ統計取得
  */
 export async function getCacheStatsByCharacter(
-  characters: CharacterData[],
+  characters: any[],
   timeframe: number = 30
 ): Promise<CharacterCacheStats[]> {
   const startDate = new Date(Date.now() - timeframe * 24 * 60 * 60 * 1000);
@@ -201,7 +208,7 @@ export async function getCacheStatsByCharacter(
 
       return {
         characterId: character._id.toString(),
-        characterName: character.name?.ja || character.name,
+        characterName: typeof character.name === 'object' ? character.name.ja : character.name,
         totalCaches,
         totalHits,
         hitRatio,
@@ -220,7 +227,7 @@ export async function getCacheStatsByCharacter(
 /**
  * 親密度レベル分布計算
  */
-function getAffinityDistribution(caches: CacheDocument[]): AffinityDistribution[] {
+function getAffinityDistribution(caches: any[]): AffinityDistribution[] {
   const distributions = [
     { range: '0-20', min: 0, max: 20 },
     { range: '21-40', min: 21, max: 40 },
@@ -250,7 +257,7 @@ function getAffinityDistribution(caches: CacheDocument[]): AffinityDistribution[
 /**
  * キャッシュ効率性計算
  */
-function calculateCacheEfficiency(caches: CacheDocument[]): number {
+function calculateCacheEfficiency(caches: any[]): number {
   if (caches.length === 0) return 0;
 
   const totalScore = caches.reduce((score, cache) => {
@@ -299,7 +306,7 @@ function calculateOverallEfficiencyScore(characterStats: CharacterCacheStats[]):
  * トップパフォーマンスキャッシュ取得
  */
 export async function getTopPerformingCaches(
-  characters: CharacterData[],
+  characters: any[],
   limit: number = 10
 ): Promise<CacheEntry[]> {
   const topCaches = await CharacterPromptCache.find({
@@ -316,9 +323,9 @@ export async function getTopPerformingCaches(
     );
 
     return {
-      _id: cache._id.toString(),
+      _id: (cache._id as any).toString(),
       characterId: cache.characterId.toString(),
-      characterName: character?.name?.ja || character?.name || 'Unknown',
+      characterName: typeof character?.name === 'object' ? character?.name?.ja : character?.name || 'Unknown',
       affinityLevel: cache.promptConfig.affinityLevel,
       useCount: cache.useCount,
       efficiency,

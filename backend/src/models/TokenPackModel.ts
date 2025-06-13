@@ -38,6 +38,7 @@ const TokenPackSchema: Schema = new Schema({
   },
   priceId: {
     type: String,
+    unique: true,
     sparse: true, // null値の重複を許可
     trim: true
   },
@@ -60,7 +61,6 @@ const TokenPackSchema: Schema = new Schema({
 
 // インデックス設定
 TokenPackSchema.index({ isActive: 1, createdAt: -1 });
-TokenPackSchema.index({ priceId: 1 }, { unique: true, sparse: true });
 
 // バリデーション
 TokenPackSchema.pre('save', function(next) {

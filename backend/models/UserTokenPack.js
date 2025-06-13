@@ -17,8 +17,7 @@ const userTokenPackSchema = new mongoose.Schema({
   stripeSessionId: {
     type: String,
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   stripeProductId: {
     type: String,
@@ -82,7 +81,6 @@ const userTokenPackSchema = new mongoose.Schema({
 // インデックス設定（パフォーマンス最適化）
 userTokenPackSchema.index({ userId: 1, purchaseDate: -1 });
 userTokenPackSchema.index({ userId: 1, isActive: 1, tokensRemaining: 1 });
-userTokenPackSchema.index({ stripeSessionId: 1 }, { unique: true });
 
 // 仮想フィールド：使用率
 userTokenPackSchema.virtual('usageRate').get(function() {
