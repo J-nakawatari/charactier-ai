@@ -293,8 +293,14 @@ function CharactersPageContent({
       </div>
 
       {showWelcomeModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-75 flex items-center justify-center p-4">
-          <div className="relative bg-gradient-to-br from-purple-600 via-pink-600 to-purple-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+        <div 
+          className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-75 flex items-center justify-center p-4"
+          onClick={() => setShowWelcomeModal(false)}
+        >
+          <div 
+            className="relative bg-gradient-to-br from-purple-600 via-pink-600 to-purple-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* 背景アニメーション */}
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 opacity-20 animate-pulse"></div>
             

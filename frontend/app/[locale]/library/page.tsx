@@ -568,8 +568,14 @@ export default function CharacterLibraryPage() {
 
       {/* 画像モーダル */}
       {showModal && selectedImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75">
-          <div className="relative max-w-4xl max-h-full bg-white rounded-lg overflow-hidden">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75"
+          onClick={() => setShowModal(false)}
+        >
+          <div 
+            className="relative max-w-4xl max-h-full bg-white rounded-lg overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* モーダルヘッダー */}
             <div className="absolute top-0 left-0 right-0 z-10 p-4">
               <div className="flex items-center justify-between">
