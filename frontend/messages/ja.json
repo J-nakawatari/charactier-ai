@@ -11,7 +11,7 @@
     },
     "filters": {
       "all": "全て表示",
-      "free": "無料キャラのみ", 
+      "free": "ベースキャラのみ", 
       "purchased": "購入済みキャラのみ",
       "unpurchased": "未購入キャラのみ"
     },
@@ -29,9 +29,8 @@
       "viewAll": "全部見る"
     },
     "characterTypes": {
-      "free": "無料",
-      "tokenBased": "トークン制",
-      "premium": "プレミアム",
+      "free": "ベースキャラ",
+      "premium": "プレミアムキャラ",
       "locked": "ロック中"
     },
     "loading": "キャラクター一覧を読み込み中...",
@@ -191,6 +190,40 @@
     "empty": {
       "title": "購入履歴がありません",
       "description": "まだ購入が行われていません。"
+    }
+  },
+  "analytics": {
+    "tokens": {
+      "title": "トークン分析",
+      "subtitle": "トークンの使用パターンと効率性を分析",
+      "usage": "使用量",
+      "efficiency": "効率性",
+      "pattern": "パターン"
+    },
+    "chats": {
+      "title": "チャット分析",
+      "subtitle": "会話パターンと活動の分析",
+      "conversations": "会話",
+      "activity": "活動",
+      "insights": "インサイト"
+    },
+    "affinity": {
+      "title": "親密度分析",
+      "subtitle": "関係性と感情の深化の分析",
+      "relationships": "関係性",
+      "emotional": "感情",
+      "progress": "進捗"
+    },
+    "common": {
+      "loading": "データを読み込み中...",
+      "error": "データの読み込みに失敗しました",
+      "retry": "再試行",
+      "noData": "データがありません",
+      "timeRange": {
+        "week": "1週間",
+        "month": "1ヶ月",
+        "quarter": "3ヶ月"
+      }
     }
   }
 }

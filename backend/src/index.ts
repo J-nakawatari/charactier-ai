@@ -7,7 +7,7 @@ import path from 'path';
 import Stripe from 'stripe';
 import mongoose from 'mongoose';
 import OpenAI from 'openai';
-import { LocalizedString } from './types';
+import { LocalizedString, ensureUserNameString } from './types';
 import { TokenPackModel, ITokenPack } from './models/TokenPackModel';
 import { getRedisClient } from '../lib/redis';
 import { UserModel, IUser } from './models/UserModel';
@@ -15,10 +15,14 @@ import { AdminModel, IAdmin } from './models/AdminModel';
 import { ChatModel, IChat, IMessage } from './models/ChatModel';
 import { CharacterModel, ICharacter } from './models/CharacterModel';
 import { PurchaseHistoryModel } from './models/PurchaseHistoryModel';
+import { NotificationModel } from './models/NotificationModel';
+import { UserNotificationReadStatusModel } from './models/UserNotificationReadStatusModel';
 import { authenticateToken, AuthRequest } from './middleware/auth';
 import authRoutes from './routes/auth';
 import characterRoutes from './routes/characters';
 import modelRoutes from './routes/modelSettings';
+import notificationRoutes from './routes/notifications';
+const userRoutes = require('../routes/user');
 import { validateMessage } from './utils/contentFilter';
 import TokenUsage from '../models/TokenUsage';
 import CharacterPromptCache from '../models/CharacterPromptCache';
@@ -342,6 +346,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         console.log('💳 チェックアウトセッション完了:', session.id);
+        console.log('🔥 新しいwebhook処理が実行されています！');
         
         const userId = session.metadata?.userId;
         const purchaseAmountYen = session.amount_total;
@@ -352,52 +357,76 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
           break;
         }
         
-        // 現在の使用モデルを取得（環境変数 or デフォルト）
-        const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+        // 価格IDから購入タイプを判別
+        if (!stripe) {
+          console.error('❌ Stripe not initialized');
+          break;
+        }
         
-        // トークン付与処理
-        const grantResult = await TokenService.grantTokens(userId, sessionId, purchaseAmountYen, currentModel);
+        const fullSession = await stripe.checkout.sessions.retrieve(sessionId, {
+          expand: ['line_items']
+        });
         
-        if (grantResult.success) {
-          console.log('✅ トークン付与完了:', grantResult.tokensGranted);
+        if (!fullSession.line_items?.data?.[0]?.price?.id) {
+          console.error('❌ 価格ID取得失敗');
+          break;
+        }
+        
+        const priceId = fullSession.line_items.data[0].price.id;
+        
+        console.log('🔍 決済詳細:', {
+          sessionId: sessionId,
+          priceId: priceId,
+          amount: purchaseAmountYen
+        });
+        
+        // 価格IDからキャラクター購入かトークン購入かを判別
+        const character = await CharacterModel.findOne({ stripeProductId: priceId });
+        
+        let purchaseType, characterId;
+        if (character) {
+          purchaseType = 'character';
+          characterId = character._id;
+          console.log(`🎭 キャラクター購入検出: ${character.name.ja || character.name.en}`);
+        } else {
+          purchaseType = 'token';
+          console.log('🎁 トークン購入検出');
+        }
+        
+        if (purchaseType === 'character' && character && characterId) {
+          // キャラクター購入処理
+          console.log(`🎭 キャラクター購入処理開始: ${characterId}`);
           
-          // 🎭 購入金額に基づいてGIFTムードトリガーを適用
-          if (purchaseAmountYen >= 500) {
-            try {
-              const user = await UserModel.findById(userId);
-              if (user?.selectedCharacter) {
-                await applyMoodTrigger(
-                  userId,
-                  user.selectedCharacter.toString(),
-                  { kind: 'GIFT', value: purchaseAmountYen }
-                );
-                console.log('🎭 GIFT ムードトリガー適用完了');
-              }
-            } catch (moodError) {
-              console.error('⚠️ ムードトリガー適用失敗:', moodError);
-            }
-          }
-          
-          // 📝 購入履歴をデータベースに記録
           try {
-            console.log('📝 購入履歴記録処理開始...');
+            // ユーザーの購入済みキャラクターに追加
+            const user = await UserModel.findById(userId);
+            if (!user) {
+              console.error('❌ ユーザーが見つかりません:', userId);
+              break;
+            }
             
+            if (!user.purchasedCharacters.includes(characterId)) {
+              user.purchasedCharacters.push(characterId);
+              await user.save();
+              console.log('✅ キャラクター購入完了:', character.name.ja || character.name.en);
+            }
+            
+            // キャラクター購入履歴を記録
             const purchaseRecord = await PurchaseHistoryModel.createFromStripeSession({
               userId: new mongoose.Types.ObjectId(userId),
               stripeSessionId: sessionId,
               stripePaymentIntentId: typeof session.payment_intent === 'string' ? session.payment_intent : undefined,
-              type: 'token',
-              amount: grantResult.tokensGranted,
+              type: 'character',
+              amount: 1, // キャラクター1体
               price: purchaseAmountYen,
               currency: session.currency || 'jpy',
               status: 'completed',
               paymentMethod: session.payment_method_types?.[0] || 'card',
-              details: `${grantResult.tokensGranted}トークン購入`,
-              description: `Stripe経由でのトークン購入 - ${grantResult.tokensGranted}トークン`,
+              details: `${character.name.ja || character.name.en}キャラクター購入`,
+              description: `Stripe経由でのキャラクター購入 - ${character.name.ja || character.name.en}`,
               metadata: {
-                profitMargin: grantResult.profitMargin,
-                originalAmount: purchaseAmountYen,
-                grantedTokens: grantResult.tokensGranted
+                characterId: characterId.toString(),
+                characterName: character.name.ja || character.name.en
               },
               stripeData: {
                 sessionId: sessionId,
@@ -407,39 +436,130 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
               }
             });
             
-            console.log('✅ 購入履歴記録成功:', {
+            console.log('✅ キャラクター購入履歴記録成功:', {
               recordId: purchaseRecord._id,
               userId: userId,
-              type: 'token',
-              amount: grantResult.tokensGranted,
-              price: purchaseAmountYen
+              type: 'character',
+              characterName: character.name.ja || character.name.en
             });
             
-          } catch (purchaseHistoryError) {
-            console.error('⚠️ 購入履歴記録エラー（トークン付与は成功）:', purchaseHistoryError);
-            console.error('🔍 購入履歴エラー詳細:', {
-              userId: userId,
-              sessionId: sessionId,
-              error: purchaseHistoryError instanceof Error ? purchaseHistoryError.message : String(purchaseHistoryError)
-            });
+            // SSE用キャラクター購入完了データをRedisに保存
+            try {
+              const redis = await getRedisClient();
+              const purchaseCompleteData = {
+                success: true,
+                type: 'character',
+                characterId: characterId.toString(),
+                characterName: character.name.ja || character.name.en,
+                purchaseAmountYen,
+                timestamp: new Date().toISOString()
+              };
+              
+              // SSE用データを保存（60秒で自動削除）
+              await redis.set(`purchase:${sessionId}`, JSON.stringify(purchaseCompleteData), { EX: 60 });
+              console.log('✅ SSE用キャラクター購入完了データ保存:', sessionId);
+            } catch (sseError) {
+              console.error('⚠️ SSE用データ保存失敗:', sseError);
+            }
+            
+          } catch (error) {
+            console.error('❌ キャラクター購入処理エラー:', error);
           }
-
-          // SSE用購入完了データをRedis/メモリに保存
-          try {
-            const redis = await getRedisClient();
-            const purchaseCompleteData = {
-              success: true,
-              addedTokens: grantResult.tokensGranted,
-              newBalance: grantResult.newBalance,
-              purchaseAmountYen,
-              timestamp: new Date().toISOString()
-            };
+          
+        } else {
+          // トークン購入処理（従来の処理）
+          console.log('🎁 トークン付与処理...');
+          
+          // 現在の使用モデルを取得（環境変数 or デフォルト）
+          const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+          
+          // トークン付与処理
+          const grantResult = await TokenService.grantTokens(userId, sessionId, purchaseAmountYen, currentModel);
+        
+          if (grantResult.success) {
+            console.log('✅ トークン付与完了:', grantResult.tokensGranted);
             
-            // SSE用データを保存（60秒で自動削除）
-            await redis.set(`purchase:${sessionId}`, JSON.stringify(purchaseCompleteData), { EX: 60 });
-            console.log('✅ SSE用購入完了データ保存:', sessionId);
-          } catch (sseError) {
-            console.error('⚠️ SSE用データ保存失敗:', sseError);
+            // 🎭 購入金額に基づいてGIFTムードトリガーを適用
+            if (purchaseAmountYen >= 500) {
+              try {
+                const user = await UserModel.findById(userId);
+                if (user?.selectedCharacter) {
+                  await applyMoodTrigger(
+                    userId,
+                    user.selectedCharacter.toString(),
+                    { kind: 'GIFT', value: purchaseAmountYen }
+                  );
+                  console.log('🎭 GIFT ムードトリガー適用完了');
+                }
+              } catch (moodError) {
+                console.error('⚠️ ムードトリガー適用失敗:', moodError);
+              }
+            }
+            
+            // 📝 購入履歴をデータベースに記録
+            try {
+              console.log('📝 購入履歴記録処理開始...');
+              
+              const purchaseRecord = await PurchaseHistoryModel.createFromStripeSession({
+                userId: new mongoose.Types.ObjectId(userId),
+                stripeSessionId: sessionId,
+                stripePaymentIntentId: typeof session.payment_intent === 'string' ? session.payment_intent : undefined,
+                type: 'token',
+                amount: grantResult.tokensGranted,
+                price: purchaseAmountYen,
+                currency: session.currency || 'jpy',
+                status: 'completed',
+                paymentMethod: session.payment_method_types?.[0] || 'card',
+                details: `${grantResult.tokensGranted}トークン購入`,
+                description: `Stripe経由でのトークン購入 - ${grantResult.tokensGranted}トークン`,
+                metadata: {
+                  profitMargin: grantResult.profitMargin,
+                  originalAmount: purchaseAmountYen,
+                  grantedTokens: grantResult.tokensGranted
+                },
+                stripeData: {
+                  sessionId: sessionId,
+                  paymentIntentId: typeof session.payment_intent === 'string' ? session.payment_intent : undefined,
+                  customerId: session.customer,
+                  mode: session.mode
+                }
+              });
+              
+              console.log('✅ 購入履歴記録成功:', {
+                recordId: purchaseRecord._id,
+                userId: userId,
+                type: 'token',
+                amount: grantResult.tokensGranted,
+                price: purchaseAmountYen
+              });
+              
+            } catch (purchaseHistoryError) {
+              console.error('⚠️ 購入履歴記録エラー（トークン付与は成功）:', purchaseHistoryError);
+              console.error('🔍 購入履歴エラー詳細:', {
+                userId: userId,
+                sessionId: sessionId,
+                error: purchaseHistoryError instanceof Error ? purchaseHistoryError.message : String(purchaseHistoryError)
+              });
+            }
+
+            // SSE用購入完了データをRedis/メモリに保存
+            try {
+              const redis = await getRedisClient();
+              const purchaseCompleteData = {
+                success: true,
+                type: 'token',
+                addedTokens: grantResult.tokensGranted,
+                newBalance: grantResult.newBalance,
+                purchaseAmountYen,
+                timestamp: new Date().toISOString()
+              };
+              
+              // SSE用データを保存（60秒で自動削除）
+              await redis.set(`purchase:${sessionId}`, JSON.stringify(purchaseCompleteData), { EX: 60 });
+              console.log('✅ SSE用購入完了データ保存:', sessionId);
+            } catch (sseError) {
+              console.error('⚠️ SSE用データ保存失敗:', sseError);
+            }
           }
         }
         break;
@@ -468,15 +588,34 @@ app.use(express.urlencoded({ extended: true }));
 // 認証ルート
 app.use('/api/auth', authRoutes);
 
+// ユーザールート
+app.use('/api/user', userRoutes);
+
 // 管理者ルート - モデル設定
 app.use('/api/admin', modelRoutes);
 
+// 管理者ルート - その他
+import adminUsersRoutes from './routes/adminUsers';
+import adminTokenPacksRoutes from './routes/adminTokenPacks';
+import adminTokenUsageRoutes from './routes/adminTokenUsage';
+
+app.use('/admin/users', adminUsersRoutes);
+app.use('/api/admin/token-packs', adminTokenPacksRoutes);
+app.use('/api/admin/token-usage', adminTokenUsageRoutes);
+
 // デバッグ: 登録されたルートを出力
-console.log('🔧 Registered model routes:');
+console.log('🔧 Registered admin routes:');
 console.log('  GET /api/admin/models');
 console.log('  GET /api/admin/models/current');
 console.log('  POST /api/admin/models/set-model');
 console.log('  POST /api/admin/models/simulate');
+console.log('  GET /admin/users');
+console.log('  POST /admin/users/:userId/reset-tokens');
+console.log('  PUT /admin/users/:userId/status');
+console.log('  GET /api/admin/token-packs');
+console.log('  POST /api/admin/token-packs');
+console.log('  GET /api/admin/token-usage');
+console.log('  GET /api/admin/token-usage/daily-stats');
 
 // 静的ファイル配信（アップロードされた画像）
 app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {
@@ -487,9 +626,142 @@ app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {
 // キャラクタールート
 app.use('/api/characters', characterRoutes);
 
+// お知らせルート（ユーザー用 + 管理者用）
+app.use('/api/notifications', notificationRoutes);
+
 // Dashboard API
 const dashboardRoutes = require('../routes/dashboard');
 app.use('/api/user/dashboard', dashboardRoutes);
+
+// 現在のユーザー情報確認エンドポイント（デバッグ用）
+app.get('/api/debug/current-user', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    res.json({
+      user: req.user,
+      admin: req.admin,
+      isAdmin: req.user?.isAdmin,
+      headers: {
+        authorization: req.headers.authorization?.substring(0, 20) + '...',
+        userAgent: req.headers['user-agent']
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error });
+  }
+});
+
+// 現在のユーザーを管理者にするエンドポイント（デバッグ用）
+app.post('/api/debug/make-admin', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const currentUser = req.user;
+    if (!currentUser) {
+      res.status(401).json({ error: 'ユーザーが見つかりません' });
+      return;
+    }
+
+    // 現在のユーザーを管理者コレクションにコピー
+    const bcrypt = require('bcrypt');
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+    
+    // 既存の管理者アカウントをチェック
+    const existingAdmin = await AdminModel.findOne({ email: currentUser.email });
+    if (existingAdmin) {
+      res.json({
+        message: 'このメールアドレスは既に管理者として登録されています',
+        admin: existingAdmin.email
+      });
+      return;
+    }
+
+    const admin = new AdminModel({
+      name: currentUser.name || '管理者',
+      email: currentUser.email,
+      password: hashedPassword,
+      role: 'super_admin',
+      permissions: [
+        'users.read', 'users.write',
+        'characters.read', 'characters.write',
+        'tokens.read', 'tokens.write',
+        'system.read', 'system.write'
+      ],
+      isActive: true
+    });
+
+    await admin.save();
+    console.log('✅ ユーザーを管理者に昇格:', admin.email);
+
+    res.json({
+      message: '現在のユーザーを管理者に昇格しました',
+      admin: {
+        email: admin.email,
+        name: admin.name,
+        role: admin.role
+      },
+      note: '同じメールアドレスとパスワード（admin123）で管理者としてログインできます'
+    });
+
+  } catch (error) {
+    console.error('❌ 管理者昇格エラー:', error);
+    res.status(500).json({ error: '管理者昇格に失敗しました' });
+  }
+});
+
+// 一時的な管理者作成エンドポイント（開発用）
+app.post('/api/debug/create-admin', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const bcrypt = require('bcrypt');
+    
+    // 既存の管理者をチェック
+    const existingAdmin = await AdminModel.findOne({ email: 'admin@charactier.ai' });
+    if (existingAdmin) {
+      res.json({ 
+        message: '管理者アカウントは既に存在します',
+        admin: {
+          email: existingAdmin.email,
+          name: existingAdmin.name,
+          role: existingAdmin.role
+        }
+      });
+      return;
+    }
+
+    // 新しい管理者を作成
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const admin = new AdminModel({
+      name: 'システム管理者',
+      email: 'admin@charactier.ai',
+      password: hashedPassword,
+      role: 'super_admin',
+      permissions: [
+        'users.read', 'users.write',
+        'characters.read', 'characters.write',
+        'tokens.read', 'tokens.write',
+        'system.read', 'system.write'
+      ],
+      isActive: true
+    });
+
+    await admin.save();
+    console.log('✅ 管理者アカウントを作成しました:', admin.email);
+
+    res.json({
+      message: '管理者アカウントを作成しました',
+      admin: {
+        email: admin.email,
+        name: admin.name,
+        role: admin.role
+      },
+      credentials: {
+        email: 'admin@charactier.ai',
+        password: 'admin123'
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ 管理者作成エラー:', error);
+    res.status(500).json({ error: '管理者作成に失敗しました' });
+  }
+});
 
 // ユーザープロフィール更新
 app.put('/api/user/profile', authenticateToken, async (req: Request, res: Response): Promise<void> => {
@@ -647,63 +919,12 @@ app.get('/api/auth/user', authenticateToken, (req: Request, res: Response): void
   });
 });
 
-app.patch('/api/users/me/use-character', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  console.log('🔄 selectedCharacter更新:', req.body);
-  const { characterId } = req.body;
-  
-  if (!req.user) {
-    res.status(401).json({ msg: 'Unauthorized' });
-    return;
-  }
-  
-  if (!characterId) {
-    res.status(400).json({ msg: 'Character ID is required' });
-    return;
-  }
-  
-  try {
-    // キャラクターが存在するかチェック
-    const character = await CharacterModel.findById(characterId);
-    if (!character || !character.isActive) {
-      res.status(404).json({ msg: 'Character not found' });
-      return;
-    }
-    
-    // ユーザーのselectedCharacterを更新
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      req.user._id,
-      { 
-        selectedCharacter: {
-          _id: characterId,
-          name: character.name
-        }
-      },
-      { new: true }
-    );
-    
-    if (!updatedUser) {
-      res.status(404).json({ msg: 'User not found' });
-      return;
-    }
-    
-    console.log('✅ selectedCharacter updated:', characterId, character.name);
-    
-    res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      tokenBalance: updatedUser.tokenBalance,
-      selectedCharacter: updatedUser.selectedCharacter
-    });
-  } catch (error) {
-    console.error('❌ Error updating selected character:', error);
-    res.status(500).json({ msg: 'Internal server error' });
-  }
-});
 
 // Chat API endpoints
 app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   console.log('💬 Chat history API called');
+  console.log('🔍 Requested characterId:', req.params.characterId);
+  console.log('🔍 User ID:', req.user?._id);
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -716,6 +937,7 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
   try {
     // キャラクター情報を取得
     const character = await CharacterModel.findById(characterId);
+    console.log('🔍 Found character:', character ? { _id: character._id, name: character.name } : 'NOT FOUND');
     if (!character || !character.isActive) {
       res.status(404).json({ error: 'Character not found' });
       return;
@@ -730,6 +952,7 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
           userId: req.user._id, 
           characterId: characterId 
         });
+        console.log('🔍 Found chat data:', chatData ? { characterId: chatData.characterId, messagesCount: chatData.messages?.length } : 'NOT FOUND');
         
         if (!chatData) {
           // 初回アクセス時は新しいチャットセッションを作成
@@ -806,6 +1029,7 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
       unlockedGalleryImages: characterAffinity?.unlockedRewards || []
     };
 
+    console.log('🔍 Sending response with character:', { _id: localizedCharacter._id, name: localizedCharacter.name });
     res.json({
       chat: {
         _id: chatData._id,
@@ -880,15 +1104,15 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
 
     // 🔥 禁止用語フィルタリング（メッセージ処理前に実行）
     console.log('🔍 Content filtering check started');
-    const validation = await validateMessage(req.user._id, message.trim(), req);
+    const { validateMessage: tsValidateMessage } = await import('./utils/contentFilter');
+    const validation = tsValidateMessage(message.trim());
     if (!validation.allowed) {
       console.log('🚫 Content violation detected:', validation.reason);
       res.status(403).json({
         error: validation.reason,
         code: 'CONTENT_VIOLATION',
         violationType: validation.violationType,
-        detectedWord: validation.detectedWord,
-        sanctionInfo: validation.sanctionInfo
+        detectedWord: validation.detectedWord
       });
       return;
     }
@@ -971,7 +1195,7 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
             },
             $inc: { 
               totalTokensUsed: aiResponse.tokensUsed,
-              currentAffinity: Math.floor(Math.random() * 3) + 1 // 1-3ポイント増加
+              currentAffinity: 1 // メッセージごとに1ポイント増加
             },
             $set: { lastActivityAt: new Date() }
           },
@@ -981,9 +1205,69 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           }
         );
 
-        const affinityIncrease = Math.floor(Math.random() * 3) + 1;
+        const affinityIncrease = 1; // 固定で1ポイント増加
+        const previousAffinity = Math.max(0, (updatedChat.currentAffinity || 0) - affinityIncrease);
         const newAffinity = Math.min(100, updatedChat.currentAffinity);
-        const previousAffinity = newAffinity - affinityIncrease;
+
+        // UserModelの親密度データも更新
+        try {
+          const userAffinityUpdate = await UserModel.findOneAndUpdate(
+            { 
+              _id: req.user._id,
+              'affinities.character': characterId 
+            },
+            {
+              $inc: { 'affinities.$.level': affinityIncrease },
+              $set: { 
+                'affinities.$.lastInteraction': new Date(),
+                'affinities.$.totalMessages': { $inc: 1 }
+              }
+            },
+            { new: true }
+          );
+
+          if (!userAffinityUpdate) {
+            // 親密度データが存在しない場合は新規作成
+            await UserModel.findByIdAndUpdate(
+              req.user._id,
+              {
+                $push: {
+                  affinities: {
+                    character: characterId,
+                    level: affinityIncrease,
+                    experience: 0,
+                    experienceToNext: 10,
+                    emotionalState: 'neutral',
+                    relationshipType: 'stranger',
+                    trustLevel: 0,
+                    intimacyLevel: affinityIncrease,
+                    totalConversations: 1,
+                    totalMessages: 1,
+                    averageResponseTime: 0,
+                    lastInteraction: new Date(),
+                    currentStreak: 1,
+                    maxStreak: 1,
+                    consecutiveDays: 1,
+                    favoriteTopics: [],
+                    specialMemories: [],
+                    personalNotes: '',
+                    giftsReceived: [],
+                    totalGiftsValue: 0,
+                    unlockedRewards: [],
+                    nextRewardLevel: 10,
+                    moodHistory: []
+                  }
+                }
+              },
+              { new: true }
+            );
+            console.log('✅ Created new affinity data for character:', characterId);
+          } else {
+            console.log('✅ Updated existing affinity data for character:', characterId);
+          }
+        } catch (affinityError) {
+          console.error('❌ Failed to update user affinity:', affinityError);
+        }
 
         console.log('✅ Chat messages saved to MongoDB:', {
           character: character.name.ja,
@@ -998,6 +1282,8 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         try {
           const previousLevel = Math.floor(previousAffinity / 10);
           const currentLevel = Math.floor(newAffinity / 10);
+          
+          console.log(`🔍 Level check: previous affinity=${previousAffinity} (level ${previousLevel}), new affinity=${newAffinity} (level ${currentLevel})`);
           
           if (currentLevel > previousLevel) {
             // レベルアップが発生
@@ -1172,6 +1458,11 @@ app.get('/api/ping', (_req: Request, res: Response): void => {
 // Dashboard API route
 app.get('/api/user/dashboard', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   console.log('📊 Dashboard API called');
+  console.log('🔍 Dashboard: User from auth middleware:', { 
+    _id: req.user?._id, 
+    email: req.user?.email,
+    tokenBalance: req.user?.tokenBalance 
+  });
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -1186,19 +1477,19 @@ app.get('/api/user/dashboard', authenticateToken, async (req: Request, res: Resp
   if (isMongoConnected) {
     console.log('🔄 Attempting to get actual token balance from MongoDB');
     try {
-      // Get actual user data from MongoDB
-      // Convert mock user ID to actual MongoDB ObjectId
-      const actualUserId = req.user._id === '507f1f77bcf86cd799439011' ? '6847b690be4f1d49db302358' : req.user._id;
-      const user = await UserModel.findById(actualUserId).lean();
-      console.log('🔍 Found user:', { _id: actualUserId, tokenBalance: user?.tokenBalance });
+      // Get latest user data directly from MongoDB (最新のトークン残高取得)
+      const user = await UserModel.findById(req.user._id).lean();
+      console.log('🔍 Dashboard: Found user:', { _id: req.user._id, tokenBalance: user?.tokenBalance });
       if (user) {
         actualBalance = user.tokenBalance || 0;
-        console.log('✅ Updated actualBalance to:', actualBalance);
+        console.log('✅ Dashboard: Updated actualBalance to:', actualBalance);
+      } else {
+        console.error('❌ Dashboard: User not found in MongoDB:', req.user._id);
       }
       
       // Get actual token pack data
       const UserTokenPack = require('../models/UserTokenPack');
-      const tokenPacks = await UserTokenPack.find({ userId: actualUserId }).lean();
+      const tokenPacks = await UserTokenPack.find({ userId: req.user._id }).lean();
       totalPurchased = tokenPacks.reduce((sum: number, pack: any) => sum + (pack.tokensPurchased || 0), 0);
     } catch (error) {
       console.error('❌ Failed to get actual token balance:', error);
@@ -1224,17 +1515,17 @@ app.get('/api/user/dashboard', authenticateToken, async (req: Request, res: Resp
     const dashboardData = {
       user: {
         _id: user._id,
-        name: user.name,
+        name: ensureUserNameString(user.name),
         email: user.email,
-        tokenBalance: user.tokenBalance,
+        tokenBalance: actualBalance, // 最新の残高を使用
         selectedCharacter: user.selectedCharacter,
         isSetupComplete: user.isSetupComplete,
         createdAt: user.createdAt || new Date(),
         lastLoginAt: new Date()
       },
       tokens: {
-        balance: user.tokenBalance || 0,
-        totalPurchased: 0, // TODO: Implement proper calculation
+        balance: actualBalance, // 最新の残高を使用
+        totalPurchased: totalPurchased, // 実際の購入履歴
         totalUsed: 0, // TODO: Implement proper calculation
         recentUsage: [] // TODO: Implement proper usage tracking
       },
@@ -1252,30 +1543,6 @@ app.get('/api/user/dashboard', authenticateToken, async (req: Request, res: Resp
   }
 });
 
-// Token Analytics API
-app.get('/api/analytics/tokens', authenticateToken, (req: Request, res: Response): void => {
-  console.log('📊 Token Analytics API called');
-  
-  if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
-    return;
-  }
-
-  const range = (req.query.range as string) || 'month';
-  
-  // TODO: Implement proper token analytics with real database queries
-  // For now, return empty data
-  const analyticsData = {
-    usage: [],
-    summary: {
-      totalUsed: 0,
-      averagePerDay: 0,
-      peakUsage: 0
-    }
-  };
-
-  res.json(analyticsData);
-});
 
 // Purchase History API
 app.get('/api/user/purchase-history', authenticateToken, async (req: Request, res: Response): Promise<void> => {
@@ -1450,102 +1717,110 @@ app.get('/api/analytics/conversations', authenticateToken, (req: Request, res: R
 });
 
 // Token Analytics API
-app.get('/api/analytics/tokens', authenticateToken, (req: Request, res: Response): void => {
-  console.log('📊 Token Analytics API called');
-  
-  if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
-    return;
+app.get('/api/analytics/tokens', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('📊 Token Analytics API called');
+    
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const range = (req.query.range as string) || 'month';
+    
+    // Generate mock data based on range
+    const generateDailyUsage = (days: number) => {
+      const data = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        data.push({
+          date: date.toISOString().slice(0, 10),
+          amount: Math.floor(Math.random() * 500) + 200,
+          count: Math.floor(Math.random() * 15) + 5
+        });
+      }
+      return data;
+    };
+
+    const generateWeeklyTrend = () => {
+      const data = [];
+      for (let i = 11; i >= 0; i--) {
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() - (i * 7));
+        data.push({
+          week: `${weekStart.getMonth() + 1}/${weekStart.getDate()}`,
+          amount: Math.floor(Math.random() * 3000) + 1500,
+          efficiency: Math.floor(Math.random() * 30) + 40
+        });
+      }
+      return data;
+    };
+
+    const generateMonthlyTrend = () => {
+      const data = [];
+      for (let i = 5; i >= 0; i--) {
+        const month = new Date();
+        month.setMonth(month.getMonth() - i);
+        const monthlyAmount = Math.floor(Math.random() * 8000) + 6000;
+        data.push({
+          month: `${month.getFullYear()}/${month.getMonth() + 1}`,
+          amount: monthlyAmount,
+          averageDaily: Math.floor(monthlyAmount / 30)
+        });
+      }
+      return data;
+    };
+
+    const generateHourlyPattern = () => {
+      const data = [];
+      for (let hour = 0; hour < 24; hour++) {
+        const baseAmount = hour >= 19 && hour <= 23 ? 200 : 
+                         hour >= 12 && hour <= 18 ? 150 : 
+                         hour >= 7 && hour <= 11 ? 100 : 50;
+        data.push({
+          hour: `${hour.toString().padStart(2, '0')}:00`,
+          amount: baseAmount + Math.floor(Math.random() * 100),
+          sessions: Math.floor((baseAmount / 50) * (Math.random() * 2 + 1))
+        });
+      }
+      return data;
+    };
+
+    const characterUsage = [
+      { characterName: 'ルナ', amount: 4850, percentage: 45, color: '#E91E63' },
+      { characterName: 'ミコ', amount: 3240, percentage: 30, color: '#9C27B0' },
+      { characterName: 'ゼン', amount: 1620, percentage: 15, color: '#2196F3' },
+      { characterName: 'アリス', amount: 1080, percentage: 10, color: '#4CAF50' }
+    ];
+
+    const efficiency = {
+      tokensPerMessage: 23.4,
+      averageSessionLength: 18.7,
+      peakHour: '21:00',
+      mostEfficientCharacter: 'ゼン'
+    };
+
+    const days = range === 'week' ? 7 : range === 'month' ? 30 : 90;
+
+    const analyticsData = {
+      dailyUsage: generateDailyUsage(days),
+      weeklyTrend: generateWeeklyTrend(),
+      monthlyTrend: generateMonthlyTrend(),
+      characterUsage,
+      hourlyPattern: generateHourlyPattern(),
+      efficiency
+    };
+
+    console.log('✅ Token analytics data generated successfully');
+    res.json(analyticsData);
+  } catch (error) {
+    console.error('❌ Token analytics error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'トークン分析の取得に失敗しました'
+    });
   }
-
-  const range = (req.query.range as string) || 'month';
-  
-  // Generate mock data based on range
-  const generateDailyUsage = (days: number) => {
-    const data = [];
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      data.push({
-        date: date.toISOString().slice(0, 10),
-        amount: Math.floor(Math.random() * 500) + 200,
-        count: Math.floor(Math.random() * 15) + 5
-      });
-    }
-    return data;
-  };
-
-  const generateWeeklyTrend = () => {
-    const data = [];
-    for (let i = 11; i >= 0; i--) {
-      const weekStart = new Date();
-      weekStart.setDate(weekStart.getDate() - (i * 7));
-      data.push({
-        week: `${weekStart.getMonth() + 1}/${weekStart.getDate()}`,
-        amount: Math.floor(Math.random() * 3000) + 1500,
-        efficiency: Math.floor(Math.random() * 30) + 40
-      });
-    }
-    return data;
-  };
-
-  const generateMonthlyTrend = () => {
-    const data = [];
-    for (let i = 5; i >= 0; i--) {
-      const month = new Date();
-      month.setMonth(month.getMonth() - i);
-      const monthlyAmount = Math.floor(Math.random() * 8000) + 6000;
-      data.push({
-        month: `${month.getFullYear()}/${month.getMonth() + 1}`,
-        amount: monthlyAmount,
-        averageDaily: Math.floor(monthlyAmount / 30)
-      });
-    }
-    return data;
-  };
-
-  const generateHourlyPattern = () => {
-    const data = [];
-    for (let hour = 0; hour < 24; hour++) {
-      const baseAmount = hour >= 19 && hour <= 23 ? 200 : 
-                       hour >= 12 && hour <= 18 ? 150 : 
-                       hour >= 7 && hour <= 11 ? 100 : 50;
-      data.push({
-        hour: `${hour.toString().padStart(2, '0')}:00`,
-        amount: baseAmount + Math.floor(Math.random() * 100),
-        sessions: Math.floor((baseAmount / 50) * (Math.random() * 2 + 1))
-      });
-    }
-    return data;
-  };
-
-  const characterUsage = [
-    { characterName: 'ルナ', amount: 4850, percentage: 45, color: '#E91E63' },
-    { characterName: 'ミコ', amount: 3240, percentage: 30, color: '#9C27B0' },
-    { characterName: 'ゼン', amount: 1620, percentage: 15, color: '#2196F3' },
-    { characterName: 'アリス', amount: 1080, percentage: 10, color: '#4CAF50' }
-  ];
-
-  const efficiency = {
-    tokensPerMessage: 23.4,
-    averageSessionLength: 18.7,
-    peakHour: '21:00',
-    mostEfficientCharacter: 'ゼン'
-  };
-
-  const days = range === 'week' ? 7 : range === 'month' ? 30 : 90;
-
-  const analyticsData = {
-    dailyUsage: generateDailyUsage(days),
-    weeklyTrend: generateWeeklyTrend(),
-    monthlyTrend: generateMonthlyTrend(),
-    characterUsage,
-    hourlyPattern: generateHourlyPattern(),
-    efficiency
-  };
-
-  console.log('✅ Token analytics data generated successfully');
-  res.json(analyticsData);
 });
 
 // Chat Analytics API
@@ -1698,27 +1973,28 @@ app.get('/api/analytics/chats', authenticateToken, (req: Request, res: Response)
 });
 
 // Affinity Analytics API
-app.get('/api/analytics/affinity', authenticateToken, (req: Request, res: Response): void => {
-  console.log('📊 Affinity Analytics API called');
-  
-  if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
-    return;
-  }
+app.get('/api/analytics/affinity', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('📊 Affinity Analytics API called');
+    
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
 
-  const range = (req.query.range as string) || 'quarter';
-  const character = (req.query.character as string) || 'all';
-  
-  // Mock character data
-  const characters = [
-    { name: 'ルナ', color: '#E91E63' },
-    { name: 'ミコ', color: '#9C27B0' },
-    { name: 'ゼン', color: '#2196F3' },
-    { name: 'アリス', color: '#4CAF50' }
-  ];
+    const range = (req.query.range as string) || 'quarter';
+    const character = (req.query.character as string) || 'all';
+    
+    // Mock character data
+    const characters = [
+      { name: 'ルナ', color: '#E91E63' },
+      { name: 'ミコ', color: '#9C27B0' },
+      { name: 'ゼン', color: '#2196F3' },
+      { name: 'アリス', color: '#4CAF50' }
+    ];
 
-  // Character progress data
-  const characterProgress = characters.map((char, index) => ({
+    // Character progress data
+    const characterProgress = characters.map((char, index) => ({
     characterName: char.name,
     level: [67, 43, 28, 15][index],
     trustLevel: [85, 72, 45, 32][index],
@@ -1861,26 +2137,44 @@ app.get('/api/analytics/affinity', authenticateToken, (req: Request, res: Respon
 
   const days = range === 'month' ? 30 : range === 'quarter' ? 90 : 365;
 
-  const analyticsData = {
-    overallStats: {
-      totalCharacters: characters.length,
-      averageLevel: Math.floor(characterProgress.reduce((sum, char) => sum + char.level, 0) / characterProgress.length),
-      highestLevel: Math.max(...characterProgress.map(char => char.level)),
-      totalGiftsGiven: giftHistory.length,
-      totalInteractionDays: 127,
-      relationshipMilestones: relationshipMilestones.length
-    },
-    characterProgress: character === 'all' ? characterProgress : characterProgress.filter(cp => cp.characterName.toLowerCase().includes(character)),
-    levelProgression: generateLevelProgression(days),
-    trustCorrelation,
-    memoryTimeline,
-    giftHistory,
-    emotionalDevelopment,
-    relationshipMilestones
-  };
+    const totalLevel = characterProgress.reduce((sum, char) => sum + char.level, 0);
+    const averageLevel = Math.floor(totalLevel / characterProgress.length);
+    const unlockedImages = characterProgress.reduce((sum, char) => sum + Math.floor(char.level / 10), 0);
+    const activeCharacters = characterProgress.filter(char => char.currentStreak > 0).length;
+    
+    const analyticsData = {
+      overallStats: {
+        totalCharacters: characters.length,
+        averageLevel,
+        highestLevel: Math.max(...characterProgress.map(char => char.level)),
+        totalGiftsGiven: giftHistory.length,
+        totalInteractionDays: 127,
+        relationshipMilestones: relationshipMilestones.length
+      },
+      overallProgress: {
+        totalLevel,
+        unlockedImages,
+        activeCharacters,
+        averageLevel
+      },
+      characterProgress: character === 'all' ? characterProgress : characterProgress.filter(cp => cp.characterName.toLowerCase().includes(character)),
+      levelProgression: generateLevelProgression(days),
+      trustCorrelation,
+      memoryTimeline,
+      giftHistory,
+      emotionalDevelopment,
+      relationshipMilestones
+    };
 
-  console.log('✅ Affinity analytics data generated successfully');
-  res.json(analyticsData);
+    console.log('✅ Affinity analytics data generated successfully');
+    res.json(analyticsData);
+  } catch (error) {
+    console.error('❌ Affinity analytics error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: '親密度分析の取得に失敗しました'
+    });
+  }
 });
 
 // Purchase History API
@@ -2140,40 +2434,71 @@ app.get('/api/purchase/events/:sessionId', async (req: Request, res: Response): 
   }
 });
 
-// セッション情報取得API (購入トークン数確認用)
-app.get('/api/purchase/session/:sessionId', (req: Request, res: Response): void => {
+// セッション情報取得API (購入タイプと詳細確認用)
+app.get('/api/purchase/session/:sessionId', async (req: Request, res: Response): Promise<void> => {
   const { sessionId } = req.params;
   
   console.log('🔍 Stripe セッション情報取得:', sessionId);
   
   try {
-    // セッション情報から商品情報を取得してトークン数を推定
-    // 実際の実装では Stripe.checkout.sessions.retrieve(sessionId) を使用
+    // Stripe初期化チェック
+    if (!stripe) {
+      res.status(500).json({ error: 'Stripe not initialized' });
+      return;
+    }
+
+    // 実際のStripe APIからセッション情報を取得
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['line_items']
+    });
     
-    // モック実装: セッションIDからトークン数を推定
-    // 実際のトークンパックのpriceIdから逆算
-    const tokenPackMap: { [key: string]: number } = {
-      'price_1QbxZCJGaR4OtJ6FQlMEHOkn': 833333,    // 5,000円 → 833,333トークン
-      'price_1QbxZCJGaR4OtJ6FQlMEHOko': 1666666,   // 10,000円 → 1,666,666トークン  
-      'price_1QbxZCJGaR4OtJ6FQlMEHOkp': 3333333,   // 20,000円 → 3,333,333トークン
-      'price_1QbxZCJGaR4OtJ6FQlMEHOkq': 5000000    // 30,000円 → 5,000,000トークン
-    };
-    
-    // セッションIDからpriceIdを推定（実装では実際のStripe APIから取得）
-    let estimatedTokens = 833333; // デフォルト値
-    
-    // セッションIDにテスト用のマッピングがある場合はそれを使用
-    if (sessionId.includes('test')) {
-      estimatedTokens = 833333; // テストセッション用のデフォルト値
+    if (!session.line_items?.data?.[0]?.price?.id) {
+      res.status(404).json({ error: 'Session not found or invalid' });
+      return;
     }
     
-    console.log('📋 推定購入トークン数:', estimatedTokens);
+    const priceId = session.line_items.data[0].price.id;
     
-    res.json({
-      sessionId,
-      tokens: estimatedTokens,
-      status: 'completed'
-    });
+    // 価格IDからキャラクター購入かトークン購入かを判別
+    const character = await CharacterModel.findOne({ stripeProductId: priceId });
+    
+    if (character) {
+      // キャラクター購入の場合
+      res.json({
+        type: 'character',
+        characterId: character._id.toString(),
+        characterName: character.name.ja || character.name.en || 'キャラクター',
+        amount: session.amount_total
+      });
+    } else {
+      // トークン購入の場合（従来のロジック）
+      const tokenPackMap: { [key: string]: number } = {
+        'price_1QbxZCJGaR4OtJ6FQlMEHOkn': 833333,    // 5,000円 → 833,333トークン
+        'price_1QbxZCJGaR4OtJ6FQlMEHOko': 1666666,   // 10,000円 → 1,666,666トークン  
+        'price_1QbxZCJGaR4OtJ6FQlMEHOkp': 3333333,   // 20,000円 → 3,333,333トークン
+        'price_1QbxZCJGaR4OtJ6FQlMEHOkq': 5000000    // 30,000円 → 5,000,000トークン
+      };
+      
+      let estimatedTokens = 833333; // デフォルト値
+      
+      // 実際のトークンパックを検索して正確な値を取得
+      for (const [packPriceId, tokens] of Object.entries(tokenPackMap)) {
+        if (priceId === packPriceId) {
+          estimatedTokens = tokens;
+          break;
+        }
+      }
+      
+      console.log('📋 推定購入トークン数:', estimatedTokens);
+      
+      res.json({
+        type: 'token',
+        sessionId,
+        tokens: estimatedTokens,
+        amount: session.amount_total,
+        status: 'completed'
+      });
+    }
     
   } catch (error) {
     console.error('❌ セッション情報取得エラー:', error);
@@ -2765,6 +3090,11 @@ app.post('/api/purchase/create-checkout-session', authenticateToken, async (req:
       // 実際のStripe API呼び出し
       console.log('🔥 実際のStripe APIでCheckout Session作成:', priceId);
       
+      if (!stripe) {
+        res.status(500).json({ error: 'Stripe not initialized' });
+        return;
+      }
+      
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [
@@ -2799,6 +3129,323 @@ app.post('/api/purchase/create-checkout-session', authenticateToken, async (req:
     res.status(500).json({
       success: false,
       message: 'チェックアウトセッションの作成に失敗しました'
+    });
+  }
+});
+
+// キャラクター購入用チェックアウトセッション作成API
+app.post('/api/purchase/create-character-checkout-session', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  console.log('🛒 キャラクター購入 Checkout Session 作成 API called:', req.body);
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { characterId } = req.body;
+  
+  if (!characterId) {
+    res.status(400).json({ 
+      success: false,
+      message: 'Character ID is required' 
+    });
+    return;
+  }
+
+  try {
+    // キャラクター情報を取得
+    const character = await CharacterModel.findById(characterId);
+    if (!character) {
+      res.status(404).json({
+        success: false,
+        message: 'Character not found'
+      });
+      return;
+    }
+
+    // Stripe商品IDが設定されているかチェック
+    if (!character.stripeProductId) {
+      res.status(400).json({
+        success: false,
+        message: 'Character is not available for purchase'
+      });
+      return;
+    }
+
+    if (!stripe) {
+      res.status(500).json({
+        success: false,
+        message: 'Stripe not configured'
+      });
+      return;
+    }
+    
+    // Stripe価格情報を取得（商品IDまたは価格IDに対応）
+    let priceId;
+    
+    if (character.stripeProductId.startsWith('price_')) {
+      // 価格IDが直接保存されている場合
+      priceId = character.stripeProductId;
+      console.log('🏷️ 価格IDを直接使用:', priceId);
+    } else if (character.stripeProductId.startsWith('prod_')) {
+      // 商品IDから価格を取得する場合
+      console.log('📦 商品IDから価格取得:', character.stripeProductId);
+      
+      if (!stripe) {
+        res.status(500).json({ error: 'Stripe not initialized' });
+        return;
+      }
+      
+      const prices = await stripe.prices.list({
+        product: character.stripeProductId,
+        active: true
+      });
+
+      if (prices.data.length === 0) {
+        res.status(400).json({
+          success: false,
+          message: 'No active price found for this character'
+        });
+        return;
+      }
+
+      priceId = prices.data[0].id;
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid Stripe ID format. Must be price_* or prod_*'
+      });
+      return;
+    }
+    
+    console.log('🔥 実際のStripe APIでキャラクター購入Checkout Session作成:', {
+      characterId,
+      priceId,
+      characterName: character.name.ja
+    });
+    
+    if (!stripe) {
+      res.status(500).json({ error: 'Stripe not initialized' });
+      return;
+    }
+    
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/ja/purchase/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/ja/characters`,
+      metadata: {
+        userId: req.user._id.toString(),
+        characterId: characterId,
+        purchaseType: 'character'
+      }
+    });
+    
+    console.log('✅ キャラクター購入 Stripe Checkout Session 作成完了:', {
+      sessionId: session.id,
+      url: session.url,
+      characterName: character.name.ja
+    });
+
+    res.json({
+      success: true,
+      sessionId: session.id,
+      url: session.url
+    });
+    
+  } catch (error) {
+    console.error('❌ キャラクター購入 Checkout Session 作成エラー:', error);
+    console.error('❌ エラー詳細:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    res.status(500).json({
+      success: false,
+      message: 'チェックアウトセッションの作成に失敗しました',
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+// Stripe価格情報取得API（商品IDまたは価格IDに対応・管理者専用）
+app.get('/api/admin/stripe/product-price/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  console.log('🔍 Stripe価格取得 API called:', req.params.id);
+  
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { id } = req.params;
+  
+  if (!id) {
+    res.status(400).json({ 
+      success: false,
+      message: 'Product ID or Price ID is required' 
+    });
+    return;
+  }
+
+  try {
+    if (!stripe) {
+      res.status(500).json({
+        success: false,
+        message: 'Stripe not configured'
+      });
+      return;
+    }
+    
+    let price;
+    let priceAmount;
+    let currency;
+    
+    if (id.startsWith('price_')) {
+      // 価格IDが直接渡された場合
+      console.log('🏷️ 価格IDから直接取得:', id);
+      
+      if (!stripe) {
+        res.status(500).json({ error: 'Stripe not initialized' });
+        return;
+      }
+      
+      price = await stripe.prices.retrieve(id);
+      priceAmount = price.unit_amount || 0;
+      currency = price.currency.toUpperCase();
+      
+    } else if (id.startsWith('prod_')) {
+      // 商品IDから価格を取得する場合
+      console.log('📦 商品IDから価格取得:', id);
+      
+      if (!stripe) {
+        res.status(500).json({ error: 'Stripe not initialized' });
+        return;
+      }
+      
+      const prices = await stripe.prices.list({
+        product: id,
+        active: true
+      });
+
+      if (prices.data.length === 0) {
+        res.status(404).json({
+          success: false,
+          message: 'No active price found for this product'
+        });
+        return;
+      }
+
+      price = prices.data[0];
+      priceAmount = price.unit_amount || 0;
+      currency = price.currency.toUpperCase();
+      
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid ID format. Must start with "prod_" or "price_"'
+      });
+      return;
+    }
+    
+    console.log('✅ Stripe価格取得成功:', {
+      id,
+      priceAmount,
+      currency,
+      priceId: price.id
+    });
+
+    res.json({
+      price: priceAmount,
+      currency: currency,
+      priceId: price.id
+    });
+    
+  } catch (error) {
+    console.error('❌ Stripe価格取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: '価格情報の取得に失敗しました'
+    });
+  }
+});
+
+// テスト用：認証なしStripe価格取得API（開発用）
+app.get('/api/test/stripe/price/:id', async (req: Request, res: Response): Promise<void> => {
+  console.log('🧪 テスト用Stripe価格取得 API called:', req.params.id);
+  
+  const { id } = req.params;
+  
+  try {
+    if (!stripe) {
+      res.status(500).json({
+        success: false,
+        message: 'Stripe not configured'
+      });
+      return;
+    }
+    
+    let price;
+    let priceAmount;
+    let currency;
+    
+    if (id.startsWith('price_')) {
+      console.log('🏷️ テスト: 価格IDから直接取得:', id);
+      price = await stripe.prices.retrieve(id);
+      priceAmount = price.unit_amount || 0;
+      currency = price.currency.toUpperCase();
+      
+    } else if (id.startsWith('prod_')) {
+      console.log('📦 テスト: 商品IDから価格取得:', id);
+      const prices = await stripe.prices.list({
+        product: id,
+        active: true
+      });
+
+      if (prices.data.length === 0) {
+        res.status(404).json({
+          success: false,
+          message: 'No active price found for this product'
+        });
+        return;
+      }
+
+      price = prices.data[0];
+      priceAmount = price.unit_amount || 0;
+      currency = price.currency.toUpperCase();
+      
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid ID format. Must start with "prod_" or "price_"'
+      });
+      return;
+    }
+    
+    console.log('✅ テスト用Stripe価格取得成功:', {
+      id,
+      priceAmount,
+      currency,
+      priceId: price.id
+    });
+
+    res.json({
+      price: priceAmount,
+      currency: currency,
+      priceId: price.id
+    });
+    
+  } catch (error) {
+    console.error('❌ テスト用Stripe価格取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: '価格情報の取得に失敗しました',
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -3014,27 +3661,59 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
         .limit(limitNum)
         .lean();
       
-      // ユーザーデータを管理画面用の形式に変換
-      const formattedUsers = users.map(user => ({
-        id: user._id.toString(),
-        _id: user._id.toString(),
-        name: user.name || 'Unknown User',
-        email: user.email || 'no-email@example.com',
-        tokenBalance: user.tokenBalance || 0,
-        totalSpent: user.totalSpent || 0,
-        chatCount: user.totalChatMessages || 0,
-        avgIntimacy: user.affinities && user.affinities.length > 0 
-          ? user.affinities.reduce((sum: number, aff: any) => sum + (aff.level || 0), 0) / user.affinities.length 
-          : 0,
-        lastLogin: user.lastLogin || user.createdAt || new Date(),
-        status: user.accountStatus || 'active',
-        isTrialUser: (user.tokenBalance === 10000 && user.totalSpent === 0),
-        violationCount: user.violationCount || 0,
-        isActive: user.isActive !== false,
-        createdAt: user.createdAt || new Date()
+      // ユーザーデータを管理画面用の形式に変換（UserTokenPackから正確なトークン残高を取得）
+      const UserTokenPack = require('../models/UserTokenPack');
+      const formattedUsers = await Promise.all(users.map(async (user) => {
+        let actualTokenBalance = user.tokenBalance || 0; // fallback
+        try {
+          actualTokenBalance = await UserTokenPack.calculateUserTokenBalance(user._id);
+        } catch (error) {
+          console.error('❌ Failed to calculate token balance for user:', user._id, error);
+        }
+        
+        return {
+          id: user._id.toString(),
+          _id: user._id.toString(),
+          name: ensureUserNameString(user.name),
+          email: user.email || 'no-email@example.com',
+          tokenBalance: actualTokenBalance, // 統一されたトークン残高を使用
+          totalSpent: user.totalSpent || 0,
+          chatCount: user.totalChatMessages || 0,
+          avgIntimacy: user.affinities && user.affinities.length > 0 
+            ? user.affinities.reduce((sum: number, aff: any) => sum + (aff.level || 0), 0) / user.affinities.length 
+            : 0,
+          lastLogin: user.lastLogin || user.createdAt || new Date(),
+          status: user.accountStatus || 'active',
+          isTrialUser: (actualTokenBalance === 10000 && user.totalSpent === 0),
+          violationCount: user.violationCount || 0,
+          isActive: user.isActive !== false,
+          createdAt: user.createdAt || new Date()
+        };
       }));
       
       console.log('✅ MongoDB Users retrieved:', formattedUsers.length);
+      console.log('🔍 Admin: First user token balance:', formattedUsers[0]?.tokenBalance);
+
+      // トークン残高の集計をバックエンドで実行（表示対象ユーザーと同じフィルタを適用）
+      console.log('💰 Admin: Starting token aggregation with query:', query);
+      const tokenSummary = await UserModel.aggregate([
+        { $match: query }, // 表示対象と同じフィルタを適用
+        { 
+          $group: { 
+            _id: null, 
+            totalTokenBalance: { $sum: "$tokenBalance" },
+            totalUsers: { $sum: 1 },
+            averageBalance: { $avg: "$tokenBalance" }
+          } 
+        }
+      ]);
+      console.log('💰 Admin: Token aggregation result:', tokenSummary[0]);
+
+      const tokenStats = tokenSummary.length > 0 ? tokenSummary[0] : {
+        totalTokenBalance: 0,
+        totalUsers: 0,
+        averageBalance: 0
+      };
 
       res.json({
         users: formattedUsers,
@@ -3043,6 +3722,11 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
           page: pageNum,
           limit: limitNum,
           totalPages: Math.ceil(totalUsers / limitNum)
+        },
+        tokenStats: {
+          totalBalance: tokenStats.totalTokenBalance || 0,
+          totalUsers: tokenStats.totalUsers || 0,
+          averageBalance: Math.round(tokenStats.averageBalance || 0)
         }
       });
       
@@ -3285,7 +3969,8 @@ app.get('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res:
     const user = await UserModel.findById(id)
       .select('-password')
       .populate('selectedCharacter', 'name')
-      .populate('purchasedCharacters', 'name');
+      .populate('purchasedCharacters', 'name')
+      .populate('affinities.character', 'name');
 
     if (!user) {
       res.status(404).json({
@@ -3295,18 +3980,29 @@ app.get('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res:
       return;
     }
 
+    // UserTokenPackから正確なトークン残高を計算
+    let actualTokenBalance = user.tokenBalance; // fallback
+    try {
+      const UserTokenPack = require('../models/UserTokenPack');
+      actualTokenBalance = await UserTokenPack.calculateUserTokenBalance(user._id);
+      console.log('🔍 Admin API: UserTokenPack calculated balance:', actualTokenBalance);
+      console.log('🔍 Admin API: UserModel.tokenBalance:', user.tokenBalance);
+    } catch (error) {
+      console.error('❌ Failed to calculate token balance from UserTokenPack:', error);
+    }
+
     res.json({
       id: user._id,
-      name: user.name,
+      name: ensureUserNameString(user.name),
       email: user.email,
-      tokenBalance: user.tokenBalance,
+      tokenBalance: actualTokenBalance, // 統一されたトークン残高を使用
       chatCount: user.totalChatMessages,
       avgIntimacy: user.affinities.length > 0 
         ? user.affinities.reduce((sum, aff) => sum + aff.level, 0) / user.affinities.length 
         : 0,
       totalSpent: user.totalSpent,
       status: user.accountStatus,
-      isTrialUser: user.tokenBalance === 10000 && user.totalSpent === 0,
+      isTrialUser: actualTokenBalance === 10000 && user.totalSpent === 0,
       loginStreak: user.loginStreak,
       maxLoginStreak: user.maxLoginStreak,
       violationCount: user.violationCount,
@@ -3314,14 +4010,29 @@ app.get('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res:
       lastLogin: user.lastLogin,
       suspensionEndDate: user.suspensionEndDate,
       banReason: user.banReason,
-      unlockedCharacters: user.purchasedCharacters,
-      affinities: user.affinities.map(aff => ({
-        characterId: aff.character,
-        level: aff.level,
-        totalConversations: aff.totalConversations,
-        relationshipType: aff.relationshipType,
-        trustLevel: aff.trustLevel
-      }))
+      unlockedCharacters: user.purchasedCharacters?.map(char => {
+        const character = char as any;
+        return {
+          id: character._id,
+          name: typeof character === 'object' && character.name ? 
+            (typeof character.name === 'object' ? (character.name.ja || character.name.en || 'Unknown') : character.name) : 
+            'Unknown Character'
+        };
+      }) || [],
+      affinities: user.affinities.map(aff => {
+        console.log('🐛 Affinity character data:', typeof aff.character, aff.character);
+        const character = aff.character as any;
+        return {
+          characterId: typeof character === 'object' ? character._id : character,
+          characterName: typeof character === 'object' && character.name ? 
+            (typeof character.name === 'object' ? (character.name.ja || character.name.en || 'Unknown') : character.name) : 
+            'Unknown Character',
+          level: aff.level,
+          totalConversations: aff.totalConversations,
+          relationshipType: aff.relationshipType,
+          trustLevel: aff.trustLevel
+        };
+      })
     });
 
   } catch (error) {
@@ -4988,6 +5699,117 @@ app.delete('/api/admin/cache/character/:characterId', authenticateToken, async (
       error: 'Internal server error',
       message: 'キャラクターキャッシュ無効化に失敗しました'
     });
+  }
+});
+
+// ==================== DEBUG ENDPOINTS ====================
+
+// 現在のユーザー情報確認（デバッグ用）
+app.get('/api/debug/current-user', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    res.json({
+      user: req.user,
+      isAdmin: req.user?.isAdmin || false,
+      admin: req.admin,
+      headers: {
+        authorization: req.headers.authorization ? 'Bearer ***' : 'なし',
+        'x-auth-token': req.headers['x-auth-token'] ? '***' : 'なし'
+      }
+    });
+  } catch (error) {
+    console.error('❌ Debug current user error:', error);
+    res.status(500).json({ error: 'デバッグエラー' });
+  }
+});
+
+// 管理者アカウント確認（認証不要）  
+app.get('/api/debug/check-admin-simple', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const email = 'designroommaster@gmail.com';
+    
+    const admin = await AdminModel.findOne({ email });
+    const user = await UserModel.findOne({ email });
+    
+    res.json({
+      email,
+      adminExists: !!admin,
+      userExists: !!user,
+      adminData: admin ? {
+        _id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role,
+        isActive: admin.isActive
+      } : null,
+      userData: user ? {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isActive: user.isActive
+      } : null
+    });
+  } catch (error) {
+    console.error('❌ Check admin error:', error);
+    res.status(500).json({ error: 'チェックエラー' });
+  }
+});
+
+// 現在のユーザーを管理者にするエンドポイント（デバッグ用）
+app.post('/api/debug/make-admin', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'ユーザーが認証されていません' });
+      return;
+    }
+
+    const currentUser = await UserModel.findById(req.user._id);
+    if (!currentUser) {
+      res.status(404).json({ error: 'ユーザーが見つかりません' });
+      return;
+    }
+
+    // 管理者モデルに既に存在するかチェック
+    const existingAdmin = await AdminModel.findOne({ email: currentUser.email });
+    if (existingAdmin) {
+      res.json({ 
+        success: true, 
+        message: '既に管理者アカウントが存在します',
+        admin: existingAdmin 
+      });
+      return;
+    }
+
+    // パスワードをハッシュ化（ランダムパスワード）
+    const bcrypt = require('bcrypt');
+    const randomPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+    // 管理者アカウント作成
+    const admin = new AdminModel({
+      name: currentUser.name || '管理者',
+      email: currentUser.email,
+      password: hashedPassword,
+      role: 'super_admin',
+      isActive: true
+    });
+
+    await admin.save();
+
+    res.json({
+      success: true,
+      message: '管理者アカウントが作成されました',
+      admin: {
+        _id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role
+      },
+      note: '新しいJWTトークンが必要です。ログアウトして管理者としてログインし直してください。'
+    });
+
+  } catch (error) {
+    console.error('❌ Make admin error:', error);
+    res.status(500).json({ error: '管理者アカウント作成に失敗しました' });
   }
 });
 

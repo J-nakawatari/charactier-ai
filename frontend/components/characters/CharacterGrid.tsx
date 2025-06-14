@@ -3,13 +3,22 @@
 import React from 'react';
 import CharacterCard from './CharacterCard';
 import { User, Search } from 'lucide-react';
-import type { Character } from '@/types/common';
+import type { BaseCharacter } from '@/types/common';
 
-// CharacterGrid用の拡張型定義（ユーザー向け表示用）
-interface GridCharacter extends Omit<Character, 'name' | 'description' | 'characterAccessType'> {
+// CharacterGrid用の型定義（ユーザー向け表示用）
+interface GridCharacter {
+  _id: string;
   name: string;
   description: string;
-  characterAccessType: 'free' | 'token-based' | 'premium';
+  characterAccessType?: 'free' | 'purchaseOnly';
+  personalityPreset?: string;
+  personalityTags?: string[];
+  gender?: string;
+  themeColor?: string;
+  imageCharacterSelect?: string;
+  imageChatAvatar?: string;
+  imageChatBackground?: string;
+  currentMood?: string;
   affinityStats?: {
     totalUsers: number;
     averageLevel: number;
@@ -45,15 +54,10 @@ export default function CharacterGrid({
   const getCharacterAccess = (character: GridCharacter) => {
     switch (character.characterAccessType) {
       case 'free':
-        // 無料キャラ: 誰でも利用可能
+        // ベースキャラ: 誰でも利用可能
         return { isLocked: false, hasAccess: true };
       
-      case 'token-based':
-        // トークン制キャラ: トークンが必要（今後実装予定）
-        // 現在は無料として扱う
-        return { isLocked: false, hasAccess: true };
-      
-      case 'premium':
+      case 'purchaseOnly':
         // プレミアムキャラ: 購入が必要
         const isPurchased = userPurchasedCharacters.includes(character._id);
         console.log(`Character ${character.name} (${character._id}): isPurchased=${isPurchased}, accessType=${character.characterAccessType}`);
@@ -134,6 +138,9 @@ export default function CharacterGrid({
         const { isLocked } = getCharacterAccess(character);
         const currentAffinity = getUserAffinity(character._id);
         
+        // purchasePrice フィールドから価格を取得
+        const price = character.purchasePrice || undefined;
+        
         return (
           <div
             key={character._id}
@@ -146,14 +153,23 @@ export default function CharacterGrid({
             <CharacterCard
               character={{
                 ...character,
-                name: character.name,
-                description: character.description,
+                name: typeof character.name === 'string' 
+                  ? { ja: character.name, en: character.name }
+                  : character.name,
+                description: typeof character.description === 'string'
+                  ? { ja: character.description, en: character.description }
+                  : character.description,
                 personalityPreset: character.personalityPreset || '',
                 personalityTags: character.personalityTags || [],
-                gender: 'unknown'
+                gender: 'unknown',
+                characterAccessType: character.characterAccessType || 'free',
+                aiModel: 'gpt-4o-mini',
+                isActive: true,
+                createdAt: new Date().toISOString()
               }}
               currentAffinity={currentAffinity}
               isLocked={isLocked}
+              price={price}
               onClick={onCharacterClick ? (char) => onCharacterClick(character) : undefined}
             />
           </div>

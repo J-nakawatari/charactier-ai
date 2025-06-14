@@ -108,7 +108,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          // TODO: 認証ヘッダーを追加（JWT実装時）
+          'Authorization': `Bearer ${adminToken}`,
         }
       });
 

@@ -6,9 +6,8 @@ import TokenStats from '@/components/admin/TokenStats';
 import TokenManagementTable from '@/components/admin/TokenManagementTable';
 import TokenPackTable, { TokenPackTableRef } from '@/components/admin/TokenPackTable';
 import TokenPackModal from '@/components/admin/TokenPackModal';
-import TokenAnalyticsDashboard from '@/components/admin/TokenAnalyticsDashboard';
 import { useToast } from '@/contexts/ToastContext';
-import { Search, Filter, Plus, Download, CreditCard, Package, Users, BarChart3, TrendingUp } from 'lucide-react';
+import { Search, Filter, Plus, Download, CreditCard, Package, Users, TrendingUp } from 'lucide-react';
 // Mock imports removed - will use actual API data
 
 interface TokenPack {
@@ -33,14 +32,13 @@ export default function TokensPage() {
   const router = useRouter();
   
   // URLクエリパラメータからタブを取得、デフォルトは'users'
-  const getInitialTab = (): 'users' | 'packs' | 'analytics' => {
+  const getInitialTab = (): 'users' | 'packs' => {
     const tab = searchParams.get('tab');
     if (tab === 'packs') return 'packs';
-    if (tab === 'analytics') return 'analytics';
     return 'users';
   };
   
-  const [activeTab, setActiveTab] = useState<'users' | 'packs' | 'analytics'>(getInitialTab());
+  const [activeTab, setActiveTab] = useState<'users' | 'packs'>(getInitialTab());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPack, setEditingPack] = useState<TokenPack | null>(null);
   const tokenPackTableRef = useRef<TokenPackTableRef>(null);
@@ -50,6 +48,11 @@ export default function TokensPage() {
   const [error, setError] = useState<string | null>(null);
   const [tokenUsage, setTokenUsage] = useState<TokenUsage[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
+  const [tokenStats, setTokenStats] = useState<{
+    totalBalance: number;
+    totalUsers: number;
+    averageBalance: number;
+  } | null>(null);
 
   // URLクエリパラメータの変更を監視
   useEffect(() => {
@@ -61,18 +64,49 @@ export default function TokensPage() {
     const fetchTokenData = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API calls
-        // const [tokenRes, usersRes] = await Promise.all([
-        //   fetch('/api/admin/token-usage'),
-        //   fetch('/api/admin/users')
-        // ]);
+        const token = localStorage.getItem('adminAccessToken');
         
-        // For now, using empty data until APIs are implemented
-        setTokenUsage([]);
-        setUsers([]);
+        if (!token) {
+          setError('認証トークンが見つかりません');
+          return;
+        }
+
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        // 実際のAPIコールを実行
+        const [tokenRes, usersRes] = await Promise.all([
+          fetch('/api/admin/token-usage', { headers }),
+          fetch('/api/admin/users', { headers })
+        ]);
+
+        if (!tokenRes.ok) {
+          throw new Error(`Token usage API error: ${tokenRes.status}`);
+        }
+        if (!usersRes.ok) {
+          throw new Error(`Users API error: ${usersRes.status}`);
+        }
+
+        const [tokenData, usersData] = await Promise.all([
+          tokenRes.json(),
+          usersRes.json()
+        ]);
+
+        console.log('🔍 Token usage data:', tokenData);
+        console.log('🔍 Users data:', usersData);
+
+        setTokenUsage(tokenData.tokenUsages || []);
+        setUsers(usersData.users || []);
+        setTokenStats(usersData.tokenStats || null);
+        setError(null);
       } catch (err) {
         setError('トークンデータの読み込みに失敗しました');
         console.error('Token data fetch error:', err);
+        // API失敗時は空データを表示
+        setTokenUsage([]);
+        setUsers([]);
       } finally {
         setLoading(false);
       }
@@ -81,7 +115,7 @@ export default function TokensPage() {
     fetchTokenData();
   }, []);
 
-  const handleTabChange = (tab: 'users' | 'packs' | 'analytics') => {
+  const handleTabChange = (tab: 'users' | 'packs') => {
     setActiveTab(tab);
     // URLクエリパラメータを更新
     const params = new URLSearchParams(searchParams.toString());
@@ -208,19 +242,6 @@ export default function TokensPage() {
                 <span>パック管理</span>
               </div>
             </button>
-            <button
-              onClick={() => handleTabChange('analytics')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                activeTab === 'analytics'
-                  ? 'border-purple-500 text-purple-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <BarChart3 className="w-4 h-4" />
-                <span>詳細分析</span>
-              </div>
-            </button>
           </nav>
         </div>
       </header>
@@ -228,10 +249,8 @@ export default function TokensPage() {
       {/* メインコンテンツ */}
       <main className="flex-1 p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
-          {/* 統計カード（詳細分析タブ以外） */}
-          {activeTab !== 'analytics' && (
-            <TokenStats tokenUsage={tokenUsage} users={users} />
-          )}
+          {/* 統計カード */}
+          <TokenStats tokenUsage={tokenUsage} users={users} tokenStats={tokenStats} />
           
           {/* タブコンテンツ */}
           {activeTab === 'users' ? (
@@ -240,14 +259,12 @@ export default function TokensPage() {
               id: user.id || user._id,
               status: user.status || (user.isActive ? 'active' : 'inactive')
             }))} />
-          ) : activeTab === 'packs' ? (
+          ) : (
             <TokenPackTable 
               ref={tokenPackTableRef}
               onCreatePack={handleCreatePack}
               onEditPack={handleEditPack}
             />
-          ) : (
-            <TokenAnalyticsDashboard />
           )}
         </div>
       </main>

@@ -1,21 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Coins, TrendingDown, AlertTriangle } from 'lucide-react';
+import { TokenPurchaseModal } from '../chat/TokenPurchaseModal';
 
 interface TokenStatusCardProps {
   balance: number;
   totalPurchased: number;
   recentUsage: Array<{ date: string; amount: number }>;
   isLowWarning?: boolean;
+  onTokensUpdated?: (newBalance: number) => void;
 }
 
 export default function TokenStatusCard({ 
   balance, 
   totalPurchased, 
   recentUsage, 
-  isLowWarning = false 
+  isLowWarning = false,
+  onTokensUpdated
 }: TokenStatusCardProps) {
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   
   const usagePercentage = totalPurchased > 0 ? ((totalPurchased - balance) / totalPurchased) * 100 : 0;
   const remainingPercentage = 100 - usagePercentage;
@@ -27,6 +31,13 @@ export default function TokenStatusCard({
   
   // 予想残り日数
   const estimatedDaysLeft = averageDailyUsage > 0 ? Math.floor(balance / averageDailyUsage) : 0;
+
+  const handlePurchaseSuccess = (newTokens: number) => {
+    if (onTokensUpdated) {
+      onTokensUpdated(newTokens);
+    }
+    setShowPurchaseModal(false);
+  };
 
   return (
     <div className={`bg-white rounded-lg shadow-sm border p-6 ${
@@ -140,14 +151,25 @@ export default function TokenStatusCard({
 
       {/* アクションボタン */}
       <div className="mt-4">
-        <button className={`w-full py-2 px-4 rounded-lg font-medium text-sm transition-colors ${
-          isLowWarning 
-            ? 'bg-red-600 hover:bg-red-700 text-white' 
-            : 'bg-purple-600 hover:bg-purple-700 text-white'
-        }`}>
+        <button 
+          onClick={() => setShowPurchaseModal(true)}
+          className={`w-full py-2 px-4 rounded-lg font-medium text-sm transition-colors ${
+            isLowWarning 
+              ? 'bg-red-600 hover:bg-red-700 text-white' 
+              : 'bg-purple-600 hover:bg-purple-700 text-white'
+          }`}
+        >
           {isLowWarning ? 'トークンを補充する' : 'トークンを購入'}
         </button>
       </div>
+
+      {/* トークン購入モーダル */}
+      <TokenPurchaseModal
+        isOpen={showPurchaseModal}
+        onClose={() => setShowPurchaseModal(false)}
+        currentTokens={balance}
+        onPurchaseSuccess={handlePurchaseSuccess}
+      />
     </div>
   );
 }

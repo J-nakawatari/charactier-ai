@@ -107,7 +107,7 @@ export default function RecentChatHistory({ recentChats, locale }: RecentChatHis
               <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
                 <Image
                   src={chat.character.imageCharacterSelect}
-                  alt={chat.character.name[locale as keyof LocalizedString]}
+                  alt={typeof chat.character.name === 'object' ? chat.character.name[locale as keyof LocalizedString] || chat.character.name.ja || 'Character' : chat.character.name || 'Character'}
                   width={40}
                   height={40}
                   className="w-full h-full object-cover"
@@ -119,7 +119,7 @@ export default function RecentChatHistory({ recentChats, locale }: RecentChatHis
                 {/* キャラクター名と時間 */}
                 <div className="flex items-center justify-between mb-1">
                   <h4 className="font-medium text-gray-900 truncate">
-                    {chat.character.name[locale as keyof LocalizedString]}
+                    {typeof chat.character.name === 'object' ? chat.character.name[locale as keyof LocalizedString] || chat.character.name.ja || 'Unknown Character' : chat.character.name || 'Unknown Character'}
                   </h4>
                   <div className="flex items-center space-x-1 text-xs text-gray-500">
                     <Clock className="w-3 h-3" />
@@ -148,17 +148,6 @@ export default function RecentChatHistory({ recentChats, locale }: RecentChatHis
         ))}
       </div>
 
-      {/* フッター */}
-      <div className="mt-4 pt-4 border-t border-gray-100">
-        <div className="text-center">
-          <button 
-            onClick={handleNewChatClick}
-            className="w-full py-2 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-          >
-            新しいチャットを開始
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

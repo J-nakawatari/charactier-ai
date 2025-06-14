@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { X, Heart, Star, Lock, Unlock, Gift, TrendingUp, Calendar } from 'lucide-react';
+import { X, Heart, Calendar } from 'lucide-react';
 import Image from 'next/image';
 
 interface LocalizedString {
@@ -52,19 +52,6 @@ export default function AffinityDetailModal({
     return { rank: '知り合い', color: 'text-gray-600', bgColor: 'bg-gray-100' };
   };
 
-  const getTotalLevel = () => {
-    return affinities.reduce((total, affinity) => total + affinity.level, 0);
-  };
-
-  const getTotalUnlockedImages = () => {
-    return affinities.reduce((total, affinity) => total + affinity.unlockedImages.length, 0);
-  };
-
-  const getNextMilestone = () => {
-    const totalLevel = getTotalLevel();
-    const nextMilestone = Math.ceil(totalLevel / 100) * 100;
-    return nextMilestone;
-  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-75 flex items-center justify-center p-4">
@@ -92,39 +79,9 @@ export default function AffinityDetailModal({
 
         {/* コンテンツ */}
         <div className="p-6 overflow-y-auto max-h-[70vh]">
-          {/* 統計サマリ */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-4 rounded-lg">
-              <div className="flex items-center space-x-2 mb-2">
-                <TrendingUp className="w-5 h-5 text-pink-600" />
-                <h3 className="font-semibold text-gray-900">総合レベル</h3>
-              </div>
-              <p className="text-2xl font-bold text-pink-600">{getTotalLevel()}</p>
-              <p className="text-sm text-gray-600">次のマイルストーン: {getNextMilestone()}</p>
-            </div>
-
-            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg">
-              <div className="flex items-center space-x-2 mb-2">
-                <Star className="w-5 h-5 text-yellow-600" />
-                <h3 className="font-semibold text-gray-900">解放済み画像</h3>
-              </div>
-              <p className="text-2xl font-bold text-yellow-600">{getTotalUnlockedImages()}枚</p>
-              <p className="text-sm text-gray-600">コレクション進行中</p>
-            </div>
-
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
-              <div className="flex items-center space-x-2 mb-2">
-                <Gift className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold text-gray-900">アクティブキャラ</h3>
-              </div>
-              <p className="text-2xl font-bold text-blue-600">{affinities.length}体</p>
-              <p className="text-sm text-gray-600">会話中のキャラクター</p>
-            </div>
-          </div>
 
           {/* キャラクター別詳細 */}
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">キャラクター別親密度</h3>
             
             {affinities.map((affinity) => {
               const rank = getAffinityRank(affinity.level);
@@ -187,52 +144,6 @@ export default function AffinityDetailModal({
                         </div>
                       </div>
 
-                      {/* アンロック情報 */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <Star className="w-4 h-4 text-yellow-500" />
-                            <span className="text-sm font-medium text-gray-700">解放済み特別画像</span>
-                          </div>
-                          <p className="text-lg font-bold text-gray-900">{affinity.unlockedImages.length}枚</p>
-                        </div>
-
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                          <div className="flex items-center space-x-2 mb-1">
-                            {affinity.level >= affinity.nextUnlockLevel ? (
-                              <>
-                                <Unlock className="w-4 h-4 text-green-500" />
-                                <span className="text-sm font-medium text-green-700">次のアンロック</span>
-                              </>
-                            ) : (
-                              <>
-                                <Lock className="w-4 h-4 text-gray-400" />
-                                <span className="text-sm font-medium text-gray-700">次のアンロック</span>
-                              </>
-                            )}
-                          </div>
-                          <p className={`text-lg font-bold ${
-                            affinity.level >= affinity.nextUnlockLevel ? 'text-green-600' : 'text-gray-900'
-                          }`}>
-                            Lv.{affinity.nextUnlockLevel}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* アンロック可能通知 */}
-                      {affinity.level >= affinity.nextUnlockLevel && (
-                        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                          <div className="flex items-center space-x-2">
-                            <Unlock className="w-5 h-5 text-green-600" />
-                            <span className="font-medium text-green-800">
-                              新しい特別画像がアンロック可能です！
-                            </span>
-                          </div>
-                          <button className="mt-2 text-sm text-green-700 hover:text-green-800 underline transition-colors">
-                            キャラクターページで確認する
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -256,7 +167,6 @@ export default function AffinityDetailModal({
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">レベル特典</h4>
                 <ul className="space-y-1">
-                  <li>• Lv.10毎: 特別画像解放</li>
                   <li>• Lv.20毎: 新しい話題追加</li>
                   <li>• Lv.50毎: 限定コンテンツ</li>
                   <li>• Lv.100: 専用エンディング</li>

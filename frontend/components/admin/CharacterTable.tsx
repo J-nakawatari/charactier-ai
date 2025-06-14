@@ -64,7 +64,7 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
                 <div className="text-sm font-medium text-gray-900">
                   {character.characterAccessType === 'free' ? (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      無料
+                      ベースキャラ
                     </span>
                   ) : (
                     `¥${character.price || 0}`
@@ -165,7 +165,7 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
                   <div className="text-sm text-gray-900">
                     {character.characterAccessType === 'free' ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        無料
+                        ベースキャラ
                       </span>
                     ) : (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">

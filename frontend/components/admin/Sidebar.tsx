@@ -6,14 +6,11 @@ import {
   MessageSquare, 
   Coins, 
   Bell, 
-  Settings, 
   Shield, 
-  BarChart3,
   LogOut,
   Menu,
   X,
   UserCog,
-  Database,
   Cpu
 } from 'lucide-react';
 import Link from 'next/link';
@@ -26,12 +23,9 @@ const sidebarItems = [
   { href: '/admin/characters', icon: MessageSquare, label: 'キャラクター管理' },
   { href: '/admin/tokens', icon: Coins, label: 'トークチケット管理' },
   { href: '/admin/models', icon: Cpu, label: 'AIモデル管理' },
-  { href: '/admin/cache', icon: Database, label: 'キャッシュ管理' },
   { href: '/admin/admins', icon: UserCog, label: '管理者管理' },
   { href: '/admin/notifications', icon: Bell, label: '通知管理' },
-  { href: '/admin/analytics', icon: BarChart3, label: 'アナリティクス' },
   { href: '/admin/security', icon: Shield, label: 'セキュリティ' },
-  { href: '/admin/settings', icon: Settings, label: '設定' },
 ];
 
 interface AdminUser {

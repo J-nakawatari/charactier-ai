@@ -190,9 +190,8 @@ export default function CharacterDetailPage() {
   
   const getAccessTypeText = (type: string) => {
     const typeMap = {
-      'free': '無料',
-      'token-based': 'トークン制',
-      'purchaseOnly': '買い切り'
+      'free': 'ベースキャラ',
+      'purchaseOnly': 'プレミアムキャラ'
     };
     return typeMap[type as keyof typeof typeMap] || type;
   };
@@ -223,7 +222,7 @@ export default function CharacterDetailPage() {
         </span>
         {isFree && (
           <span className="px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800">
-            無料
+            ベースキャラ
           </span>
         )}
       </div>
@@ -322,7 +321,7 @@ export default function CharacterDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">価格</p>
                   <p className="text-xl font-semibold text-gray-900">
-                    {character.isFree ? '無料' : `¥${(character.price || 0).toLocaleString()}`}
+                    {character.isFree ? 'ベースキャラ' : `¥${(character.price || 0).toLocaleString()}`}
                   </p>
                   {/* Stripe ID は後で実装 */}
                 </div>
@@ -519,7 +518,7 @@ export default function CharacterDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">アクセスタイプ</p>
                   <p className="text-gray-900 font-medium">
-                    {getAccessTypeText(character.characterAccessType || 'token-based')}
+                    {getAccessTypeText(character.characterAccessType || 'free')}
                   </p>
                   {character.characterAccessType === 'purchaseOnly' && character.stripePriceId && (
                     <p className="text-xs text-gray-500 mt-1">

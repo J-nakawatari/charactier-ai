@@ -191,5 +191,39 @@
       "title": "No Purchase History",
       "description": "No purchases have been made yet."
     }
+  },
+  "analytics": {
+    "tokens": {
+      "title": "Token Analytics",
+      "subtitle": "Analyze token usage patterns and efficiency",
+      "usage": "Usage",
+      "efficiency": "Efficiency",
+      "pattern": "Pattern"
+    },
+    "chats": {
+      "title": "Chat Analytics", 
+      "subtitle": "Analyze conversation patterns and activity",
+      "conversations": "Conversations",
+      "activity": "Activity",
+      "insights": "Insights"
+    },
+    "affinity": {
+      "title": "Affinity Analytics",
+      "subtitle": "Analyze relationship and emotional development",
+      "relationships": "Relationships",
+      "emotional": "Emotional",
+      "progress": "Progress"
+    },
+    "common": {
+      "loading": "Loading data...",
+      "error": "Failed to load data",
+      "retry": "Retry",
+      "noData": "No data available",
+      "timeRange": {
+        "week": "1 Week",
+        "month": "1 Month",
+        "quarter": "3 Months"
+      }
+    }
   }
 }

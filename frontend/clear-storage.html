@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Storage Clear</title>
+</head>
+<body>
+    <h1>ローカルストレージをクリア</h1>
+    <button onclick="clearAll()">全てクリア</button>
+    <div id="result"></div>
+    
+    <script>
+        function clearAll() {
+            // ローカルストレージをクリア
+            localStorage.clear();
+            
+            // セッションストレージもクリア
+            sessionStorage.clear();
+            
+            // Cookieもクリア
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            document.getElementById('result').innerHTML = '✅ 全てのストレージがクリアされました。<br>ページをリフレッシュして charactier.ai@gmail.com でログインしてください。';
+        }
+        
+        // 現在のストレージ内容を表示
+        console.log('現在のlocalStorage:', localStorage);
+        console.log('accessToken:', localStorage.getItem('accessToken'));
+    </script>
+</body>
+</html>

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Award, Lock, CheckCircle, Star, Target, TrendingUp } from 'lucide-react';
+import BadgeSystemModal from './BadgeSystemModal';
 
 interface LocalizedString {
   ja: string;
@@ -26,6 +27,7 @@ interface BadgeGalleryProps {
 
 export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
   const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
+  const [isSystemModalOpen, setIsSystemModalOpen] = useState(false);
   
   const unlockedCount = (badges || []).filter(badge => badge.isUnlocked).length;
   const totalCount = Math.max((badges || []).length, 1); // 0で除算を防ぐ
@@ -57,6 +59,14 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
     } else {
       return <Award className={`w-6 h-6 ${isUnlocked ? 'text-purple-500' : 'text-gray-400'}`} />;
     }
+  };
+
+  const handleSystemModalOpen = () => {
+    setIsSystemModalOpen(true);
+  };
+
+  const handleSystemModalClose = () => {
+    setIsSystemModalOpen(false);
   };
 
   const formatUnlockDate = (date?: Date) => {
@@ -131,7 +141,7 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
         {filteredBadges.map((badge) => (
           <div
             key={badge._id}
-            className={`relative p-4 border rounded-lg transition-all hover:shadow-md ${
+            className={`relative p-4 border rounded-lg transition-all ${
               badge.isUnlocked
                 ? 'border-yellow-200 bg-yellow-50'
                 : 'border-gray-200 bg-gray-50'
@@ -222,11 +232,21 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
           <p className="text-sm text-gray-600 mb-2">
             アクティビティを通じて新しいバッジを獲得しよう！
           </p>
-          <button className="text-sm text-yellow-600 hover:text-yellow-700 font-medium transition-colors">
+          <button 
+            onClick={handleSystemModalOpen}
+            className="text-sm text-yellow-600 hover:text-yellow-700 font-medium transition-colors"
+          >
             バッジについて詳しく見る
           </button>
         </div>
       </div>
+
+      {/* バッジシステム説明モーダル */}
+      <BadgeSystemModal
+        isOpen={isSystemModalOpen}
+        onClose={handleSystemModalClose}
+        locale={locale}
+      />
     </div>
   );
 }

@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../../data/ai-character-feature-simplify-terms-privacy-pages/backend/middleware/auth');
-const User = require('../../data/ai-character-feature-simplify-terms-privacy-pages/backend/models/User');
-const Character = require('../../data/ai-character-feature-simplify-terms-privacy-pages/backend/models/Character');
+const { authenticateToken } = require('../src/middleware/auth');
+const { UserModel } = require('../src/models/UserModel');
+const { CharacterModel } = require('../src/models/CharacterModel');
 
 // POST /api/user/select-character - キャラ選択保存API
-router.post('/select-character', auth, async (req, res) => {
+router.post('/select-character', authenticateToken, async (req, res) => {
   try {
     const { characterId } = req.body;
 
@@ -18,7 +18,7 @@ router.post('/select-character', auth, async (req, res) => {
     }
 
     // ユーザーの存在確認
-    const user = await User.findById(req.user.id);
+    const user = await UserModel.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ 
         error: 'ユーザーが見つかりません',
@@ -27,7 +27,7 @@ router.post('/select-character', auth, async (req, res) => {
     }
 
     // キャラクターの存在確認とアクセス権限チェック
-    const character = await Character.findById(characterId);
+    const character = await CharacterModel.findById(characterId);
     if (!character || !character.isActive) {
       return res.status(404).json({ 
         error: 'キャラクターが見つかりません',
@@ -46,16 +46,10 @@ router.post('/select-character', auth, async (req, res) => {
         accessReason = 'free_character';
         break;
         
-      case 'token-based':
-        // トークン制キャラクターはトークン残高があれば利用可能
-        hasAccess = user.tokenBalance > 0;
-        accessReason = hasAccess ? 'token_available' : 'insufficient_tokens';
-        break;
-        
       case 'purchaseOnly':
         // 買い切りキャラクターは購入済みかチェック
         const hasPurchased = user.purchasedCharacters?.some(
-          purchase => purchase.character.toString() === characterId
+          charId => charId.toString() === characterId
         );
         hasAccess = hasPurchased;
         accessReason = hasAccess ? 'purchased' : 'not_purchased';
@@ -73,7 +67,7 @@ router.post('/select-character', auth, async (req, res) => {
         reason: accessReason,
         characterAccessType: character.characterAccessType,
         requiresPurchase: character.characterAccessType === 'purchaseOnly',
-        requiresTokens: character.characterAccessType === 'token-based'
+        requiresTokens: false
       });
     }
 
@@ -108,6 +102,7 @@ router.post('/select-character', auth, async (req, res) => {
 
     // ログ出力
     console.log(`✅ キャラクター選択更新: ユーザー${user._id} -> キャラクター${characterId}`);
+    console.log(`🔍 保存後のselectedCharacter: ${user.selectedCharacter}`);
     if (previousSelectedCharacter) {
       console.log(`   前回選択: ${previousSelectedCharacter} -> 新規選択: ${characterId}`);
     } else {
@@ -138,7 +133,7 @@ router.post('/select-character', auth, async (req, res) => {
     res.json(response);
 
   } catch (error) {
-    console.error('Character selection error:', error);
+    console.error('CharacterModel selection error:', error);
     res.status(500).json({ 
       error: 'キャラクター選択の保存中にエラーが発生しました',
       message: error.message,

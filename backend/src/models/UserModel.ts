@@ -297,7 +297,15 @@ const UserSchema: Schema = new Schema({
     type: String,
     required: false,
     trim: true,
-    default: ''
+    default: '',
+    // Ensure only strings are saved
+    set: function(value: any) {
+      if (typeof value === 'string') return value;
+      if (typeof value === 'object' && value?.name) return value.name;
+      if (typeof value === 'object' && value?.ja) return value.ja;
+      if (typeof value === 'object' && value?.en) return value.en;
+      return 'Unknown User';
+    }
   },
   password: {
     type: String,

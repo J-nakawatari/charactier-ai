@@ -40,8 +40,8 @@ const PERSONALITY_TAGS = [
 
 // アクセスタイプ
 const ACCESS_TYPES = [
-  { value: 'free', label: '無料', description: '誰でも無料で利用可能' },
-  { value: 'purchaseOnly', label: 'プレミアム', description: '購入が必要なキャラクター' }
+  { value: 'free', label: 'ベースキャラ', description: 'トークン消費で利用可能' },
+  { value: 'purchaseOnly', label: 'プレミアムキャラ', description: '購入が必要なキャラクター' }
 ];
 
 // AIモデル（初期値、APIから動的取得）

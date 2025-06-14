@@ -3,58 +3,86 @@
 import { CreditCard, TrendingUp, Users, DollarSign } from 'lucide-react';
 
 interface TokenUsage {
-  date: string;
+  _id: string;
   tokensUsed: number;
-  revenue: number;
+  messageContent?: string;
+  tokenType?: string;
+  sessionId?: string;
+  createdAt: string;
+  user?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  character?: {
+    _id: string;
+    name: string;
+  };
 }
 
 interface UserData {
-  _id: string;
+  id: string;
+  name: string;
+  email: string;
   tokenBalance: number;
   totalSpent: number;
+  chatCount: number;
+  status: string;
+  isTrialUser: boolean;
+  lastLogin: string;
 }
 
 interface TokenStatsProps {
   tokenUsage: TokenUsage[];
   users: UserData[];
+  tokenStats?: {
+    totalBalance: number;
+    totalUsers: number;
+    averageBalance: number;
+  };
 }
 
-export default function TokenStats({ tokenUsage, users }: TokenStatsProps) {
-  const latestUsage = tokenUsage[tokenUsage.length - 1];
-  const totalRevenue = tokenUsage.reduce((sum, usage) => sum + usage.revenue, 0);
-  const totalTokensUsed = tokenUsage.reduce((sum, usage) => sum + usage.tokensUsed, 0);
-  const totalTokenBalance = users.reduce((sum, user) => sum + user.tokenBalance, 0);
-  const totalSpent = users.reduce((sum, user) => sum + user.totalSpent, 0);
-  const avgRevenuePerDay = totalRevenue / tokenUsage.length;
+export default function TokenStats({ tokenUsage, users, tokenStats }: TokenStatsProps) {
+  // 安全なデータ処理
+  const safeTokenUsage = Array.isArray(tokenUsage) ? tokenUsage : [];
+  const safeUsers = Array.isArray(users) ? users : [];
+  
+  const latestUsage = safeTokenUsage[safeTokenUsage.length - 1];
+  const totalTokensUsed = safeTokenUsage.reduce((sum, usage) => sum + (usage?.tokensUsed || 0), 0);
+  
+  // バックエンドから提供されたtokenStatsを優先使用、フォールバックでフロントエンド計算
+  const totalTokenBalance = tokenStats?.totalBalance ?? safeUsers.reduce((sum, user) => sum + (user?.tokenBalance || 0), 0);
+  const totalSpent = safeUsers.reduce((sum, user) => sum + (user?.totalSpent || 0), 0);
+  const avgTokensPerDay = safeTokenUsage.length > 0 ? Math.round(totalTokensUsed / safeTokenUsage.length) : 0;
 
   const cards = [
     {
-      title: '今日のトークン使用',
-      value: latestUsage?.tokensUsed.toLocaleString() || '0',
+      title: '最新のトークン使用',
+      value: latestUsage?.tokensUsed?.toLocaleString() || '0',
       icon: CreditCard,
       color: 'bg-purple-500',
       bgColor: 'bg-purple-50',
       textColor: 'text-purple-700'
     },
     {
-      title: '今日の売上',
-      value: `¥${latestUsage?.revenue.toLocaleString() || '0'}`,
-      icon: DollarSign,
-      color: 'bg-green-500',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-700'
-    },
-    {
-      title: '総トークン残高',
-      value: totalTokenBalance.toLocaleString(),
+      title: '総トークン使用量',
+      value: totalTokensUsed.toLocaleString(),
       icon: TrendingUp,
       color: 'bg-blue-500',
       bgColor: 'bg-blue-50',
       textColor: 'text-blue-700'
     },
     {
-      title: '平均日次売上',
-      value: `¥${Math.round(avgRevenuePerDay).toLocaleString()}`,
+      title: '総トークン残高',
+      value: totalTokenBalance.toLocaleString(),
+      icon: DollarSign,
+      color: 'bg-green-500',
+      bgColor: 'bg-green-50',
+      textColor: 'text-green-700'
+    },
+    {
+      title: '総ユーザー数',
+      value: safeUsers.length.toLocaleString(),
       icon: Users,
       color: 'bg-orange-500',
       bgColor: 'bg-orange-50',

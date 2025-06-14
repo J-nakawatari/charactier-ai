@@ -154,7 +154,7 @@ export default function LoginPage() {
       console.log('🔍 Stored user in localStorage:', storedUser);
       console.log('🔍 Stored isSetupComplete:', storedUser.isSetupComplete);
       
-      console.log('✅ ログイン成功:', data.user.name || 'ユーザー');
+      console.log('✅ ログイン成功:', typeof data.user.name === 'string' ? data.user.name : (typeof data.user.name === 'object' && data.user.name?.name ? data.user.name.name : 'ユーザー'));
       
       // 初回セットアップが完了していない場合のみセットアップ画面へ
       // 厳密にtrueかどうかをチェック

@@ -12,7 +12,7 @@ interface Character {
   description: { ja: string; en: string };
   personalityPreset: string;
   personalityTags: string[];
-  characterAccessType: 'free' | 'token-based' | 'premium';
+  characterAccessType: 'free' | 'purchaseOnly';
   isActive: boolean;
   imageCharacterSelect?: string;
   totalConversations?: number;
@@ -36,7 +36,7 @@ export default function CharactersPage() {
     try {
       setIsLoading(true);
       // 認証トークンを取得
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('adminAccessToken');
       
       const response = await fetch('/api/characters?locale=ja', {
         headers: {

@@ -139,7 +139,7 @@ export default function SetupPage() {
       
       if (response.ok) {
         const data = await response.json();
-        // 無料キャラクターのみをフィルタリング（初回セットアップ用）
+        // ベースキャラクターのみをフィルタリング（初回セットアップ用）
         const freeCharacters = (data.characters || []).filter((char: any) => 
           char.characterAccessType === 'free'
         );

@@ -17,6 +17,7 @@ interface UserData {
 }
 import { useToast } from '@/contexts/ToastContext';
 import { Eye, Ban, Unlock, Trash2 } from 'lucide-react';
+import { ensureUserNameString } from '@/utils/userUtils';
 
 interface UserTableProps {
   users: UserData[];
@@ -25,6 +26,8 @@ interface UserTableProps {
 
 export default function UserTable({ users, onUserUpdate }: UserTableProps) {
   const { success, error } = useToast();
+  
+  // 統一されたユーティリティ関数を使用
   
   const getStatusBadge = (status: string) => {
     const styles = {
@@ -62,7 +65,7 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
     const newStatus = user.status === 'suspended' ? 'active' : 'suspended';
     const action = newStatus === 'active' ? '復活' : '停止';
     
-    if (!confirm(`${user.name}のアカウントを${action}しますか？`)) {
+    if (!confirm(`${ensureUserNameString(user.name)}のアカウントを${action}しますか？`)) {
       return;
     }
     
@@ -91,9 +94,9 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
       }
 
       if (newStatus === 'active') {
-        success('アカウント復活', `${user.name}のアカウントを復活させました`);
+        success('アカウント復活', `${ensureUserNameString(user.name)}のアカウントを復活させました`);
       } else {
-        error('アカウント停止', `${user.name}のアカウントを停止しました`);
+        error('アカウント停止', `${ensureUserNameString(user.name)}のアカウントを停止しました`);
       }
       
       // ユーザー一覧を更新
@@ -107,7 +110,7 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
 
   // ⚠️ 一時的機能：トークンリセット
   const handleResetTokens = async (user: UserData) => {
-    if (!confirm(`⚠️ ${user.name}のトークン残高(${formatNumber(user.tokenBalance)}枚)を0にリセットしますか？\n\n※これは開発用の一時的機能です`)) {
+    if (!confirm(`⚠️ ${ensureUserNameString(user.name)}のトークン残高(${formatNumber(user.tokenBalance)}枚)を0にリセットしますか？\n\n※これは開発用の一時的機能です`)) {
       return;
     }
 
@@ -132,7 +135,7 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
       }
 
       const result = await response.json();
-      success('トークンリセット完了', `${user.name}のトークン残高を${formatNumber(result.previousBalance)}から0にリセットしました`);
+      success('トークンリセット完了', `${ensureUserNameString(user.name)}のトークン残高を${formatNumber(result.previousBalance)}から0にリセットしました`);
       
       // ユーザー一覧を更新
       onUserUpdate?.();
@@ -157,7 +160,7 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <div className="flex items-center mb-1">
-                  <div className={`text-sm font-medium ${user.status === 'suspended' ? 'text-red-700' : 'text-gray-900'}`}>{user.name}</div>
+                  <div className={`text-sm font-medium ${user.status === 'suspended' ? 'text-red-700' : 'text-gray-900'}`}>{ensureUserNameString(user.name)}</div>
                   {user.status === 'suspended' && (
                     <span className="ml-2 px-2 py-1 text-xs font-medium bg-red-200 text-red-800 rounded-full">
                       停止中
@@ -268,7 +271,7 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
                     <div className={`text-sm font-medium ${user.status === 'suspended' ? 'text-red-700' : 'text-gray-900'}`}>
-                      {user.name}
+                      {ensureUserNameString(user.name)}
                       {user.status === 'suspended' && (
                         <span className="ml-2 px-2 py-1 text-xs font-medium bg-red-200 text-red-800 rounded-full">
                           停止中

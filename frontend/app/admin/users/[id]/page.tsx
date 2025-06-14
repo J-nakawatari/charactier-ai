@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
+import { ensureUserNameString } from '@/utils/userUtils';
 
 // Inline type definitions
 interface User {
@@ -22,9 +23,10 @@ interface User {
   lastLogin: string;
   suspensionEndDate?: string;
   banReason?: string;
-  unlockedCharacters?: string[];
+  unlockedCharacters?: Array<{ id: string; name: string }> | string[];
   affinities?: Array<{
     characterId: string;
+    characterName?: string;
     level: number;
     totalConversations: number;
     relationshipType: string;
@@ -146,13 +148,15 @@ export default function UserDetailPage() {
   }
 
 
+  // 統一されたユーティリティ関数を使用
+
   const handleBanToggle = async () => {
     if (!user) return;
     
     const newStatus = user.status === 'suspended' ? 'active' : 'suspended';
     const action = newStatus === 'active' ? '復活' : '停止';
     
-    if (!confirm(`${user.name}のアカウントを${action}しますか？`)) {
+    if (!confirm(`${ensureUserNameString(user.name)}のアカウントを${action}しますか？`)) {
       return;
     }
     
@@ -186,9 +190,9 @@ export default function UserDetailPage() {
       setUser(prev => prev ? { ...prev, status: newStatus } : null);
       
       if (newStatus === 'active') {
-        success('アカウント復活', `${user.name}のアカウントを復活させました`);
+        success('アカウント復活', `${ensureUserNameString(user.name)}のアカウントを復活させました`);
       } else {
-        showError('アカウント停止', `${user.name}のアカウントを停止しました`);
+        showError('アカウント停止', `${ensureUserNameString(user.name)}のアカウントを停止しました`);
       }
       
     } catch (err) {
@@ -200,7 +204,7 @@ export default function UserDetailPage() {
   const handleDeleteUser = async () => {
     if (!user) return;
     
-    if (!confirm(`⚠️ ${user.name}のアカウントを完全に削除しますか？\n\nこの操作は取り消すことができません。`)) {
+    if (!confirm(`⚠️ ${ensureUserNameString(user.name)}のアカウントを完全に削除しますか？\n\nこの操作は取り消すことができません。`)) {
       return;
     }
     
@@ -224,7 +228,7 @@ export default function UserDetailPage() {
         throw new Error('ユーザー削除に失敗しました');
       }
 
-      success('ユーザー削除', `${user.name}のアカウントを削除しました`);
+      success('ユーザー削除', `${ensureUserNameString(user.name)}のアカウントを削除しました`);
       
       // ユーザー一覧に戻る
       router.push('/admin/users');
@@ -343,11 +347,11 @@ export default function UserDetailPage() {
               <div className="flex items-center space-x-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-xl font-medium">
-                    {user.name.charAt(0)}
+                    {ensureUserNameString(user.name).charAt(0)}
                   </span>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{user.name}</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">{ensureUserNameString(user.name)}</h2>
                   <p className="text-gray-500">{user.email}</p>
                   <div className="mt-2">
                     {getStatusBadge(user.status)}
@@ -480,14 +484,18 @@ export default function UserDetailPage() {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">解放キャラクター</h3>
               <div className="space-y-2">
-                {user?.unlockedCharacters?.map((charId) => (
-                  <div key={charId} className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">{charId}</span>
+                {user?.unlockedCharacters?.map((charData, index) => {
+                  const charId = typeof charData === 'string' ? charData : (typeof charData === 'object' && charData?.id ? charData.id : `unknown-${index}`);
+                  const charName = typeof charData === 'string' ? charData : (typeof charData === 'object' && charData?.name ? String(charData.name) : charId);
+                  return (
+                    <div key={charId} className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-sm font-medium">{String(charId).charAt(0)}</span>
+                      </div>
+                      <span className="text-gray-900">キャラクター {String(charName)}</span>
                     </div>
-                    <span className="text-gray-900">キャラクター {charId}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
             
@@ -541,8 +549,8 @@ export default function UserDetailPage() {
               {user?.affinities?.map((affinity, index) => (
                 <div key={index} className="p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-gray-900">キャラクター {affinity.characterId}</span>
-                    <span className="text-sm text-gray-500">Lv.{affinity.level}</span>
+                    <span className="font-medium text-gray-900">{affinity.characterName || `キャラクター ${String(affinity.characterId)}`}</span>
+                    <span className="text-sm text-gray-500">Lv.{String(affinity.level)}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                     <div 
@@ -551,9 +559,9 @@ export default function UserDetailPage() {
                     ></div>
                   </div>
                   <div className="text-xs text-gray-500 space-y-1">
-                    <div>総会話数: {affinity.totalConversations}回</div>
-                    <div>関係性: {getRelationshipText(affinity.relationshipType)}</div>
-                    <div>信頼度: {affinity.trustLevel}%</div>
+                    <div>総会話数: {String(affinity.totalConversations)}回</div>
+                    <div>関係性: {getRelationshipText(String(affinity.relationshipType))}</div>
+                    <div>信頼度: {String(affinity.trustLevel)}%</div>
                   </div>
                 </div>
               )) || (

@@ -16,7 +16,7 @@ interface Character {
   personalityPreset: string;
   personalityTags: string[];
   gender: string;
-  characterAccessType: 'free' | 'token-based' | 'premium';
+  characterAccessType: 'free' | 'purchaseOnly';
   imageCharacterSelect?: string;
   affinityStats?: {
     totalUsers: number;
@@ -47,14 +47,39 @@ function CharactersPageContent({
     characterType: 'all',
     sort: 'popular'
   });
-  const [isLoading, setIsLoading] = useState(false); // 初期ローディングも無効化
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  
+  // ユーザー情報の状態管理
+  const [userAffinities, setUserAffinities] = useState<any[]>([]);
+  const [userPurchasedCharacters, setUserPurchasedCharacters] = useState<string[]>([]);
+
+  // ユーザー情報取得関数
+  const fetchUserData = useCallback(async () => {
+    try {
+      const response = await fetch('/api/user/profile', {
+        headers: {
+          ...getAuthHeaders(),
+          'Cache-Control': 'no-store'
+        },
+        cache: 'no-store'
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        setUserAffinities(userData.affinities || []);
+        setUserPurchasedCharacters(userData.purchasedCharacters?.map((id: string) => id.toString()) || []);
+      }
+    } catch (err) {
+      console.error('ユーザー情報取得エラー:', err);
+    }
+  }, []);
 
   const fetchCharacters = useCallback(async () => {
     try {
-      // setIsLoading(true); // ローディング表示を無効化
+      setIsLoading(true);
       setError(null);
 
       const queryParams = new URLSearchParams({
@@ -70,7 +95,6 @@ function CharactersPageContent({
         sort: filters.sort,
         keyword: filters.keyword
       });
-      console.log('🔍 フロントエンド: APIリクエストURL', `/api/characters?${queryParams}`);
 
       const response = await fetch(`/api/characters?${queryParams}`, {
         headers: {
@@ -94,7 +118,7 @@ function CharactersPageContent({
       setCharacters([]);
       setTotalCount(0);
     } finally {
-      // setIsLoading(false); // ローディング表示を無効化
+      setIsLoading(false);
     }
   }, [locale, filters]);
 
@@ -111,8 +135,24 @@ function CharactersPageContent({
   }, [searchParams]);
 
   useEffect(() => {
+    fetchUserData();
     fetchCharacters();
-  }, [fetchCharacters]);
+  }, [fetchUserData, fetchCharacters]);
+
+  // 購入完了イベントリスナー
+  useEffect(() => {
+    const handlePurchaseComplete = () => {
+      console.log('🔄 購入完了イベント受信 - データ再取得中...');
+      fetchUserData();
+      fetchCharacters();
+    };
+
+    window.addEventListener('characterPurchaseCompleted', handlePurchaseComplete);
+    
+    return () => {
+      window.removeEventListener('characterPurchaseCompleted', handlePurchaseComplete);
+    };
+  }, [fetchUserData, fetchCharacters]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -215,8 +255,7 @@ function CharactersPageContent({
               ...char,
               name: typeof char.name === 'string' ? char.name : (char.name as any).ja || (char.name as any).en,
               description: typeof char.description === 'string' ? char.description : (char.description as any).ja || (char.description as any).en,
-              characterAccessType: char.characterAccessType === 'free' ? 'free' : 
-                                 char.characterAccessType === 'premium' ? 'premium' : 'token-based',
+              characterAccessType: char.characterAccessType === 'free' ? 'free' : 'purchaseOnly',
               imageChatAvatar: (char as any).imageChatAvatar || '/images/default-avatar.png',
               imageChatBackground: (char as any).imageChatBackground || '/images/default-bg.png',
               currentMood: (char as any).currentMood || 'happy',
@@ -229,8 +268,8 @@ function CharactersPageContent({
                 handleCharacterClick(originalChar);
               }
             }}
-            userAffinities={[]} // モック環境では空配列
-            userPurchasedCharacters={[]} // モック環境では空配列
+            userAffinities={userAffinities}
+            userPurchasedCharacters={userPurchasedCharacters}
             filterKey={`${filters.characterType}-${filters.sort}-${filters.keyword}`} // アニメーション用のキー
           />
         ) : (

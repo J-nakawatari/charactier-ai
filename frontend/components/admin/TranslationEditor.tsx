@@ -31,7 +31,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
     onChange({
       ...data,
       [field]: {
-        ...data[field],
+        ...(data[field] || {}),
         [lang]: value
       }
     });
@@ -39,14 +39,14 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
 
   const addTag = () => {
     if (newTag.trim()) {
-      const currentTags = data.personalityTags[activeLanguage];
+      const currentTags = data.personalityTags?.[activeLanguage] || [];
       updateField('personalityTags', activeLanguage, [...currentTags, newTag.trim()]);
       setNewTag('');
     }
   };
 
   const removeTag = (index: number) => {
-    const currentTags = data.personalityTags[activeLanguage];
+    const currentTags = data.personalityTags?.[activeLanguage] || [];
     updateField('personalityTags', activeLanguage, currentTags.filter((_, i) => i !== index));
   };
 
@@ -84,7 +84,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
           </label>
           <input
             type="text"
-            value={data.name[activeLanguage]}
+            value={data.name?.[activeLanguage] || ''}
             onChange={(e) => updateField('name', activeLanguage, e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
             placeholder={activeLanguage === 'ja' ? '例: ルナ' : '例: Luna'}
@@ -97,7 +97,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
             説明 ({activeLanguage === 'ja' ? '日本語' : '英語'})
           </label>
           <textarea
-            value={data.description[activeLanguage]}
+            value={data.description?.[activeLanguage] || ''}
             onChange={(e) => updateField('description', activeLanguage, e.target.value)}
             rows={4}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors resize-none text-gray-900"
@@ -115,7 +115,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
             性格プリセット ({activeLanguage === 'ja' ? '日本語' : '英語'})
           </label>
           <textarea
-            value={data.personalityPreset[activeLanguage]}
+            value={data.personalityPreset?.[activeLanguage] || ''}
             onChange={(e) => updateField('personalityPreset', activeLanguage, e.target.value)}
             rows={6}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors resize-none text-gray-900"
@@ -135,7 +135,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
           
           {/* 既存タグ表示 */}
           <div className="flex flex-wrap gap-2 mb-3">
-            {data.personalityTags[activeLanguage].map((tag, index) => (
+            {(data.personalityTags?.[activeLanguage] || []).map((tag, index) => (
               <span
                 key={index}
                 className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full"
@@ -183,7 +183,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
             管理者プロンプト ({activeLanguage === 'ja' ? '日本語' : '英語'})
           </label>
           <textarea
-            value={data.adminPrompt[activeLanguage]}
+            value={data.adminPrompt?.[activeLanguage] || ''}
             onChange={(e) => updateField('adminPrompt', activeLanguage, e.target.value)}
             rows={4}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors resize-none text-gray-900"
@@ -201,7 +201,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
             デフォルトメッセージ ({activeLanguage === 'ja' ? '日本語' : '英語'})
           </label>
           <textarea
-            value={data.defaultMessage[activeLanguage]}
+            value={data.defaultMessage?.[activeLanguage] || ''}
             onChange={(e) => updateField('defaultMessage', activeLanguage, e.target.value)}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors resize-none text-gray-900"
@@ -219,7 +219,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
             制限メッセージ ({activeLanguage === 'ja' ? '日本語' : '英語'})
           </label>
           <textarea
-            value={data.limitMessage[activeLanguage]}
+            value={data.limitMessage?.[activeLanguage] || ''}
             onChange={(e) => updateField('limitMessage', activeLanguage, e.target.value)}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors resize-none text-gray-900"
@@ -237,13 +237,13 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
           <div className="space-y-2">
             {languages.map((lang) => {
               const completedFields = [
-                data.name[lang.code].trim() !== '',
-                data.description[lang.code].trim() !== '',
-                data.personalityPreset[lang.code].trim() !== '',
-                data.personalityTags[lang.code].length > 0,
-                data.adminPrompt[lang.code].trim() !== '',
-                data.defaultMessage[lang.code].trim() !== '',
-                data.limitMessage[lang.code].trim() !== ''
+                data.name?.[lang.code]?.trim() !== '',
+                data.description?.[lang.code]?.trim() !== '',
+                data.personalityPreset?.[lang.code]?.trim() !== '',
+                (data.personalityTags?.[lang.code] || []).length > 0,
+                data.adminPrompt?.[lang.code]?.trim() !== '',
+                data.defaultMessage?.[lang.code]?.trim() !== '',
+                data.limitMessage?.[lang.code]?.trim() !== ''
               ].filter(Boolean).length;
               
               const totalFields = 7;

@@ -11,8 +11,9 @@ import RecentChatHistory from '@/components/user/RecentChatHistory';
 import PurchaseHistorySummary from '@/components/user/PurchaseHistorySummary';
 import BadgeGallery from '@/components/user/BadgeGallery';
 import AnalyticsCharts from '@/components/user/AnalyticsCharts';
-import EnhancedAnalyticsSection from '@/components/user/EnhancedAnalyticsSection';
-import AchievementSystem from '@/components/user/AchievementSystem';
+// 将来実装用コンポーネント（現在は非表示）
+// import EnhancedAnalyticsSection from '@/components/future-features/EnhancedAnalyticsSection';
+// import AchievementSystem from '@/components/future-features/AchievementSystem';
 
 interface DashboardData {
   user: {
@@ -98,6 +99,19 @@ export default function DashboardPage() {
     }
   };
 
+  // トークン残高更新ハンドラー
+  const handleTokensUpdated = (newBalance: number) => {
+    if (dashboardData) {
+      setDashboardData({
+        ...dashboardData,
+        tokens: {
+          ...dashboardData.tokens,
+          balance: newBalance
+        }
+      });
+    }
+  };
+
   const isLowTokenWarning = () => {
     return !!(dashboardData && dashboardData.tokens.balance <= (dashboardData.tokens.totalPurchased * 0.2));
   };
@@ -126,7 +140,7 @@ export default function DashboardPage() {
                 <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                   <div className="min-w-0">
                     <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2 leading-tight">
-                      {t('title', { name: dashboardData.user.name })}
+                      {t('title', { name: typeof dashboardData.user.name === 'string' ? dashboardData.user.name : (typeof dashboardData.user.name === 'object' && dashboardData.user.name?.name ? dashboardData.user.name.name : 'ユーザー') })}
                     </h1>
                     <p className="text-sm md:text-base text-gray-600">
                       {t('welcome')}
@@ -151,7 +165,14 @@ export default function DashboardPage() {
                 {/* お知らせセクション - 全幅 */}
                 <div className="md:col-span-2 lg:col-span-3">
                   <NotificationSection 
-                    notifications={dashboardData.notifications}
+                    locale={locale}
+                  />
+                </div>
+
+                {/* 親密度セクション */}
+                <div className="md:col-span-2 lg:col-span-3">
+                  <AffinitySection 
+                    affinities={dashboardData.affinities}
                     locale={locale}
                   />
                 </div>
@@ -163,14 +184,7 @@ export default function DashboardPage() {
                     totalPurchased={dashboardData.tokens.totalPurchased}
                     recentUsage={dashboardData.tokens.recentUsage}
                     isLowWarning={isLowTokenWarning()}
-                  />
-                </div>
-
-                {/* 親密度セクション */}
-                <div className="md:col-span-1 lg:col-span-2">
-                  <AffinitySection 
-                    affinities={dashboardData.affinities}
-                    locale={locale}
+                    onTokensUpdated={handleTokensUpdated}
                   />
                 </div>
 
@@ -191,7 +205,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* バッジギャラリー */}
-                <div className="md:col-span-1">
+                <div className="md:col-span-2 lg:col-span-3">
                   <BadgeGallery 
                     badges={dashboardData.badges}
                     locale={locale}
@@ -206,22 +220,24 @@ export default function DashboardPage() {
                   />
                 </div>
 
-                {/* 🎯 AI駆動インサイト */}
+                {/* 🎯 AI駆動インサイト - 将来実装用（現在は非表示）
                 <div className="md:col-span-2 lg:col-span-3">
                   <EnhancedAnalyticsSection 
                     userId={dashboardData.user._id}
                   />
                 </div>
+                */}
 
-                {/* 🏆 実績システム */}
+                {/* 🏆 実績システム - 将来実装用（現在は非表示）
                 <div className="md:col-span-2 lg:col-span-3">
                   <AchievementSystem 
                     userId={dashboardData.user._id}
                   />
                 </div>
+                */}
               </div>
 
-              {/* 詳細統計リンクセクション */}
+              {/* 詳細統計リンクセクション - 将来実装用（現在は非表示）
               <div className="mt-8 bg-white rounded-lg shadow-sm p-6">
                 <div className="text-center">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -232,7 +248,6 @@ export default function DashboardPage() {
                   </p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* トークン分析 */}
                     <button
                       onClick={() => router.push(`/${locale}/analytics/tokens`)}
                       className="group flex flex-col items-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-transparent hover:border-blue-200 transition-all duration-200 hover:shadow-md"
@@ -246,7 +261,6 @@ export default function DashboardPage() {
                       <p className="text-xs text-gray-600 text-center">使用パターンと効率性</p>
                     </button>
 
-                    {/* チャット分析 */}
                     <button
                       onClick={() => router.push(`/${locale}/analytics/chats`)}
                       className="group flex flex-col items-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-transparent hover:border-green-200 transition-all duration-200 hover:shadow-md"
@@ -260,7 +274,6 @@ export default function DashboardPage() {
                       <p className="text-xs text-gray-600 text-center">会話パターンと活動</p>
                     </button>
 
-                    {/* 親密度分析 */}
                     <button
                       onClick={() => router.push(`/${locale}/analytics/affinity`)}
                       className="group flex flex-col items-center p-6 bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg border-2 border-transparent hover:border-pink-200 transition-all duration-200 hover:shadow-md"
@@ -276,6 +289,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
+              */}
             </>
           )}
         </div>

@@ -71,12 +71,12 @@ export interface ICharacter extends Document {
   
   // AI・モデル設定
   aiModel: 'gpt-3.5-turbo' | 'gpt-4o-mini' | 'o4-mini';
-  characterAccessType: 'free' | 'token-based' | 'purchaseOnly';
+  characterAccessType: 'free' | 'purchaseOnly';
   requiresUnlock: boolean;
   purchasePrice?: number; // 円
   
   // 性格システム
-  personalityPreset: 'おっとり系' | '元気系' | 'クール系' | '真面目系' | 'セクシー系' | '天然系' | 'ボーイッシュ系' | 'お姉さん系';
+  personalityPreset: 'おっとり系' | '元気系' | 'クール系' | '真面目系' | 'セクシー系' | '天然系' | 'ボーイッシュ系' | 'お姉さん系' | 'ツンデレ';
   personalityTags: string[];
   gender: 'male' | 'female' | 'neutral';
   age?: string; // "18歳", "20代前半" など
@@ -321,7 +321,7 @@ const CharacterSchema = new Schema<ICharacter>({
   },
   characterAccessType: {
     type: String,
-    enum: ['free', 'token-based', 'purchaseOnly'],
+    enum: ['free', 'purchaseOnly'],
     required: true,
     default: 'free'
   },
@@ -337,7 +337,7 @@ const CharacterSchema = new Schema<ICharacter>({
   // 性格システム
   personalityPreset: {
     type: String,
-    enum: ['おっとり系', '元気系', 'クール系', '真面目系', 'セクシー系', '天然系', 'ボーイッシュ系', 'お姉さん系'],
+    enum: ['おっとり系', '元気系', 'クール系', '真面目系', 'セクシー系', '天然系', 'ボーイッシュ系', 'お姉さん系', 'ツンデレ'],
     required: true
   },
   personalityTags: [{

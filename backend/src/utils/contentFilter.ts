@@ -1,6 +1,6 @@
-import { OpenAI } from 'openai';
-import { Request } from 'express';
-import { publishSecurityEvent } from '../../lib/redis';
+/**
+ * バックエンド用コンテンツフィルター（TypeScript版）
+ */
 
 // 禁止用語リスト
 const BLOCKED_WORDS = {
@@ -30,29 +30,27 @@ const BLOCKED_WORDS = {
   ]
 };
 
-// OpenAI インスタンス（環境変数がある場合のみ初期化）
-let openai: OpenAI | null = null;
-if (process.env.OPENAI_API_KEY) {
-  openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-  });
+export interface ContentFilterResult {
+  isBlocked: boolean;
+  detectedWord?: string;
+  reason?: string;
+  violationType?: 'blocked_word' | 'openai_moderation';
 }
 
 /**
  * 禁止用語チェック
- * @param message - チェック対象メッセージ
- * @returns チェック結果
  */
-export function checkBlockedWords(message: string) {
+export function checkBlockedWords(message: string): ContentFilterResult {
   const normalizedMessage = message.toLowerCase();
   const allWords = [...BLOCKED_WORDS.japanese, ...BLOCKED_WORDS.english];
   
-  for (const word of allWords) {
+  for (let word of allWords) {
     if (normalizedMessage.includes(word.toLowerCase())) {
       return {
         isBlocked: true,
         detectedWord: word,
-        reason: 'カスタム禁止用語検出'
+        reason: 'メッセージに不適切な内容が含まれています',
+        violationType: 'blocked_word'
       };
     }
   }
@@ -61,170 +59,39 @@ export function checkBlockedWords(message: string) {
 }
 
 /**
- * OpenAI Moderation API チェック
- * @param message - チェック対象メッセージ
- * @returns チェック結果
- */
-export async function checkOpenAIModeration(message: string) {
-  try {
-    if (!openai) {
-      console.log('OpenAI API key not available, skipping moderation check');
-      return { isFlagged: false };
-    }
-
-    const response = await openai.moderations.create({
-      input: message
-    });
-    
-    if (response.results[0].flagged) {
-      return {
-        isFlagged: true,
-        categories: response.results[0].categories,
-        reason: 'OpenAI Moderation API検出'
-      };
-    }
-    
-    return { isFlagged: false };
-  } catch (error) {
-    console.error('OpenAI Moderation API failed:', error);
-    // フォールバック: OpenAI失敗時はカスタムチェック結果のみを使用
-    return { isFlagged: false };
-  }
-}
-
-/**
  * メッセージバリデーション（統合チェック）
- * @param userId - ユーザーID
- * @param message - チェック対象メッセージ
- * @param req - リクエストオブジェクト
- * @returns バリデーション結果
  */
-export async function validateMessage(userId: string, message: string, req: Request) {
-  try {
-    // 制裁システムがある場合のチェック（動的インポート）
-    try {
-      const { checkChatPermission, recordViolation, applySanction } = require('../../utils/sanctionSystem');
-      
-      // 1. 制裁状況チェック
-      const permissionCheck = await checkChatPermission(userId);
-      if (!permissionCheck.allowed) {
-        return {
-          allowed: false,
-          reason: permissionCheck.reason,
-          sanctionInfo: {
-            type: permissionCheck.sanctionType,
-            expiresAt: permissionCheck.expiresAt,
-            violationCount: permissionCheck.violationCount
-          }
-        };
-      }
-
-      // 2. 禁止用語チェック
-      const blockedCheck = checkBlockedWords(message);
-      if (blockedCheck.isBlocked) {
-        const violationData = {
-          detectedWord: blockedCheck.detectedWord,
-          reason: blockedCheck.reason,
-          messageContent: message,
-          ipAddress: req.ip || req.connection?.remoteAddress || 'unknown',
-          userAgent: req.get('User-Agent') || 'unknown'
-        };
-
-        await recordViolation(userId, 'blocked_word', violationData);
-        
-        // 🛡️ リアルタイムセキュリティイベント発行
-        await publishSecurityEvent({
-          type: 'content_violation',
-          severity: 'medium',
-          userId,
-          violationType: 'blocked_word',
-          detectedWord: blockedCheck.detectedWord,
-          messageContent: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
-          ipAddress: violationData.ipAddress,
-          userAgent: violationData.userAgent,
-          action: 'recorded_violation'
-        });
-        
-        await applySanction(userId);
-        
-        return {
-          allowed: false,
-          reason: 'メッセージに不適切な内容が含まれています',
-          violationType: 'blocked_word',
-          detectedWord: blockedCheck.detectedWord
-        };
-      }
-      
-      // 3. OpenAI Moderationチェック（フォールバック対応）
-      const moderationCheck = await checkOpenAIModeration(message);
-      if (moderationCheck.isFlagged) {
-        const violationData = {
-          reason: moderationCheck.reason,
-          messageContent: message,
-          ipAddress: req.ip || req.connection?.remoteAddress || 'unknown',
-          userAgent: req.get('User-Agent') || 'unknown',
-          moderationCategories: moderationCheck.categories
-        };
-
-        await recordViolation(userId, 'openai_moderation', violationData);
-        
-        // 🛡️ リアルタイムセキュリティイベント発行
-        await publishSecurityEvent({
-          type: 'ai_moderation',
-          severity: 'high',
-          userId,
-          violationType: 'openai_moderation',
-          messageContent: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
-          ipAddress: violationData.ipAddress,
-          userAgent: violationData.userAgent,
-          moderationCategories: moderationCheck.categories,
-          action: 'recorded_violation'
-        });
-        
-        await applySanction(userId);
-        
-        return {
-          allowed: false,
-          reason: 'メッセージが利用規約に違反しています',
-          violationType: 'openai_moderation',
-          categories: moderationCheck.categories
-        };
-      }
-    } catch {
-      console.log('Sanction system not available, using basic content filtering only');
-      
-      // 制裁システムがない場合は基本的なチェックのみ
-      const blockedCheck = checkBlockedWords(message);
-      if (blockedCheck.isBlocked) {
-        console.log(`🚫 違反記録: User ${userId}, Type: blocked_word, Word: ${blockedCheck.detectedWord}`);
-        return {
-          allowed: false,
-          reason: 'メッセージに不適切な内容が含まれています',
-          violationType: 'blocked_word',
-          detectedWord: blockedCheck.detectedWord
-        };
-      }
-      
-      const moderationCheck = await checkOpenAIModeration(message);
-      if (moderationCheck.isFlagged) {
-        console.log(`🚫 違反記録: User ${userId}, Type: openai_moderation, Categories:`, moderationCheck.categories);
-        return {
-          allowed: false,
-          reason: 'メッセージが利用規約に違反しています',
-          violationType: 'openai_moderation',
-          categories: moderationCheck.categories
-        };
-      }
-    }
-    
-    return { allowed: true };
-    
-  } catch (error) {
-    console.error('Content moderation failed:', error);
-    // 緊急フォールバック: エラー時はメッセージを通す（UX断絶防止）
+export function validateMessage(message: string): {
+  allowed: boolean;
+  reason?: string;
+  violationType?: string;
+  detectedWord?: string;
+} {
+  // 1. 基本バリデーション
+  if (!message || !message.trim()) {
     return {
-      allowed: true,
-      warning: 'Moderation check failed - message allowed by fallback'
+      allowed: false,
+      reason: 'メッセージが空です'
     };
   }
+
+  if (message.length > 2000) {
+    return {
+      allowed: false,
+      reason: 'メッセージが長すぎます（2000文字以内）'
+    };
+  }
+
+  // 2. 禁止用語チェック
+  const blockedCheck = checkBlockedWords(message);
+  if (blockedCheck.isBlocked) {
+    return {
+      allowed: false,
+      reason: blockedCheck.reason || 'メッセージに不適切な内容が含まれています',
+      violationType: blockedCheck.violationType,
+      detectedWord: blockedCheck.detectedWord
+    };
+  }
+  
+  return { allowed: true };
 }

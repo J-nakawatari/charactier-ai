@@ -1,5 +1,14 @@
 // TypeScript type definitions
 
+// ユーザー名の安全変換ユーティリティ
+export function ensureUserNameString(nameField: any): string {
+  if (typeof nameField === 'string') return nameField;
+  if (typeof nameField === 'object' && nameField?.name) return nameField.name;
+  if (typeof nameField === 'object' && nameField?.ja) return nameField.ja;
+  if (typeof nameField === 'object' && nameField?.en) return nameField.en;
+  return 'Unknown User';
+}
+
 export interface LocalizedString {
   ja: string;
   en: string;
@@ -26,7 +35,7 @@ export interface CharacterDocument {
   _id: string;
   name: LocalizedString;
   description: LocalizedString;
-  characterAccessType: 'initial' | 'premium'; // initial = 初期開放, premium = 課金キャラ
+  characterAccessType: 'free' | 'purchaseOnly'; // free = ベースキャラ, purchaseOnly = プレミアキャラ
   model: 'gpt-3.5-turbo' | 'gpt-4';
   gender?: 'female' | 'male' | 'other';
   personalityPreset?: string;

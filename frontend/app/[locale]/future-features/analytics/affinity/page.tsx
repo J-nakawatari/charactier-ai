@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import UserSidebar from '@/components/user/UserSidebar';
 
 // 型定義
@@ -21,6 +22,7 @@ interface AffinityAnalyticsData {
 
 export default function AffinityAnalyticsPage() {
   const params = useParams();
+  const router = useRouter();
   const locale = (params?.locale as string) || 'ja';
   const t = useTranslations('analytics');
 
@@ -30,45 +32,23 @@ export default function AffinityAnalyticsPage() {
   const [selectedCharacter, setSelectedCharacter] = useState('all');
 
   useEffect(() => {
-    const fetchAffinityAnalytics = async () => {
-      try {
-        setIsLoading(true);
-        const token = localStorage.getItem('accessToken');
-        
-        const response = await fetch(`/api/analytics/affinity?timeRange=${timeRange}&character=${selectedCharacter}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` })
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        setAnalyticsData(data);
-      } catch (error) {
-        console.error('Affinity analytics fetch error:', error);
-        // エラー時は空データを設定
-        setAnalyticsData({
-          overallProgress: {
-            totalLevel: 0,
-            unlockedImages: 0,
-            activeCharacters: 0,
-            averageLevel: 0
-          },
-          characterProgress: [],
-          intimacyTrends: [],
-          recentActivities: [],
-          insights: []
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchAffinityAnalytics();
+    // 現在は未実装のため、空データを設定
+    setIsLoading(true);
+    setTimeout(() => {
+      setAnalyticsData({
+        overallProgress: {
+          totalLevel: 0,
+          unlockedImages: 0,
+          activeCharacters: 0,
+          averageLevel: 0
+        },
+        characterProgress: [],
+        intimacyTrends: [],
+        recentActivities: [],
+        insights: []
+      });
+      setIsLoading(false);
+    }, 500);
   }, [timeRange, selectedCharacter]);
 
   const getRelationshipColor = (type: string) => {
@@ -102,12 +82,34 @@ export default function AffinityAnalyticsPage() {
     <div className="min-h-screen bg-gray-50 flex">
       <UserSidebar locale={locale} />
       
-      <div className="flex-1 p-8">
+      <div className="flex-1 lg:ml-64 p-8">
         <div className="max-w-7xl mx-auto">
           {/* ヘッダー */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">親密度分析</h1>
-            <p className="text-gray-600">キャラクターとの関係性を詳細に分析します</p>
+            <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => router.back()}
+                  className="flex items-center justify-center w-10 h-10 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <Image
+                    src="/icon/arrow.svg"
+                    alt="戻る"
+                    width={20}
+                    height={20}
+                    className="transform rotate-180"
+                  />
+                </button>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                    親密度分析
+                  </h1>
+                  <p className="text-gray-600">
+                    キャラクターとの関係性を詳細に分析します
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* フィルター */}
@@ -118,12 +120,12 @@ export default function AffinityAnalyticsPage() {
                 <select
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 bg-white"
                 >
-                  <option value="7d">過去7日</option>
-                  <option value="30d">過去30日</option>
-                  <option value="90d">過去90日</option>
-                  <option value="all">全期間</option>
+                  <option value="7d" className="text-gray-900">過去7日</option>
+                  <option value="30d" className="text-gray-900">過去30日</option>
+                  <option value="90d" className="text-gray-900">過去90日</option>
+                  <option value="all" className="text-gray-900">全期間</option>
                 </select>
               </div>
               <div>
@@ -131,28 +133,37 @@ export default function AffinityAnalyticsPage() {
                 <select
                   value={selectedCharacter}
                   onChange={(e) => setSelectedCharacter(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 bg-white"
                 >
-                  <option value="all">全キャラクター</option>
+                  <option value="all" className="text-gray-900">全キャラクター</option>
                 </select>
               </div>
             </div>
           </div>
 
-          {/* データが無い場合の表示 */}
+          {/* 未実装機能の表示 */}
           {(!analyticsData || analyticsData.characterProgress.length === 0) && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-              <div className="text-6xl mb-4">📊</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">分析データがありません</h3>
+              <div className="text-6xl mb-4">🚧</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">親密度分析機能は準備中です</h3>
               <p className="text-gray-600 mb-6">
-                キャラクターとの会話を開始すると、親密度の分析データが表示されます。
+                詳細な親密度分析機能は現在開発中です。<br />
+                基本的な親密度情報はダッシュボードでご確認いただけます。
               </p>
-              <button
-                onClick={() => window.location.href = `/${locale}/characters`}
-                className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                キャラクターと話してみる
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => router.push(`/${locale}/dashboard`)}
+                  className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  ダッシュボードに戻る
+                </button>
+                <button
+                  onClick={() => router.push(`/${locale}/characters`)}
+                  className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  キャラクターと話す
+                </button>
+              </div>
             </div>
           )}
 

@@ -2,6 +2,7 @@
 
 import { useToast } from '@/contexts/ToastContext';
 import { Eye, Edit, CreditCard, Plus, Minus } from 'lucide-react';
+import { ensureUserNameString } from '@/utils/userUtils';
 
 interface UserData {
   id: string;
@@ -21,6 +22,8 @@ interface TokenManagementTableProps {
 
 export default function TokenManagementTable({ users }: TokenManagementTableProps) {
   const { success, warning, info } = useToast();
+  
+  // 統一されたユーティリティ関数を使用
   const getStatusBadge = (status: string, isTrialUser: boolean) => {
     const statusConfig = {
       active: { label: 'アクティブ', color: 'bg-green-100 text-green-800' },
@@ -59,19 +62,19 @@ export default function TokenManagementTable({ users }: TokenManagementTableProp
   };
 
   const handleViewUser = (user: UserData) => {
-    info('ユーザー詳細', `${user.name}のトークン詳細を表示しました`);
+    info('ユーザー詳細', `${ensureUserNameString(user.name)}のトークン詳細を表示しました`);
   };
 
   const handleEditUser = (user: UserData) => {
-    success('編集モード', `${user.name}の情報編集画面を開きました`);
+    success('編集モード', `${ensureUserNameString(user.name)}の情報編集画面を開きました`);
   };
 
   const handleAddTokens = (user: UserData) => {
-    success('トークン追加', `${user.name}にトークンを追加しました`);
+    success('トークン追加', `${ensureUserNameString(user.name)}にトークンを追加しました`);
   };
 
   const handleRemoveTokens = (user: UserData) => {
-    warning('トークン減算', `${user.name}からトークンを減算しました`);
+    warning('トークン減算', `${ensureUserNameString(user.name)}からトークンを減算しました`);
   };
 
   return (
@@ -115,11 +118,13 @@ export default function TokenManagementTable({ users }: TokenManagementTableProp
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                       <span className="text-white text-sm font-medium">
-                        {user.name.charAt(0)}
+                        {ensureUserNameString(user.name).charAt(0)}
                       </span>
                     </div>
                     <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {ensureUserNameString(user.name)}
+                      </div>
                       <div className="text-sm text-gray-500">{user.email}</div>
                     </div>
                   </div>

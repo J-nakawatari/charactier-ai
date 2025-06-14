@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { CharacterModel } from '../models/CharacterModel';
+import { UserModel } from '../models/UserModel';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { uploadImage, optimizeImage } from '../utils/fileUpload';
 
@@ -117,17 +118,30 @@ router.post('/', authenticateToken, async (req: Request, res: Response): Promise
 });
 
 // キャラクター一覧取得
-router.get('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const locale = (req.query.locale as string) || 'ja';
     const characterType = (req.query.characterType as string) || 'all';
     const sort = (req.query.sort as string) || 'newest';
     const keyword = (req.query.keyword as string) || '';
     
+    console.log('🚀 Characters API (TS) called with:', { locale, characterType, sort, keyword });
+
+    // ユーザーの購入履歴を取得
+    let userPurchasedCharacters: string[] = [];
+    if (req.user && req.user._id) {
+      const user = await UserModel.findById(req.user._id);
+      if (user && user.purchasedCharacters) {
+        userPurchasedCharacters = user.purchasedCharacters.map(charId => charId.toString());
+      }
+      console.log(`🛒 ユーザー ${req.user._id} の購入済みキャラ:`, userPurchasedCharacters);
+    }
+    
     // Build query
     interface QueryFilter {
       isActive: boolean;
       characterAccessType?: string;
+      _id?: { $in?: string[]; $nin?: string[] };
       $or?: Array<{
         'name.ja'?: { $regex: string; $options: string };
         'name.en'?: { $regex: string; $options: string };
@@ -139,10 +153,25 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
     }
     const query: QueryFilter = { isActive: true };
     
-    if (characterType === 'initial') {
-      query.characterAccessType = 'initial';
+    // キャラクタータイプフィルター
+    if (characterType === 'free') {
+      query.characterAccessType = 'free';
+    } else if (characterType === 'purchased') {
+      // 購入済みキャラのみ表示
+      if (userPurchasedCharacters.length > 0) {
+        query._id = { $in: userPurchasedCharacters };
+      } else {
+        // 購入済みキャラがない場合は空の結果を返す
+        query._id = { $in: [] };
+      }
+    } else if (characterType === 'unpurchased') {
+      // 未購入キャラのみ表示（プレミアムキャラで未購入のもの）
+      query.characterAccessType = 'purchaseOnly';
+      if (userPurchasedCharacters.length > 0) {
+        query._id = { $nin: userPurchasedCharacters };
+      }
     } else if (characterType === 'premium') {
-      query.characterAccessType = 'premium';
+      query.characterAccessType = 'purchaseOnly';
     }
     
     if (keyword) {
@@ -179,9 +208,14 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
         sortQuery = { createdAt: -1 };
     }
     
+    console.log(`🔍 フィルター条件:`, { characterType, userPurchasedCount: userPurchasedCharacters.length });
+    console.log(`🔍 適用フィルター:`, query);
+
     const characters = await CharacterModel.find(query)
       .select('-__v')
       .sort(sortQuery);
+    
+    console.log(`✅ ${characters.length}件のキャラクターを取得`);
     
     res.json({
       characters,
@@ -195,6 +229,92 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
     res.status(500).json({
       error: 'Database error',
       message: 'キャラクター一覧の取得に失敗しました'
+    });
+  }
+});
+
+// 親密度画像取得（/:idより前に定義する必要あり）
+router.get('/:id/affinity-images', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('🖼️ Affinity images request:', {
+      characterId: req.params.id,
+      userId: req.user?._id
+    });
+    
+    const character = await CharacterModel.findById(req.params.id);
+    
+    if (!character || !character.isActive) {
+      res.status(404).json({
+        error: 'Character not found',
+        message: 'キャラクターが見つかりません'
+      });
+      return;
+    }
+
+    // ユーザーの親密度レベルを取得
+    let userAffinityLevel = 0;
+    if (req.user && req.user._id) {
+      console.log('🔍 Looking up user affinity for:', req.user._id);
+      const user = await UserModel.findById(req.user._id);
+      console.log('🔍 User found:', user ? 'Yes' : 'No');
+      console.log('🔍 User affinities:', user?.affinities?.length || 0);
+      
+      if (user && user.affinities) {
+        console.log('🔍 User affinities structure:', user.affinities.map((aff: any) => ({
+          characterId: aff.characterId,
+          character: aff.character,
+          level: aff.level,
+          hasCharacterId: !!aff.characterId,
+          hasCharacter: !!aff.character
+        })));
+        
+        const characterAffinity = user.affinities.find(
+          (aff: any) => (aff.characterId && aff.characterId.toString() === req.params.id) ||
+                        (aff.character && aff.character.toString() === req.params.id)
+        );
+        if (characterAffinity) {
+          userAffinityLevel = characterAffinity.level || 0;
+          console.log('🔍 Found character affinity level:', userAffinityLevel);
+        } else {
+          console.log('🔍 No affinity found for this character');
+        }
+      }
+    }
+
+    // ギャラリー画像を取得（unlockLevelでソート）
+    const galleryImages = character.galleryImages || [];
+    console.log('🔍 Character gallery images:', galleryImages.length);
+    
+    const sortedImages = galleryImages
+      .map(img => ({
+        url: img.url,
+        unlockLevel: img.unlockLevel,
+        title: img.title,
+        description: img.description,
+        rarity: img.rarity,
+        tags: img.tags,
+        isDefault: img.isDefault,
+        order: img.order,
+        createdAt: img.createdAt
+      }))
+      .sort((a, b) => a.unlockLevel - b.unlockLevel);
+
+    console.log(`🖼️ キャラクター ${character.name.ja} の画像取得: ユーザーレベル ${userAffinityLevel}, 総画像数 ${sortedImages.length}`);
+
+    // 画像が存在しない場合でも正常なレスポンスを返す
+    res.json({
+      images: sortedImages,
+      userAffinityLevel,
+      totalImages: sortedImages.length,
+      unlockedCount: sortedImages.filter(img => img.unlockLevel <= userAffinityLevel).length,
+      message: sortedImages.length === 0 ? 'このキャラクターにはまだ画像が設定されていません' : undefined
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching affinity images:', error);
+    res.status(500).json({
+      error: 'Database error',
+      message: '親密度画像の取得に失敗しました'
     });
   }
 });
@@ -245,19 +365,19 @@ router.put('/:id/translations', authenticateToken, async (req: Request, res: Res
   try {
     const { name, description, personalityPreset, personalityTags, adminPrompt, defaultMessage, limitMessage } = req.body;
     
-    // バリデーション
-    if (!name || !name.ja || !name.en) {
+    // バリデーション（オブジェクト構造のみチェック、空文字列は許可）
+    if (!name || typeof name.ja !== 'string' || typeof name.en !== 'string') {
       res.status(400).json({
-        error: 'Name is required in both languages',
-        message: 'キャラクター名は日本語と英語の両方が必要です'
+        error: 'Name structure is invalid',
+        message: 'キャラクター名の構造が正しくありません'
       });
       return;
     }
     
-    if (!description || !description.ja || !description.en) {
+    if (!description || typeof description.ja !== 'string' || typeof description.en !== 'string') {
       res.status(400).json({
-        error: 'Description is required in both languages',
-        message: '説明は日本語と英語の両方が必要です'
+        error: 'Description structure is invalid',
+        message: '説明の構造が正しくありません'
       });
       return;
     }

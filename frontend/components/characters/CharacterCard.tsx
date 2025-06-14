@@ -8,17 +8,9 @@ import { useTranslations } from 'next-intl';
 import { MessageSquare, User, Sparkles, Unlock } from 'lucide-react';
 import AffinityBar from './AffinityBar';
 import LockBadge from './LockBadge';
+import { BaseCharacter } from '../../types/common';
 
-interface Character {
-  _id: string;
-  name: { ja: string; en: string } | string;
-  description: { ja: string; en: string } | string;
-  personalityPreset: string;
-  personalityTags: string[];
-  gender?: string;
-  characterAccessType: 'free' | 'token-based' | 'premium';
-  imageCharacterSelect?: string;
-  imageChatAvatar?: string;
+interface Character extends BaseCharacter {
   affinityStats?: {
     totalUsers: number;
     averageLevel: number;
@@ -53,9 +45,60 @@ export default function CharacterCard({
     return text[locale as 'ja' | 'en'] || text.ja || '';
   };
 
-  const handleClick = () => {
-    if (onClick) {
+  const handleClick = async () => {
+    if (character.characterAccessType === 'purchaseOnly' && isLocked) {
+      // キャラクター購入処理
+      await handleCharacterPurchase();
+    } else if (onClick) {
       onClick(character);
+    }
+  };
+
+  const handleCharacterPurchase = async () => {
+    try {
+      setIsUpdating(true);
+      
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        alert('ログインが必要です');
+        return;
+      }
+
+      console.log('🛒 キャラクター購入リクエスト開始:', character._id);
+
+      // キャラクター購入のチェックアウトセッション作成（直接バックエンドアクセス）
+      const response = await fetch('http://localhost:3004/api/purchase/create-character-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          characterId: character._id
+        })
+      });
+
+      console.log('📡 チェックアウトセッション作成レスポンス:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ チェックアウトセッション作成成功:', data);
+        if (data.url) {
+          // Stripeチェックアウトページにリダイレクト
+          window.location.href = data.url;
+        } else {
+          alert('チェックアウトURLが取得できませんでした');
+        }
+      } else {
+        const errorData = await response.json();
+        console.error('❌ チェックアウトセッション作成失敗:', errorData);
+        alert(errorData.message || 'チェックアウトセッションの作成に失敗しました');
+      }
+    } catch (error) {
+      console.error('キャラクター購入エラー:', error);
+      alert('キャラクター購入中にエラーが発生しました');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -72,7 +115,7 @@ export default function CharacterCard({
       console.log('📝 Starting character selection update...');
       
       // selectedCharacterを更新
-      let token = localStorage.getItem('token');
+      let token = localStorage.getItem('accessToken');
       
       // localStorageにない場合はクッキーから取得を試みる
       if (!token && typeof document !== 'undefined') {
@@ -93,11 +136,11 @@ export default function CharacterCard({
       
       if (token) {
         console.log('📡 Sending API request to update selectedCharacter...');
-        const response = await fetch('/api/users/me/use-character', {
-          method: 'PATCH',
+        const response = await fetch('/api/user/select-character', {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-auth-token': token,
+            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             characterId: character._id,
@@ -107,6 +150,15 @@ export default function CharacterCard({
         console.log('📡 API Response status:', response.status);
         if (response.ok) {
           console.log('✅ selectedCharacter updated:', getLocalizedText(character.name));
+          
+          // localStorageのユーザー情報も更新
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            const userData = JSON.parse(userStr);
+            userData.selectedCharacter = character._id;
+            localStorage.setItem('user', JSON.stringify(userData));
+            console.log('✅ localStorage updated with selectedCharacter:', character._id);
+          }
         } else {
           const errorText = await response.text();
           console.error('❌ Failed to update selectedCharacter:', response.status, errorText);
@@ -209,11 +261,13 @@ export default function CharacterCard({
           </h3>
           
           {/* 性格プリセット */}
-          <div className="mt-1">
-            <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${getPersonalityColor(character.personalityPreset)}`}>
-              {character.personalityPreset}
-            </span>
-          </div>
+          {character.personalityPreset && (
+            <div className="mt-1">
+              <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${getPersonalityColor(character.personalityPreset)}`}>
+                {character.personalityPreset}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* 説明文 */}
@@ -269,12 +323,16 @@ export default function CharacterCard({
           {isLocked ? (
             <button
               onClick={handleClick}
-              className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              className={`w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg transition-colors font-medium ${
+                character.characterAccessType === 'purchaseOnly' 
+                  ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white hover:from-amber-500 hover:to-yellow-600 shadow-md' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
             >
-              {character.characterAccessType === 'premium' ? (
+              {character.characterAccessType === 'purchaseOnly' ? (
                 <>
                   <Unlock className="w-4 h-4" />
-                  <span>{t('actions.unlock')}</span>
+                  <span>{price ? `¥${price.toLocaleString()}でアンロック` : t('actions.unlock')}</span>
                 </>
               ) : (
                 <span>{t('actions.needTokens')}</span>

@@ -5,7 +5,6 @@ import {
   Users, 
   Heart, 
   Coins, 
-  Settings, 
   LogOut,
   Menu,
   X,
@@ -63,12 +62,17 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
             // APIレスポンスからユーザー情報を取得
             let user = userData.user || userData;
             
-            // selectedCharacterがない場合、affinitiesから最初のキャラクターを使用
-            if (!user.selectedCharacter && userData.affinities && userData.affinities.length > 0) {
-              user.selectedCharacter = userData.affinities[0].character._id;
-            }
+            // selectedCharacterがない場合は空のままにする（自動選択しない）
+            // ユーザーが明示的にキャラクターを選択するまで待つ
             
-            setUser(user);
+            // トークン残高を明示的に設定（ChatSidebarと同じロジック）
+            const userWithTokenBalance = {
+              ...user,
+              tokenBalance: userData.tokenBalance || user.tokenBalance || 0
+            };
+            
+            console.log('🔍 UserSidebar - setting user data:', { selectedCharacter: userWithTokenBalance.selectedCharacter });
+            setUser(userWithTokenBalance);
             setLoading(false);
             return;
           }
@@ -103,22 +107,28 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
 
   // selectedCharacterに基づく動的なチャットリンク
   const getChatHref = () => {
+    console.log('🔍 UserSidebar getChatHref - user.selectedCharacter:', user?.selectedCharacter);
     if (user?.selectedCharacter) {
-      return `/${currentLocale}/characters/${user.selectedCharacter}/chat`;
+      const chatUrl = `/${currentLocale}/characters/${user.selectedCharacter}/chat`;
+      console.log('🔍 UserSidebar generating chat URL:', chatUrl);
+      return chatUrl;
     }
     
     // キャラクター未選択の場合は一覧へ
+    console.log('🔍 UserSidebar - no selectedCharacter, redirecting to character list');
     return `/${currentLocale}/characters?from=chat`;
   };
 
   const sidebarItems = [
     { id: 'home', href: `/${currentLocale}/dashboard`, icon: Home, label: t('home') },
     { id: 'characters', href: `/${currentLocale}/characters`, icon: Users, label: t('characters') },
-    { id: 'chat', href: getChatHref(), icon: MessageSquare, label: t('chatHistory') },
+    { id: 'chat', href: null, icon: MessageSquare, label: t('chatHistory'), onClick: () => {
+      const chatUrl = getChatHref();
+      window.location.href = chatUrl;
+    }},
     { id: 'library', href: `/${currentLocale}/library`, icon: Images, label: t('library') },
     { id: 'tokens', href: null, icon: Coins, label: t('tokens'), onClick: () => setShowPurchaseModal(true) },
     { id: 'purchase-history', href: `/${currentLocale}/purchase-history`, icon: ShoppingCart, label: t('purchaseHistory') },
-    { id: 'settings', href: `/${currentLocale}/settings`, icon: Settings, label: t('settings') },
   ];
 
   return (
@@ -161,7 +171,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
               <span className="text-sm font-medium text-purple-600">
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                {user?.name ? (typeof user.name === 'string' ? user.name.charAt(0).toUpperCase() : (typeof user.name === 'object' && user.name?.name ? user.name.name.charAt(0).toUpperCase() : 'U')) : 'U'}
               </span>
             </div>
             <div className="flex-1 min-w-0">

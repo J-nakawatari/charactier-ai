@@ -42,8 +42,8 @@ const PERSONALITY_TAGS = [
 
 // アクセスタイプ
 const ACCESS_TYPES = [
-  { value: 'initial', label: 'ベースキャラ', description: '無料で利用可能なベースキャラクター' },
-  { value: 'premium', label: 'プレミアムキャラ', description: '購入が必要なプレミアムキャラクター' }
+  { value: 'free', label: 'ベースキャラ', description: 'トークン消費で利用可能' },
+  { value: 'purchaseOnly', label: 'プレミアムキャラ', description: '購入が必要なキャラクター' }
 ];
 
 // AIモデル（初期値、APIから動的取得）
@@ -94,8 +94,9 @@ export default function CharacterEditPage() {
     
     // AI設定
     model: 'gpt-3.5-turbo',
-    characterAccessType: 'initial' as 'initial' | 'premium',
+    characterAccessType: 'free' as 'free' | 'purchaseOnly',
     stripeProductId: '',
+    purchasePrice: 0,
     
     // プロンプト・メッセージ
     adminPrompt: { ja: '', en: '' },
@@ -126,6 +127,11 @@ export default function CharacterEditPage() {
   const [currentImageType, setCurrentImageType] = useState<string>('');
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState<number>(-1);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // 価格情報取得関連
+  const [priceInfo, setPriceInfo] = useState<{ price: number; currency: string } | null>(null);
+  const [priceError, setPriceError] = useState<string>('');
+  const [isFetchingPrice, setIsFetchingPrice] = useState(false);
 
   // 既存データの読み込み
   useEffect(() => {
@@ -151,6 +157,8 @@ export default function CharacterEditPage() {
         });
         if (characterResponse.ok) {
           const character = await characterResponse.json();
+          console.log('✅ キャラクターデータを取得しました:', character);
+          console.log('🔍 取得した価格情報:', character.purchasePrice);
           
           // 既存のギャラリー画像を変換
           const existingGalleryImages = character.galleryImages ? character.galleryImages.map((img: any) => ({
@@ -168,8 +176,9 @@ export default function CharacterEditPage() {
             personalityTags: character.personalityTags || [],
             gender: character.gender || 'female',
             model: character.model || character.aiModel || 'o4-mini',
-            characterAccessType: character.characterAccessType || 'initial',
+            characterAccessType: character.characterAccessType || 'free',
             stripeProductId: character.stripeProductId || '',
+            purchasePrice: character.purchasePrice || 0,
             isActive: character.isActive || false,
             
             // 既存の画像URLを設定
@@ -181,6 +190,16 @@ export default function CharacterEditPage() {
             // 既存のギャラリー画像を設定
             galleryImages: existingGalleryImages
           }));
+          
+          console.log('🔄 FormDataに設定した価格:', character.purchasePrice || 0);
+          
+          // 保存済み価格がある場合は価格情報表示エリアにも設定
+          if (character.purchasePrice && character.purchasePrice > 0) {
+            setPriceInfo({
+              price: character.purchasePrice,
+              currency: 'JPY'
+            });
+          }
         }
         
         // 翻訳データを取得
@@ -238,6 +257,60 @@ export default function CharacterEditPage() {
     // console.log('翻訳データ更新:', newTranslationData);
   };
 
+  // 価格情報取得関数
+  const handleFetchPrice = async () => {
+    if (!formData.stripeProductId) return;
+    
+    setIsFetchingPrice(true);
+    setPriceError('');
+    setPriceInfo(null);
+    
+    try {
+      const adminToken = localStorage.getItem('adminAccessToken');
+      if (!adminToken) {
+        setPriceError('管理者認証が必要です');
+        error('認証エラー', '管理者認証が必要です');
+        return;
+      }
+
+      console.log('🔍 価格取得リクエスト:', formData.stripeProductId);
+      
+      const response = await fetch(`/api/admin/stripe/product-price/${formData.stripeProductId}`, {
+        headers: {
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('📡 価格取得レスポンス状態:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ 価格取得成功:', data);
+        setPriceInfo(data);
+        
+        // 価格情報をformDataに保存（これが永続化される）
+        setFormData(prev => ({
+          ...prev,
+          purchasePrice: data.price
+        }));
+        
+        success('価格取得成功', `価格情報を取得しました: ¥${data.price.toLocaleString()}`);
+      } else {
+        const errorData = await response.json();
+        console.error('❌ 価格取得失敗:', errorData);
+        setPriceError(errorData.message || '価格情報の取得に失敗しました');
+        error('価格取得エラー', errorData.message || '価格情報の取得に失敗しました');
+      }
+    } catch (err) {
+      console.error('❌ 価格取得例外エラー:', err);
+      setPriceError(`ネットワークエラー: ${err instanceof Error ? err.message : '不明なエラー'}`);
+      error('価格取得エラー', 'ネットワークまたはサーバーエラーが発生しました');
+    } finally {
+      setIsFetchingPrice(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -247,6 +320,7 @@ export default function CharacterEditPage() {
       const adminToken = localStorage.getItem('adminAccessToken');
       
       // 1. 翻訳データを保存
+      console.log('🔍 Sending translation data:', translationData);
       const translationSaveResponse = await fetch(`http://localhost:3004/api/characters/${characterId}/translations`, {
         method: 'PUT',
         headers: {
@@ -259,7 +333,9 @@ export default function CharacterEditPage() {
       if (!translationSaveResponse.ok) {
         const errorData = await translationSaveResponse.json();
         console.error('❌ 翻訳データ保存エラー:', errorData);
-        error('翻訳データ保存エラー', errorData.message || '翻訳データの保存に失敗しました');
+        console.error('❌ Response status:', translationSaveResponse.status);
+        console.error('❌ Response headers:', translationSaveResponse.headers);
+        error('翻訳データ保存エラー', errorData.message || '翻訳データの更新に失敗しました');
         return;
       }
       
@@ -292,6 +368,7 @@ export default function CharacterEditPage() {
         aiModel: formData.model,
         characterAccessType: formData.characterAccessType,
         stripeProductId: formData.stripeProductId,
+        purchasePrice: formData.purchasePrice,
         isActive: formData.isActive,
         galleryImages: galleryImagesForSave
       };
@@ -528,7 +605,7 @@ export default function CharacterEditPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col [&_input]:text-gray-900 [&_textarea]:text-gray-900 [&_select]:text-gray-900">
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-200 p-4 md:p-6">
         <div className="flex items-center justify-between">
@@ -560,41 +637,58 @@ export default function CharacterEditPage() {
               onChange={handleTranslationChange}
             />
             
-            {/* 基本情報 */}
+            {/* 基本設定 */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">基本設定</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    性別
-                  </label>
-                  <select
-                    value={formData.gender}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
-                  >
-                    {GENDERS.map(gender => (
-                      <option key={gender.value} value={gender.value} className="text-gray-900">
-                        {gender.label}
-                      </option>
-                    ))}
-                  </select>
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">基本設定</h3>
+              
+              {/* キャラクター基本情報 */}
+              <div className="mb-8">
+                <h4 className="text-md font-medium text-gray-800 mb-4 border-b border-gray-200 pb-2">キャラクター情報</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      性別
+                    </label>
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                    >
+                      {GENDERS.map(gender => (
+                        <option key={gender.value} value={gender.value} className="text-gray-900">
+                          {gender.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      年齢
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.age}
+                      onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                      placeholder="例: 18歳、20代前半"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.isActive}
+                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">キャラクターを公開する</span>
+                    </label>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    年齢
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.age}
-                    onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors"
-                    placeholder="例: 18歳、20代前半"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
+                <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     職業・設定
                   </label>
@@ -602,38 +696,77 @@ export default function CharacterEditPage() {
                     type="text"
                     value={formData.occupation}
                     onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
                     placeholder="例: 学生、OL、お嬢様"
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    アクセスタイプ
-                  </label>
-                  <select
-                    value={formData.characterAccessType}
-                    onChange={(e) => setFormData({ ...formData, characterAccessType: e.target.value as 'initial' | 'premium' })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
-                  >
-                    {ACCESS_TYPES.map(type => (
-                      <option key={type.value} value={type.value} className="text-gray-900">
-                        {type.label} - {type.description}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* アクセス設定 */}
+              <div>
+                <h4 className="text-md font-medium text-gray-800 mb-4 border-b border-gray-200 pb-2">アクセス・課金設定</h4>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        アクセスタイプ
+                      </label>
+                      <select
+                        value={formData.characterAccessType}
+                        onChange={(e) => setFormData({ ...formData, characterAccessType: e.target.value as 'free' | 'purchaseOnly' })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                      >
+                        {ACCESS_TYPES.map(type => (
+                          <option key={type.value} value={type.value} className="text-gray-900">
+                            {type.label} - {type.description}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                <div>
-                  <label className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                    />
-                    <span className="text-sm font-medium text-gray-700">キャラクターを公開する</span>
-                  </label>
+                    {formData.characterAccessType === 'purchaseOnly' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          購入価格
+                        </label>
+                        <div className="flex space-x-2">
+                          <div className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+                            {formData.purchasePrice > 0 ? `¥${formData.purchasePrice.toLocaleString()}` : '未設定'}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {formData.characterAccessType === 'purchaseOnly' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Stripe価格ID
+                      </label>
+                      <div className="flex space-x-2">
+                        <input
+                          type="text"
+                          value={formData.stripeProductId}
+                          onChange={(e) => setFormData({ ...formData, stripeProductId: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                          placeholder="price_xxxxxxxxx または prod_xxxxxxxxx"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleFetchPrice}
+                          disabled={!formData.stripeProductId || isFetchingPrice}
+                          className="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {isFetchingPrice ? '取得中...' : '価格取得'}
+                        </button>
+                      </div>
+                      {priceError && (
+                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                          <p className="text-sm text-red-800">{priceError}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -709,20 +842,6 @@ export default function CharacterEditPage() {
                   </select>
                 </div>
 
-                {formData.characterAccessType === 'premium' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Stripe商品ID
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.stripeProductId}
-                      onChange={(e) => setFormData({ ...formData, stripeProductId: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors"
-                      placeholder="prod_xxxxxxxxx"
-                    />
-                  </div>
-                )}
               </div>
             </div>
 
@@ -976,7 +1095,7 @@ export default function CharacterEditPage() {
                               type="text"
                               value={galleryItem?.title || ''}
                               onChange={(e) => updateGalleryInfo(unlockLevel, 'title', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-purple-500 transition-colors"
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
                               placeholder="画像タイトル"
                             />
                           </div>
@@ -985,7 +1104,7 @@ export default function CharacterEditPage() {
                             <textarea
                               value={galleryItem?.description || ''}
                               onChange={(e) => updateGalleryInfo(unlockLevel, 'description', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-purple-500 transition-colors"
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
                               rows={2}
                               placeholder="画像説明"
                             />

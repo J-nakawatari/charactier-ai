@@ -9,7 +9,7 @@ interface Character {
   description: { ja: string; en: string };
   personalityPreset: string;
   personalityTags: string[];
-  characterAccessType: 'free' | 'token-based' | 'premium';
+  characterAccessType: 'free' | 'purchaseOnly';
   isActive: boolean;
   imageCharacterSelect?: string;
   totalConversations?: number;
@@ -49,7 +49,7 @@ export default function CharacterManagementTable({ characters }: CharacterManage
         </span>
         {isFree && (
           <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-            無料
+            ベースキャラ
           </span>
         )}
       </div>
@@ -156,7 +156,7 @@ export default function CharacterManagementTable({ characters }: CharacterManage
               <div>
                 <div className="text-xs text-gray-500">タイプ</div>
                 <div className="text-sm font-medium text-gray-900">
-                  {character.characterAccessType === 'free' ? '無料' : character.characterAccessType === 'token-based' ? 'トークン制' : 'プレミアム'}
+                  {character.characterAccessType === 'free' ? 'ベースキャラ' : 'プレミアムキャラ'}
                 </div>
               </div>
               <div>
@@ -259,7 +259,7 @@ export default function CharacterManagementTable({ characters }: CharacterManage
                   {getStatusBadge(character.isActive, character.characterAccessType === 'free')}
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {character.characterAccessType === 'free' ? '無料' : character.characterAccessType === 'token-based' ? 'トークン制' : 'プレミアム'}
+                  {character.characterAccessType === 'free' ? 'ベースキャラ' : 'プレミアムキャラ'}
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {(character.totalConversations || 0).toLocaleString()}

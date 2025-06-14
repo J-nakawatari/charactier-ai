@@ -16,9 +16,17 @@ export const authenticateToken = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Authorization ヘッダーから JWT を取得
+    // Authorization ヘッダーまたは x-auth-token ヘッダーから JWT を取得
     const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1]; // "Bearer TOKEN"
+    const mockToken = req.headers['x-auth-token'] as string;
+    
+    let token: string | undefined;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1]; // "Bearer TOKEN"
+    } else if (mockToken) {
+      token = mockToken; // 開発用モック認証
+    }
 
     if (!token) {
       res.status(401).json({ 
@@ -42,9 +50,11 @@ export const authenticateToken = async (
 
     // トークンをデコード
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    console.log('🔍 JWT decoded userId:', decoded.userId);
     
     // まず管理者として検索
     const admin = await AdminModel.findById(decoded.userId);
+    console.log('🔍 Admin found by userId:', admin ? `${admin.email} (${admin.role})` : 'null');
     if (admin && admin.isActive) {
       // 管理者として認証成功
       req.admin = admin;
@@ -63,6 +73,7 @@ export const authenticateToken = async (
     
     // 管理者で見つからない場合は一般ユーザーとして検索
     const user = await UserModel.findById(decoded.userId);
+    console.log('🔍 User found by userId:', user ? `${user.email}` : 'null');
     if (user) {
       // アカウント状態チェック（停止・削除ユーザーのアクセス拒否）
       if (!user.isActive || user.accountStatus === 'suspended' || user.accountStatus === 'banned') {

@@ -180,6 +180,7 @@ async function handleCheckoutSessionCompleted(event) {
     const session = event.data.object;
     
     console.log('💳 チェックアウトセッション完了:', session.id);
+    console.log('🔥 新しいwebhook処理が実行されています！');
     console.log('👤 顧客:', session.customer);
     console.log('💰 金額:', session.amount_total, session.currency);
     
@@ -187,6 +188,32 @@ async function handleCheckoutSessionCompleted(event) {
     const userId = session.metadata?.userId;
     const purchaseAmountYen = session.amount_total; // Stripeは最小通貨単位で返す
     const sessionId = session.id;
+    
+    // 価格IDから購入タイプを判別
+    const fullSession = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['line_items']
+    });
+    const priceId = fullSession.line_items.data[0].price.id;
+    
+    console.log('🔍 決済詳細:', {
+      sessionId: sessionId,
+      priceId: priceId,
+      amount: purchaseAmountYen
+    });
+    
+    // 価格IDからキャラクター購入かトークン購入かを判別
+    const CharacterModel = require('../src/models/CharacterModel');
+    const character = await CharacterModel.findOne({ stripeProductId: priceId });
+    
+    let purchaseType, characterId;
+    if (character) {
+      purchaseType = 'character';
+      characterId = character._id;
+      console.log(`🎭 キャラクター購入検出: ${character.name.ja || character.name.en}`);
+    } else {
+      purchaseType = 'token';
+      console.log('🎁 トークン購入検出');
+    }
     
     // バリデーション
     if (!userId) {
@@ -208,103 +235,191 @@ async function handleCheckoutSessionCompleted(event) {
       throw new Error('価格設定に問題があります');
     }
     
-    console.log('🎁 トークン付与処理開始...');
+    console.log(`🎁 購入処理開始... (タイプ: ${purchaseType})`);
     console.log(`👤 ユーザーID: ${userId}`);
     console.log(`💰 購入金額: ${purchaseAmountYen}円`);
     console.log(`🔑 セッションID: ${sessionId}`);
     
-    // 🎯 自動計算でトークン付与（50%利益保証）
-    const grantResult = await TokenService.grantTokens(
-      userId,
-      sessionId,
-      purchaseAmountYen
-    );
+    if (purchaseType === 'character') {
+      // キャラクター購入処理
+      console.log(`🎭 キャラクター購入処理開始: ${characterId}`);
+      await handleCharacterPurchase(userId, characterId, sessionId, purchaseAmountYen);
+      
+    } else {
+      // トークン購入処理（従来の処理）
+      console.log('🎁 トークン付与処理...');
+      
+      // 🎯 自動計算でトークン付与（50%利益保証）
+      const grantResult = await TokenService.grantTokens(
+        userId,
+        sessionId,
+        purchaseAmountYen
+      );
     
-    if (grantResult.success) {
-      console.log('✅ トークン付与成功:', {
-        ユーザーID: userId,
-        付与トークン数: grantResult.tokensGranted,
-        新しい残高: grantResult.newBalance,
-        購入金額: `${purchaseAmountYen}円`,
-        利益率: `${(grantResult.profitMargin * 100)}%`
-      });
-      
-      // Stripe決済成功ログ（管理者向け）
-      console.log(`📊 決済完了サマリー:`, {
-        sessionId: sessionId,
-        userId: userId,
-        amount: `${purchaseAmountYen}円`,
-        tokensGranted: grantResult.tokensGranted,
-        profitMargin: `${(grantResult.profitMargin * 100)}%`,
-        timestamp: new Date().toISOString()
-      });
-      
-      // 🌊 SSE用購入完了データをRedis/メモリに保存
-      // TODO: Redis処理を一時的にコメントアウト（Webhook成功確認のため）
-      console.log('⚠️ SSE用データ保存はスキップ（デバッグ中）');
-      
-      // 📝 購入履歴をデータベースに記録
-      const PurchaseModel = getPurchaseHistoryModel();
-      if (PurchaseModel) {
-        try {
-          console.log('📝 購入履歴記録処理開始...');
-        
-        const purchaseRecord = await PurchaseModel.createFromStripeSession({
-          userId: new mongoose.Types.ObjectId(userId),
-          stripeSessionId: sessionId,
-          stripePaymentIntentId: session.payment_intent,
-          type: 'token', // トークン購入として記録
-          amount: grantResult.tokensGranted,
-          price: purchaseAmountYen,
-          currency: session.currency || 'jpy',
-          status: 'completed',
-          paymentMethod: session.payment_method_types?.[0] || 'card',
-          details: `${grantResult.tokensGranted}トークン購入`,
-          description: `Stripe経由でのトークン購入 - ${grantResult.tokensGranted}トークン`,
-          metadata: {
-            profitMargin: grantResult.profitMargin,
-            originalAmount: purchaseAmountYen,
-            grantedTokens: grantResult.tokensGranted
-          },
-          stripeData: {
-            sessionId: sessionId,
-            paymentIntentId: session.payment_intent,
-            customerId: session.customer,
-            mode: session.mode
-          }
+      if (grantResult.success) {
+        console.log('✅ トークン付与成功:', {
+          ユーザーID: userId,
+          付与トークン数: grantResult.tokensGranted,
+          新しい残高: grantResult.newBalance,
+          購入金額: `${purchaseAmountYen}円`,
+          利益率: `${(grantResult.profitMargin * 100)}%`
         });
         
-        console.log('✅ 購入履歴記録成功:', {
-          recordId: purchaseRecord._id,
+        // Stripe決済成功ログ（管理者向け）
+        console.log(`📊 決済完了サマリー:`, {
+          sessionId: sessionId,
           userId: userId,
-          type: 'token',
-          amount: grantResult.tokensGranted,
-          price: purchaseAmountYen
+          amount: `${purchaseAmountYen}円`,
+          tokensGranted: grantResult.tokensGranted,
+          profitMargin: `${(grantResult.profitMargin * 100)}%`,
+          timestamp: new Date().toISOString()
         });
         
-        } catch (purchaseHistoryError) {
-          // 購入履歴記録エラーはWebhook処理全体を失敗させない
-          console.error('⚠️ 購入履歴記録エラー（トークン付与は成功）:', purchaseHistoryError);
-          console.error('🔍 購入履歴エラー詳細:', {
-            userId: userId,
-            sessionId: sessionId,
-            error: purchaseHistoryError.message
-          });
+        // 🌊 SSE用購入完了データをRedis/メモリに保存
+        // TODO: Redis処理を一時的にコメントアウト（Webhook成功確認のため）
+        console.log('⚠️ SSE用データ保存はスキップ（デバッグ中）');
+        
+        // 📝 購入履歴をデータベースに記録
+        const PurchaseModel = getPurchaseHistoryModel();
+        if (PurchaseModel) {
+          try {
+            console.log('📝 購入履歴記録処理開始...');
+            
+            const purchaseRecord = await PurchaseModel.createFromStripeSession({
+              userId: new mongoose.Types.ObjectId(userId),
+              stripeSessionId: sessionId,
+              stripePaymentIntentId: session.payment_intent,
+              type: 'token', // トークン購入として記録
+              amount: grantResult.tokensGranted,
+              price: purchaseAmountYen,
+              currency: session.currency || 'jpy',
+              status: 'completed',
+              paymentMethod: session.payment_method_types?.[0] || 'card',
+              details: `${grantResult.tokensGranted}トークン購入`,
+              description: `Stripe経由でのトークン購入 - ${grantResult.tokensGranted}トークン`,
+              metadata: {
+                profitMargin: grantResult.profitMargin,
+                originalAmount: purchaseAmountYen,
+                grantedTokens: grantResult.tokensGranted
+              },
+              stripeData: {
+                sessionId: sessionId,
+                paymentIntentId: session.payment_intent,
+                customerId: session.customer,
+                mode: session.mode
+              }
+            });
+            
+            console.log('✅ 購入履歴記録成功:', {
+              recordId: purchaseRecord._id,
+              userId: userId,
+              type: 'token',
+              amount: grantResult.tokensGranted,
+              price: purchaseAmountYen
+            });
+            
+          } catch (purchaseHistoryError) {
+            // 購入履歴記録エラーはWebhook処理全体を失敗させない
+            console.error('⚠️ 購入履歴記録エラー（トークン付与は成功）:', purchaseHistoryError);
+            console.error('🔍 購入履歴エラー詳細:', {
+              userId: userId,
+              sessionId: sessionId,
+              error: purchaseHistoryError.message
+            });
+          }
+        } else {
+          console.log('⚠️ PurchaseHistoryModel が利用できません - 購入履歴記録をスキップ');
         }
-      } else {
-        console.log('⚠️ PurchaseHistoryModel が利用できません - 購入履歴記録をスキップ');
-      }
       
       // TODO: 必要に応じてユーザーへの通知メール送信
       // await sendPurchaseConfirmationEmail(userId, grantResult);
       
-    } else {
-      console.log('⚠️ トークン付与スキップ:', grantResult.reason);
+      } else {
+        console.log('⚠️ トークン付与スキップ:', grantResult.reason);
+      }
     }
     
   } catch (error) {
     console.error('❌ チェックアウトセッション処理エラー:', error);
     throw error; // 上位の catch で処理
+  }
+}
+
+/**
+ * キャラクター購入処理
+ * @param {string} userId - ユーザーID
+ * @param {string} characterId - キャラクターID
+ * @param {string} sessionId - StripeセッションID
+ * @param {number} purchaseAmountYen - 購入金額（円）
+ */
+async function handleCharacterPurchase(userId, characterId, sessionId, purchaseAmountYen) {
+  try {
+    // UserModelでpurchasedCharactersにキャラクターIDを追加
+    const { UserModel } = require('../src/models/UserModel');
+    
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw new Error(`ユーザーが見つかりません: ${userId}`);
+    }
+    
+    // 既に購入済みかチェック
+    if (user.purchasedCharacters && user.purchasedCharacters.includes(characterId)) {
+      console.log('⚠️ キャラクターは既に購入済みです:', { userId, characterId });
+      return;
+    }
+    
+    // キャラクターを購入済みリストに追加
+    await UserModel.findByIdAndUpdate(userId, {
+      $addToSet: { purchasedCharacters: characterId }
+    });
+    
+    console.log('✅ キャラクター購入完了:', {
+      userId,
+      characterId,
+      sessionId,
+      amount: purchaseAmountYen
+    });
+    
+    // 購入履歴に記録
+    const { PurchaseHistoryModel } = require('../src/models/PurchaseHistoryModel');
+    
+    if (PurchaseHistoryModel) {
+      try {
+        const purchaseRecord = await PurchaseHistoryModel.create({
+          userId,
+          stripeSessionId: sessionId,
+          type: 'character',
+          characterId: characterId,
+          price: purchaseAmountYen,
+          currency: 'jpy',
+          status: 'completed',
+          paymentMethod: 'card',
+          details: `キャラクター購入`,
+          description: `Stripe経由でのキャラクター購入`,
+          metadata: {
+            characterId: characterId,
+            originalAmount: purchaseAmountYen
+          },
+          stripeData: {
+            sessionId: sessionId
+          }
+        });
+        
+        console.log('✅ キャラクター購入履歴記録成功:', {
+          recordId: purchaseRecord._id,
+          userId,
+          characterId,
+          price: purchaseAmountYen
+        });
+        
+      } catch (purchaseHistoryError) {
+        console.error('⚠️ キャラクター購入履歴記録エラー:', purchaseHistoryError);
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ キャラクター購入処理エラー:', error);
+    throw error;
   }
 }
 

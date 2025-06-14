@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Heart, Star, Lock, Unlock } from 'lucide-react';
 import Image from 'next/image';
 import AffinityDetailModal from './AffinityDetailModal';
+import AffinityImageModal from './AffinityImageModal';
 
 interface LocalizedString {
   ja: string;
@@ -32,13 +33,33 @@ interface AffinitySectionProps {
 
 export default function AffinitySection({ affinities, locale }: AffinitySectionProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedCharacter, setSelectedCharacter] = useState<AffinityItem | null>(null);
   
   const getProgressPercentage = (experience: number, maxExperience: number) => {
     return maxExperience > 0 ? (experience / maxExperience) * 100 : 0;
   };
 
-  const isUnlockAvailable = (level: number, nextUnlockLevel: number) => {
-    return level >= nextUnlockLevel;
+  const isUnlockAvailable = (level: number, nextUnlockLevel: number, unlockedImages: string[]) => {
+    // unlockedImages が undefined の場合は空配列として扱う
+    const images = unlockedImages || [];
+    
+    // レベル0で画像が0枚の場合は通知を表示しない
+    if (level === 0 && images.length === 0) {
+      return false;
+    }
+    return level >= nextUnlockLevel && nextUnlockLevel > 0;
+  };
+
+  const handleViewImages = (affinity: AffinityItem) => {
+    console.log('🔍 handleViewImages called with:', {
+      characterId: affinity.character._id,
+      characterName: affinity.character.name,
+      level: affinity.level,
+      unlockedImages: affinity.unlockedImages
+    });
+    setSelectedCharacter(affinity);
+    setImageModalOpen(true);
   };
 
   return (
@@ -137,7 +158,7 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
             </div>
 
             {/* アンロック通知 */}
-            {isUnlockAvailable(affinity.level, affinity.nextUnlockLevel) && (
+            {isUnlockAvailable(affinity.level, affinity.nextUnlockLevel, affinity.unlockedImages) && (
               <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <Unlock className="w-4 h-4 text-green-600" />
@@ -145,7 +166,10 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
                     新しい画像がアンロックされました！
                   </span>
                 </div>
-                <button className="mt-2 text-sm text-green-700 hover:text-green-800 underline">
+                <button 
+                  onClick={() => handleViewImages(affinity)}
+                  className="mt-2 text-sm text-green-700 hover:text-green-800 underline transition-colors"
+                >
                   画像を確認する
                 </button>
               </div>
@@ -176,6 +200,21 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
         affinities={affinities || []}
         locale={locale}
       />
+
+      {/* 親密度画像モーダル */}
+      {selectedCharacter && (
+        <AffinityImageModal
+          isOpen={imageModalOpen}
+          onClose={() => {
+            setImageModalOpen(false);
+            setSelectedCharacter(null);
+          }}
+          characterId={selectedCharacter.character._id}
+          characterName={selectedCharacter.character.name[locale as keyof LocalizedString]}
+          userAffinityLevel={selectedCharacter.level}
+          locale={locale}
+        />
+      )}
     </div>
   );
 }

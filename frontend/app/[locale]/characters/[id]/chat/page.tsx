@@ -7,6 +7,7 @@ import { ChatLayout } from '@/components/chat/ChatLayout';
 import { getAuthHeaders, getCurrentUser, isDevelopment } from '@/utils/auth';
 import { handleApiError } from '@/utils/errorHandler';
 import { useToast } from '@/contexts/ToastContext';
+import { validateMessageBeforeSend } from '@/utils/contentFilter';
 import { ChatPaginationService, PaginationState } from '@/utils/chatPagination';
 import { 
   Character, 
@@ -186,6 +187,16 @@ export default function ChatPage() {
   const handleSendMessage = useCallback(async (message: string) => {
     if (!chatData) return;
 
+    // フロントエンド側でメッセージバリデーション
+    const validation = validateMessageBeforeSend(message);
+    if (!validation.canSend) {
+      showApiError({
+        code: 'CONTENT_VALIDATION_ERROR',
+        message: validation.errorMessage || 'メッセージに問題があります'
+      }, validation.errorMessage || 'メッセージの送信に失敗しました');
+      return;
+    }
+
     // ユーザーメッセージを即座に表示
     const tempUserMessage: Message = {
       id: `temp-${Date.now()}`,
@@ -213,7 +224,6 @@ export default function ChatPage() {
 
       if (!response.ok) {
         const apiError = await handleApiError(response);
-        showApiError(apiError, 'メッセージの送信に失敗しました');
         throw apiError;
       }
 
@@ -276,8 +286,17 @@ export default function ChatPage() {
         messages: prev.messages.filter(m => m.id !== tempUserMessage.id)
       } : null);
 
+      // エラーの詳細確認用ログ
+      console.error('🚫 Message send error details:', error);
+      
       if (typeof error === 'object' && error !== null && 'code' in error) {
-        showApiError(error as any, 'メッセージの送信に失敗しました');
+        const apiError = error as any;
+        // 禁止用語エラーの場合は専用メッセージを表示
+        if (apiError.code === 'CONTENT_VIOLATION') {
+          showApiError(apiError, apiError.message || 'メッセージが利用規約に違反しています');
+        } else {
+          showApiError(apiError, 'メッセージの送信に失敗しました');
+        }
       } else {
         showApiError({
           code: 'MESSAGE_SEND_ERROR',

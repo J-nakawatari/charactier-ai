@@ -163,17 +163,6 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
         ))}
       </div>
 
-      {/* フッター */}
-      <div className="mt-6 pt-4 border-t border-gray-100">
-        <div className="grid grid-cols-2 gap-3">
-          <button className="py-2 px-4 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium">
-            トークン購入
-          </button>
-          <button className="py-2 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
-            キャラクター購入
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

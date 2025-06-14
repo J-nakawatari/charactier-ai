@@ -9,9 +9,12 @@ function PurchaseSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [processing, setProcessing] = useState(true);
-  const [tokenData, setTokenData] = useState<{
-    addedTokens: number;
-    newBalance: number;
+  const [purchaseData, setPurchaseData] = useState<{
+    type: 'token' | 'character';
+    addedTokens?: number;
+    newBalance?: number;
+    characterName?: string;
+    characterId?: string;
   } | null>(null);
 
   const sessionId = searchParams.get('session_id');
@@ -45,11 +48,14 @@ function PurchaseSuccessContent() {
             return;
           }
           
-          if (data.addedTokens) {
+          if (data.addedTokens || data.characterId) {
             console.log('✅ SSE: 購入完了通知受信');
-            setTokenData({
+            setPurchaseData({
+              type: data.type || (data.addedTokens ? 'token' : 'character'),
               addedTokens: data.addedTokens,
-              newBalance: data.newBalance
+              newBalance: data.newBalance,
+              characterName: data.characterName,
+              characterId: data.characterId
             });
             setProcessing(false);
             eventSource?.close();
@@ -97,16 +103,15 @@ function PurchaseSuccessContent() {
     try {
       console.log('🔄 フォールバック処理開始（従来のポーリング方式）');
       
-      // Stripe Session情報から購入トークン数を取得
+      // Stripe Session情報から購入情報を取得
       const sessionResponse = await fetch(`/api/purchase/session/${sessionId}`, {
         headers: getAuthHeaders()
       });
-      let purchasedTokens = null;
+      let sessionData = null;
       
       if (sessionResponse.ok) {
-        const sessionData = await sessionResponse.json();
-        purchasedTokens = sessionData.tokens;
-        console.log('💰 購入トークン数取得:', purchasedTokens);
+        sessionData = await sessionResponse.json();
+        console.log('💰 購入情報取得:', sessionData);
       }
       
       // 初期ユーザー情報取得
@@ -139,29 +144,54 @@ function PurchaseSuccessContent() {
         finalUserData = await updatedUserResponse.json();
         console.log(`🔄 フォールバック リトライ ${retryCount + 1}: 残高 ${finalUserData.tokenBalance}`);
         
-        const tokensAdded = finalUserData.tokenBalance - userData.tokenBalance;
-        if (tokensAdded > 0) {
-          console.log('✅ フォールバック: トークン増加確認:', tokensAdded);
-          setTokenData({
-            addedTokens: tokensAdded,
-            newBalance: finalUserData.tokenBalance
+        // 購入タイプに応じて処理を分岐
+        if (sessionData?.type === 'character') {
+          // キャラクター購入の場合はトークン残高変化をチェックしない
+          console.log('✅ フォールバック: キャラクター購入完了');
+          setPurchaseData({
+            type: 'character',
+            characterName: sessionData.characterName || 'キャラクター',
+            characterId: sessionData.characterId
           });
           setProcessing(false);
           return;
+        } else {
+          // トークン購入の場合は残高変化をチェック
+          const tokensAdded = finalUserData.tokenBalance - userData.tokenBalance;
+          if (tokensAdded > 0) {
+            console.log('✅ フォールバック: トークン増加確認:', tokensAdded);
+            setPurchaseData({
+              type: 'token',
+              addedTokens: tokensAdded,
+              newBalance: finalUserData.tokenBalance
+            });
+            setProcessing(false);
+            return;
+          }
         }
         
         retryCount++;
       }
       
       // フォールバック処理でも確認できない場合
-      if (purchasedTokens) {
-        console.log('📋 フォールバック: セッション情報から表示:', purchasedTokens);
-        setTokenData({
-          addedTokens: purchasedTokens,
-          newBalance: finalUserData.tokenBalance + purchasedTokens
-        });
+      if (sessionData) {
+        console.log('📋 フォールバック: セッション情報から表示:', sessionData);
+        if (sessionData.type === 'character') {
+          setPurchaseData({
+            type: 'character',
+            characterName: sessionData.characterName || 'キャラクター',
+            characterId: sessionData.characterId
+          });
+        } else if (sessionData.tokens) {
+          setPurchaseData({
+            type: 'token',
+            addedTokens: sessionData.tokens,
+            newBalance: finalUserData.tokenBalance
+          });
+        }
       } else {
-        setTokenData({
+        setPurchaseData({
+          type: 'token',
           addedTokens: 0,
           newBalance: finalUserData.tokenBalance
         });
@@ -176,18 +206,23 @@ function PurchaseSuccessContent() {
   };
 
   const handleBackToChat = () => {
-    // localStorageから元のチャット画面情報を取得
-    const returnCharacterId = localStorage.getItem('returnToCharacterId');
-    const returnLocale = localStorage.getItem('returnToLocale') || 'ja';
-    
-    if (returnCharacterId) {
-      // 保存されたキャラクターIDに戻る
-      localStorage.removeItem('returnToCharacterId');
-      localStorage.removeItem('returnToLocale');
-      router.push(`/${returnLocale}/characters/${returnCharacterId}/chat`);
+    if (purchaseData?.type === 'character' && purchaseData.characterId) {
+      // キャラクター購入の場合は購入したキャラクターのチャット画面に遷移
+      router.push(`/ja/characters/${purchaseData.characterId}/chat`);
     } else {
-      // フォールバック: デフォルトのチャット画面
-      router.push('/ja/characters/3/chat');
+      // トークン購入の場合は元のチャット画面情報を取得
+      const returnCharacterId = localStorage.getItem('returnToCharacterId');
+      const returnLocale = localStorage.getItem('returnToLocale') || 'ja';
+      
+      if (returnCharacterId) {
+        // 保存されたキャラクターIDに戻る
+        localStorage.removeItem('returnToCharacterId');
+        localStorage.removeItem('returnToLocale');
+        router.push(`/${returnLocale}/characters/${returnCharacterId}/chat`);
+      } else {
+        // フォールバック: キャラクター一覧画面
+        router.push('/ja/characters');
+      }
     }
   };
 
@@ -202,7 +237,7 @@ function PurchaseSuccessContent() {
               決済の確認とトークンの付与を処理しています。
             </p>
           </>
-        ) : tokenData ? (
+        ) : purchaseData ? (
           <>
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-8 h-8 text-green-600" />
@@ -212,29 +247,59 @@ function PurchaseSuccessContent() {
               購入完了！
             </h2>
             
-            <p className="text-gray-600 mb-6">
-              トークチケットの購入が完了しました。
-            </p>
-            
-            <div className="bg-green-50 rounded-lg p-4 mb-6">
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                <Coins className="w-5 h-5 text-green-600" />
-                <span className="font-semibold text-green-800">
-                  +{tokenData.addedTokens.toLocaleString()}枚
-                </span>
-              </div>
-              <div className="text-sm text-green-700">
-                新しい残高: {tokenData.newBalance.toLocaleString()}枚
-              </div>
-            </div>
-            
-            <button
-              onClick={handleBackToChat}
-              className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>チャットに戻る</span>
-            </button>
+            {purchaseData.type === 'character' ? (
+              <>
+                <p className="text-gray-600 mb-6">
+                  キャラクター「{purchaseData.characterName}」の購入が完了しました。
+                </p>
+                
+                <div className="bg-purple-50 rounded-lg p-4 mb-6">
+                  <div className="flex items-center justify-center space-x-2 mb-2">
+                    <span className="text-2xl">🎭</span>
+                    <span className="font-semibold text-purple-800">
+                      {purchaseData.characterName}
+                    </span>
+                  </div>
+                  <div className="text-sm text-purple-700">
+                    キャラクターがアンロックされました
+                  </div>
+                </div>
+                
+                <button
+                  onClick={handleBackToChat}
+                  className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>{purchaseData.characterName}とチャットする</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-600 mb-6">
+                  トークチケットの購入が完了しました。
+                </p>
+                
+                <div className="bg-green-50 rounded-lg p-4 mb-6">
+                  <div className="flex items-center justify-center space-x-2 mb-2">
+                    <Coins className="w-5 h-5 text-green-600" />
+                    <span className="font-semibold text-green-800">
+                      +{purchaseData.addedTokens?.toLocaleString() || 0}枚
+                    </span>
+                  </div>
+                  <div className="text-sm text-green-700">
+                    新しい残高: {purchaseData.newBalance?.toLocaleString() || 0}枚
+                  </div>
+                </div>
+                
+                <button
+                  onClick={handleBackToChat}
+                  className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>チャットに戻る</span>
+                </button>
+              </>
+            )}
           </>
         ) : (
           <>

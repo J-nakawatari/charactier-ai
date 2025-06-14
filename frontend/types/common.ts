@@ -35,12 +35,15 @@ export interface BaseCharacter {
   _id: string;
   name: LocalizedString;
   description: LocalizedString;
-  characterAccessType: 'free' | 'token-based' | 'purchaseOnly';
+  characterAccessType: 'free' | 'purchaseOnly';
   aiModel: string;
   personalityPreset?: string;
   personalityTags?: string[];
+  gender?: string;
   themeColor?: string;
   imageCharacterSelect?: string;
+  imageChatAvatar?: string;
+  imageChatBackground?: string;
   isActive: boolean;
   createdAt: Date | string;
   updatedAt?: Date | string;
@@ -198,7 +201,7 @@ export interface Character {
   imageCharacterSelect?: string;
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
-  characterAccessType?: 'initial' | 'premium' | 'free';
+  characterAccessType?: 'free' | 'purchaseOnly';
   model?: 'gpt-3.5-turbo' | 'gpt-4';
   personalityPreset?: string;
   personalityTags?: string[];

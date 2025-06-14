@@ -8,7 +8,7 @@ interface Character {
   description: { ja: string; en: string };
   personalityPreset: string;
   personalityTags: string[];
-  characterAccessType: 'free' | 'token-based' | 'premium';
+  characterAccessType: 'free' | 'purchaseOnly';
   isActive: boolean;
   imageCharacterSelect?: string;
   totalConversations?: number;
@@ -49,7 +49,7 @@ export default function CharacterStats({ characters }: CharacterStatsProps) {
       textColor: 'text-green-700'
     },
     {
-      title: '無料キャラクター',
+      title: 'ベースキャラクター',
       value: stats.free.toLocaleString(),
       icon: Heart,
       color: 'bg-blue-500',

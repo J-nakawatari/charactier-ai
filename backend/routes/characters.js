@@ -4,6 +4,7 @@ const escapeStringRegexp = require('escape-string-regexp');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const { CharacterModel: Character } = require('../src/models/CharacterModel');
+const { UserModel } = require('../src/models/UserModel');
 
 // Characters rate limiting - 1つのIPから1分間に60回まで
 const charactersRateLimit = rateLimit({
@@ -22,18 +23,46 @@ router.get('/', charactersRateLimit, auth, async (req, res) => {
   try {
     const { 
       locale = 'ja', 
-      freeOnly = 'false', 
+      freeOnly = 'false',
+      characterType = 'all',
       sort = 'popular', 
       keyword = '' 
     } = req.query;
 
+    console.log('🚀 Characters API called with:', { locale, freeOnly, characterType, sort, keyword });
+
     // 基本フィルター: アクティブなキャラクターのみ
     let filter = { isActive: true };
 
-    // 無料キャラクターのみフィルター
-    if (freeOnly === 'true') {
-      filter.characterAccessType = 'free';
+    // ユーザーの購入履歴を取得
+    let userPurchasedCharacters = [];
+    if (req.user && req.user.id) {
+      const user = await UserModel.findById(req.user.id);
+      if (user && user.purchasedCharacters) {
+        userPurchasedCharacters = user.purchasedCharacters.map(charId => charId.toString());
+      }
+      console.log(`🛒 ユーザー ${req.user.id} の購入済みキャラ:`, userPurchasedCharacters);
     }
+
+    // キャラクタータイプフィルター
+    if (freeOnly === 'true' || characterType === 'free') {
+      filter.characterAccessType = 'free';
+    } else if (characterType === 'purchased') {
+      // 購入済みキャラのみ表示
+      if (userPurchasedCharacters.length > 0) {
+        filter._id = { $in: userPurchasedCharacters };
+      } else {
+        // 購入済みキャラがない場合は空の結果を返す
+        filter._id = { $in: [] };
+      }
+    } else if (characterType === 'unpurchased') {
+      // 未購入キャラのみ表示（プレミアムキャラで未購入のもの）
+      filter.characterAccessType = 'purchaseOnly';
+      if (userPurchasedCharacters.length > 0) {
+        filter._id = { $nin: userPurchasedCharacters };
+      }
+    }
+    // characterType === 'all' の場合はフィルタリングなし
 
     // キーワード検索フィルター（正規表現インジェクション対策）
     if (keyword) {
@@ -79,6 +108,8 @@ router.get('/', charactersRateLimit, auth, async (req, res) => {
       .sort(sortOption)
       .lean();
 
+    console.log(`🔍 フィルター条件:`, { characterType, freeOnly, userPurchasedCount: userPurchasedCharacters.length });
+    console.log(`🔍 適用フィルター:`, filter);
     console.log(`✅ ${characters.length}件のキャラクターを取得`);
     res.json({
       characters,

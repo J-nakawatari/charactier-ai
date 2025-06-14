@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import UserSidebar from '@/components/user/UserSidebar';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { Calendar, TrendingUp, Clock, Users } from 'lucide-react';
+import { Calendar, TrendingUp, Clock, Users, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 
 interface TokenAnalyticsData {
@@ -33,31 +33,12 @@ export default function TokenAnalyticsPage() {
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'quarter'>('month');
 
   useEffect(() => {
-    const fetchTokenAnalytics = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch(`/api/analytics/tokens?range=${timeRange}`, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        setAnalyticsData(data);
-      } catch (error) {
-        console.error('Token analytics fetch error:', error);
-        // フォールバック: モックデータを使用
-        setAnalyticsData(generateMockTokenAnalytics());
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTokenAnalytics();
+    // 現在は未実装のため、空データを設定
+    setIsLoading(true);
+    setTimeout(() => {
+      setAnalyticsData(null); // 未実装状態を示すためにnullを設定
+      setIsLoading(false);
+    }, 500);
   }, [timeRange]);
 
   const generateMockTokenAnalytics = (): TokenAnalyticsData => {
@@ -142,7 +123,7 @@ export default function TokenAnalyticsPage() {
             <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
               <div className="flex items-center space-x-4">
                 <button
-                  onClick={() => router.push(`/${locale}/dashboard`)}
+                  onClick={() => router.back()}
                   className="flex items-center justify-center w-10 h-10 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
                 >
                   <Image
@@ -185,6 +166,32 @@ export default function TokenAnalyticsPage() {
           {isLoading && (
             <div className="flex items-center justify-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            </div>
+          )}
+
+          {/* 未実装機能の表示 */}
+          {!isLoading && !analyticsData && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+              <div className="text-6xl mb-4">🚧</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">トークン分析機能は準備中です</h3>
+              <p className="text-gray-600 mb-6">
+                詳細なトークン使用分析機能は現在開発中です。<br />
+                基本的なトークン情報はダッシュボードでご確認いただけます。
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => router.push(`/${locale}/dashboard`)}
+                  className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  ダッシュボードに戻る
+                </button>
+                <button
+                  onClick={() => router.push(`/${locale}/characters`)}
+                  className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  キャラクターと話す
+                </button>
+              </div>
             </div>
           )}
 
