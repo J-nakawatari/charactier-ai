@@ -226,6 +226,12 @@ function PurchaseSuccessContent() {
     }
   };
 
+  const handleBackToCharacterList = () => {
+    // キャラクター一覧に戻る場合、購入完了フラグを設定
+    localStorage.setItem('purchaseCompleted', 'true');
+    router.push('/ja/characters');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8 text-center">
@@ -265,13 +271,22 @@ function PurchaseSuccessContent() {
                   </div>
                 </div>
                 
-                <button
-                  onClick={handleBackToChat}
-                  className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>{purchaseData.characterName}とチャットする</span>
-                </button>
+                <div className="space-y-3">
+                  <button
+                    onClick={handleBackToChat}
+                    className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>{purchaseData.characterName}とチャットする</span>
+                  </button>
+                  
+                  <button
+                    onClick={handleBackToCharacterList}
+                    className="w-full flex items-center justify-center space-x-2 px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                  >
+                    <span>キャラクター一覧に戻る</span>
+                  </button>
+                </div>
               </>
             ) : (
               <>

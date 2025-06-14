@@ -59,6 +59,7 @@ function CharactersPageContent({
   // ユーザー情報取得関数
   const fetchUserData = useCallback(async () => {
     try {
+      console.log('🔄 ユーザー情報取得中...');
       const response = await fetch('/api/user/profile', {
         headers: {
           ...getAuthHeaders(),
@@ -69,8 +70,14 @@ function CharactersPageContent({
 
       if (response.ok) {
         const userData = await response.json();
+        console.log('✅ ユーザー情報取得完了:', {
+          affinities: userData.affinities?.length || 0,
+          purchasedCharacters: userData.purchasedCharacters?.length || 0
+        });
         setUserAffinities(userData.affinities || []);
         setUserPurchasedCharacters(userData.purchasedCharacters?.map((id: string) => id.toString()) || []);
+      } else {
+        console.error('❌ ユーザー情報取得失敗:', response.status);
       }
     } catch (err) {
       console.error('ユーザー情報取得エラー:', err);
@@ -137,6 +144,18 @@ function CharactersPageContent({
   useEffect(() => {
     fetchUserData();
     fetchCharacters();
+    
+    // 購入完了フラグをチェック
+    const purchaseCompleted = localStorage.getItem('purchaseCompleted');
+    if (purchaseCompleted === 'true') {
+      console.log('🎉 購入完了フラグ検出 - データ強制更新');
+      localStorage.removeItem('purchaseCompleted');
+      // 少し遅延してから再取得（UIの表示を確実にするため）
+      setTimeout(() => {
+        fetchUserData();
+        fetchCharacters();
+      }, 1000);
+    }
   }, [fetchUserData, fetchCharacters]);
 
   // 購入完了イベントリスナー
@@ -153,6 +172,20 @@ function CharactersPageContent({
       window.removeEventListener('characterPurchaseCompleted', handlePurchaseComplete);
     };
   }, [fetchUserData, fetchCharacters]);
+
+  // ページフォーカス時の再取得（購入完了後に戻ってきた場合）
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('🔄 ページフォーカス - ユーザーデータ再取得');
+      fetchUserData();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [fetchUserData]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
