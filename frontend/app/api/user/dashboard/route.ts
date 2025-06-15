@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
     }
 
     // バックエンドAPIにプロキシ
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const isProduction = process.env.NODE_ENV === 'production';
+    const backendUrl = isProduction 
+      ? 'https://charactier-ai.com'
+      : (process.env.BACKEND_URL || 'http://localhost:5000');
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };

@@ -218,7 +218,6 @@ export default function CharacterCard({
             alt={getLocalizedText(character.name)}
             fill
             className="object-cover"
-            unoptimized={true}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

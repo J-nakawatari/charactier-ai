@@ -3,6 +3,8 @@ const withNextIntl = require('next-intl/plugin')('./i18n.ts');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // Next.js Image最適化を無効化（unoptimizedを使用）
+    unoptimized: true,
     domains: [
       'localhost',
       'charactier-ai.com',

@@ -17,21 +17,14 @@ export const normalizeImageUrl = (imageUrl: string | undefined | null): string |
   
   // 相対パスの場合は絶対URLに変換
   if (imageUrl.startsWith('/uploads/')) {
-    // 本番環境かローカル環境かを判定
-    const baseUrl = typeof window !== 'undefined' 
-      ? window.location.origin 
-      : process.env.NEXT_PUBLIC_API_URL || 'https://charactier-ai.com';
-    
-    return `${baseUrl}${imageUrl}`;
+    // 本番環境では直接パスを返す（Next.js rewrites経由でアクセス）
+    return imageUrl;
   }
   
   // uploads/ で始まる場合（先頭スラッシュなし）
   if (imageUrl.startsWith('uploads/')) {
-    const baseUrl = typeof window !== 'undefined' 
-      ? window.location.origin 
-      : process.env.NEXT_PUBLIC_API_URL || 'https://charactier-ai.com';
-    
-    return `${baseUrl}/${imageUrl}`;
+    // 先頭にスラッシュを追加
+    return `/${imageUrl}`;
   }
   
   return imageUrl;
