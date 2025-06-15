@@ -23,6 +23,8 @@ log/
 # OSファイル
 .DS_Store
 Thumbs.db
+# Windows Zone.Identifier files (セキュリティ属性ファイル)
+*:Zone.Identifier
 
 # IDE/Editor
 .vscode/
