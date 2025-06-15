@@ -27,12 +27,16 @@ try {
     res.json({ success: true });
   });
 
-  // ✅ ルータマウント（重複不可能）
-  const dashboardRoutes = require('../routes/dashboard');
-  RouteRegistry.mount('/api/user/dashboard', dashboardRoutes);
-
-  // ❌ これは実行時エラーになる
-  // RouteRegistry.mount('/api/user/dashboard', anotherRouter);
+  // ---------------- Dashboard ----------------------
+  // ※まだルーター実装が無いので読み込みを無効化しておく
+  // import dashboardRoutes from '../routes/dashboard';
+  
+  // RouteRegistry.define(
+  //   'GET',
+  //   '/api/dashboard',
+  //   authenticateToken,
+  //   dashboardRoutes.getDashboard             // or whatever you had
+  // );
 
 } catch (error) {
   console.error('🔴 ルート定義エラー:', error instanceof Error ? error.message : String(error));
