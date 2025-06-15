@@ -1,4 +1,4 @@
-import { createClient } from 'redis';
+import { createClient, RedisClientType } from 'redis';
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
@@ -7,7 +7,7 @@ let redisSubscriber: ReturnType<typeof createClient> | null = null;
 let redisPublisher: ReturnType<typeof createClient> | null = null;
 let isConnecting = false;
 
-export const getRedisClient = async () => {
+export const getRedisClient = async (): Promise<any> => {
   // Redis利用可能性をチェック
   if (process.env.DISABLE_REDIS === 'true') {
     console.log('🚫 Redis無効化モード（メモリフォールバック）');
@@ -69,7 +69,7 @@ export const getRedisClient = async () => {
 // メモリベースのモッククライアント（Redis利用不可時）
 const memoryStore = new Map<string, { value: string; expiry?: number }>();
 
-const createMockRedisClient = () => {
+const createMockRedisClient = (): any => {
   return {
     set: async (key: string, value: string, options?: { EX?: number }) => {
       console.log('📝 Memory Store SET:', key, value);
@@ -99,7 +99,7 @@ const createMockRedisClient = () => {
 };
 
 // 🔄 Pub/Sub専用クライアント取得
-export const getRedisPublisher = async () => {
+export const getRedisPublisher = async (): Promise<any> => {
   if (process.env.DISABLE_REDIS === 'true') {
     return createMockPubSubClient();
   }
@@ -117,7 +117,7 @@ export const getRedisPublisher = async () => {
   return redisPublisher;
 };
 
-export const getRedisSubscriber = async () => {
+export const getRedisSubscriber = async (): Promise<any> => {
   if (process.env.DISABLE_REDIS === 'true') {
     return createMockPubSubClient();
   }
@@ -155,7 +155,7 @@ export const publishSecurityEvent = async (eventData: any) => {
 // モックPub/Subクライアント（Redis利用不可時）
 const mockSubscribers = new Map<string, Set<Function>>();
 
-const createMockPubSubClient = () => {
+const createMockPubSubClient = (): any => {
   return {
     publish: async (channel: string, message: string) => {
       console.log('📡 Mock Publish:', channel, message);
