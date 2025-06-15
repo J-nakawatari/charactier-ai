@@ -11,7 +11,7 @@ export const getApiUrl = (): string => {
     
     // 本番ドメインの場合
     if (origin.includes('charactier-ai.com')) {
-      return 'http://charactier-ai.com:5000';
+      return 'https://charactier-ai.com:5000';
     }
   }
   
