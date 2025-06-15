@@ -391,7 +391,12 @@ export default function CharacterEditPage() {
         stripeProductId: formData.stripeProductId,
         purchasePrice: formData.purchasePrice,
         isActive: formData.isActive,
-        galleryImages: galleryImagesForSave
+        galleryImages: galleryImagesForSave,
+        // 画像URL情報を含める
+        imageCharacterSelect: formData.imageCharacterSelectUrl,
+        imageDashboard: formData.imageDashboardUrl,
+        imageChatBackground: formData.imageChatBackgroundUrl,
+        imageChatAvatar: formData.imageChatAvatarUrl
       };
       
       const basicSaveResponse = await fetch(`${API_BASE_URL}/api/characters/${characterId}`, {
