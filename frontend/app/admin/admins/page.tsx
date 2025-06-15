@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { Plus, Shield, User, Mail, Calendar, MoreVertical, Edit, Trash2 } from 'lucide-react';
@@ -26,9 +26,9 @@ export default function AdminListPage() {
 
   useEffect(() => {
     fetchAdmins();
-  }, []);
+  }, [fetchAdmins]);
 
-  const fetchAdmins = async () => {
+  const fetchAdmins = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -60,7 +60,7 @@ export default function AdminListPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [error]);
 
   const filteredAdmins = admins.filter(admin =>
     (admin.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -83,7 +83,7 @@ export default function DashboardPage() {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [locale, router]);
 
   // モック切り替え用（開発時のみ）
   const toggleLowTokens = () => {

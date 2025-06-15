@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const token = req.headers.get('authorization');
-    const { id } = params;
+    const { id } = await params;
 
     console.log('🔍 API Proxy: 価格取得リクエスト:', id);
 
