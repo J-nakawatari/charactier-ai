@@ -22,7 +22,8 @@ import authRoutes from './routes/auth';
 import characterRoutes from './routes/characters';
 import modelRoutes from './routes/modelSettings';
 import notificationRoutes from './routes/notifications';
-const userRoutes = require('../routes/user');
+// const userRoutes = require('./routes/user');
+// const dashboardRoutes = require('./routes/dashboard');
 import { validateMessage } from './utils/contentFilter';
 import TokenUsage from '../models/TokenUsage';
 import CharacterPromptCache from '../models/CharacterPromptCache';
@@ -592,7 +593,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 
 // ユーザールート
-app.use('/api/user', userRoutes);
+// app.use('/api/user', userRoutes);
 
 // 管理者ルート - モデル設定
 app.use('/api/admin', modelRoutes);
@@ -633,8 +634,7 @@ routeRegistry.mount('/api/characters', characterRoutes);
 routeRegistry.mount('/api/notifications', notificationRoutes);
 
 // Dashboard API
-const dashboardRoutes = require('../routes/dashboard');
-routeRegistry.mount('/api/user/dashboard', dashboardRoutes);
+// routeRegistry.mount('/api/user/dashboard', dashboardRoutes);
 
 // 現在のユーザー情報確認エンドポイント（デバッグ用）
 routeRegistry.define('GET', '/api/debug/current-user', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {

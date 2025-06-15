@@ -4,7 +4,7 @@ module.exports = {
     /* ---------- Frontend (Next.js) ---------- */
     {
       name: 'charactier-frontend',
-      cwd: '/var/www/charactier-ai/frontend',
+      cwd: './frontend',
 
       // ── ❶ bash でラッパースクリプトを実行 ──
       script: './node_modules/.bin/next',
@@ -19,7 +19,7 @@ module.exports = {
     /* ---------- Backend (Express) ---------- */
     {
       name: 'charactier-backend',
-      cwd : '/var/www/charactier-ai/backend',
+      cwd : './backend',
       script: 'dist/src/index.js',    // 本番用メインエントリーポイント
       exec_mode: 'fork',
       instances: 1,
