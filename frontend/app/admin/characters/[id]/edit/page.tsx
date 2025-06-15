@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useToast } from '@/contexts/ToastContext';
 import { getCroppedImg } from '@/utils/cropImage';
 import { compressImage, isImageSizeValid, formatFileSize } from '@/utils/imageCompression';
+import { normalizeImageUrl } from '@/utils/imageUtils';
 import ImageCropper from '@/components/admin/ImageCropper';
 import TranslationEditor from '@/components/admin/TranslationEditor';
 import { ArrowLeft, Save, X, Upload } from 'lucide-react';
@@ -893,7 +894,7 @@ export default function CharacterEditPage() {
                           <Image 
                             src={formData.imageCharacterSelect 
                               ? URL.createObjectURL(formData.imageCharacterSelect) 
-                              : formData.imageCharacterSelectUrl
+                              : normalizeImageUrl(formData.imageCharacterSelectUrl) || ''
                             } 
                             alt="キャラクター選択" 
                             width={80}
@@ -937,7 +938,7 @@ export default function CharacterEditPage() {
                           <Image 
                             src={formData.imageDashboard 
                               ? URL.createObjectURL(formData.imageDashboard) 
-                              : formData.imageDashboardUrl
+                              : normalizeImageUrl(formData.imageDashboardUrl) || ''
                             } 
                             alt="ダッシュボード" 
                             width={80}
@@ -981,7 +982,7 @@ export default function CharacterEditPage() {
                           <Image 
                             src={formData.imageChatBackground 
                               ? URL.createObjectURL(formData.imageChatBackground) 
-                              : formData.imageChatBackgroundUrl
+                              : normalizeImageUrl(formData.imageChatBackgroundUrl) || ''
                             } 
                             alt="チャット背景" 
                             width={80}
@@ -1025,7 +1026,7 @@ export default function CharacterEditPage() {
                           <Image 
                             src={formData.imageChatAvatar 
                               ? URL.createObjectURL(formData.imageChatAvatar) 
-                              : formData.imageChatAvatarUrl
+                              : normalizeImageUrl(formData.imageChatAvatarUrl) || ''
                             } 
                             alt="チャットアバター" 
                             width={80}
@@ -1095,7 +1096,7 @@ export default function CharacterEditPage() {
                             />
                           ) : galleryItem?.imageUrl ? (
                             <Image 
-                              src={galleryItem.imageUrl} 
+                              src={normalizeImageUrl(galleryItem.imageUrl) || ''} 
                               alt={`ギャラリー ${index + 1}`} 
                               width={64}
                               height={64}
