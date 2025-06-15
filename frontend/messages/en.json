@@ -81,6 +81,14 @@
       "invalidEmail": "Please enter a valid email address"
     }
   },
+  "library": {
+    "title": "Character Library",
+    "subtitle": "Enjoy special images unlocked based on your intimacy level",
+    "noImages": "No unlocked images yet",
+    "unlockedAt": "Unlocked at intimacy level {level}",
+    "loading": "Loading...",
+    "error": "Failed to load data"
+  },
   "sidebar": {
     "home": "Home",
     "characters": "Characters", 
