@@ -5,17 +5,21 @@ module.exports = {
     {
       name: 'charactier-frontend',
       cwd: '/var/www/charactier-ai/frontend',
-      script: './node_modules/.bin/next',   // ← npm 経由より確実
-      args: 'start -p 3000',
-      exec_mode: 'fork',                    // 1 プロセスで十分
-      instances: 1,
+
+      // ── ❶ bash でラッパースクリプトを実行 ──
+      script: './node_modules/.bin/next',
+      args:   'start -p 3000',
+
+      interpreter: 'bash',        //  ←★ ここがポイント
+      exec_mode  : 'fork',
+      instances  : 1,
       env: { NODE_ENV: 'production' }
     },
 
     /* ---------- Backend (Express) ---------- */
     {
       name: 'charactier-backend',
-      cwd: '/var/www/charactier-ai/backend',
+      cwd : '/var/www/charactier-ai/backend',
       script: 'dist/src/index-new.js',
       exec_mode: 'fork',
       instances: 1,
