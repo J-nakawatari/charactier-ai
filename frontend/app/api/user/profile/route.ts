@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
     
     // バックエンドAPIに転送
-    const backendUrl = `http://localhost:3004/api/user/dashboard`;
+    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:3004'}/api/user/dashboard`;
     const response = await fetch(backendUrl, {
       method: 'GET',
       headers,
@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
     
     // ユーザープロファイル形式に整形
+    console.log('🔍 Backend data.user.purchasedCharacters:', data.user?.purchasedCharacters);
     const userProfile = {
       user: {
         ...data.user,
@@ -54,8 +55,10 @@ export async function GET(request: NextRequest) {
       totalPurchased: data.tokens?.totalPurchased || 0,
       totalUsed: data.tokens?.totalUsed || 0,
       affinities: data.affinities || [],
-      recentChats: data.recentChats || []
+      recentChats: data.recentChats || [],
+      purchasedCharacters: data.user?.purchasedCharacters?.map((char: any) => char.id) || []
     };
+    console.log('🔍 Frontend userProfile.purchasedCharacters:', userProfile.purchasedCharacters);
     
     return NextResponse.json(userProfile);
     

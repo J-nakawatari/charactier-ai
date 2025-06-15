@@ -1,0 +1,40 @@
+#!/bin/sh
+# 機械的にAPI重複を防ぐpre-commitフック
+
+echo "🔍 API重複チェック実行中..."
+
+# 1. ESLintでAPI重複をチェック
+cd backend
+npx eslint src/**/*.ts --rule="custom-api-rules/no-duplicate-routes: error"
+
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint: API重複が検出されました"
+  exit 1
+fi
+
+# 2. TypeScriptコンパイルチェック（型レベル重複検出）
+npx tsc --noEmit
+
+if [ $? -ne 0 ]; then
+  echo "❌ TypeScript: 型エラー（重複の可能性）が検出されました"
+  exit 1
+fi
+
+# 3. RouteRegistryテスト（実行時重複検出）
+node -e "
+  try {
+    require('./src/index-new.ts');
+    console.log('✅ RouteRegistry: 重複なし');
+  } catch (error) {
+    if (error.message.includes('重複')) {
+      console.error('❌ RouteRegistry:', error.message);
+      process.exit(1);
+    }
+  }
+"
+
+if [ $? -ne 0 ]; then
+  exit 1
+fi
+
+echo "✅ 全てのAPI重複チェックが完了しました"

@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     const authHeader = req.headers.get('Authorization');
     
     // バックエンドAPIに転送
-    const backendUrl = `http://localhost:3004/api/auth/user`;
+    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:3004'}/api/auth/user`;
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };

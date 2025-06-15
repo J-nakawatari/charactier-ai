@@ -25,9 +25,10 @@ router.get('/', authenticateToken, async (req, res) => {
     const userId = req.user.id;
     console.log('📊 Dashboard API called for user:', userId);
 
-    // 1. ユーザー基本情報を取得
+    // 1. ユーザー基本情報を取得（購入済みキャラクター含む）
     const user = await UserModel.findById(userId)
-      .select('_id email name createdAt lastLogin affinities tokenBalance totalSpent selectedCharacter')
+      .select('_id email name createdAt lastLogin affinities tokenBalance totalSpent selectedCharacter purchasedCharacters')
+      .populate('purchasedCharacters', 'name')
       .lean();
     
     if (!user) {
@@ -293,7 +294,13 @@ router.get('/', authenticateToken, async (req, res) => {
         email: user.email,
         createdAt: user.createdAt,
         lastLoginAt: user.lastLogin,
-        selectedCharacter: user.selectedCharacter
+        selectedCharacter: user.selectedCharacter,
+        purchasedCharacters: user.purchasedCharacters?.map((char) => ({
+          id: char._id,
+          name: typeof char === 'object' && char.name ? 
+            (typeof char.name === 'object' ? (char.name.ja || char.name.en || 'Unknown') : char.name) : 
+            'Unknown Character'
+        })) || []
       },
       tokens: {
         balance,
@@ -315,6 +322,7 @@ router.get('/', authenticateToken, async (req, res) => {
       tokenBalance: response.tokens.balance,
       recentUsage: response.tokens.recentUsage.length
     });
+    console.log('🔍 Dashboard response purchasedCharacters:', response.user.purchasedCharacters);
 
     res.json(response);
 

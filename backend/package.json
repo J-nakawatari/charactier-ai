@@ -7,7 +7,9 @@
         "lint": "eslint src/**/*.ts",
         "lint:fix": "eslint src/**/*.ts --fix",
         "type-check": "tsc --noEmit",
-        "test:mood": "ts-node src/scripts/testMoodEngine.ts"
+        "test:mood": "ts-node src/scripts/testMoodEngine.ts",
+        "check-api-duplicates": "node ../scripts/check-api-duplicates.js",
+        "precommit": "npm run lint && npm run type-check && npm run check-api-duplicates"
     },
     "devDependencies": {
         "@types/express": "^5.0.3",

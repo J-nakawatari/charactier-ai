@@ -38,12 +38,10 @@ import { applyMoodTrigger } from './services/moodEngine';
 import { startAllMoodJobs } from './scripts/moodDecay';
 import { calcTokensToGive, logTokenConfig } from './config/tokenConfig';
 const TokenService = require('../services/tokenService');
-import routeRegistry from './core/RouteRegistry';
 
 dotenv.config({ path: './.env' });
 
 const app = express();
-routeRegistry.setApp(app);
 const PORT = process.env.PORT || 3004;
 
 // MongoDB接続
@@ -601,9 +599,9 @@ import adminUsersRoutes from './routes/adminUsers';
 import adminTokenPacksRoutes from './routes/adminTokenPacks';
 import adminTokenUsageRoutes from './routes/adminTokenUsage';
 
-routeRegistry.mount('/admin/users', adminUsersRoutes);
-routeRegistry.mount('/api/admin/token-packs', adminTokenPacksRoutes);
-routeRegistry.mount('/api/admin/token-usage', adminTokenUsageRoutes);
+app.use('/admin/users', adminUsersRoutes);
+app.use('/api/admin/token-packs', adminTokenPacksRoutes);
+app.use('/api/admin/token-usage', adminTokenUsageRoutes);
 
 // デバッグ: 登録されたルートを出力
 console.log('🔧 Registered admin routes:');
@@ -626,17 +624,17 @@ app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {
 }));
 
 // キャラクタールート
-routeRegistry.mount('/api/characters', characterRoutes);
+app.use('/api/characters', characterRoutes);
 
 // お知らせルート（ユーザー用 + 管理者用）
-routeRegistry.mount('/api/notifications', notificationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Dashboard API
 const dashboardRoutes = require('../routes/dashboard');
-routeRegistry.mount('/api/user/dashboard', dashboardRoutes);
+app.use('/api/user/dashboard', dashboardRoutes);
 
 // 現在のユーザー情報確認エンドポイント（デバッグ用）
-routeRegistry.define('GET', '/api/debug/current-user', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get('/api/debug/current-user', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     res.json({
       user: req.user,
@@ -655,7 +653,7 @@ routeRegistry.define('GET', '/api/debug/current-user', authenticateToken, async 
 
 
 // ユーザープロフィール更新
-routeRegistry.define('PUT', '/api/user/profile', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.put('/api/user/profile', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { name } = req.body;
 
@@ -1522,8 +1520,702 @@ const validateTokenPriceRatio = (tokens: number, price: number): boolean => {
   return tokens >= minTokens && tokens <= maxTokens;
 };
 
-// 削除: 重複するtoken-packs API（adminTokenPacksRoutesを使用）
+// Token Packs CRUD API endpoints
+app.get('/api/admin/token-packs', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  console.log('📦 Token Packs 一覧取得 API called');
+  
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
+    return;
+  }
 
+  try {
+    // Query parameters
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
+    
+    if (isMongoConnected) {
+      // MongoDB実装
+      console.log('🍃 Using MongoDB for token packs');
+      
+      // フィルター条件構築
+      const filter: any = {};
+      if (isActive !== undefined) {
+        filter.isActive = isActive;
+      }
+      
+      // ページネーション計算
+      const skip = (page - 1) * limit;
+      
+      // データ取得（並行実行）
+      const [tokenPacks, total] = await Promise.all([
+        TokenPackModel.find(filter)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        TokenPackModel.countDocuments(filter)
+      ]);
+      
+      const pagination = {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      };
+
+      console.log('✅ MongoDB Token Packs 取得完了:', {
+        totalPacks: total,
+        returnedPacks: tokenPacks.length,
+        page,
+        isActiveFilter: isActive
+      });
+
+      res.json({
+        tokenPacks,
+        pagination
+      });
+      
+    } else {
+      // モック実装（従来通り）
+      console.log('🎭 Using mock data for token packs');
+      
+      // データベースからトークンパックを取得（フィルタリング付き）
+      const query: any = {};
+      if (isActive !== undefined) {
+        query.isActive = isActive;
+      }
+      const tokenPacks = await TokenPackModel.find(query).sort({ tokens: 1 });
+      
+      // Pagination
+      const total = tokenPacks.length;
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedPacks = tokenPacks.slice(startIndex, endIndex);
+      
+      // Calculate profit margin and token per yen for each pack
+      const enrichedPacks = paginatedPacks.map(pack => ({
+        ...pack,
+        profitMargin: ((pack.tokens - pack.price * 2) / pack.tokens * 100),
+        tokenPerYen: pack.tokens / pack.price
+      }));
+      
+      const pagination = {
+        total: total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      };
+
+      console.log('✅ Token Packs データ取得完了:', {
+        totalPacks: total,
+        returnedPacks: enrichedPacks.length,
+        page,
+        isActiveFilter: isActive
+      });
+
+      res.json({
+        tokenPacks: enrichedPacks,
+        pagination
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Token Packs 取得エラー:', error);
+    console.error('Error details:', {
+      name: (error as Error).name,
+      message: (error as Error).message,
+      stack: (error as Error).stack
+    });
+    res.status(500).json({
+      success: false,
+      message: 'トークンパック一覧の取得に失敗しました',
+      error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+    });
+  }
+});
+
+// SSE用エンドポイント (購入完了のリアルタイム通知)
+app.get('/api/purchase/events/:sessionId', async (req: Request, res: Response): Promise<void> => {
+  const { sessionId } = req.params;
+  
+  console.log('🌊 SSE接続開始:', sessionId);
+  
+  // SSEヘッダー設定
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
+  
+  try {
+    const redis = await getRedisClient();
+    let intervalId: NodeJS.Timeout;
+    let timeoutId: NodeJS.Timeout;
+    
+    // 1秒ごとにRedisをチェック
+    intervalId = setInterval(async () => {
+      try {
+        const purchaseData = await redis.get(`purchase:${sessionId}`);
+        
+        if (purchaseData) {
+          console.log('✅ SSE: 購入データ発見:', purchaseData);
+          
+          // クライアントにデータを送信
+          res.write(`data: ${purchaseData}\n\n`);
+          
+          // クリーンアップ
+          clearInterval(intervalId);
+          clearTimeout(timeoutId);
+          res.end();
+          
+          // Redisからデータを削除
+          await redis.del(`purchase:${sessionId}`);
+          
+          return;
+        }
+      } catch (error) {
+        console.error('❌ SSE Redis取得エラー:', error);
+      }
+    }, 1000);
+    
+    // 30秒でタイムアウト
+    timeoutId = setTimeout(() => {
+      console.log('⏰ SSE タイムアウト:', sessionId);
+      clearInterval(intervalId);
+      res.write(`data: {"error": "timeout"}\n\n`);
+      res.end();
+    }, 30000);
+    
+    // クライアント接続が閉じられた場合のクリーンアップ
+    req.on('close', () => {
+      console.log('🔌 SSE接続終了:', sessionId);
+      clearInterval(intervalId);
+      clearTimeout(timeoutId);
+    });
+    
+  } catch (error) {
+    console.error('❌ SSE初期化エラー:', error);
+    res.status(500).json({ error: 'SSE connection failed' });
+  }
+});
+
+// セッション情報取得API (購入タイプと詳細確認用)
+app.get('/api/purchase/session/:sessionId', async (req: Request, res: Response): Promise<void> => {
+  const { sessionId } = req.params;
+  
+  console.log('🔍 Stripe セッション情報取得:', sessionId);
+  
+  try {
+    // Stripe初期化チェック
+    if (!stripe) {
+      res.status(500).json({ error: 'Stripe not initialized' });
+      return;
+    }
+
+    // 実際のStripe APIからセッション情報を取得
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['line_items']
+    });
+    
+    if (!session.line_items?.data?.[0]?.price?.id) {
+      res.status(404).json({ error: 'Session not found or invalid' });
+      return;
+    }
+    
+    const priceId = session.line_items.data[0].price.id;
+    
+    // 価格IDからキャラクター購入かトークン購入かを判別
+    const character = await CharacterModel.findOne({ stripeProductId: priceId });
+    
+    if (character) {
+      // キャラクター購入の場合
+      res.json({
+        type: 'character',
+        characterId: character._id.toString(),
+        characterName: character.name.ja || character.name.en || 'キャラクター',
+        amount: session.amount_total
+      });
+    } else {
+      // トークン購入の場合（従来のロジック）
+      const tokenPackMap: { [key: string]: number } = {
+        'price_1QbxZCJGaR4OtJ6FQlMEHOkn': 833333,    // 5,000円 → 833,333トークン
+        'price_1QbxZCJGaR4OtJ6FQlMEHOko': 1666666,   // 10,000円 → 1,666,666トークン  
+        'price_1QbxZCJGaR4OtJ6FQlMEHOkp': 3333333,   // 20,000円 → 3,333,333トークン
+        'price_1QbxZCJGaR4OtJ6FQlMEHOkq': 5000000    // 30,000円 → 5,000,000トークン
+      };
+      
+      let estimatedTokens = 833333; // デフォルト値
+      
+      // 実際のトークンパックを検索して正確な値を取得
+      for (const [packPriceId, tokens] of Object.entries(tokenPackMap)) {
+        if (priceId === packPriceId) {
+          estimatedTokens = tokens;
+          break;
+        }
+      }
+      
+      console.log('📋 推定購入トークン数:', estimatedTokens);
+      
+      res.json({
+        type: 'token',
+        sessionId,
+        tokens: estimatedTokens,
+        amount: session.amount_total,
+        status: 'completed'
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ セッション情報取得エラー:', error);
+    res.status(500).json({ 
+      error: 'Failed to retrieve session information',
+      sessionId
+    });
+  }
+});
+
+app.post('/api/admin/token-packs', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  console.log('📦 Token Pack 作成 API called:', req.body);
+  
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
+    return;
+  }
+
+  const { 
+    name, 
+    description, 
+    tokens, 
+    price, 
+    purchaseAmountYen,
+    tokensPurchased,
+    priceId, 
+    isActive = true 
+  } = req.body;
+  
+  // Support both new and legacy field names
+  const finalTokens = tokensPurchased || tokens;
+  const finalPrice = purchaseAmountYen || price;
+  
+  // Required fields validation
+  if (!name || !finalTokens || !finalPrice) {
+    res.status(400).json({ 
+      success: false,
+      message: '必須フィールドが不足しています (name, tokens/tokensPurchased, price/purchaseAmountYen)' 
+    });
+    return;
+  }
+  
+  // Type validation
+  if (typeof finalTokens !== 'number' || typeof finalPrice !== 'number' || finalTokens <= 0 || finalPrice <= 0) {
+    res.status(400).json({ 
+      success: false,
+      message: 'tokens と price は正の数値である必要があります' 
+    });
+    return;
+  }
+  
+  // 新トークン計算モデルのバリデーション（利益率90%）
+  if (!validateTokenPriceRatio(finalTokens, finalPrice)) {
+    const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+    const expectedTokens = calcTokensToGive(finalPrice, currentModel);
+    res.status(400).json({ 
+      success: false,
+      message: `${currentModel}モデル違反: ${finalPrice}円に対して${finalTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン（利益率90%設計）` 
+    });
+    return;
+  }
+
+  try {
+    if (isMongoConnected) {
+      // MongoDB実装
+      console.log('🍃 Using MongoDB for token pack creation');
+      
+      // priceId重複チェック（MongoDB）
+      if (priceId) {
+        const existingPack = await TokenPackModel.findOne({ priceId });
+        if (existingPack) {
+          res.status(400).json({ 
+            success: false,
+            message: 'この priceId は既に使用されています' 
+          });
+          return;
+        }
+      }
+      
+      // MongoDB用データ準備
+      const tokenPackData = {
+        name,
+        description: description || '',
+        tokens: finalTokens,
+        price: finalPrice,
+        priceId: priceId || `price_${Date.now()}`,
+        isActive
+      };
+      
+      // MongoDBに保存
+      const newTokenPack = new TokenPackModel(tokenPackData);
+      const savedPack = await newTokenPack.save();
+      
+      console.log('✅ MongoDB Token Pack 作成完了:', {
+        id: savedPack._id,
+        name: savedPack.name,
+        profitMargin: savedPack.profitMargin
+      });
+
+      res.status(201).json({
+        success: true,
+        created: savedPack
+      });
+      
+    } else {
+      // データベース実装
+      console.log('💾 Creating token pack in database');
+      
+      // Check if priceId already exists
+      if (priceId) {
+        const existingPack = await TokenPackModel.findOne({ priceId });
+        if (existingPack) {
+          res.status(400).json({ 
+            success: false,
+            message: 'この priceId は既に使用されています' 
+          });
+          return;
+        }
+      }
+      
+      // Create new token pack
+      const newTokenPack = new TokenPackModel({
+        name,
+        description: description || '',
+        tokens: finalTokens,
+        price: finalPrice,
+        priceId: priceId || `price_${Date.now()}`,
+        isActive
+      });
+      
+      const savedPack = await newTokenPack.save();
+      
+      console.log('✅ Token Pack 作成完了:', {
+        id: savedPack._id,
+        name: savedPack.name,
+        tokens: savedPack.tokens,
+        price: savedPack.price
+      });
+
+      res.status(201).json({
+        success: true,
+        created: savedPack
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Token Pack 作成エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'トークンパックの作成に失敗しました'
+    });
+  }
+});
+
+app.get('/api/admin/token-packs/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  console.log('📦 Token Pack 詳細取得 API called:', { tokenPackId: req.params.id });
+  
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
+    return;
+  }
+
+  const { id } = req.params;
+  
+  try {
+    if (isMongoConnected) {
+      // MongoDB実装
+      console.log('🍃 Using MongoDB for token pack retrieval');
+      
+      const tokenPack = await TokenPackModel.findById(id).lean();
+      
+      if (!tokenPack) {
+        res.status(404).json({ 
+          success: false,
+          message: 'トークンパックが見つかりません' 
+        });
+        return;
+      }
+
+      console.log('✅ MongoDB Token Pack 詳細取得完了:', tokenPack.name);
+      res.json(tokenPack);
+      
+    } else {
+      // データベース実装
+      console.log('💾 Retrieving token pack from database');
+      
+      const tokenPack = await TokenPackModel.findById(id);
+      
+      if (!tokenPack) {
+        res.status(404).json({ 
+          success: false,
+          message: 'トークンパックが見つかりません' 
+        });
+        return;
+      }
+
+      console.log('✅ Token Pack 詳細取得完了:', tokenPack.name);
+      res.json(tokenPack);
+    }
+    
+  } catch (error) {
+    console.error('❌ Token Pack 詳細取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'トークンパック詳細の取得に失敗しました'
+    });
+  }
+});
+
+app.put('/api/admin/token-packs/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  console.log('📦 Token Pack 更新 API called:', { tokenPackId: req.params.id, body: req.body });
+  
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
+    return;
+  }
+
+  const { id } = req.params;
+  const { name, description, tokens, price, priceId, isActive } = req.body;
+  
+  try {
+    if (isMongoConnected) {
+      // MongoDB実装
+      console.log('🍃 Using MongoDB for token pack update');
+      
+      // 既存パック取得
+      const existingPack = await TokenPackModel.findById(id);
+      if (!existingPack) {
+        res.status(404).json({ 
+          success: false,
+          message: 'トークンパックが見つかりません' 
+        });
+        return;
+      }
+      
+      // Validate tokens and price if provided
+      const newTokens = tokens !== undefined ? tokens : existingPack.tokens;
+      const newPrice = price !== undefined ? price : existingPack.price;
+      
+      if (typeof newTokens !== 'number' || typeof newPrice !== 'number' || newTokens <= 0 || newPrice <= 0) {
+        res.status(400).json({ 
+          success: false,
+          message: 'tokens と price は正の数値である必要があります' 
+        });
+        return;
+      }
+      
+      // 新トークン計算モデルのバリデーション（利益率90%）
+      if (!validateTokenPriceRatio(newTokens, newPrice)) {
+        const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+        const expectedTokens = calcTokensToGive(newPrice, currentModel);
+        res.status(400).json({ 
+          success: false,
+          message: `${currentModel}モデル違反: ${newPrice}円に対して${newTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン（利益率90%設計）` 
+        });
+        return;
+      }
+      
+      // priceId重複チェック（MongoDB）
+      if (priceId && priceId !== existingPack.priceId) {
+        const duplicatePack = await TokenPackModel.findOne({ 
+          priceId, 
+          _id: { $ne: id } 
+        });
+        if (duplicatePack) {
+          res.status(400).json({ 
+            success: false,
+            message: 'この priceId は既に他のパックで使用されています' 
+          });
+          return;
+        }
+      }
+      
+      // 更新データ準備
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name;
+      if (description !== undefined) updateData.description = description;
+      if (tokens !== undefined) updateData.tokens = newTokens;
+      if (price !== undefined) updateData.price = newPrice;
+      if (priceId !== undefined) updateData.priceId = priceId;
+      if (isActive !== undefined) updateData.isActive = isActive;
+      
+      // MongoDB更新（pre-saveミドルウェアで利益率等を自動計算）
+      const updatedPack = await TokenPackModel.findByIdAndUpdate(
+        id,
+        updateData,
+        { new: true, runValidators: true }
+      );
+      
+      console.log('✅ MongoDB Token Pack 更新完了:', {
+        id: updatedPack!._id,
+        name: updatedPack!.name,
+        profitMargin: updatedPack!.profitMargin
+      });
+
+      res.json(updatedPack);
+      
+    } else {
+      // データベース実装
+      console.log('💾 Updating token pack in database');
+      
+      const existingPack = await TokenPackModel.findById(id);
+      if (!existingPack) {
+        res.status(404).json({ 
+          success: false,
+          message: 'トークンパックが見つかりません' 
+        });
+        return;
+      }
+      
+      // Validate tokens and price if provided
+      const newTokens = tokens !== undefined ? tokens : existingPack.tokens;
+      const newPrice = price !== undefined ? price : existingPack.price;
+      
+      if (typeof newTokens !== 'number' || typeof newPrice !== 'number' || newTokens <= 0 || newPrice <= 0) {
+        res.status(400).json({ 
+          success: false,
+          message: 'tokens と price は正の数値である必要があります' 
+        });
+        return;
+      }
+      
+      // 新トークン計算モデルのバリデーション（利益率90%）
+      if (!validateTokenPriceRatio(newTokens, newPrice)) {
+        const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+        const expectedTokens = calcTokensToGive(newPrice, currentModel);
+        res.status(400).json({ 
+          success: false,
+          message: `${currentModel}モデル違反: ${newPrice}円に対して${newTokens}トークンは適切ではありません。推奨トークン数: 約${expectedTokens.toLocaleString()}トークン（利益率90%設計）` 
+        });
+        return;
+      }
+      
+      // Check if priceId is being changed and already exists elsewhere
+      if (priceId && priceId !== existingPack.priceId) {
+        const duplicatePack = await TokenPackModel.findOne({ priceId, _id: { $ne: id } });
+        if (duplicatePack) {
+          res.status(400).json({ 
+            success: false,
+            message: 'この priceId は既に他のパックで使用されています' 
+          });
+          return;
+        }
+      }
+      
+      // Update token pack
+      const updatedPack = await TokenPackModel.findByIdAndUpdate(
+        id,
+        {
+          ...(name !== undefined && { name }),
+          ...(description !== undefined && { description }),
+          tokens: newTokens,
+          price: newPrice,
+          ...(priceId !== undefined && { priceId }),
+          ...(isActive !== undefined && { isActive })
+        },
+        { new: true, runValidators: true }
+      );
+      
+      console.log('✅ Token Pack 更新完了:', {
+        id: updatedPack!._id,
+        name: updatedPack!.name,
+        tokens: updatedPack!.tokens,
+        price: updatedPack!.price
+      });
+
+      res.json(updatedPack);
+    }
+    
+  } catch (error) {
+    console.error('❌ Token Pack 更新エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'トークンパックの更新に失敗しました'
+    });
+  }
+});
+
+app.delete('/api/admin/token-packs/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  console.log('📦 Token Pack 削除 API called:', { tokenPackId: req.params.id });
+  
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
+    return;
+  }
+
+  const { id } = req.params;
+  
+  try {
+    if (isMongoConnected) {
+      // MongoDB実装
+      console.log('🍃 Using MongoDB for token pack deletion');
+      
+      const deletedPack = await TokenPackModel.findByIdAndDelete(id);
+      
+      if (!deletedPack) {
+        res.status(404).json({ 
+          success: false,
+          message: 'トークンパックが見つかりません' 
+        });
+        return;
+      }
+      
+      console.log('✅ MongoDB Token Pack 削除完了:', deletedPack.name);
+
+      res.json({
+        success: true,
+        message: `トークンパック「${deletedPack.name}」を削除しました`,
+        deletedPack: {
+          _id: deletedPack._id,
+          name: deletedPack.name
+        }
+      });
+      
+    } else {
+      // データベース実装
+      console.log('💾 Deleting token pack from database');
+      
+      const tokenPack = await TokenPackModel.findById(id);
+      
+      if (!tokenPack) {
+        res.status(404).json({ 
+          success: false,
+          message: 'トークンパックが見つかりません' 
+        });
+        return;
+      }
+      
+      await TokenPackModel.findByIdAndDelete(id);
+      
+      console.log('✅ Token Pack 削除完了:', tokenPack.name);
+
+      res.json({
+        success: true,
+        message: `トークンパック「${tokenPack.name}」を削除しました`,
+        deletedPack: {
+          _id: tokenPack._id,
+          name: tokenPack.name
+        }
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Token Pack 削除エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'トークンパックの削除に失敗しました'
+    });
+  }
+});
 
 // Stripe Price API endpoint
 app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Request, res: Response): Promise<void> => {
@@ -2315,7 +3007,7 @@ app.post('/admin/users/:userId/reset-tokens', authenticateToken, async (req: Req
 });
 
 // 管理者向けユーザー停止/復活（より具体的なルートを先に定義）
-routeRegistry.define('PUT', '/api/admin/users/:id/status', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.put('/api/admin/users/:id/status', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user || !(req.user as any).isAdmin) {
       res.status(403).json({ error: 'Admin access required' });
@@ -2388,7 +3080,7 @@ routeRegistry.define('PUT', '/api/admin/users/:id/status', authenticateToken, as
 });
 
 // 管理者向けユーザー削除（論理削除）
-routeRegistry.define('DELETE', '/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.delete('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user || !(req.user as any).isAdmin) {
       res.status(403).json({ error: 'Admin access required' });
@@ -4154,7 +4846,7 @@ app.post('/api/admin/cache/cleanup', authenticateToken, async (req: AuthRequest,
 /**
  * 🎯 特定キャラクターのキャッシュ無効化
  */
-routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.delete('/api/admin/cache/character/:characterId', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { characterId } = req.params;
     const reason = req.body.reason || 'manual_admin_action';

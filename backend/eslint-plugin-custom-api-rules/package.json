@@ -1,0 +1,13 @@
+{
+  "name": "eslint-plugin-custom-api-rules",
+  "version": "1.0.0",
+  "description": "ESLint plugin to prevent API route duplication",
+  "main": "index.js",
+  "keywords": [
+    "eslint",
+    "plugin",
+    "api",
+    "routes",
+    "duplicate"
+  ]
+}
