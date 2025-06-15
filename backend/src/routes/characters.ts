@@ -1,14 +1,14 @@
-import type { AuthRequest } from '../types/express';
-import { Router, Request, Response, NextFunction } from 'express';
+import type { AuthRequest } from '../middleware/auth';
+import { Router, Response, NextFunction } from 'express';
 import { CharacterModel } from '../models/CharacterModel';
 import { UserModel } from '../models/UserModel';
 import { authenticateToken } from '../middleware/auth';
 import { uploadImage, optimizeImage } from '../utils/fileUpload';
 
-const router = Router();
+const router: Router = Router();
 
 // キャラクター作成（管理者のみ）
-router.post('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     console.log('📥 Received character creation request:', {
       headers: req.headers,
@@ -321,7 +321,7 @@ router.get('/:id/affinity-images', authenticateToken, async (req: AuthRequest, r
 });
 
 // 翻訳データ取得（/:idより前に定義する必要あり）
-router.get('/:id/translations', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.get('/:id/translations', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const character = await CharacterModel.findById(req.params.id);
     
@@ -362,7 +362,7 @@ router.get('/:id/translations', authenticateToken, async (req: Request, res: Res
 });
 
 // 翻訳データ保存（/:idより前に定義する必要あり）
-router.put('/:id/translations', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { name, description, personalityPreset, personalityTags, adminPrompt, defaultMessage, limitMessage } = req.body;
     
@@ -458,7 +458,7 @@ router.put('/:id/translations', authenticateToken, async (req: Request, res: Res
 });
 
 // 個別キャラクター取得
-router.get('/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const character = await CharacterModel.findById(req.params.id);
     
@@ -489,7 +489,7 @@ router.get('/:id', authenticateToken, async (req: Request, res: Response): Promi
 });
 
 // キャラクター更新（管理者のみ）
-router.put('/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     console.log('📝 Character update request:', {
       id: req.params.id,
@@ -532,7 +532,7 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response): Promi
 });
 
 // キャラクター削除（論理削除）
-router.delete('/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const updatedCharacter = await CharacterModel.findByIdAndUpdate(
       req.params.id,
@@ -563,7 +563,7 @@ router.delete('/:id', authenticateToken, async (req: Request, res: Response): Pr
 });
 
 // 画像アップロードAPI（管理者のみ）
-router.post('/upload/image', authenticateToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: Request, res: Response): Promise<void> => {
+router.post('/upload/image', authenticateToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.file) {
       res.status(400).json({

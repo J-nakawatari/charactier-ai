@@ -1,10 +1,10 @@
-import type { AuthRequest } from '../types/express';
-import { Router, Request, Response, NextFunction } from 'express';
+import type { AuthRequest } from '../middleware/auth';
+import { Router, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { authenticateToken } from '../middleware/auth';
 import { UserModel } from '../models/UserModel';
 
-const router = Router();
+const router: Router = Router();
 
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {

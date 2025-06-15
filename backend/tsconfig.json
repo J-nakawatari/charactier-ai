@@ -19,6 +19,7 @@
     "skipLibCheck": true,
     "noEmitOnError": false,
     "strict": false,
+    "noImplicitAny": false,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },

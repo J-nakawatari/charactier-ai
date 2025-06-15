@@ -1,9 +1,9 @@
-import type { AuthRequest } from '../types/express';
-import { Router, Request, Response, NextFunction } from 'express';
+import type { AuthRequest } from '../middleware/auth';
+import { Router, Response, NextFunction } from 'express';
 import { authenticateToken } from '../middleware/auth';
 import { calcTokensToGive, validateModel } from '../config/tokenConfig';
 
-const router = Router();
+const router: Router = Router();
 
 // 利用可能なモデル一覧
 const AVAILABLE_MODELS = [
@@ -33,7 +33,7 @@ const AVAILABLE_MODELS = [
 /**
  * 利用可能なモデル一覧取得
  */
-router.get('/models', async (req: Request, res: Response) => {
+router.get('/models', async (req: AuthRequest, res: Response) => {
   try {
     const modelsWithCalc = AVAILABLE_MODELS.map(model => ({
       ...model,

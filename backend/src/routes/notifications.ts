@@ -1,12 +1,12 @@
-import type { AuthRequest } from '../types/express';
-import { Router, Request, Response, NextFunction } from 'express';
+import type { AuthRequest } from '../middleware/auth';
+import { Router, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { authenticateToken } from '../middleware/auth';
 import { NotificationModel, INotification } from '../models/NotificationModel';
 import { UserNotificationReadStatusModel } from '../models/UserNotificationReadStatusModel';
 import { UserModel } from '../models/UserModel';
 
-const router = Router();
+const router: Router = Router();
 
 // ユーザー向けお知らせ一覧取得
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {

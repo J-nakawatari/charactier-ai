@@ -1,6 +1,6 @@
 // 中央集権型ルート管理システム - 重複を物理的に不可能にする
 
-import { Express, RequestHandler } from 'express';
+import { Application, RequestHandler } from 'express';
 
 type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 type RouteKey = `${HTTPMethod}:${string}`;
@@ -8,7 +8,7 @@ type RouteKey = `${HTTPMethod}:${string}`;
 class RouteRegistry {
   private static instance: RouteRegistry;
   private registeredRoutes = new Map<RouteKey, string>();
-  private app: Express | null = null;
+  private app: Application | null = null;
 
   private constructor() {}
 
@@ -19,7 +19,7 @@ class RouteRegistry {
     return RouteRegistry.instance;
   }
 
-  setApp(app: Express): void {
+  setApp(app: Application): void {
     this.app = app;
   }
 
