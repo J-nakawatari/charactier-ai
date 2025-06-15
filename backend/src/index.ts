@@ -783,12 +783,6 @@ app.post('/api/user/setup-complete', authenticateToken, async (req: Request, res
 
 // Stripe Webhook endpoints (must be before express.json())
 
-// Extend Request interface
-declare module 'express-serve-static-core' {
-  interface Request {
-    user?: IUser;
-  }
-}
 
 // Character routes are handled by the imported characterRoutes module
 // All character-related endpoints are defined in ./routes/characters.ts
@@ -1359,7 +1353,7 @@ app.get('/api/user/purchase-history', authenticateToken, async (req: Request, re
   }
 
   try {
-    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const userId = new mongoose.Types.ObjectId(req.user._id);
     
     // クエリパラメータから フィルター・ソート設定を取得
     const {

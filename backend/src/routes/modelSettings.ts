@@ -1,8 +1,9 @@
-import express, { Request, Response } from 'express';
-import { authenticateToken, AuthRequest } from '../middleware/auth';
+import type { AuthRequest } from '../types/express';
+import { Router, Request, Response, NextFunction } from 'express';
+import { authenticateToken } from '../middleware/auth';
 import { calcTokensToGive, validateModel } from '../config/tokenConfig';
 
-const router = express.Router();
+const router = Router();
 
 // 利用可能なモデル一覧
 const AVAILABLE_MODELS = [

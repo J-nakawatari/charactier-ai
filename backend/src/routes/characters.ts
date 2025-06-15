@@ -1,7 +1,8 @@
-import { Router, Request, Response } from 'express';
+import type { AuthRequest } from '../types/express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { CharacterModel } from '../models/CharacterModel';
 import { UserModel } from '../models/UserModel';
-import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { authenticateToken } from '../middleware/auth';
 import { uploadImage, optimizeImage } from '../utils/fileUpload';
 
 const router = Router();

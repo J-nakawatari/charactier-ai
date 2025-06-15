@@ -1,9 +1,10 @@
-import express, { Request, Response } from 'express';
+import type { AuthRequest } from '../types/express';
+import { Router, Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { authenticateToken } from '../middleware/auth';
 import { UserModel } from '../models/UserModel';
 
-const router = express.Router();
+const router = Router();
 
 // 既存のTokenUsageモデルを使用
 const TokenUsageModel = require('../../models/TokenUsage');

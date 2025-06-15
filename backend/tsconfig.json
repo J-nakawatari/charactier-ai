@@ -6,7 +6,6 @@
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "./",
-    "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitReturns": true,
@@ -16,14 +15,17 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "typeRoots": ["./src/types", "./node_modules/@types"],
     "skipLibCheck": true,
     "noEmitOnError": false,
+    "strict": false,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
   "include": [
     "src/**/*",
-    "lib/**/*"
+    "lib/**/*",
+    "src/types/**/*"
   ],
   "exclude": [
     "node_modules",
