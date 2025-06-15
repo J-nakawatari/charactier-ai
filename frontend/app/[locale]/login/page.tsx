@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
+import { API_BASE_URL } from '@/lib/api-config';
 
 const orbitron = Orbitron({ 
   weight: ['400', '700'], 
@@ -125,7 +126,7 @@ export default function LoginPage() {
       }
       
       // バックエンドのログインAPIを呼び出し
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
