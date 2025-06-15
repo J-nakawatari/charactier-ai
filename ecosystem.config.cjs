@@ -13,7 +13,7 @@ module.exports = {
     {
       name: 'charactier-backend',
       cwd: '/var/www/charactier-ai/backend',
-      script: 'dist/index.js',
+      script: 'dist/src/index-new.js',
       instances: 1,
       env: {
         NODE_ENV: 'production',
