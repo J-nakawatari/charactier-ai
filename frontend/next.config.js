@@ -11,8 +11,11 @@ const nextConfig = {
   },
   async rewrites() {
     // 本番環境対応: 環境変数からバックエンドURLを取得
-    // ★ 新: デフォルトポートを5000に変更
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const isProduction = process.env.NODE_ENV === 'production';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 
+                      (isProduction ? 'https://api.charactier-ai.com' : 'http://localhost:5000');
+    
+    console.log('🔗 Backend URL:', backendUrl);
     
     return [
       {
