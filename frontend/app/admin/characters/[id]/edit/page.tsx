@@ -173,6 +173,12 @@ export default function CharacterEditPage() {
           })) : [];
 
           // 基本情報をフォームに反映
+          console.log('🔍 画像URL取得状況:');
+          console.log('  imageCharacterSelect:', character.imageCharacterSelect);
+          console.log('  imageDashboard:', character.imageDashboard);
+          console.log('  imageChatBackground:', character.imageChatBackground);
+          console.log('  imageChatAvatar:', character.imageChatAvatar);
+          
           setFormData(prev => ({
             ...prev,
             personalityPreset: character.personalityPreset || '',
@@ -193,6 +199,12 @@ export default function CharacterEditPage() {
             // 既存のギャラリー画像を設定
             galleryImages: existingGalleryImages
           }));
+          
+          console.log('🔄 FormDataに設定された画像URL:');
+          console.log('  imageCharacterSelectUrl:', character.imageCharacterSelect || '');
+          console.log('  imageDashboardUrl:', character.imageDashboard || '');
+          console.log('  imageChatBackgroundUrl:', character.imageChatBackground || '');
+          console.log('  imageChatAvatarUrl:', character.imageChatAvatar || '');
           
           console.log('🔄 FormDataに設定した価格:', character.purchasePrice || 0);
           
