@@ -7,7 +7,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     console.log('🔍 API Proxy: 価格取得リクエスト:', id);
 
-    const response = await fetch(`http://localhost:5000/api/admin/stripe/product-price/${id}`, {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:5000'}/api/admin/stripe/product-price/${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

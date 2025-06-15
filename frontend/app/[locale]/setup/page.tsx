@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
 import { getCurrentUser, authenticatedFetch } from '../../../utils/auth';
+import { API_BASE_URL } from '@/lib/api-config';
 
 const orbitron = Orbitron({ 
   weight: ['400', '700'], 
@@ -129,7 +130,7 @@ export default function SetupPage() {
   // キャラクター取得
   const fetchCharacters = useCallback(async () => {
     try {
-      const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/characters?locale=${locale}`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/api/characters?locale=${locale}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -180,7 +181,7 @@ export default function SetupPage() {
     setError('');
 
     try {
-      const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/user/setup-complete`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/api/user/setup-complete`, {
         method: 'POST',
         body: JSON.stringify({ 
           name: name.trim(), 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { ArrowLeft, User, Mail, Lock, Shield } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function CreateAdminPage() {
   const router = useRouter();
@@ -126,7 +127,7 @@ export default function CreateAdminPage() {
         throw new Error('管理者認証が必要です');
       }
 
-      const response = await fetch('http://localhost:5000/api/admin/create-admin', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/create-admin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -5,6 +5,7 @@ import UserStats from '@/components/admin/UserStats';
 import UserTable from '@/components/admin/UserTable';
 import { useToast } from '@/contexts/ToastContext';
 import { Search, Filter, Download } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface UserData {
   id: string;
@@ -62,7 +63,7 @@ export default function UsersPage() {
         params.append('status', statusFilter);
       }
 
-      const url = `http://localhost:5000/api/admin/users?${params}`;
+      const url = `${API_BASE_URL}/api/admin/users?${params}`;
       console.log('🔍 Fetching users from:', url);
 
       const adminToken = localStorage.getItem('adminAccessToken');

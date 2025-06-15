@@ -3,6 +3,7 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { Edit, Trash2, Plus, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface TokenPack {
   _id: string;
@@ -52,7 +53,7 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
         throw new Error('Admin authentication required');
       }
 
-      const response = await fetch(`http://localhost:5000/api/admin/token-packs?${params}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/token-packs?${params}`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${adminToken}`
@@ -95,7 +96,7 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/admin/token-packs/${pack._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/token-packs/${pack._id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -126,7 +127,7 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/admin/token-packs/${pack._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/token-packs/${pack._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

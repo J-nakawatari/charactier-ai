@@ -3,6 +3,8 @@
  * JWT認証システム
  */
 
+import { API_BASE_URL } from '@/lib/api-config';
+
 export interface AuthUser {
   _id: string;
   name: string;
@@ -124,7 +126,7 @@ export async function refreshToken(): Promise<boolean> {
   if (!refresh) return false;
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/refresh`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

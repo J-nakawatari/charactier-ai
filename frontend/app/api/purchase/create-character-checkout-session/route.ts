@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     console.log('🔄 API Proxy: キャラクター購入リクエスト受信:', body);
     console.log('🔑 API Proxy: 認証トークン:', token ? 'あり' : 'なし');
 
-    const response = await fetch('http://localhost:5000/api/purchase/create-character-checkout-session', {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:5000'}/api/purchase/create-character-checkout-session`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
+import { API_BASE_URL } from '@/lib/api-config';
 
 // Inline type definitions
 interface Character {
@@ -89,7 +90,7 @@ export default function CharacterDetailPage() {
           throw new Error('管理者認証が必要です');
         }
         
-        const response = await fetch(`http://localhost:5000/api/characters/${params.id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/characters/${params.id}`, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${adminToken}`

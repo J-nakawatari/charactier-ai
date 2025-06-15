@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { ensureUserNameString } from '@/utils/userUtils';
+import { API_BASE_URL } from '@/lib/api-config';
 
 // Inline type definitions
 interface User {
@@ -72,7 +73,7 @@ export default function UserDetailPage() {
           return;
         }
 
-        const response = await fetch(`http://localhost:5000/api/admin/users/${params.id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/users/${params.id}`, {
           headers: {
             'Authorization': `Bearer ${adminToken}`,
             'Content-Type': 'application/json'
@@ -168,7 +169,7 @@ export default function UserDetailPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/admin/users/${user.id}/status`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/${user.id}/status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -216,7 +217,7 @@ export default function UserDetailPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/admin/users/${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/${user.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${adminToken}`,

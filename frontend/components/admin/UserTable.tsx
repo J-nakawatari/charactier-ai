@@ -18,6 +18,7 @@ interface UserData {
 import { useToast } from '@/contexts/ToastContext';
 import { Eye, Ban, Unlock, Trash2 } from 'lucide-react';
 import { ensureUserNameString } from '@/utils/userUtils';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface UserTableProps {
   users: UserData[];
@@ -77,7 +78,7 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/admin/users/${user.id}/status`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/${user.id}/status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -122,7 +123,7 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/admin/users/${user.id}/reset-tokens`, {
+      const response = await fetch(`${API_BASE_URL}/admin/users/${user.id}/reset-tokens`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

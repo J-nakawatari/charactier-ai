@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { X, AlertCircle } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface TokenPack {
   _id?: string;
@@ -220,8 +221,8 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
       }
 
       const backendUrl = editingPack 
-        ? `http://localhost:5000/api/admin/token-packs/${editingPack._id}`
-        : 'http://localhost:5000/api/admin/token-packs';
+        ? `${API_BASE_URL}/api/admin/token-packs/${editingPack._id}`
+        : `${API_BASE_URL}/api/admin/token-packs`;
 
       const response = await fetch(backendUrl, {
         method,

@@ -6,6 +6,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { getCroppedImg } from '@/utils/cropImage';
 import ImageCropper from '@/components/admin/ImageCropper';
 import { ArrowLeft, Save, X, Upload } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 // 調査したデータから取得した性格プリセット
 const PERSONALITY_PRESETS = [
@@ -242,7 +243,7 @@ export default function CharacterNewPage() {
         adminToken: adminToken ? 'Present' : 'Missing'
       });
 
-      const response = await fetch('http://localhost:5000/api/characters', {
+      const response = await fetch(`${API_BASE_URL}/api/characters`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

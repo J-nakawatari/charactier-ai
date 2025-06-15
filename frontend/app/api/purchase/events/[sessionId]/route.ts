@@ -13,7 +13,7 @@ export async function GET(
     const authHeader = req.headers.get('Authorization');
     
     // バックエンドのSSEエンドポイントにプロキシ
-    const backendUrl = `http://localhost:5000/api/purchase/events/${sessionId}`;
+    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/purchase/events/${sessionId}`;
     
     const headers: HeadersInit = {
       'Accept': 'text/event-stream',

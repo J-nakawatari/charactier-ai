@@ -9,6 +9,7 @@ import { MessageSquare, User, Sparkles, Unlock } from 'lucide-react';
 import AffinityBar from './AffinityBar';
 import LockBadge from './LockBadge';
 import { BaseCharacter } from '../../types/common';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface Character extends BaseCharacter {
   affinityStats?: {
@@ -67,7 +68,7 @@ export default function CharacterCard({
       console.log('🛒 キャラクター購入リクエスト開始:', character._id);
 
       // キャラクター購入のチェックアウトセッション作成（直接バックエンドアクセス）
-      const response = await fetch('http://localhost:5000/api/purchase/create-character-checkout-session', {
+      const response = await fetch(`${API_BASE_URL}/api/purchase/create-character-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

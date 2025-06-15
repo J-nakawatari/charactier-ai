@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, Coins, ArrowLeft } from 'lucide-react';
 import { getAuthHeaders } from '@/utils/auth';
+import { API_BASE_URL } from '@/lib/api-config';
 
 function PurchaseSuccessContent() {
   const searchParams = useSearchParams();
@@ -34,9 +35,7 @@ function PurchaseSuccessContent() {
       let fallbackTimeout: NodeJS.Timeout;
       
       // SSEでリアルタイム通知を受信（本番環境対応）
-      // ★ 新: デフォルトポートを5000に変更
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-      eventSource = new EventSource(`${backendUrl}/api/purchase/events/${sessionId}`);
+      eventSource = new EventSource(`${API_BASE_URL}/api/purchase/events/${sessionId}`);
       
       eventSource.onmessage = (event) => {
         try {
