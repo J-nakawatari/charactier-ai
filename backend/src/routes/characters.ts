@@ -472,9 +472,12 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
     
     console.log('🔍 Character data being returned:', {
       id: character._id,
-      model: character.model,
       aiModel: character.aiModel,
-      name: character.name?.ja
+      name: character.name?.ja,
+      imageCharacterSelect: character.imageCharacterSelect,
+      imageDashboard: character.imageDashboard,
+      imageChatBackground: character.imageChatBackground,
+      imageChatAvatar: character.imageChatAvatar
     });
     
     res.json(character);
