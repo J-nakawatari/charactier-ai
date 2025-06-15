@@ -9,9 +9,9 @@ export const getApiUrl = (): string => {
   if (typeof window !== 'undefined') {
     const origin = window.location.origin;
     
-    // 本番ドメインの場合
+    // 本番ドメインの場合 - Nginxプロキシを使用
     if (origin.includes('charactier-ai.com')) {
-      return 'https://charactier-ai.com:5000';
+      return 'https://charactier-ai.com';
     }
   }
   
