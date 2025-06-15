@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useToast } from '@/contexts/ToastContext';
 import { getCroppedImg } from '@/utils/cropImage';
+import { compressImage, isImageSizeValid, formatFileSize } from '@/utils/imageCompression';
 import ImageCropper from '@/components/admin/ImageCropper';
 import TranslationEditor from '@/components/admin/TranslationEditor';
 import { ArrowLeft, Save, X, Upload } from 'lucide-react';
@@ -416,8 +417,8 @@ export default function CharacterEditPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, imageType: string, galleryIndex?: number) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB制限
-        error('ファイルエラー', '画像ファイルは5MB以下にしてください');
+      if (file.size > 10 * 1024 * 1024) { // 10MB制限（圧縮で対応）
+        error('ファイルエラー', '画像ファイルは10MB以下にしてください。自動で圧縮されます。');
         return;
       }
 
@@ -452,9 +453,21 @@ export default function CharacterEditPage() {
       setIsUploading(true);
       
       const croppedImage = await getCroppedImg(cropperImageSrc, croppedAreaPixels);
-      const croppedFile = new File([croppedImage], `${currentImageType}.jpg`, {
+      let croppedFile = new File([croppedImage], `${currentImageType}.jpg`, {
         type: 'image/jpeg',
       });
+      
+      // 画像サイズが500KB以上の場合は圧縮
+      if (!isImageSizeValid(croppedFile, 500)) {
+        console.log(`🔄 画像を圧縮中... 元サイズ: ${formatFileSize(croppedFile.size)}`);
+        croppedFile = await compressImage(croppedFile, {
+          maxWidth: 800,
+          maxHeight: 800,
+          quality: 0.8,
+          maxSizeKB: 500
+        });
+        console.log(`✅ 圧縮完了: ${formatFileSize(croppedFile.size)}`);
+      }
       
       // バックエンドに画像をアップロード
       const formDataForUpload = new FormData();
@@ -475,9 +488,26 @@ export default function CharacterEditPage() {
       });
       
       if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json();
-        console.error('Upload failed:', errorData);
-        error('アップロードエラー', errorData.message || '画像のアップロードに失敗しました');
+        let errorMessage = '画像のアップロードに失敗しました';
+        
+        if (uploadResponse.status === 413) {
+          errorMessage = 'ファイルサイズが大きすぎます。画像をさらに圧縮してお試しください。';
+        } else {
+          try {
+            const errorData = await uploadResponse.json();
+            errorMessage = errorData.message || errorMessage;
+          } catch (e) {
+            console.error('Error response parsing failed:', e);
+            errorMessage = `サーバーエラー (${uploadResponse.status}): ${uploadResponse.statusText}`;
+          }
+        }
+        
+        console.error('Upload failed:', {
+          status: uploadResponse.status,
+          statusText: uploadResponse.statusText,
+          fileSize: formatFileSize(croppedFile.size)
+        });
+        error('アップロードエラー', errorMessage);
         return;
       }
       

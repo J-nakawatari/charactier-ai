@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { getCroppedImg } from '@/utils/cropImage';
+import { compressImage, isImageSizeValid, formatFileSize } from '@/utils/imageCompression';
 import ImageCropper from '@/components/admin/ImageCropper';
 import { ArrowLeft, Save, X, Upload } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
