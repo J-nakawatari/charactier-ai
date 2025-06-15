@@ -36,7 +36,6 @@ interface CharacterGridProps {
   userTokenBalance?: number;
   userPurchasedCharacters?: string[];
   onCharacterClick?: (character: GridCharacter) => void;
-  isLoading?: boolean;
   filterKey?: string; // アニメーション用のキー
 }
 
@@ -46,7 +45,6 @@ export default function CharacterGrid({
   userTokenBalance = 0,
   userPurchasedCharacters = [],
   onCharacterClick,
-  isLoading = false,
   filterKey = 'default'
 }: CharacterGridProps) {
   
@@ -77,40 +75,7 @@ export default function CharacterGrid({
     return affinity ? affinity.level : 0;
   };
 
-  // ローディング状態の表示
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: 6 }, (_, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {/* 画像エリアのスケルトン */}
-            <div className="aspect-square bg-gray-200 animate-pulse" />
-            
-            {/* コンテンツエリアのスケルトン */}
-            <div className="p-4 space-y-3">
-              {/* タイトル */}
-              <div className="h-5 bg-gray-200 rounded animate-pulse" />
-              
-              {/* 説明文 */}
-              <div className="space-y-2">
-                <div className="h-3 bg-gray-200 rounded animate-pulse" />
-                <div className="h-3 bg-gray-200 rounded w-3/4 animate-pulse" />
-              </div>
-              
-              {/* タグ */}
-              <div className="flex space-x-2">
-                <div className="h-5 w-16 bg-gray-200 rounded animate-pulse" />
-                <div className="h-5 w-12 bg-gray-200 rounded animate-pulse" />
-              </div>
-              
-              {/* ボタン */}
-              <div className="h-10 bg-gray-200 rounded animate-pulse" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
+  // ローディング状態の表示を削除（チラツキ防止）
 
   // キャラクターがない場合の表示
   if (!characters || characters.length === 0) {

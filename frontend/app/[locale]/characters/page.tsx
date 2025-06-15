@@ -47,7 +47,7 @@ function CharactersPageContent({
     characterType: 'all',
     sort: 'popular'
   });
-  const [isLoading, setIsLoading] = useState(false);
+  // isLoading stateを削除（チラツキ防止）
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -86,7 +86,6 @@ function CharactersPageContent({
 
   const fetchCharacters = useCallback(async () => {
     try {
-      setIsLoading(true);
       setError(null);
 
       const queryParams = new URLSearchParams({
@@ -125,7 +124,7 @@ function CharactersPageContent({
       setCharacters([]);
       setTotalCount(0);
     } finally {
-      setIsLoading(false);
+      // setIsLoading削除（チラツキ防止）
     }
   }, [locale, filters]);
 
@@ -207,19 +206,7 @@ function CharactersPageContent({
     fetchCharacters();
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex">
-        <UserSidebar locale={locale} />
-        <div className="flex-1 lg:ml-64 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">{t('loading')}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // ローディング中の表示を削除（チラツキ防止）
 
   if (error) {
     return (
@@ -435,14 +422,7 @@ export default function CharactersPage({
   params: Promise<{ locale: string }>;
 }) {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">キャラクター一覧を読み込んでいます...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<div></div>}>
       <CharactersPageContent params={params} />
     </Suspense>
   );
