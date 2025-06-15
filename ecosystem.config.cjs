@@ -1,30 +1,27 @@
-// ecosystem.config.cjs
+// /var/www/charactier-ai/ecosystem.config.cjs
 module.exports = {
   apps: [
-    /* ────────────── Frontend (Next.js) ────────────── */
+    /* ─────────────── Frontend (Next.js) ─────────────── */
     {
       name: 'charactier-frontend',
-      cwd: '/var/www/charactier-ai/frontend',          // ← 絶対パスで固定
-      script: 'node_modules/.bin/next',                // ← npm を介さず直接
-      args: 'start -p 3000',                           // ← ポートを明示
-      instances: 1,                                    // ← 1 で競合回避
-      interpreter: 'node',                             // （デフォルト）
-      env: {
-        NODE_ENV: 'production'
-      }
+      cwd:  '/var/www/charactier-ai/frontend',
+      /* Next を直接呼び出す ― npm script 経由より確実 */
+      script: 'node_modules/.bin/next',
+      args:   'start -p 3000',
+      /* フロントはポート競合しやすいのでまずは fork + 1 インスタンス */
+      exec_mode: 'fork',
+      instances: 1,
+      env: { NODE_ENV: 'production' }
     },
 
     /* ─────────────── Backend (Express) ─────────────── */
     {
       name: 'charactier-backend',
-      cwd: '/var/www/charactier-ai/backend',
-      script: '/var/www/charactier-ai/backend/dist/src/index-new.js',
+      cwd:  '/var/www/charactier-ai/backend',
+      script: 'dist/src/index-new.js',
+      exec_mode: 'fork',
       instances: 1,
-      interpreter: 'node',
-      env: {
-        NODE_ENV: 'production',
-        PORT: 5000
-      }
+      env: { NODE_ENV: 'production', PORT: 5000 }
     }
   ]
 };
