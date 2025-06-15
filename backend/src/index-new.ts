@@ -6,8 +6,7 @@ import { authenticateToken } from './middleware/auth';
 
 const app: express.Application = express();
 
-// ★ 新: 環境変数優先、無ければ 5000
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT ?? 5000);   // ← 好きなデフォルト値
 
 // RouteRegistryにExpressアプリを設定
 RouteRegistry.setApp(app);
