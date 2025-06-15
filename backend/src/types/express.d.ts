@@ -1,11 +1,8 @@
+import type { IUser } from '../models/UserModel';
+
 declare global {
   namespace Express {
-    interface User {
-      _id: string;
-      name: string;
-      email: string;
-      tokenBalance: number;
-      selectedCharacter?: string;
+    interface User extends IUser {
       isAdmin?: boolean;
       role?: string;
     }
@@ -16,3 +13,4 @@ declare global {
 }
 
 export type AuthRequest = Express.Request;
+export {};  // 型合成を壊さないために必須

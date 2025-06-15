@@ -1,328 +1,370 @@
-const mongoose = require('mongoose');
-
-/**
- * TokenUsage Schema（簡素化版）
- * シンプルなトークン使用履歴管理
- */
-const tokenUsageSchema = new mongoose.Schema({
-  // ユーザー情報
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    index: true
-  },
-  
-  // キャラクター情報
-  characterId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Character',
-    required: true,
-    index: true
-  },
-  
-  // 使用情報（簡素化）
-  tokensUsed: {
-    type: Number,
-    required: true,
-    min: 1
-  },
-  
-  // メッセージ情報（オプション）
-  messageContent: {
-    type: String,
-    maxlength: 2000,
-    default: ''
-  },
-  
-  // タイムスタンプ
-  timestamp: {
-    type: Date,
-    default: Date.now,
-    index: true
-  },
-  
-  // セッション情報（オプション）
-  sessionId: {
-    type: String,
-    default: null
-  },
-  
-  // トークンタイプ（将来拡張用）
-  tokenType: {
-    type: String,
-    enum: ['chat_message', 'character_response', 'system_operation'],
-    default: 'chat_message'
-  }
-}, {
-  timestamps: true
-});
-
-// インデックス設定（パフォーマンス最適化）
-tokenUsageSchema.index({ userId: 1, timestamp: -1 });
-tokenUsageSchema.index({ characterId: 1, timestamp: -1 });
-tokenUsageSchema.index({ userId: 1, characterId: 1, timestamp: -1 });
-tokenUsageSchema.index({ timestamp: -1 });
-tokenUsageSchema.index({ sessionId: 1 });
-
-// 仮想フィールド：推定コスト（参考用）
-tokenUsageSchema.virtual('estimatedCostYen').get(function() {
-  const gpt4CostPerToken = parseFloat(process.env.GPT4_COST_PER_TOKEN_YEN || '0.216');
-  return (this.tokensUsed * gpt4CostPerToken).toFixed(3);
-});
-
-// 仮想フィールド：メッセージ長
-tokenUsageSchema.virtual('messageLength').get(function() {
-  return this.messageContent ? this.messageContent.length : 0;
-});
-
-// 静的メソッド：ユーザーの使用履歴取得
-tokenUsageSchema.statics.getUserUsageHistory = async function(userId, limit = 50) {
-  return await this.find({ userId })
-    .sort({ timestamp: -1 })
-    .limit(limit)
-    .populate('characterId', 'name')
-    .select('tokensUsed messageContent timestamp characterId tokenType sessionId');
-};
-
-// 静的メソッド：キャラクター別使用統計
-tokenUsageSchema.statics.getCharacterUsageStats = async function(characterId, days = 30) {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  
-  const stats = await this.aggregate([
-    {
-      $match: {
-        characterId: new mongoose.Types.ObjectId(characterId),
-        timestamp: { $gte: startDate }
-      }
-    },
-    {
-      $group: {
-        _id: null,
-        totalTokensUsed: { $sum: '$tokensUsed' },
-        totalMessages: { $sum: 1 },
-        avgTokensPerMessage: { $avg: '$tokensUsed' },
-        maxTokensInMessage: { $max: '$tokensUsed' },
-        minTokensInMessage: { $min: '$tokensUsed' }
-      }
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
     }
-  ]);
-  
-  return stats.length > 0 ? {
-    ...stats[0],
-    period: `${days}日間`,
-    estimatedCostYen: (stats[0].totalTokensUsed * parseFloat(process.env.GPT4_COST_PER_TOKEN_YEN || '0.216')).toFixed(2)
-  } : {
-    totalTokensUsed: 0,
-    totalMessages: 0,
-    avgTokensPerMessage: 0,
-    maxTokensInMessage: 0,
-    minTokensInMessage: 0,
-    period: `${days}日間`,
-    estimatedCostYen: '0.00'
-  };
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = __importStar(require("mongoose"));
+const TokenUsageSchema = new mongoose_1.Schema({
+    // 基本情報
+    userId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        index: true
+    },
+    characterId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'Character',
+        required: true,
+        index: true
+    },
+    sessionId: {
+        type: String,
+        required: true,
+        index: true,
+        maxlength: 64
+    },
+    // 使用量詳細
+    tokensUsed: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 100000 // 異常値制限
+    },
+    tokenType: {
+        type: String,
+        required: true,
+        enum: ['chat_message', 'character_purchase', 'image_generation', 'voice_synthesis', 'bonus_grant'],
+        index: true
+    },
+    messageContent: {
+        type: String,
+        required: true,
+        maxlength: 2000 // ログサイズ制限
+    },
+    responseContent: {
+        type: String,
+        required: true,
+        maxlength: 4000 // AI応答ログ制限
+    },
+    // AI API詳細
+    aiModel: {
+        type: String,
+        required: true,
+        enum: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o'],
+        index: true
+    },
+    inputTokens: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 50000
+    },
+    outputTokens: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 50000
+    },
+    apiCost: {
+        type: Number,
+        required: true,
+        min: 0,
+        validate: {
+            validator: function (v) {
+                return v <= 10.0; // $10上限（異常値防止）
+            },
+            message: 'API cost exceeds safety limit'
+        }
+    },
+    apiCostYen: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 1500 // 1500円上限
+    },
+    // 原価・利益分析
+    stripeFee: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    grossProfit: {
+        type: Number,
+        required: true,
+        validate: {
+            validator: function (v) {
+                // 50%利益ルールチェック
+                return v >= (this.apiCostYen * 0.5);
+            },
+            message: 'Profit margin below 50% rule'
+        }
+    },
+    profitMargin: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 1,
+        validate: {
+            validator: function (v) {
+                return v >= 0.5; // 50%利益ルール強制
+            },
+            message: 'Profit margin must be at least 50%'
+        }
+    },
+    // 親密度変化
+    intimacyBefore: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 100
+    },
+    intimacyAfter: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 100
+    },
+    affinityChange: {
+        type: Number,
+        required: true,
+        min: -20,
+        max: 20
+    },
+    experienceGained: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 1000
+    },
+    // メタデータ
+    userAgent: {
+        type: String,
+        required: true,
+        maxlength: 500
+    },
+    ipAddress: {
+        type: String,
+        required: true,
+        validate: {
+            validator: function (v) {
+                // IPv4/IPv6バリデーション
+                const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+                const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+                return ipv4Regex.test(v) || ipv6Regex.test(v);
+            },
+            message: 'Invalid IP address format'
+        }
+    },
+    platform: {
+        type: String,
+        required: true,
+        enum: ['web', 'mobile'],
+        index: true
+    },
+    // タイムスタンプ
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        required: true,
+        index: true
+    },
+    processedAt: {
+        type: Date,
+        required: true,
+        default: Date.now
+    }
+}, {
+    timestamps: false, // 手動管理
+    collection: 'tokenusages'
+});
+/**
+ * インデックス戦略
+ *
+ * 1. 複合インデックス（検索・集計最適化）
+ * 2. 時系列データ用インデックス
+ * 3. セキュリティ検知用インデックス
+ * 4. 分析用インデックス
+ */
+// 1. ユーザー・キャラクター・時系列複合インデックス（最重要）
+TokenUsageSchema.index({
+    userId: 1,
+    characterId: 1,
+    createdAt: -1
+}, {
+    name: 'user_character_time_compound'
+});
+// 2. 時系列分析用インデックス
+TokenUsageSchema.index({
+    createdAt: -1,
+    tokenType: 1
+}, {
+    name: 'time_type_analysis'
+});
+// 3. セキュリティ・異常検知用インデックス
+TokenUsageSchema.index({
+    userId: 1,
+    tokensUsed: -1,
+    createdAt: -1
+}, {
+    name: 'security_anomaly_detection'
+});
+// 4. 経済分析用インデックス
+TokenUsageSchema.index({
+    model: 1,
+    createdAt: -1,
+    profitMargin: 1
+}, {
+    name: 'economic_analysis'
+});
+// 5. セッション分析用インデックス
+TokenUsageSchema.index({
+    sessionId: 1,
+    createdAt: -1
+}, {
+    name: 'session_analysis'
+});
+// 6. 日次集計用インデックス
+TokenUsageSchema.index({
+    createdAt: -1,
+    platform: 1,
+    tokenType: 1
+}, {
+    name: 'daily_aggregation'
+});
+/**
+ * TTL (Time To Live) 設定
+ * 365日後に自動削除（ストレージ最適化）
+ */
+TokenUsageSchema.index({
+    createdAt: 1
+}, {
+    expireAfterSeconds: 365 * 24 * 60 * 60, // 365日
+    name: 'ttl_365_days'
+});
+/**
+ * 仮想フィールド・メソッド
+ */
+// トークン効率性計算
+TokenUsageSchema.virtual('tokenEfficiency').get(function () {
+    return this.tokensUsed > 0 ? this.apiCostYen / this.tokensUsed : 0;
+});
+// 1時間当たりのコスト
+TokenUsageSchema.virtual('costPerHour').get(function () {
+    const hoursDiff = (Date.now() - this.createdAt.getTime()) / (1000 * 60 * 60);
+    return hoursDiff > 0 ? this.apiCostYen / hoursDiff : this.apiCostYen;
+});
+/**
+ * スタティックメソッド
+ */
+// 異常使用検知
+TokenUsageSchema.statics.detectAnomalies = async function (userId, timeWindow = 3600000) {
+    const oneHourAgo = new Date(Date.now() - timeWindow);
+    const usage = await this.aggregate([
+        {
+            $match: {
+                userId: new mongoose_1.default.Types.ObjectId(userId),
+                createdAt: { $gte: oneHourAgo }
+            }
+        },
+        {
+            $group: {
+                _id: '$model',
+                totalTokens: { $sum: '$tokensUsed' },
+                totalCost: { $sum: '$apiCostYen' },
+                messageCount: { $sum: 1 },
+                avgTokensPerMessage: { $avg: '$tokensUsed' }
+            }
+        }
+    ]);
+    return usage.filter(u => u.totalTokens > 10000 || // 1時間で10k tokens異常
+        u.avgTokensPerMessage > 2000 || // 1メッセージ2k tokens異常
+        u.totalCost > 500 // 1時間で500円異常
+    );
 };
-
-// 静的メソッド：ユーザー別使用統計
-tokenUsageSchema.statics.getUserUsageStats = async function(userId, days = 30) {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  
-  const [generalStats, characterBreakdown] = await Promise.all([
-    this.aggregate([
-      {
-        $match: {
-          userId: new mongoose.Types.ObjectId(userId),
-          timestamp: { $gte: startDate }
+// 利益率分析
+TokenUsageSchema.statics.getProfitAnalysis = async function (startDate, endDate) {
+    return this.aggregate([
+        {
+            $match: {
+                createdAt: { $gte: startDate, $lte: endDate }
+            }
+        },
+        {
+            $group: {
+                _id: '$model',
+                totalRevenue: { $sum: '$grossProfit' },
+                totalCost: { $sum: '$apiCostYen' },
+                avgProfitMargin: { $avg: '$profitMargin' },
+                messageCount: { $sum: 1 }
+            }
+        },
+        {
+            $project: {
+                model: '$_id',
+                totalRevenue: 1,
+                totalCost: 1,
+                avgProfitMargin: 1,
+                messageCount: 1,
+                netProfit: { $subtract: ['$totalRevenue', '$totalCost'] }
+            }
         }
-      },
-      {
-        $group: {
-          _id: null,
-          totalTokensUsed: { $sum: '$tokensUsed' },
-          totalMessages: { $sum: 1 },
-          avgTokensPerMessage: { $avg: '$tokensUsed' },
-          avgMessageLength: { $avg: { $strLenCP: '$messageContent' } }
-        }
-      }
-    ]),
-    this.aggregate([
-      {
-        $match: {
-          userId: new mongoose.Types.ObjectId(userId),
-          timestamp: { $gte: startDate }
-        }
-      },
-      {
-        $group: {
-          _id: '$characterId',
-          tokensUsed: { $sum: '$tokensUsed' },
-          messageCount: { $sum: 1 }
-        }
-      },
-      {
-        $lookup: {
-          from: 'characters',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'character'
-        }
-      },
-      {
-        $project: {
-          characterName: { $ifNull: [{ $arrayElemAt: ['$character.name.ja', 0] }, 'Unknown'] },
-          tokensUsed: 1,
-          messageCount: 1
-        }
-      },
-      { $sort: { tokensUsed: -1 } }
-    ])
-  ]);
-  
-  const stats = generalStats.length > 0 ? generalStats[0] : {
-    totalTokensUsed: 0,
-    totalMessages: 0,
-    avgTokensPerMessage: 0,
-    avgMessageLength: 0
-  };
-  
-  return {
-    ...stats,
-    period: `${days}日間`,
-    estimatedCostYen: (stats.totalTokensUsed * parseFloat(process.env.GPT4_COST_PER_TOKEN_YEN || '0.216')).toFixed(2),
-    characterBreakdown
-  };
+    ]);
 };
-
-// 静的メソッド：システム全体の使用統計
-tokenUsageSchema.statics.getSystemUsageStats = async function(days = 30) {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  
-  const [dailyStats, topUsers, topCharacters] = await Promise.all([
-    this.aggregate([
-      {
-        $match: { timestamp: { $gte: startDate } }
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$timestamp' },
-            month: { $month: '$timestamp' },
-            day: { $dayOfMonth: '$timestamp' }
-          },
-          tokensUsed: { $sum: '$tokensUsed' },
-          messageCount: { $sum: 1 }
-        }
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } }
-    ]),
-    this.aggregate([
-      {
-        $match: { timestamp: { $gte: startDate } }
-      },
-      {
-        $group: {
-          _id: '$userId',
-          tokensUsed: { $sum: '$tokensUsed' },
-          messageCount: { $sum: 1 }
-        }
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'user'
-        }
-      },
-      {
-        $project: {
-          userEmail: { $ifNull: [{ $arrayElemAt: ['$user.email', 0] }, 'Unknown'] },
-          tokensUsed: 1,
-          messageCount: 1
-        }
-      },
-      { $sort: { tokensUsed: -1 } },
-      { $limit: 10 }
-    ]),
-    this.aggregate([
-      {
-        $match: { timestamp: { $gte: startDate } }
-      },
-      {
-        $group: {
-          _id: '$characterId',
-          tokensUsed: { $sum: '$tokensUsed' },
-          messageCount: { $sum: 1 }
-        }
-      },
-      {
-        $lookup: {
-          from: 'characters',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'character'
-        }
-      },
-      {
-        $project: {
-          characterName: { $ifNull: [{ $arrayElemAt: ['$character.name.ja', 0] }, 'Unknown'] },
-          tokensUsed: 1,
-          messageCount: 1
-        }
-      },
-      { $sort: { tokensUsed: -1 } },
-      { $limit: 10 }
-    ])
-  ]);
-  
-  const totalTokens = dailyStats.reduce((sum, day) => sum + day.tokensUsed, 0);
-  const totalMessages = dailyStats.reduce((sum, day) => sum + day.messageCount, 0);
-  
-  return {
-    period: `${days}日間`,
-    totalTokensUsed: totalTokens,
-    totalMessages: totalMessages,
-    avgTokensPerMessage: totalMessages > 0 ? (totalTokens / totalMessages).toFixed(2) : '0.00',
-    estimatedCostYen: (totalTokens * parseFloat(process.env.GPT4_COST_PER_TOKEN_YEN || '0.216')).toFixed(2),
-    dailyBreakdown: dailyStats.map(day => ({
-      date: `${day._id.year}-${String(day._id.month).padStart(2, '0')}-${String(day._id.day).padStart(2, '0')}`,
-      tokensUsed: day.tokensUsed,
-      messageCount: day.messageCount,
-      avgTokensPerMessage: day.messageCount > 0 ? (day.tokensUsed / day.messageCount).toFixed(2) : '0.00'
-    })),
-    topUsers,
-    topCharacters
-  };
-};
-
-// 静的メソッド：セッション別使用履歴
-tokenUsageSchema.statics.getSessionUsage = async function(sessionId) {
-  return await this.find({ sessionId })
-    .sort({ timestamp: 1 })
-    .populate('characterId', 'name')
-    .select('tokensUsed messageContent timestamp characterId');
-};
-
-// インスタンスメソッド：詳細情報取得
-tokenUsageSchema.methods.getDetailedInfo = function() {
-  const gpt4CostPerToken = parseFloat(process.env.GPT4_COST_PER_TOKEN_YEN || '0.216');
-  
-  return {
-    id: this._id,
-    userId: this.userId,
-    characterId: this.characterId,
-    tokensUsed: this.tokensUsed,
-    messageLength: this.messageLength,
-    messagePreview: this.messageContent ? this.messageContent.substring(0, 100) + '...' : '',
-    timestamp: this.timestamp,
-    sessionId: this.sessionId,
-    tokenType: this.tokenType,
-    estimatedCostYen: (this.tokensUsed * gpt4CostPerToken).toFixed(3),
-    tokensPerCharacter: this.messageLength > 0 ? (this.tokensUsed / this.messageLength).toFixed(3) : '0.000'
-  };
-};
-
-module.exports = mongoose.model('TokenUsage', tokenUsageSchema);
+/**
+ * プリ・ポストフック
+ */
+// 保存前バリデーション
+TokenUsageSchema.pre('save', function (next) {
+    // 利益率計算
+    if (this.apiCostYen > 0) {
+        this.profitMargin = Math.max(0, (this.grossProfit - this.apiCostYen) / this.grossProfit);
+    }
+    // 親密度変化計算
+    this.affinityChange = this.intimacyAfter - this.intimacyBefore;
+    // 処理時刻設定
+    this.processedAt = new Date();
+    next();
+});
+// 異常値アラート
+TokenUsageSchema.post('save', async function (doc) {
+    // 高コスト使用時のアラート
+    if (doc.apiCostYen > 100) {
+        console.warn(`High API cost detected: ${doc.apiCostYen} yen for user ${doc.userId}`);
+    }
+    // 利益率違反アラート
+    if (doc.profitMargin < 0.5) {
+        console.error(`Profit margin violation: ${doc.profitMargin} for user ${doc.userId}`);
+    }
+});
+exports.default = mongoose_1.default.model('TokenUsage', TokenUsageSchema);

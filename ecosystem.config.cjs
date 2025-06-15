@@ -1,29 +1,24 @@
-// ecosystem.config.cjs
 module.exports = {
   apps: [
-    /* ─────────────── Frontend ─────────────── */
     {
       name: 'charactier-frontend',
-      cwd: './frontend',
-      script: 'pnpm',
-      args: 'start',          // ← "next start" を呼ぶ
-      interpreter: 'none',    // pnpm が node を呼ぶため
+      cwd: '/var/www/charactier-ai/frontend',   // フロント本体のパスを統一
+      script: 'node_modules/.bin/next',
+      args: 'start -p 3000',                    // ← ポートをはっきり指定
+      instances: 1,                            // ← ここが 2 以上だと競合します
       env: {
-        NODE_ENV: 'production',
-        PORT: 3000            // Nginx が proxy するポート
+        NODE_ENV: 'production'
       }
     },
-
-    /* ─────────────── Backend ─────────────── */
     {
       name: 'charactier-backend',
-      cwd: './backend',
-      script: 'node',
-      args: 'dist/index.js',  // tsc で生成された JS エントリ
+      cwd: '/var/www/charactier-ai/backend',
+      script: 'dist/index.js',
+      instances: 1,
       env: {
         NODE_ENV: 'production',
         PORT: 5000
       }
     }
   ]
-};
+}
