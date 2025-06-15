@@ -126,7 +126,7 @@ export default function CreateAdminPage() {
         throw new Error('管理者認証が必要です');
       }
 
-      const response = await fetch('http://localhost:3004/api/admin/create-admin', {
+      const response = await fetch('http://localhost:5000/api/admin/create-admin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

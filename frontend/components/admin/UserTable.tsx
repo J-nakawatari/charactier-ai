@@ -77,7 +77,7 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
         return;
       }
 
-      const response = await fetch(`http://localhost:3004/api/admin/users/${user.id}/status`, {
+      const response = await fetch(`http://localhost:5000/api/admin/users/${user.id}/status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -122,7 +122,7 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
         return;
       }
 
-      const response = await fetch(`http://localhost:3004/admin/users/${user.id}/reset-tokens`, {
+      const response = await fetch(`http://localhost:5000/admin/users/${user.id}/reset-tokens`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -149,7 +149,7 @@ export default function CharacterEditPage() {
         });
         
         // 基本キャラクター情報を取得
-        const characterResponse = await fetch(`http://localhost:3004/api/characters/${characterId}`, {
+        const characterResponse = await fetch(`http://localhost:5000/api/characters/${characterId}`, {
           headers: {
             'Authorization': `Bearer ${adminToken}`,
             'Content-Type': 'application/json'
@@ -204,7 +204,7 @@ export default function CharacterEditPage() {
         
         // 翻訳データを取得
         try {
-          const translationResponse = await fetch(`http://localhost:3004/api/characters/${characterId}/translations`, {
+          const translationResponse = await fetch(`http://localhost:5000/api/characters/${characterId}/translations`, {
             headers: {
               'Authorization': `Bearer ${adminToken}`,
               'Content-Type': 'application/json'
@@ -321,7 +321,7 @@ export default function CharacterEditPage() {
       
       // 1. 翻訳データを保存
       console.log('🔍 Sending translation data:', translationData);
-      const translationSaveResponse = await fetch(`http://localhost:3004/api/characters/${characterId}/translations`, {
+      const translationSaveResponse = await fetch(`http://localhost:5000/api/characters/${characterId}/translations`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -373,7 +373,7 @@ export default function CharacterEditPage() {
         galleryImages: galleryImagesForSave
       };
       
-      const basicSaveResponse = await fetch(`http://localhost:3004/api/characters/${characterId}`, {
+      const basicSaveResponse = await fetch(`http://localhost:5000/api/characters/${characterId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -465,7 +465,7 @@ export default function CharacterEditPage() {
         return;
       }
       
-      const uploadResponse = await fetch('http://localhost:3004/api/characters/upload/image', {
+      const uploadResponse = await fetch('http://localhost:5000/api/characters/upload/image', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${adminToken}`
@@ -515,7 +515,7 @@ export default function CharacterEditPage() {
         const updateField = imageFieldMap[currentImageType];
         if (updateField) {
           // キャラクターデータを即座に更新
-          const updateResponse = await fetch(`http://localhost:3004/api/characters/${characterId}`, {
+          const updateResponse = await fetch(`http://localhost:5000/api/characters/${characterId}`, {
             method: 'PUT',
             headers: {
               'Authorization': `Bearer ${adminToken}`,

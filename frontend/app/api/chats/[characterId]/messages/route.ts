@@ -11,7 +11,7 @@ export async function POST(
     console.log('🔗 Chat Messages API Route (POST): プロキシ先バックエンド', { characterId, message: body.message });
     
     // バックエンドAPIに転送
-    const backendUrl = `http://localhost:3004/api/chats/${characterId}/messages`;
+    const backendUrl = `http://localhost:5000/api/chats/${characterId}/messages`;
     
     // 認証ヘッダーを転送
     const headers: HeadersInit = {

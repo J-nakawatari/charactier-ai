@@ -18,8 +18,8 @@ export async function createApiProxy(
     const searchParams = request.nextUrl.searchParams;
     const queryString = searchParams.toString();
     
-    // 環境変数からバックエンドURLを取得（デフォルトはlocalhost:3004）
-    const backendBaseUrl = process.env.BACKEND_URL || 'http://localhost:3004';
+    // 環境変数からバックエンドURLを取得（デフォルトはlocalhost:5000）
+    const backendBaseUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const backendUrl = `${backendBaseUrl}${backendPath}${queryString ? `?${queryString}` : ''}`;
     
     console.log(`🔗 API Proxy: ${backendPath} → ${backendUrl}`);
@@ -100,6 +100,6 @@ export async function createAuthenticatedApiProxy(
  * バックエンドURL取得ヘルパー
  */
 export function getBackendUrl(path: string): string {
-  const backendBaseUrl = process.env.BACKEND_URL || 'http://localhost:3004';
+  const backendBaseUrl = process.env.BACKEND_URL || 'http://localhost:5000';
   return `${backendBaseUrl}${path}`;
 }

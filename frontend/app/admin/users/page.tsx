@@ -62,7 +62,7 @@ export default function UsersPage() {
         params.append('status', statusFilter);
       }
 
-      const url = `http://localhost:3004/api/admin/users?${params}`;
+      const url = `http://localhost:5000/api/admin/users?${params}`;
       console.log('🔍 Fetching users from:', url);
 
       const adminToken = localStorage.getItem('adminAccessToken');

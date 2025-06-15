@@ -44,7 +44,8 @@ dotenv.config({ path: './.env' });
 
 const app = express();
 routeRegistry.setApp(app);
-const PORT = process.env.PORT || 3004;
+// ★ 新: 環境変数優先、無ければ 5000
+const PORT = process.env.PORT || 5000;
 
 // MongoDB接続
 let isMongoConnected = false;

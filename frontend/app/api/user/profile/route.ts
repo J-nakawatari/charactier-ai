@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
     
     // バックエンドAPIに転送
-    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:3004'}/api/user/dashboard`;
+    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/user/dashboard`;
     const response = await fetch(backendUrl, {
       method: 'GET',
       headers,

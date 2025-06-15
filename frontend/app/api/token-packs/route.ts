@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     
     // バックエンドのユーザー用APIに転送
-    const backendUrl = `http://localhost:3004/api/token-packs?isActive=${isActive}&limit=50`;
+    const backendUrl = `http://localhost:5000/api/token-packs?isActive=${isActive}&limit=50`;
     const response = await fetch(backendUrl, {
       method: 'GET',
       headers: {

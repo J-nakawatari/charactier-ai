@@ -13,7 +13,7 @@ export async function GET(
     const authHeader = req.headers.get('Authorization');
     
     // バックエンドAPIからセッション情報を取得
-    const backendUrl = `http://localhost:3004/api/purchase/session/${sessionId}`;
+    const backendUrl = `http://localhost:5000/api/purchase/session/${sessionId}`;
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };

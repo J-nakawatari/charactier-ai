@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3004';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
 
     console.log('🔍 Debug current user - forwarding to backend...');
 

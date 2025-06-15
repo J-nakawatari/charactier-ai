@@ -34,7 +34,8 @@ function PurchaseSuccessContent() {
       let fallbackTimeout: NodeJS.Timeout;
       
       // SSEでリアルタイム通知を受信（本番環境対応）
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004';
+      // ★ 新: デフォルトポートを5000に変更
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       eventSource = new EventSource(`${backendUrl}/api/purchase/events/${sessionId}`);
       
       eventSource.onmessage = (event) => {

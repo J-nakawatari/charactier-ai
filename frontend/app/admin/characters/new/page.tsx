@@ -242,7 +242,7 @@ export default function CharacterNewPage() {
         adminToken: adminToken ? 'Present' : 'Missing'
       });
 
-      const response = await fetch('http://localhost:3004/api/characters', {
+      const response = await fetch('http://localhost:5000/api/characters', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

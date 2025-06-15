@@ -220,8 +220,8 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
       }
 
       const backendUrl = editingPack 
-        ? `http://localhost:3004/api/admin/token-packs/${editingPack._id}`
-        : 'http://localhost:3004/api/admin/token-packs';
+        ? `http://localhost:5000/api/admin/token-packs/${editingPack._id}`
+        : 'http://localhost:5000/api/admin/token-packs';
 
       const response = await fetch(backendUrl, {
         method,

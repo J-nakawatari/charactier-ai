@@ -6,6 +6,9 @@ import { authenticateToken } from './middleware/auth';
 
 const app: express.Application = express();
 
+// ★ 新: 環境変数優先、無ければ 5000
+const PORT = process.env.PORT || 5000;
+
 // RouteRegistryにExpressアプリを設定
 RouteRegistry.setApp(app);
 
@@ -44,8 +47,8 @@ try {
 }
 
 // サーバー起動時に登録済みルートを表示
-app.listen(3004, () => {
-  console.log('🚀 Server started on port 3004');
+app.listen(PORT, () => {
+  console.log(`🚀 Server started on port ${PORT}`);
   console.log('\n📋 登録済みAPIルート:');
   RouteRegistry.getRegisteredRoutes().forEach(({ route, file }) => {
     console.log(`  ${route} (${file})`);

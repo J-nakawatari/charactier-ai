@@ -33,7 +33,7 @@ export default function AdminListPage() {
         throw new Error('管理者認証が必要です');
       }
 
-      const response = await fetch('http://localhost:3004/api/admin/admins', {
+      const response = await fetch('http://localhost:5000/api/admin/admins', {
         headers: { 
           'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json'

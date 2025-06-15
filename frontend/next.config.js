@@ -11,7 +11,8 @@ const nextConfig = {
   },
   async rewrites() {
     // 本番環境対応: 環境変数からバックエンドURLを取得
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004';
+    // ★ 新: デフォルトポートを5000に変更
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     
     return [
       {

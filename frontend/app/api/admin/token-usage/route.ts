@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3004';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const { searchParams } = new URL(request.url);
     
     console.log('🔍 Admin token-usage proxy - params:', Object.fromEntries(searchParams));

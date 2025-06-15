@@ -13,7 +13,7 @@ export async function GET(
       );
     }
 
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3004';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const { id } = await params;
 
     const response = await fetch(`${backendUrl}/api/notifications/admin/${id}`, {
@@ -59,7 +59,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3004';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const { id } = await params;
 
     const response = await fetch(`${backendUrl}/api/notifications/admin/${id}`, {
@@ -105,7 +105,7 @@ export async function DELETE(
       );
     }
 
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3004';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const { id } = await params;
 
     const response = await fetch(`${backendUrl}/api/notifications/admin/${id}`, {

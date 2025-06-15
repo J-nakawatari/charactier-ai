@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     }
 
     // バックエンドAPIにプロキシ
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3004';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };

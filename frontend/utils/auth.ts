@@ -124,7 +124,7 @@ export async function refreshToken(): Promise<boolean> {
   if (!refresh) return false;
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'}/api/auth/refresh`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

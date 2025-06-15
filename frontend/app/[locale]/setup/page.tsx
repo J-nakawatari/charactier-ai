@@ -129,7 +129,7 @@ export default function SetupPage() {
   // キャラクター取得
   const fetchCharacters = useCallback(async () => {
     try {
-      const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'}/api/characters?locale=${locale}`);
+      const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/characters?locale=${locale}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -180,7 +180,7 @@ export default function SetupPage() {
     setError('');
 
     try {
-      const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'}/api/user/setup-complete`, {
+      const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/user/setup-complete`, {
         method: 'POST',
         body: JSON.stringify({ 
           name: name.trim(), 

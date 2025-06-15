@@ -189,7 +189,7 @@ export default function RegisterPage() {
       console.log('🔐 新規登録実行中...');
       
       // バックエンドの登録APIを呼び出し（名前は一時的に空文字で登録）
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'}/api/auth/register`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

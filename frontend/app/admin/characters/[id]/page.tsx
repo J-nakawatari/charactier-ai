@@ -89,7 +89,7 @@ export default function CharacterDetailPage() {
           throw new Error('管理者認証が必要です');
         }
         
-        const response = await fetch(`http://localhost:3004/api/characters/${params.id}`, {
+        const response = await fetch(`http://localhost:5000/api/characters/${params.id}`, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${adminToken}`

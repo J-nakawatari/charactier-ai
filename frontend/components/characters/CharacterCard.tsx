@@ -67,7 +67,7 @@ export default function CharacterCard({
       console.log('🛒 キャラクター購入リクエスト開始:', character._id);
 
       // キャラクター購入のチェックアウトセッション作成（直接バックエンドアクセス）
-      const response = await fetch('http://localhost:3004/api/purchase/create-character-checkout-session', {
+      const response = await fetch('http://localhost:5000/api/purchase/create-character-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
