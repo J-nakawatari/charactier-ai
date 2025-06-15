@@ -2555,7 +2555,7 @@ app.get('/api/debug', (_req: Request, res: Response): void => {
   });
 });
 
-const swaggerDocument = YAML.load(path.resolve(__dirname, '../../docs/openapi.yaml'));
+const swaggerDocument = YAML.load(path.resolve(__dirname, '../../../docs/openapi.yaml'));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // 管理者作成API
