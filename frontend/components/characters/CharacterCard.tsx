@@ -10,6 +10,7 @@ import AffinityBar from './AffinityBar';
 import LockBadge from './LockBadge';
 import { BaseCharacter } from '../../types/common';
 import { API_BASE_URL } from '@/lib/api-config';
+import { getSafeImageUrl } from '@/utils/imageUtils';
 
 interface Character extends BaseCharacter {
   affinityStats?: {
@@ -208,12 +209,16 @@ export default function CharacterCard({
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
       {/* キャラクター画像エリア */}
       <div className="relative aspect-square bg-gradient-to-br from-purple-100 to-pink-100">
-        {character.imageCharacterSelect || character.imageChatAvatar ? (
+        {(character.imageCharacterSelect || character.imageChatAvatar) ? (
           <Image
-            src={character.imageCharacterSelect || character.imageChatAvatar || ''}
+            src={getSafeImageUrl(
+              character.imageCharacterSelect || character.imageChatAvatar, 
+              getLocalizedText(character.name)
+            )}
             alt={getLocalizedText(character.name)}
             fill
             className="object-cover"
+            unoptimized={true}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
