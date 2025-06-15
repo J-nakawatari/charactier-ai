@@ -4,10 +4,24 @@ info:
   version: 1.0.0
   description: >
     CharactierサービスのAPI仕様書。すべてのエンドポイントはJWT認証または開発用Mock認証を利用します。
+    
+    ## 環境設定
+    
+    ### 本番環境での環境変数
+    - NEXT_PUBLIC_API_URL: フロントエンドから使用するAPIベースURL
+    - BACKEND_URL: サーバーサイドで使用するAPIベースURL
+    - NEXT_PUBLIC_IMAGE_DOMAIN: 画像配信ドメイン
+    
+    ### CORS設定
+    本番環境では適切なオリジン制限を設定してください。
 
 servers:
   - url: http://localhost:3004
-    description: ローカルExpressバックエンドサーバー
+    description: ローカル開発環境
+  - url: https://api.charactier.com
+    description: 本番環境API
+  - url: https://staging-api.charactier.com
+    description: ステージング環境API
 
 components:
   securitySchemes:

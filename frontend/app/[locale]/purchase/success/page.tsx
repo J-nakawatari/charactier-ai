@@ -33,8 +33,9 @@ function PurchaseSuccessContent() {
       let eventSource: EventSource | null = null;
       let fallbackTimeout: NodeJS.Timeout;
       
-      // SSEでリアルタイム通知を受信（バックエンドに直接接続）
-      eventSource = new EventSource(`http://localhost:3004/api/purchase/events/${sessionId}`);
+      // SSEでリアルタイム通知を受信（本番環境対応）
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004';
+      eventSource = new EventSource(`${backendUrl}/api/purchase/events/${sessionId}`);
       
       eventSource.onmessage = (event) => {
         try {
