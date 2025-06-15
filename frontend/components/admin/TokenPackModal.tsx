@@ -96,6 +96,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
 
     setPriceLoading(true);
     try {
+      const adminToken = localStorage.getItem('adminAccessToken');
       const apiUrl = `/api/admin/stripe/price/${encodeURIComponent(priceIdInput)}`;
       console.log('🔗 Stripe Price API 呼び出し開始:', {
         priceId: priceIdInput,

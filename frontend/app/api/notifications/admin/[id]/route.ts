@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authHeader = request.headers.get('Authorization');
@@ -14,7 +14,7 @@ export async function GET(
     }
 
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:3004';
-    const { id } = params;
+    const { id } = await params;
 
     const response = await fetch(`${backendUrl}/api/notifications/admin/${id}`, {
       method: 'GET',
@@ -47,7 +47,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authHeader = request.headers.get('Authorization');
@@ -60,7 +60,7 @@ export async function PUT(
 
     const body = await request.json();
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:3004';
-    const { id } = params;
+    const { id } = await params;
 
     const response = await fetch(`${backendUrl}/api/notifications/admin/${id}`, {
       method: 'PUT',
@@ -94,7 +94,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authHeader = request.headers.get('Authorization');
@@ -106,7 +106,7 @@ export async function DELETE(
     }
 
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:3004';
-    const { id } = params;
+    const { id } = await params;
 
     const response = await fetch(`${backendUrl}/api/notifications/admin/${id}`, {
       method: 'DELETE',

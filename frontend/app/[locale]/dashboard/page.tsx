@@ -140,7 +140,7 @@ export default function DashboardPage() {
                 <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                   <div className="min-w-0">
                     <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2 leading-tight">
-                      {t('title', { name: typeof dashboardData.user.name === 'string' ? dashboardData.user.name : (typeof dashboardData.user.name === 'object' && dashboardData.user.name?.name ? dashboardData.user.name.name : 'ユーザー') })}
+                      {t('title', { name: dashboardData.user.name || 'ユーザー' })}
                     </h1>
                     <p className="text-sm md:text-base text-gray-600">
                       {t('welcome')}

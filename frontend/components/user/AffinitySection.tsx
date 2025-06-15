@@ -137,7 +137,7 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
                   
                   {/* 次のアンロック */}
                   <div className="flex items-center space-x-1 text-sm">
-                    {isUnlockAvailable(affinity.level, affinity.nextUnlockLevel) ? (
+                    {isUnlockAvailable(affinity.level, affinity.nextUnlockLevel, affinity.unlockedImages) ? (
                       <>
                         <Unlock className="w-4 h-4 text-green-500" />
                         <span className="text-green-600 font-medium">

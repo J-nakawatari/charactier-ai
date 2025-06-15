@@ -197,7 +197,7 @@ function CharactersPageContent({
   }, [filters, fetchCharacters]);
 
   const handleCharacterClick = (character: Character) => {
-    if (character.characterAccessType === 'premium') {
+    if (character.characterAccessType === 'purchaseOnly') {
       window.location.href = `/${locale}/purchase/character/${character._id}`;
     }
   };

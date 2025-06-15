@@ -171,7 +171,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
               <span className="text-sm font-medium text-purple-600">
-                {user?.name ? (typeof user.name === 'string' ? user.name.charAt(0).toUpperCase() : (typeof user.name === 'object' && user.name?.name ? user.name.name.charAt(0).toUpperCase() : 'U')) : 'U'}
+                {(user?.name || 'U').charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="flex-1 min-w-0">

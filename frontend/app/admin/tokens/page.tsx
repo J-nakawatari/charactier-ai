@@ -250,7 +250,7 @@ export default function TokensPage() {
       <main className="flex-1 p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
           {/* 統計カード */}
-          <TokenStats tokenUsage={tokenUsage} users={users} tokenStats={tokenStats} />
+          <TokenStats tokenUsage={tokenUsage as any} users={users as any} tokenStats={tokenStats as any} />
           
           {/* タブコンテンツ */}
           {activeTab === 'users' ? (

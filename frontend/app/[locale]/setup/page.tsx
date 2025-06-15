@@ -127,12 +127,6 @@ export default function SetupPage() {
   }, [mounted, isMobile, videoSources]);
 
   // キャラクター取得
-  useEffect(() => {
-    if (step === 2) {
-      fetchCharacters();
-    }
-  }, [step, fetchCharacters]);
-
   const fetchCharacters = useCallback(async () => {
     try {
       const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'}/api/characters?locale=${locale}`);
@@ -153,6 +147,12 @@ export default function SetupPage() {
       setError('キャラクター情報の取得に失敗しました');
     }
   }, [locale]);
+
+  useEffect(() => {
+    if (step === 2) {
+      fetchCharacters();
+    }
+  }, [step, fetchCharacters]);
 
   const handleNameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

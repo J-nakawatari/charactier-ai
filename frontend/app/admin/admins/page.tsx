@@ -24,10 +24,6 @@ export default function AdminListPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchAdmins();
-  }, [fetchAdmins]);
-
   const fetchAdmins = useCallback(async () => {
     try {
       setLoading(true);
@@ -61,6 +57,10 @@ export default function AdminListPage() {
       setLoading(false);
     }
   }, [error]);
+
+  useEffect(() => {
+    fetchAdmins();
+  }, [fetchAdmins]);
 
   const filteredAdmins = admins.filter(admin =>
     (admin.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -104,7 +104,7 @@ export default function CharacterGrid({
         const currentAffinity = getUserAffinity(character._id);
         
         // purchasePrice フィールドから価格を取得
-        const price = character.purchasePrice || undefined;
+        const price = (character as any).purchasePrice || undefined;
         
         return (
           <div

@@ -15,7 +15,7 @@ import {
   Eye,
   RotateCcw
 } from 'lucide-react';
-import CacheAnalyticsDashboard from '../../../components/admin/CacheAnalyticsDashboard';
+// import CacheAnalyticsDashboard from '../../../components/admin/CacheAnalyticsDashboard';
 
 interface CachePerformanceMetrics {
   totalCaches: number;
@@ -534,13 +534,16 @@ export default function CacheManagementPage() {
 
       {/* アナリティクスタブ */}
       {activeTab === 'analytics' && metrics && (
-        <CacheAnalyticsDashboard
-          characterStats={metrics.cachesByCharacter}
-          topCaches={metrics.topPerformingCaches}
-          recentActivity={metrics.recentActivity}
-          hitRatio={metrics.hitRatio}
-          efficiencyScore={metrics.cacheEfficiencyScore}
-        />
+        <div>
+          {/* <CacheAnalyticsDashboard
+            characterStats={metrics.cachesByCharacter}
+            topCaches={metrics.topPerformingCaches}
+            recentActivity={metrics.recentActivity}
+            hitRatio={metrics.hitRatio}
+            efficiencyScore={metrics.cacheEfficiencyScore}
+          /> */}
+          <div className="text-center text-gray-500 py-8">Analytics Dashboard (準備中)</div>
+        </div>
       )}
     </div>
   );

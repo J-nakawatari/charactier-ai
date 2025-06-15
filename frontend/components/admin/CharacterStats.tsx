@@ -28,7 +28,7 @@ export default function CharacterStats({ characters }: CharacterStatsProps) {
     free: characters.filter(c => c.characterAccessType === 'free').length,
     totalChats: characters.reduce((sum, c) => sum + (c.totalConversations || 0), 0),
     avgIntimacy: characters.length > 0 ? characters.reduce((sum, c) => sum + (c.averageAffinity || 0), 0) / characters.length : 0,
-    premium: characters.filter(c => c.characterAccessType === 'premium').length
+    premium: characters.filter(c => c.characterAccessType === 'purchaseOnly').length
   };
 
   const cards = [
