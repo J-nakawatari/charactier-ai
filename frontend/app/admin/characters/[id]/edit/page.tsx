@@ -206,6 +206,12 @@ export default function CharacterEditPage() {
           console.log('  imageChatBackgroundUrl:', character.imageChatBackground || '');
           console.log('  imageChatAvatarUrl:', character.imageChatAvatar || '');
           
+          console.log('🔄 normalizeImageUrl適用後:');
+          console.log('  imageCharacterSelect normalized:', normalizeImageUrl(character.imageCharacterSelect));
+          console.log('  imageDashboard normalized:', normalizeImageUrl(character.imageDashboard));
+          console.log('  imageChatBackground normalized:', normalizeImageUrl(character.imageChatBackground));
+          console.log('  imageChatAvatar normalized:', normalizeImageUrl(character.imageChatAvatar));
+          
           console.log('🔄 FormDataに設定した価格:', character.purchasePrice || 0);
           
           // 保存済み価格がある場合は価格情報表示エリアにも設定
@@ -906,7 +912,7 @@ export default function CharacterEditPage() {
                           <Image 
                             src={formData.imageCharacterSelect 
                               ? URL.createObjectURL(formData.imageCharacterSelect) 
-                              : normalizeImageUrl(formData.imageCharacterSelectUrl) || ''
+                              : (formData.imageCharacterSelectUrl || '/images/default-character.png')
                             } 
                             alt="キャラクター選択" 
                             width={80}
@@ -950,7 +956,7 @@ export default function CharacterEditPage() {
                           <Image 
                             src={formData.imageDashboard 
                               ? URL.createObjectURL(formData.imageDashboard) 
-                              : normalizeImageUrl(formData.imageDashboardUrl) || ''
+                              : (formData.imageDashboardUrl || '/images/default-character.png')
                             } 
                             alt="ダッシュボード" 
                             width={80}
@@ -994,7 +1000,7 @@ export default function CharacterEditPage() {
                           <Image 
                             src={formData.imageChatBackground 
                               ? URL.createObjectURL(formData.imageChatBackground) 
-                              : normalizeImageUrl(formData.imageChatBackgroundUrl) || ''
+                              : (formData.imageChatBackgroundUrl || '/images/default-character.png')
                             } 
                             alt="チャット背景" 
                             width={80}
@@ -1038,7 +1044,7 @@ export default function CharacterEditPage() {
                           <Image 
                             src={formData.imageChatAvatar 
                               ? URL.createObjectURL(formData.imageChatAvatar) 
-                              : normalizeImageUrl(formData.imageChatAvatarUrl) || ''
+                              : (formData.imageChatAvatarUrl || '/images/default-character.png')
                             } 
                             alt="チャットアバター" 
                             width={80}
@@ -1108,7 +1114,7 @@ export default function CharacterEditPage() {
                             />
                           ) : galleryItem?.imageUrl ? (
                             <Image 
-                              src={normalizeImageUrl(galleryItem.imageUrl) || ''} 
+                              src={galleryItem.imageUrl || '/images/default-character.png'} 
                               alt={`ギャラリー ${index + 1}`} 
                               width={64}
                               height={64}
