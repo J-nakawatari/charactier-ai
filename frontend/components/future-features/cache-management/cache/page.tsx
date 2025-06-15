@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Activity,
   BarChart3,
@@ -101,11 +101,7 @@ export default function CacheManagementPage() {
   const [error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics'>('overview');
 
-  useEffect(() => {
-    fetchCacheData();
-  }, [timeframe]);
-
-  const fetchCacheData = async () => {
+  const fetchCacheData = useCallback(async () => {
     setIsLoading(true);
     setError('');
     
@@ -141,7 +137,11 @@ export default function CacheManagementPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [timeframe]);
+
+  useEffect(() => {
+    fetchCacheData();
+  }, [timeframe, fetchCacheData]);
 
   const handleCacheCleanup = async () => {
     setIsCleaningUp(true);

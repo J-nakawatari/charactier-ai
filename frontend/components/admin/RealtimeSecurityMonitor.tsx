@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { 
   Shield, 
@@ -65,7 +65,7 @@ export default function RealtimeSecurityMonitor({
   const audioContextRef = useRef<AudioContext | null>(null);
 
   // 🔊 アラート音生成
-  const playAlertSound = (severity: string) => {
+  const playAlertSound = useCallback((severity: string) => {
     if (!soundEnabled) return;
 
     try {
@@ -95,10 +95,10 @@ export default function RealtimeSecurityMonitor({
     } catch (error) {
       console.error('Alert sound error:', error);
     }
-  };
+  }, [soundEnabled]);
 
   // 🔄 SSE接続開始
-  const connectToSecurityStream = () => {
+  const connectToSecurityStream = useCallback(() => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
@@ -199,7 +199,7 @@ export default function RealtimeSecurityMonitor({
       setConnectionStatus('error');
       showError('セキュリティストリームの接続に失敗しました');
     }
-  };
+  }, [showError, maxEvents, autoScroll, warning, playAlertSound]);
 
   // 🎨 重要度バッジ
   const getSeverityBadge = (severity: string) => {
@@ -253,7 +253,7 @@ export default function RealtimeSecurityMonitor({
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
-  }, []);
+  }, [connectToSecurityStream]);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200">

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Eye, Edit, MoreHorizontal, Heart } from 'lucide-react';
 import type { Character } from '@/types/common';
 
@@ -28,9 +29,11 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
               <div className="flex items-center space-x-3 flex-1">
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center overflow-hidden">
                   {character.imageCharacterSelect ? (
-                    <img
+                    <Image
                       src={character.imageCharacterSelect}
                       alt={character.name.ja}
+                      width={48}
+                      height={48}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -136,9 +139,11 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center overflow-hidden">
                       {character.imageCharacterSelect ? (
-                        <img
+                        <Image
                           src={character.imageCharacterSelect}
                           alt={character.name.ja}
+                          width={40}
+                          height={40}
                           className="w-full h-full object-cover"
                         />
                       ) : (

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Eye, Star, Calendar, Tag } from 'lucide-react';
 import Image from 'next/image';
 
@@ -42,19 +42,7 @@ export default function AffinityImageModal({
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
 
-  useEffect(() => {
-    if (isOpen && characterId) {
-      console.log('🔍 AffinityImageModal: モーダル表示開始', {
-        isOpen,
-        characterId,
-        characterName,
-        userAffinityLevel
-      });
-      fetchAffinityImages();
-    }
-  }, [isOpen, characterId]);
-
-  const fetchAffinityImages = async () => {
+  const fetchAffinityImages = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -97,7 +85,19 @@ export default function AffinityImageModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [characterId, userAffinityLevel]);
+
+  useEffect(() => {
+    if (isOpen && characterId) {
+      console.log('🔍 AffinityImageModal: モーダル表示開始', {
+        isOpen,
+        characterId,
+        characterName,
+        userAffinityLevel
+      });
+      fetchAffinityImages();
+    }
+  }, [isOpen, characterId, characterName, userAffinityLevel, fetchAffinityImages]);
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {

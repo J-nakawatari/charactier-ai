@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
@@ -27,11 +27,11 @@ export default function SetupPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const videoSources = [
+  const videoSources = useMemo(() => [
     '/video/hero-videos_01.mp4',
     '/video/hero-videos_02.mp4',
     '/video/hero-videos_03.mp4'
-  ];
+  ], []);
 
   const fallbackImages = [
     '/images/hero/hero-fallback_01.jpg',
@@ -353,9 +353,11 @@ export default function SetupPage() {
                       {/* キャラクター画像 */}
                       <div className="aspect-square w-full bg-gradient-to-br from-pink-100 to-purple-100 overflow-hidden">
                         {character.imageCharacterSelect ? (
-                          <img
+                          <Image
                             src={character.imageCharacterSelect}
-                            alt={character.name[locale] || character.name.ja}
+                            alt={character.name[locale] || character.name.ja || 'Character image'}
+                            width={200}
+                            height={200}
                             className="w-full h-full object-cover"
                           />
                         ) : (

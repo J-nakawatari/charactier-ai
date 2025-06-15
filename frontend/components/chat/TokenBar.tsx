@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Coins, AlertTriangle, Plus } from 'lucide-react';
 import { getAuthHeaders, getCurrentUser } from '@/utils/auth';
 
@@ -14,13 +14,8 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
   const [currentTokens, setCurrentTokens] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // 初期ロード時に実際の残高を取得
-  useEffect(() => {
-    refreshTokenBalance();
-  }, []);
-  
   // トークン残高の手動更新
-  const refreshTokenBalance = async () => {
+  const refreshTokenBalance = useCallback(async () => {
     if (isRefreshing) return;
     
     try {
@@ -40,7 +35,12 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [isRefreshing, onTokenUpdate]);
+
+  // 初期ロード時に実際の残高を取得
+  useEffect(() => {
+    refreshTokenBalance();
+  }, [refreshTokenBalance]);
   
   // ページのフォーカス時に自動更新
   useEffect(() => {
@@ -65,7 +65,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
       window.removeEventListener('focus', handleFocus);
       clearInterval(interval);
     };
-  }, []);
+  }, [refreshTokenBalance]);
   
   // ローディング中の処理
   if (currentTokens === null) {

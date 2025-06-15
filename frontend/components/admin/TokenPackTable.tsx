@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { Edit, Trash2, Plus, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
@@ -35,7 +35,7 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
   const [page, setPage] = useState(1);
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
 
-  const fetchTokenPacks = async () => {
+  const fetchTokenPacks = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -72,11 +72,11 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, isActiveFilter, error]);
 
   useEffect(() => {
     fetchTokenPacks();
-  }, [page, isActiveFilter]);
+  }, [fetchTokenPacks]);
 
   // 外部からリフレッシュできるようにする
   useImperativeHandle(ref, () => ({

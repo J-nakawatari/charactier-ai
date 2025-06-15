@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import UserSidebar from '@/components/user/UserSidebar';
+import Image from 'next/image';
+import { authenticatedFetch } from '@/utils/auth';
+import { API_BASE_URL } from '@/lib/api-config';
 import { 
   Images, 
   ChevronDown, 
@@ -62,30 +65,7 @@ export default function CharacterLibraryPage() {
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
 
-  useEffect(() => {
-    loadCharacterLibraryData();
-  }, []);
-
-  // ESCキーでモーダルを閉じる
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && showModal) {
-        closeModal();
-      }
-    };
-
-    if (showModal) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden'; // スクロールを無効化
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset'; // スクロールを復元
-    };
-  }, [showModal]);
-
-  const loadCharacterLibraryData = async () => {
+  const loadCharacterLibraryData = useCallback(async () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('accessToken');
@@ -130,7 +110,30 @@ export default function CharacterLibraryPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedCharacter]);
+
+  useEffect(() => {
+    loadCharacterLibraryData();
+  }, [loadCharacterLibraryData]);
+
+  // ESCキーでモーダルを閉じる
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showModal) {
+        closeModal();
+      }
+    };
+
+    if (showModal) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden'; // スクロールを無効化
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset'; // スクロールを復元
+    };
+  }, [showModal]);
 
   const handleCharacterSelect = (character: Character) => {
     setSelectedCharacter(character);
@@ -390,9 +393,11 @@ export default function CharacterLibraryPage() {
                           className="aspect-w-16 aspect-h-12 bg-white border border-gray-200 relative cursor-pointer group"
                           onClick={() => handleImageClick(image)}
                         >
-                          <img 
+                          <Image 
                             src={image.url} 
-                            alt={image.title[locale as keyof typeof image.title]}
+                            alt={image.title[locale as keyof typeof image.title] || 'Character gallery image'}
+                            width={400}
+                            height={192}
                             className="w-full h-48 object-contain group-hover:scale-105 transition-transform duration-300 p-2"
                           />
                           
@@ -483,9 +488,11 @@ export default function CharacterLibraryPage() {
                           className="aspect-w-16 aspect-h-12 bg-white border border-gray-200 relative cursor-pointer group"
                         >
                           {/* ブラー処理された画像 */}
-                          <img 
+                          <Image 
                             src={image.url} 
                             alt="未解放の思い出"
+                            width={400}
+                            height={192}
                             className="w-full h-48 object-contain filter blur-md scale-110 p-2"
                           />
                           
@@ -599,9 +606,11 @@ export default function CharacterLibraryPage() {
 
             {/* モーダル画像 - 白背景で透過PNG対応 */}
             <div className="relative bg-white p-8">
-              <img
+              <Image
                 src={selectedImage.url}
-                alt={selectedImage.title[locale]}
+                alt={selectedImage.title[locale] || 'Selected image'}
+                width={800}
+                height={600}
                 className="w-full max-h-[70vh] object-contain mx-auto"
                 onClick={(e) => e.stopPropagation()}
               />

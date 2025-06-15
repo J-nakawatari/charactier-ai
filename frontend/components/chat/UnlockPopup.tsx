@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { X, Star, Heart, Gift, Sparkles } from 'lucide-react';
 
 interface UnlockPopupProps {
@@ -13,6 +13,11 @@ interface UnlockPopupProps {
 export function UnlockPopup({ level, illustration, characterName, onClose }: UnlockPopupProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+
+  const handleClose = useCallback(() => {
+    setIsVisible(false);
+    setTimeout(onClose, 300); // アニメーション完了後にクローズ
+  }, [onClose]);
 
   useEffect(() => {
     // アニメーション開始
@@ -33,12 +38,7 @@ export function UnlockPopup({ level, illustration, characterName, onClose }: Unl
       clearTimeout(confettiTimer);
       clearTimeout(autoCloseTimer);
     };
-  }, []);
-
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(onClose, 300); // アニメーション完了後にクローズ
-  };
+  }, [handleClose]);
 
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${

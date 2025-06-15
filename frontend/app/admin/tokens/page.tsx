@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import TokenStats from '@/components/admin/TokenStats';
 import TokenManagementTable from '@/components/admin/TokenManagementTable';
@@ -32,11 +32,11 @@ export default function TokensPage() {
   const router = useRouter();
   
   // URLクエリパラメータからタブを取得、デフォルトは'users'
-  const getInitialTab = (): 'users' | 'packs' => {
+  const getInitialTab = useCallback((): 'users' | 'packs' => {
     const tab = searchParams.get('tab');
     if (tab === 'packs') return 'packs';
     return 'users';
-  };
+  }, [searchParams]);
   
   const [activeTab, setActiveTab] = useState<'users' | 'packs'>(getInitialTab());
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,7 +57,7 @@ export default function TokensPage() {
   // URLクエリパラメータの変更を監視
   useEffect(() => {
     setActiveTab(getInitialTab());
-  }, [searchParams]);
+  }, [searchParams, getInitialTab]);
 
   // データ取得
   useEffect(() => {

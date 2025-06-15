@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { Settings, Cpu, DollarSign, RotateCcw, Info } from 'lucide-react';
 
@@ -33,7 +33,7 @@ export default function ModelsPage() {
   const [selectedModel, setSelectedModel] = useState('');
 
   // モデル情報を取得
-  const fetchModels = async () => {
+  const fetchModels = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/admin/models', {
@@ -56,7 +56,7 @@ export default function ModelsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [error]);
 
   // モデルを変更
   const handleModelChange = async () => {
@@ -94,7 +94,7 @@ export default function ModelsPage() {
 
   useEffect(() => {
     fetchModels();
-  }, []);
+  }, [fetchModels]);
 
   if (isLoading) {
     return (

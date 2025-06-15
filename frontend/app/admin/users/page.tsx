@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import UserStats from '@/components/admin/UserStats';
 import UserTable from '@/components/admin/UserTable';
 import { useToast } from '@/contexts/ToastContext';
@@ -46,7 +46,7 @@ export default function UsersPage() {
   });
 
   // ユーザーデータを取得
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -99,12 +99,12 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.page, pagination.limit, searchTerm, statusFilter, error]);
 
   // 初回読み込み
   useEffect(() => {
     fetchUsers();
-  }, [pagination.page, searchTerm, statusFilter]);
+  }, [pagination.page, searchTerm, statusFilter, fetchUsers]);
 
   // 検索処理
   const handleSearch = (e: React.FormEvent) => {

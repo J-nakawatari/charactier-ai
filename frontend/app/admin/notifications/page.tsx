@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { 
@@ -88,7 +88,7 @@ export default function NotificationsManagementPage() {
   });
 
   // お知らせ一覧を取得
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('adminAccessToken');
@@ -145,7 +145,7 @@ export default function NotificationsManagementPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filters]);
 
   // お知らせ削除
   const deleteNotification = async (id: string) => {
@@ -175,7 +175,7 @@ export default function NotificationsManagementPage() {
   // 初回読み込み
   useEffect(() => {
     fetchNotifications();
-  }, [filters]);
+  }, [filters, fetchNotifications]);
 
   // タイプアイコン取得
   const getTypeIcon = (type: string) => {

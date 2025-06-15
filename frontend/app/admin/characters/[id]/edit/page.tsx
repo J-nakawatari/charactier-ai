@@ -250,7 +250,7 @@ export default function CharacterEditPage() {
     if (characterId) {
       loadCharacterData();
     }
-  }, [characterId]);
+  }, [characterId, error]);
 
   const handleTranslationChange = (newTranslationData: any) => {
     setTranslationData(newTranslationData);
@@ -860,12 +860,14 @@ export default function CharacterEditPage() {
                     {formData.imageCharacterSelect || formData.imageCharacterSelectUrl ? (
                       <div className="space-y-2">
                         <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                          <img 
+                          <Image 
                             src={formData.imageCharacterSelect 
                               ? URL.createObjectURL(formData.imageCharacterSelect) 
                               : formData.imageCharacterSelectUrl
                             } 
                             alt="キャラクター選択" 
+                            width={80}
+                            height={80}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -902,12 +904,14 @@ export default function CharacterEditPage() {
                     {formData.imageDashboard || formData.imageDashboardUrl ? (
                       <div className="space-y-2">
                         <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                          <img 
+                          <Image 
                             src={formData.imageDashboard 
                               ? URL.createObjectURL(formData.imageDashboard) 
                               : formData.imageDashboardUrl
                             } 
                             alt="ダッシュボード" 
+                            width={80}
+                            height={80}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -944,12 +948,14 @@ export default function CharacterEditPage() {
                     {formData.imageChatBackground || formData.imageChatBackgroundUrl ? (
                       <div className="space-y-2">
                         <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                          <img 
+                          <Image 
                             src={formData.imageChatBackground 
                               ? URL.createObjectURL(formData.imageChatBackground) 
                               : formData.imageChatBackgroundUrl
                             } 
                             alt="チャット背景" 
+                            width={80}
+                            height={80}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -986,12 +992,14 @@ export default function CharacterEditPage() {
                     {formData.imageChatAvatar || formData.imageChatAvatarUrl ? (
                       <div className="space-y-2">
                         <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
-                          <img 
+                          <Image 
                             src={formData.imageChatAvatar 
                               ? URL.createObjectURL(formData.imageChatAvatar) 
                               : formData.imageChatAvatarUrl
                             } 
                             alt="チャットアバター" 
+                            width={80}
+                            height={80}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -1048,15 +1056,19 @@ export default function CharacterEditPage() {
                       <div className="flex items-start space-x-4">
                         <div className="w-16 h-16 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
                           {galleryItem?.file ? (
-                            <img 
+                            <Image 
                               src={URL.createObjectURL(galleryItem.file)} 
                               alt={`ギャラリー ${index + 1}`} 
+                              width={64}
+                              height={64}
                               className="w-full h-full object-cover"
                             />
                           ) : galleryItem?.imageUrl ? (
-                            <img 
+                            <Image 
                               src={galleryItem.imageUrl} 
                               alt={`ギャラリー ${index + 1}`} 
+                              width={64}
+                              height={64}
                               className="w-full h-full object-cover"
                             />
                           ) : (

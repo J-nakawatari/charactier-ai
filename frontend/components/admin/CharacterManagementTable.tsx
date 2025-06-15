@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useToast } from '@/contexts/ToastContext';
 import { Eye, Edit, Play, Pause, Heart } from 'lucide-react';
 
@@ -87,9 +88,11 @@ export default function CharacterManagementTable({ characters }: CharacterManage
               <div className="flex items-center flex-1">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center overflow-hidden">
                   {character.imageCharacterSelect ? (
-                    <img
+                    <Image
                       src={character.imageCharacterSelect}
                       alt={character.name?.ja || 'Character'}
+                      width={48}
+                      height={48}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -223,9 +226,11 @@ export default function CharacterManagementTable({ characters }: CharacterManage
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center overflow-hidden">
                       {character.imageCharacterSelect ? (
-                        <img
+                        <Image
                           src={character.imageCharacterSelect}
                           alt={character.name?.ja || 'Character'}
+                          width={40}
+                          height={40}
                           className="w-full h-full object-cover"
                         />
                       ) : (

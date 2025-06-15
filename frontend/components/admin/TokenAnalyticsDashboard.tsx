@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { 
   BarChart3, 
@@ -133,7 +133,7 @@ export default function TokenAnalyticsDashboard({ defaultDays = 30 }: TokenAnaly
   const [anomalies, setAnomalies] = useState<AnomalyData | null>(null);
 
   // 🔄 データ取得
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -182,11 +182,11 @@ export default function TokenAnalyticsDashboard({ defaultDays = 30 }: TokenAnaly
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDays, showError]);
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, [selectedDays]);
+  }, [selectedDays, fetchAnalyticsData]);
 
   // 🎨 ユーティリティ関数
   const formatNumber = (num: number) => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Send, Heart, Zap, Settings, Eye, EyeOff } from 'lucide-react';
 import { MessageList } from './MessageList';
@@ -115,10 +115,10 @@ export function ChatLayout({
       experience: affinity.currentExp,
       mood: (affinity as any).currentMood || 'neutral'
     });
-  }, [affinity.level, affinity.currentExp, (affinity as any).currentMood, updateAffinity]);
+  }, [affinity, updateAffinity]);
 
   // 定期的にトークン残高を更新する関数
-  const refreshTokenBalance = async () => {
+  const refreshTokenBalance = useCallback(async () => {
     try {
       // TODO: 適切なユーザー情報取得APIに変更
       const response = await fetch('/api/user/profile', {
@@ -131,7 +131,7 @@ export function ChatLayout({
     } catch (error) {
       console.error('Token balance refresh failed:', error);
     }
-  };
+  }, [currentTokens]);
 
   // ページがフォーカスされた時（購入完了から戻ってきた時など）にトークン残高を更新
   useEffect(() => {
@@ -150,7 +150,7 @@ export function ChatLayout({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       clearInterval(interval);
     };
-  }, []);
+  }, [refreshTokenBalance]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
