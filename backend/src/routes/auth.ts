@@ -5,7 +5,7 @@ import { UserModel } from '../models/UserModel';
 import { AdminModel } from '../models/AdminModel';
 import { generateAccessToken, generateRefreshToken } from '../middleware/auth';
 
-const router = Router();
+const router: Router = Router();
 
 // ユーザー登録
 router.post('/register', async (req: Request, res: Response): Promise<void> => {

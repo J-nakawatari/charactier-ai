@@ -4,7 +4,7 @@ import express from 'express';
 import RouteRegistry from './core/RouteRegistry';
 import { authenticateToken } from './middleware/auth';
 
-const app = express();
+const app: express.Application = express();
 
 // RouteRegistryにExpressアプリを設定
 RouteRegistry.setApp(app);
