@@ -87,3 +87,11 @@ export function startAllMoodJobs(): void {
   startMoodDecayJob();
   startInactivityMoodJob();
 }
+
+/**
+ * 為替レート更新Cronジョブを開始
+ */
+export function startExchangeRateJob(): void {
+  const { startExchangeRateJob: startJob } = require('./exchangeRateJob');
+  startJob();
+}

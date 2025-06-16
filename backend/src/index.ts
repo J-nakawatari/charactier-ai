@@ -37,7 +37,8 @@ import {
   invalidateCharacterCache
 } from './utils/cacheAnalytics';
 import { applyMoodTrigger } from './services/moodEngine';
-import { startAllMoodJobs } from './scripts/moodDecay';
+import { startAllMoodJobs, startExchangeRateJob } from './scripts/moodDecay';
+import { initializeExchangeRate } from './scripts/exchangeRateJob';
 import { calcTokensToGive, logTokenConfig } from './config/tokenConfig';
 const TokenService = require('../services/tokenService');
 import routeRegistry from './core/RouteRegistry';
@@ -4573,6 +4574,23 @@ app.get('/api/admin/cron-status', authenticateToken, async (req: AuthRequest, re
           nextRunJST: nextInactivity.toISOString().replace('Z', '+09:00'),
           isActive: true,
           lastRunTime: 'ログを確認してください'
+        },
+        {
+          id: 'exchange-rate-update',
+          name: '為替レート更新',
+          schedule: '0 10 * * 1',
+          description: 'USD/JPY為替レートを毎週月曜日10時に更新（異常値検知・フォールバック機能付き）',
+          frequency: '週1回（月曜 10:00）',
+          nextRunJST: (() => {
+            const now = dayjs().tz('Asia/Tokyo');
+            let nextMonday = now.day(1).hour(10).minute(0).second(0);
+            if (nextMonday.isBefore(now)) {
+              nextMonday = nextMonday.add(1, 'week');
+            }
+            return nextMonday.toISOString().replace('Z', '+09:00');
+          })(),
+          isActive: true,
+          lastRunTime: 'ログを確認してください'
         }
       ],
       monitoring: {
@@ -4580,7 +4598,9 @@ app.get('/api/admin/cron-status', authenticateToken, async (req: AuthRequest, re
         logMessages: [
           '🎭 Starting Mood Decay Cron Job (起動時)',
           '🧹 Running mood decay cleanup... (10分毎)',
-          '😔 Checking for inactive users... (毎日9時)'
+          '😔 Checking for inactive users... (毎日9時)',
+          '💱 Starting Exchange Rate Update Cron Job (起動時)',
+          '💱 Running weekly exchange rate update... (週1回月曜10時)'
         ]
       }
     };
@@ -4788,9 +4808,15 @@ routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authen
 
 
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log('✅ Server is running on:', { port: PORT, url: `http://localhost:${PORT}` });
   
   // 🎭 MoodEngine Cronジョブを開始
   startAllMoodJobs();
+  
+  // 💱 為替レート更新Cronジョブを開始
+  startExchangeRateJob();
+  
+  // 💱 初回起動時に為替レートを初期化
+  await initializeExchangeRate();
 });
