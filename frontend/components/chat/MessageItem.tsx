@@ -13,8 +13,8 @@ interface Character {
   _id: string;
   name: string; // すでに多言語処理済み文字列
   description: string; // すでに多言語処理済み文字列
-  imageChatAvatar: string;
-  imageChatBackground: string;
+  imageChatAvatar?: string;
+  imageChatBackground?: string;
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
 }
@@ -62,7 +62,7 @@ export function MessageItem({ message, character, showAdvanced = false, affinity
       {/* キャラアイコン - モバイルでも表示 */}
       <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
         <Image 
-          src={character.imageChatAvatar} 
+          src={character.imageChatAvatar || '/images/default-character.png'} 
           alt={character.name}
           width={40}
           height={40}
