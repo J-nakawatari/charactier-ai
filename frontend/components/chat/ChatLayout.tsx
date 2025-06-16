@@ -295,15 +295,11 @@ export function ChatLayout({
         {/* キャラクター画像（真ん中に配置） */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ backgroundColor: 'transparent' }}>
           <div className="h-full w-auto" style={{ backgroundColor: 'transparent' }}>
-            <Image 
+            <img 
               src={character.imageChatBackground || character.imageChatAvatar}
               alt={character.name}
-              width={400}
-              height={600}
               className="h-full w-auto object-contain"
               style={{ backgroundColor: 'transparent' }}
-              unoptimized={true}
-              priority={true}
             />
           </div>
         </div>
