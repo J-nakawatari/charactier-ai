@@ -4533,6 +4533,103 @@ app.get('/api/admin/cache/invalidation-stats', authenticateToken, async (req: Au
 });
 
 /**
+ * 🧪 テスト用APIエラー発生エンドポイント
+ */
+app.get('/api/admin/test-errors', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errorType = req.query.type as string;
+    
+    console.log(`🧪 Test error requested: ${errorType} by admin:`, req.user?._id);
+    
+    switch (errorType) {
+      case '400':
+        res.status(400).json({
+          success: false,
+          error: 'Bad Request',
+          message: 'テスト用400エラー: 不正なリクエストです'
+        });
+        return;
+        
+      case '401':
+        res.status(401).json({
+          success: false,
+          error: 'Unauthorized',
+          message: 'テスト用401エラー: 認証が必要です'
+        });
+        return;
+        
+      case '403':
+        res.status(403).json({
+          success: false,
+          error: 'Forbidden',
+          message: 'テスト用403エラー: アクセス権限がありません'
+        });
+        return;
+        
+      case '404':
+        res.status(404).json({
+          success: false,
+          error: 'Not Found',
+          message: 'テスト用404エラー: リソースが見つかりません'
+        });
+        return;
+        
+      case '500':
+        res.status(500).json({
+          success: false,
+          error: 'Internal Server Error',
+          message: 'テスト用500エラー: サーバー内部エラーです'
+        });
+        return;
+        
+      case 'timeout':
+        // 10秒のタイムアウトをシミュレート
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        res.json({
+          success: true,
+          message: 'タイムアウトテスト完了（10秒待機）'
+        });
+        return;
+        
+      case 'exception':
+        // 意図的な例外を発生
+        throw new Error('テスト用例外: 意図的に発生させたエラーです');
+        
+      case 'db-error':
+        // データベースエラーをシミュレート
+        await require('mongoose').connection.db.collection('nonexistent').findOne({});
+        break;
+        
+      default:
+        res.json({
+          success: true,
+          message: 'テスト用エラーエンドポイント',
+          availableErrors: [
+            '400 - Bad Request',
+            '401 - Unauthorized', 
+            '403 - Forbidden',
+            '404 - Not Found',
+            '500 - Internal Server Error',
+            'timeout - タイムアウトテスト（10秒）',
+            'exception - 例外発生テスト',
+            'db-error - データベースエラーテスト'
+          ],
+          usage: '/api/admin/test-errors?type=400'
+        });
+        return;
+    }
+    
+  } catch (error) {
+    console.error('🧪 Test error endpoint error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Test Error Exception',
+      message: error instanceof Error ? error.message : 'テスト用エラーの実行中に例外が発生しました'
+    });
+  }
+});
+
+/**
  * 📅 クーロンジョブ状態確認
  */
 app.get('/api/admin/cron-status', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
