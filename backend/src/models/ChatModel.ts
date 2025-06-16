@@ -28,7 +28,7 @@ interface IMessage {
 export interface IChat extends Document {
   _id: string;
   userId: string;
-  characterId: string;
+  characterId: mongoose.Types.ObjectId | string;
   messages: IMessage[];
   totalTokensUsed: number;
   currentAffinity: number;
@@ -78,7 +78,8 @@ const ChatSchema = new Schema<IChat>({
     index: true
   },
   characterId: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: 'Character',
     required: true,
     index: true
   },

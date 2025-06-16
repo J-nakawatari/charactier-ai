@@ -679,18 +679,52 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
       .limit(3)
       .select('characterId lastActivityAt messages');
 
+    // デバッグログ：populateの結果を確認
+    console.log('🔍 Dashboard API - Recent Chats Raw:', JSON.stringify(recentChats, null, 2));
+    console.log('🔍 Dashboard API - First Chat characterId:', recentChats[0]?.characterId);
+    console.log('🔍 Dashboard API - First Chat characterId type:', typeof recentChats[0]?.characterId);
+
     // 親密度情報
     const affinities = user.affinities || [];
 
     // recentChatsをフロントエンドが期待する形式に変換
-    const formattedRecentChats = recentChats.map(chat => ({
-      _id: chat._id,
-      character: chat.characterId,
-      lastMessage: chat.messages && chat.messages.length > 0 
-        ? chat.messages[chat.messages.length - 1].content 
-        : '',
-      lastMessageAt: chat.lastActivityAt,
-      messageCount: chat.messages ? chat.messages.length : 0
+    const formattedRecentChats = await Promise.all(recentChats.map(async (chat) => {
+      // デバッグログ：各チャットのcharacterIdを確認
+      console.log('🔍 Formatting chat:', {
+        chatId: chat._id,
+        characterId: chat.characterId,
+        characterIdType: typeof chat.characterId,
+        isPopulated: chat.characterId && typeof chat.characterId === 'object'
+      });
+
+      // populateが失敗した場合の処理
+      let character: any = chat.characterId;
+      if (typeof character === 'string' || character instanceof mongoose.Types.ObjectId) {
+        // characterIdが文字列またはObjectIdの場合（populate失敗）、手動でCharacterを取得
+        console.log('⚠️ Populate failed for characterId:', character, '- Fetching manually');
+        const characterDoc = await CharacterModel.findById(character).select('name imageCharacterSelect');
+        if (characterDoc) {
+          character = characterDoc;
+        } else {
+          console.error('❌ Character not found:', character);
+          // デフォルトのキャラクター情報を返す
+          character = {
+            _id: character.toString(),
+            name: { ja: 'Unknown Character', en: 'Unknown Character' },
+            imageCharacterSelect: '/images/default-avatar.png'
+          };
+        }
+      }
+
+      return {
+        _id: chat._id,
+        character: character,
+        lastMessage: chat.messages && chat.messages.length > 0 
+          ? chat.messages[chat.messages.length - 1].content 
+          : '',
+        lastMessageAt: chat.lastActivityAt,
+        messageCount: chat.messages ? chat.messages.length : 0
+      };
     }));
 
     res.json({
