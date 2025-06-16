@@ -73,16 +73,48 @@ export default function ChatPage() {
         
         const apiData = await response.json();
         
-        // 🤖 デバッグ: APIレスポンスのモデル・プロンプト情報を確認
-        console.log('🤖 Chat API レスポンス - モデル・プロンプト情報:', {
-          characterId: apiData.character._id,
-          characterName: getLocalizedString(apiData.character.name, locale),
+        // 🤖 デバッグ: APIレスポンスの完全な情報を確認
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🔍 Chat API レスポンス - 完全なデータ確認');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        
+        console.log('📡 API URL:', `/api/chats/${characterId}?locale=${locale}`);
+        console.log('👤 キャラクター情報:', {
+          id: apiData.character._id,
+          name: getLocalizedString(apiData.character.name, locale),
           aiModel: apiData.character.aiModel,
-          model: apiData.character.model,
-          personalityPrompt: apiData.character.personalityPrompt,
-          adminPrompt: apiData.character.adminPrompt,
-          fullCharacterData: apiData.character
+          model: apiData.character.model
         });
+        
+        console.log('❤️ 生のuserState情報:', {
+          fullUserState: apiData.userState,
+          affinity: apiData.userState?.affinity,
+          tokenBalance: apiData.userState?.tokenBalance,
+          unlockedGalleryImages: apiData.userState?.unlockedGalleryImages
+        });
+        
+        console.log('📊 親密度の詳細分析:', {
+          affinityLevel: apiData.userState?.affinity?.level,
+          affinityExperience: apiData.userState?.affinity?.experience,
+          affinityMood: apiData.userState?.affinity?.mood,
+          unlockedImages: apiData.userState?.unlockedGalleryImages,
+          unlockedImagesLength: apiData.userState?.unlockedGalleryImages?.length || 0
+        });
+        
+        console.log('🔍 変換前vs変換後の比較:', {
+          変換前: {
+            level: apiData.userState?.affinity?.level,
+            experience: apiData.userState?.affinity?.experience,
+            unlockedImages: apiData.userState?.unlockedGalleryImages?.length
+          },
+          変換後: {
+            level: apiData.userState?.affinity?.level || 0,
+            experience: apiData.userState?.affinity?.experience || 0,
+            unlockedImages: (apiData.userState?.unlockedGalleryImages || []).length
+          }
+        });
+        
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         // API レスポンスを ChatLayoutData 形式に変換
         const chatData: ChatLayoutData = {
