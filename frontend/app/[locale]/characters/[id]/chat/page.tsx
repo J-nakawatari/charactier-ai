@@ -74,7 +74,7 @@ export default function ChatPage() {
             name: getLocalizedString(apiData.character.name, locale),
             description: getLocalizedString(apiData.character.description, locale),
             imageChatAvatar: apiData.character.imageChatAvatar || '/characters/luna.png',
-            imageChatBackground: apiData.character.imageChatBackground || '/backgrounds/default.jpg',
+            imageChatBackground: apiData.character.imageChatBackground || apiData.character.imageChatAvatar || '/characters/luna.png',
             currentMood: apiData.userState?.affinity?.mood || 'neutral', // 統一: affinityのmoodを使用
             themeColor: apiData.character.themeColor || '#8B5CF6'
           },
