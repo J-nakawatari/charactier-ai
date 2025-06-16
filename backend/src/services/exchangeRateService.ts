@@ -6,6 +6,14 @@ import { ExchangeRateModel } from '../models/ExchangeRate';
  */
 
 interface ExchangeRateAPIResponse {
+  base: string;
+  date: string;
+  rates: {
+    [currency: string]: number;
+  };
+}
+
+interface FixerAPIResponse {
   success: boolean;
   base: string;
   date: string;
@@ -30,7 +38,7 @@ export async function fetchUSDJPYRate(): Promise<number | null> {
 
     const data: ExchangeRateAPIResponse = await response.json();
     
-    if (!data.success || !data.rates || !data.rates.JPY) {
+    if (!data.rates || !data.rates.JPY) {
       throw new Error('Invalid API response structure');
     }
 
@@ -66,7 +74,7 @@ export async function fetchUSDJPYRateFromFixer(): Promise<number | null> {
       throw new Error(`Fixer API responded with status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data: FixerAPIResponse = await response.json();
     
     if (!data.success || !data.rates || !data.rates.JPY) {
       throw new Error('Invalid Fixer API response structure');
@@ -129,7 +137,7 @@ export async function updateExchangeRate(): Promise<{
     }
 
     // 異常値チェック
-    const validation = await ExchangeRateModel.validateRate(rate);
+    const validation = await (ExchangeRateModel as any).validateRate(rate);
     
     // データベースに保存
     const exchangeRateRecord = await ExchangeRateModel.create({
@@ -185,7 +193,7 @@ export async function updateExchangeRate(): Promise<{
  */
 export async function getCurrentExchangeRate(): Promise<number> {
   try {
-    const rate = await ExchangeRateModel.getLatestValidRate('USD', 'JPY');
+    const rate = await (ExchangeRateModel as any).getLatestValidRate('USD', 'JPY');
     console.log(`📊 Using exchange rate for token calculation: ${rate} JPY/USD`);
     return rate;
   } catch (error) {

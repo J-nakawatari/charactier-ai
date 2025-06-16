@@ -1917,9 +1917,9 @@ app.get('/api/token-packs', authenticateToken, async (req: Request, res: Respons
 // 削除: 重複するpurchase-history API（1351行目の定義を使用）
 
 // 新トークン計算モデルバリデーション関数（利益率90%）
-const validateTokenPriceRatio = (tokens: number, price: number): boolean => {
+const validateTokenPriceRatio = async (tokens: number, price: number): Promise<boolean> => {
   const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
-  const expectedTokens = calcTokensToGive(price, currentModel);
+  const expectedTokens = await calcTokensToGive(price, currentModel);
   const tolerance = 0.05; // 5%の許容範囲
   const minTokens = expectedTokens * (1 - tolerance);
   const maxTokens = expectedTokens * (1 + tolerance);
@@ -2396,7 +2396,7 @@ app.post('/api/user/process-session', authenticateToken, async (req: Request, re
         if (tokensToAdd === 0) {
           const amountInYen = session.amount_total || 0;
           const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
-          tokensToAdd = calcTokensToGive(amountInYen, currentModel);
+          tokensToAdd = await calcTokensToGive(amountInYen, currentModel);
         }
         
         // ユーザーにトークンを付与
@@ -4582,7 +4582,7 @@ app.get('/api/admin/cron-status', authenticateToken, async (req: AuthRequest, re
           description: 'USD/JPY為替レートを毎週月曜日10時に更新（異常値検知・フォールバック機能付き）',
           frequency: '週1回（月曜 10:00）',
           nextRunJST: (() => {
-            const now = dayjs().tz('Asia/Tokyo');
+            const now = require('dayjs')().tz('Asia/Tokyo');
             let nextMonday = now.day(1).hour(10).minute(0).second(0);
             if (nextMonday.isBefore(now)) {
               nextMonday = nextMonday.add(1, 'week');
