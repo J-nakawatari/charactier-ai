@@ -1,32 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { backendClient } from '@/utils/backend-client';
 
 export async function GET(request: NextRequest) {
   try {
     console.log('🔗 User Profile API Route: プロキシ先バックエンド');
     
-    // 認証ヘッダーを転送
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-    
-    // リクエストからJWT認証ヘッダーを転送
-    const authHeader = request.headers.get('Authorization');
-    if (authHeader) {
-      headers['Authorization'] = authHeader;
-    }
-    
-    // モック認証ヘッダーも転送（開発用）
-    const mockAuthHeader = request.headers.get('x-auth-token');
-    if (mockAuthHeader) {
-      headers['x-auth-token'] = mockAuthHeader;
-    }
-    
-    // バックエンドAPIに転送
-    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/user/dashboard`;
-    const response = await fetch(backendUrl, {
-      method: 'GET',
-      headers,
-    });
+    // 統一されたクライアントを使用してバックエンドを呼び出し
+    const response = await backendClient.proxyRequest(request, '/api/user/profile');
 
     if (!response.ok) {
       const errorData = await response.text();
