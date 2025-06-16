@@ -39,7 +39,7 @@ export default function ImageCropper({
       case 'imageDashboard':
         return { shape: 'rect' as const, aspect: 1, label: '正方形' }; // 四角形（正方形）
       case 'imageChatBackground':
-        return { shape: 'rect' as const, aspect: 16/9, label: '16:9' }; // 四角形（16:9）
+        return { shape: 'rect' as const, aspect: 9/16, label: '9:16（縦長）' }; // 四角形（9:16 縦長）
       case 'imageChatAvatar':
         return { shape: 'round' as const, aspect: 1, label: '円形' }; // 円形
       default:
@@ -66,7 +66,7 @@ export default function ImageCropper({
       onClick={onCancel}
     >
       <div 
-        className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col"
+        className="bg-white rounded-lg max-w-5xl w-full max-h-[95vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
@@ -93,7 +93,7 @@ export default function ImageCropper({
         </div>
 
         {/* クロッパー */}
-        <div className="flex-1 relative min-h-96">
+        <div className="flex-1 relative min-h-96 h-96 md:h-[500px]">
           <Cropper
             image={imageSrc}
             crop={crop}
