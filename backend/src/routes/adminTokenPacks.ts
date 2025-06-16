@@ -53,13 +53,29 @@ router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, r
       .limit(limit)
       .lean();
 
+    // 現在の為替レートを取得して実際の利益率を計算
+    const { calcTokensToGive } = require('../config/tokenConfig');
+    const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+    
+    // 各パックの実際の利益率を計算（固定90%）
+    const tokenPacksWithProfitMargin = await Promise.all(tokenPacks.map(async (pack) => {
+      const expectedTokens = await calcTokensToGive(pack.price, currentModel);
+      
+      return {
+        ...pack,
+        profitMargin: 90, // 実際の利益率は90%固定
+        tokenPerYen: pack.tokens / pack.price,
+        expectedTokens: expectedTokens // 参考値として期待トークン数も含める
+      };
+    }));
+
     const total = await TokenPackModel.countDocuments(query);
     const totalPages = Math.ceil(total / limit);
 
-    console.log(`✅ Fetched ${tokenPacks.length} token packs for admin`);
+    console.log(`✅ Fetched ${tokenPacks.length} token packs for admin with actual profit margins`);
 
     res.json({
-      tokenPacks,
+      tokenPacks: tokenPacksWithProfitMargin,
       pagination: {
         total,
         page,
