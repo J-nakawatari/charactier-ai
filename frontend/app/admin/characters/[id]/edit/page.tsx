@@ -920,7 +920,7 @@ export default function CharacterEditPage() {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
                     {formData.imageCharacterSelect || formData.imageCharacterSelectUrl ? (
                       <div className="space-y-2">
-                        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        <div className="w-20 h-20 mx-auto bg-transparent border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
                           <Image 
                             src={formData.imageCharacterSelect 
                               ? URL.createObjectURL(formData.imageCharacterSelect) 
@@ -964,7 +964,7 @@ export default function CharacterEditPage() {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
                     {formData.imageDashboard || formData.imageDashboardUrl ? (
                       <div className="space-y-2">
-                        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        <div className="w-20 h-20 mx-auto bg-transparent border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
                           <Image 
                             src={formData.imageDashboard 
                               ? URL.createObjectURL(formData.imageDashboard) 
@@ -1008,7 +1008,7 @@ export default function CharacterEditPage() {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
                     {formData.imageChatBackground || formData.imageChatBackgroundUrl ? (
                       <div className="space-y-2">
-                        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        <div className="w-20 h-20 mx-auto bg-transparent border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
                           <Image 
                             src={formData.imageChatBackground 
                               ? URL.createObjectURL(formData.imageChatBackground) 
@@ -1052,7 +1052,7 @@ export default function CharacterEditPage() {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
                     {formData.imageChatAvatar || formData.imageChatAvatarUrl ? (
                       <div className="space-y-2">
-                        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                        <div className="w-20 h-20 mx-auto bg-transparent border border-gray-200 rounded-full flex items-center justify-center overflow-hidden">
                           <Image 
                             src={formData.imageChatAvatar 
                               ? URL.createObjectURL(formData.imageChatAvatar) 

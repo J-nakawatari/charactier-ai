@@ -500,12 +500,12 @@ export default function CharacterNewPage() {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
                     {formData.imageCharacterSelect ? (
                       <div className="space-y-2">
-                        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        <div className="w-20 h-20 mx-auto bg-transparent rounded-lg flex items-center justify-center overflow-hidden border border-gray-200">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img 
                             src={URL.createObjectURL(formData.imageCharacterSelect)} 
                             alt="キャラクター選択" 
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover bg-transparent"
                           />
                         </div>
                         <p className="text-sm text-gray-600">画像が設定されています</p>
@@ -540,12 +540,12 @@ export default function CharacterNewPage() {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
                     {formData.imageDashboard ? (
                       <div className="space-y-2">
-                        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        <div className="w-20 h-20 mx-auto bg-transparent rounded-lg flex items-center justify-center overflow-hidden border border-gray-200">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img 
                             src={URL.createObjectURL(formData.imageDashboard)} 
                             alt="ダッシュボード" 
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover bg-transparent"
                           />
                         </div>
                         <p className="text-sm text-gray-600">画像が設定されています</p>
@@ -580,12 +580,12 @@ export default function CharacterNewPage() {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
                     {formData.imageChatBackground ? (
                       <div className="space-y-2">
-                        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        <div className="w-20 h-20 mx-auto bg-transparent rounded-lg flex items-center justify-center overflow-hidden border border-gray-200">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img 
                             src={URL.createObjectURL(formData.imageChatBackground)} 
                             alt="チャット背景" 
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover bg-transparent"
                           />
                         </div>
                         <p className="text-sm text-gray-600">画像が設定されています</p>
@@ -620,12 +620,12 @@ export default function CharacterNewPage() {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
                     {formData.imageChatAvatar ? (
                       <div className="space-y-2">
-                        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                        <div className="w-20 h-20 mx-auto bg-transparent rounded-full flex items-center justify-center overflow-hidden border border-gray-200">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img 
                             src={URL.createObjectURL(formData.imageChatAvatar)} 
                             alt="チャットアバター" 
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover bg-transparent"
                           />
                         </div>
                         <p className="text-sm text-gray-600">画像が設定されています</p>
