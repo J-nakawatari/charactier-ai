@@ -1293,7 +1293,10 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
       model: character.aiModel,
       imageChatAvatar: character.imageChatAvatar,
       imageChatBackground: character.imageChatBackground,
-      themeColor: character.themeColor
+      themeColor: character.themeColor,
+      // プロンプト情報を追加（デバッグ用）
+      personalityPrompt: character.personalityPrompt,
+      adminPrompt: character.adminPrompt
     };
 
     // キャラクターに対する親密度情報を取得
