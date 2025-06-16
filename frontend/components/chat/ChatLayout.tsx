@@ -34,6 +34,9 @@ interface Character {
   // 🤖 AIモデル情報
   aiModel?: string;
   model?: string;
+  // 💬 プロンプト情報
+  personalityPrompt?: string;
+  adminPrompt?: string;
 }
 
 interface UserCharacterAffinity {
@@ -139,18 +142,30 @@ export function ChatLayout({
     });
   }, [character]);
 
-  // 🤖 AIモデル情報のデバッグログ
+  // 🤖 AIモデル・プロンプト情報のデバッグログ
   useEffect(() => {
     const currentModel = character.aiModel || character.model;
-    console.log('🤖 チャット画面 - 使用中AIモデル:', {
+    console.log('🤖 チャット画面 - 使用中AIモデル・プロンプト:', {
       characterId: character._id,
       characterName: character.name,
       aiModel: character.aiModel,
       model: character.model,
       currentModel: currentModel || 'undefined',
+      personalityPrompt: character.personalityPrompt ? character.personalityPrompt.substring(0, 100) + '...' : 'undefined',
+      adminPrompt: character.adminPrompt ? character.adminPrompt.substring(0, 100) + '...' : 'undefined',
       timestamp: new Date().toLocaleTimeString()
     });
-  }, [character._id, character.name, character.aiModel, character.model]);
+    
+    // 💬 プロンプト詳細を別ログで出力（長いため）
+    if (character.personalityPrompt || character.adminPrompt) {
+      console.log('💬 チャット画面 - プロンプト詳細:', {
+        characterId: character._id,
+        characterName: character.name,
+        personalityPrompt: character.personalityPrompt,
+        adminPrompt: character.adminPrompt
+      });
+    }
+  }, [character._id, character.name, character.aiModel, character.model, character.personalityPrompt, character.adminPrompt]);
 
   // 定期的にトークン残高を更新する関数
   const refreshTokenBalance = useCallback(async () => {
@@ -211,14 +226,16 @@ export function ChatLayout({
       const messageToSend = inputMessage.trim();
       setInputMessage('');
       
-      // 🤖 メッセージ送信時のAIモデル情報をログ出力
+      // 🤖 メッセージ送信時のAIモデル・プロンプト情報をログ出力
       const currentModel = character.aiModel || character.model;
-      console.log('🤖 メッセージ送信 - 使用AIモデル:', {
+      console.log('🤖 メッセージ送信 - 使用AIモデル・プロンプト:', {
         characterId: character._id,
         characterName: character.name,
         aiModel: character.aiModel,
         model: character.model,
         currentModel: currentModel || 'undefined',
+        personalityPrompt: character.personalityPrompt ? character.personalityPrompt.substring(0, 50) + '...' : 'undefined',
+        adminPrompt: character.adminPrompt ? character.adminPrompt.substring(0, 50) + '...' : 'undefined',
         messageToSend: messageToSend.substring(0, 50) + (messageToSend.length > 50 ? '...' : ''),
         timestamp: new Date().toLocaleTimeString()
       });

@@ -31,6 +31,9 @@ interface ChatLayoutCharacter {
   // 🤖 AIモデル情報
   aiModel?: string;
   model?: string;
+  // 💬 プロンプト情報
+  personalityPrompt?: string;
+  adminPrompt?: string;
 }
 
 interface ChatLayoutData {
@@ -70,12 +73,14 @@ export default function ChatPage() {
         
         const apiData = await response.json();
         
-        // 🤖 デバッグ: APIレスポンスのモデル情報を確認
-        console.log('🤖 Chat API レスポンス - モデル情報:', {
+        // 🤖 デバッグ: APIレスポンスのモデル・プロンプト情報を確認
+        console.log('🤖 Chat API レスポンス - モデル・プロンプト情報:', {
           characterId: apiData.character._id,
           characterName: getLocalizedString(apiData.character.name, locale),
           aiModel: apiData.character.aiModel,
           model: apiData.character.model,
+          personalityPrompt: apiData.character.personalityPrompt,
+          adminPrompt: apiData.character.adminPrompt,
           fullCharacterData: apiData.character
         });
         
@@ -91,7 +96,10 @@ export default function ChatPage() {
             themeColor: apiData.character.themeColor || '#8B5CF6',
             // 🤖 AIモデル情報を追加
             aiModel: apiData.character.aiModel,
-            model: apiData.character.model
+            model: apiData.character.model,
+            // 💬 プロンプト情報を追加
+            personalityPrompt: getLocalizedString(apiData.character.personalityPrompt, locale),
+            adminPrompt: getLocalizedString(apiData.character.adminPrompt, locale)
           },
           affinity: {
             level: apiData.userState?.affinity?.level || 0,
