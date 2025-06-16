@@ -2005,6 +2005,15 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
       const profitMargin = 90;
       const tokenPerYen = await calcTokensToGive(1, currentModel); // 1円あたりのトークン数
       
+      // デバッグログ追加
+      console.log('🔍 Token Calculation Debug:', {
+        model: currentModel,
+        priceInMainUnit,
+        calculatedTokens,
+        tokenPerYen,
+        expectedFor500: await calcTokensToGive(500, currentModel)
+      });
+      
       // Product名を安全に取得
       const productName = price.product && typeof price.product === 'object' && 'name' in price.product 
         ? price.product.name 

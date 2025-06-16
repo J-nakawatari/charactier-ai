@@ -52,7 +52,17 @@ export const avgTokenCostYen = async (model: string): Promise<number> => {
  */
 export const tokensPerYen = async (model: string): Promise<number> => {
   const costYen = await avgTokenCostYen(model);
-  return COST_RATIO / costYen;
+  const result = COST_RATIO / costYen;
+  
+  // デバッグログ
+  console.log('💰 tokensPerYen calculation:', {
+    model,
+    costYen,
+    COST_RATIO,
+    result
+  });
+  
+  return result;
 };
 
 /**
