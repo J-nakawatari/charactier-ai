@@ -386,6 +386,18 @@ export default function CharacterNewPage() {
       const croppedFile = new File([croppedImage], `${currentImageType}.png`, {
         type: 'image/png',
       });
+
+      // 🔍 デバッグ: ファイル情報を確認
+      console.log('🔍 クロップ後のファイル情報:', {
+        name: croppedFile.name,
+        type: croppedFile.type,
+        size: croppedFile.size,
+        blobType: croppedImage.type
+      });
+      
+      // 🔍 デバッグ: 元の画像ソース確認
+      console.log('🔍 元の画像ソース:', cropperImageSrc.substring(0, 50) + '...');
+      console.log('🔍 クロップ領域:', croppedAreaPixels);
       
       if (currentImageType === 'gallery' && currentGalleryIndex >= 0) {
         // ギャラリー画像の場合
