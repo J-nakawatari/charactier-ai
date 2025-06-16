@@ -4582,12 +4582,26 @@ app.get('/api/admin/cron-status', authenticateToken, async (req: AuthRequest, re
           description: 'USD/JPY為替レートを毎週月曜日10時に更新（異常値検知・フォールバック機能付き）',
           frequency: '週1回（月曜 10:00）',
           nextRunJST: (() => {
-            const now = require('dayjs')().tz('Asia/Tokyo');
-            let nextMonday = now.day(1).hour(10).minute(0).second(0);
-            if (nextMonday.isBefore(now)) {
-              nextMonday = nextMonday.add(1, 'week');
+            try {
+              const dayjs = require('dayjs');
+              const utc = require('dayjs/plugin/utc');
+              const timezone = require('dayjs/plugin/timezone');
+              dayjs.extend(utc);
+              dayjs.extend(timezone);
+              
+              const now = dayjs().tz('Asia/Tokyo');
+              let nextMonday = now.day(1).hour(10).minute(0).second(0);
+              if (nextMonday.isBefore(now)) {
+                nextMonday = nextMonday.add(1, 'week');
+              }
+              return nextMonday.toISOString().replace('Z', '+09:00');
+            } catch (error) {
+              // dayjsエラー時のフォールバック
+              const now = new Date();
+              const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+              nextWeek.setHours(10, 0, 0, 0);
+              return nextWeek.toISOString().replace('Z', '+09:00');
             }
-            return nextMonday.toISOString().replace('Z', '+09:00');
           })(),
           isActive: true,
           lastRunTime: 'ログを確認してください'
