@@ -1999,11 +1999,11 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
       
       // 新トークン計算システムに基づくトークン数計算（利益率90%）
       const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
-      const calculatedTokens = calcTokensToGive(priceInMainUnit, currentModel);
+      const calculatedTokens = await calcTokensToGive(priceInMainUnit, currentModel);
       
       // 実際の利益率は90%固定
       const profitMargin = 90;
-      const tokenPerYen = calcTokensToGive(1, currentModel); // 1円あたりのトークン数
+      const tokenPerYen = await calcTokensToGive(1, currentModel); // 1円あたりのトークン数
       
       // Product名を安全に取得
       const productName = price.product && typeof price.product === 'object' && 'name' in price.product 
