@@ -291,15 +291,19 @@ export function ChatLayout({
       </div>
 
       {/* メッセージエリア */}
-      <div className="flex-1 relative z-10 overflow-hidden">
+      <div className="flex-1 relative z-10 overflow-hidden" style={{ backgroundColor: 'transparent' }}>
         {/* キャラクター画像（真ん中に配置） */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ backgroundColor: 'transparent' }}>
           <div className="h-full w-auto" style={{ backgroundColor: 'transparent' }}>
             <img 
               src={character.imageChatBackground || character.imageChatAvatar}
               alt={character.name}
-              className="h-full w-auto object-contain"
-              style={{ backgroundColor: 'transparent' }}
+              className="h-full w-auto object-contain bg-transparent"
+              style={{ 
+                backgroundColor: 'transparent',
+                imageRendering: 'auto',
+                mixBlendMode: 'normal'
+              }}
             />
           </div>
         </div>
