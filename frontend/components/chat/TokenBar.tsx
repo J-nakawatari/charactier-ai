@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Coins, AlertTriangle, Plus } from 'lucide-react';
 import { getAuthHeaders, getCurrentUser } from '@/utils/auth';
 
@@ -13,6 +13,7 @@ interface TokenBarProps {
 export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: TokenBarProps) {
   const [currentTokens, setCurrentTokens] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const refreshTokenBalanceRef = useRef<() => Promise<void>>();
 
   // トークン残高の手動更新
   const refreshTokenBalance = useCallback(async () => {
@@ -35,37 +36,48 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
     } finally {
       setIsRefreshing(false);
     }
-  }, [isRefreshing, onTokenUpdate]);
+  }, [onTokenUpdate]); // isRefreshingを依存関係から削除して無限ループを防止
+
+  // ref＆最新の関数を保持
+  refreshTokenBalanceRef.current = refreshTokenBalance;
 
   // 初期ロード時に実際の残高を取得
   useEffect(() => {
     refreshTokenBalance();
-  }, [refreshTokenBalance]);
+  }, []); // 依存関係を空にして初期ロード時のみ実行
   
   // ページのフォーカス時に自動更新
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        refreshTokenBalance();
+      if (!document.hidden && refreshTokenBalanceRef.current) {
+        refreshTokenBalanceRef.current();
       }
     };
     
     const handleFocus = () => {
-      refreshTokenBalance();
+      if (refreshTokenBalanceRef.current) {
+        refreshTokenBalanceRef.current();
+      }
+    };
+    
+    const intervalHandler = () => {
+      if (refreshTokenBalanceRef.current) {
+        refreshTokenBalanceRef.current();
+      }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
     
     // 定期的な更新（60秒間隔）
-    const interval = setInterval(refreshTokenBalance, 60000);
+    const interval = setInterval(intervalHandler, 60000);
     
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
       clearInterval(interval);
     };
-  }, [refreshTokenBalance]);
+  }, []); // 依存関係を空にして無限ループを防止, 関数はrefで参照
   
   // ローディング中の処理
   if (currentTokens === null) {

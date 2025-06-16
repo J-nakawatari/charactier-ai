@@ -58,7 +58,6 @@ export default function CharacterGrid({
       case 'purchaseOnly':
         // プレミアムキャラ: 購入が必要
         const isPurchased = userPurchasedCharacters.includes(character._id);
-        console.log(`Character ${character.name} (${character._id}): isPurchased=${isPurchased}, accessType=${character.characterAccessType}`);
         return { 
           isLocked: !isPurchased, 
           hasAccess: isPurchased 

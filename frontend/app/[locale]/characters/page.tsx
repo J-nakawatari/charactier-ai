@@ -59,7 +59,6 @@ function CharactersPageContent({
   // ユーザー情報取得関数
   const fetchUserData = useCallback(async () => {
     try {
-      console.log('🔄 ユーザー情報取得中...');
       const response = await fetch('/api/user/profile', {
         headers: {
           ...getAuthHeaders(),
@@ -70,14 +69,9 @@ function CharactersPageContent({
 
       if (response.ok) {
         const userData = await response.json();
-        console.log('✅ ユーザー情報取得完了:', {
-          affinities: userData.affinities?.length || 0,
-          purchasedCharacters: userData.purchasedCharacters?.length || 0
-        });
         setUserAffinities(userData.affinities || []);
         setUserPurchasedCharacters(userData.purchasedCharacters?.map((id: string) => id.toString()) || []);
       } else {
-        console.error('❌ ユーザー情報取得失敗:', response.status);
       }
     } catch (err) {
       console.error('ユーザー情報取得エラー:', err);
@@ -95,12 +89,6 @@ function CharactersPageContent({
         ...(filters.keyword && { keyword: filters.keyword })
       });
 
-      console.log('🔍 フロントエンド: 送信するパラメータ', {
-        locale,
-        characterType: filters.characterType,
-        sort: filters.sort,
-        keyword: filters.keyword
-      });
 
       const response = await fetch(`/api/characters?${queryParams}`, {
         headers: {
@@ -147,7 +135,6 @@ function CharactersPageContent({
     // 購入完了フラグをチェック
     const purchaseCompleted = localStorage.getItem('purchaseCompleted');
     if (purchaseCompleted === 'true') {
-      console.log('🎉 購入完了フラグ検出 - データ強制更新');
       localStorage.removeItem('purchaseCompleted');
       // 少し遅延してから再取得（UIの表示を確実にするため）
       setTimeout(() => {
@@ -155,12 +142,11 @@ function CharactersPageContent({
         fetchCharacters();
       }, 1000);
     }
-  }, [fetchUserData, fetchCharacters]);
+  }, []);  // 空の依存配列に変更
 
   // 購入完了イベントリスナー
   useEffect(() => {
     const handlePurchaseComplete = () => {
-      console.log('🔄 購入完了イベント受信 - データ再取得中...');
       fetchUserData();
       fetchCharacters();
     };
@@ -170,12 +156,11 @@ function CharactersPageContent({
     return () => {
       window.removeEventListener('characterPurchaseCompleted', handlePurchaseComplete);
     };
-  }, [fetchUserData, fetchCharacters]);
+  }, []);  // 空の依存配列に変更
 
   // ページフォーカス時の再取得（購入完了後に戻ってきた場合）
   useEffect(() => {
     const handleFocus = () => {
-      console.log('🔄 ページフォーカス - ユーザーデータ再取得');
       fetchUserData();
     };
 
@@ -184,7 +169,7 @@ function CharactersPageContent({
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
-  }, [fetchUserData]);
+  }, []);  // 空の依存配列に変更
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -194,7 +179,7 @@ function CharactersPageContent({
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [filters, fetchCharacters]);
+  }, [filters.keyword, filters.characterType, filters.sort]);  // 関数依存を削除
 
   const handleCharacterClick = (character: Character) => {
     if (character.characterAccessType === 'purchaseOnly') {

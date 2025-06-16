@@ -66,8 +66,6 @@ export default function ChatPage() {
         }
         
         const apiData = await response.json();
-        console.log('🔍 Chat API Response:', apiData);
-        console.log('🔍 Messages from API:', apiData.chat?.messages);
         
         // API レスポンスを ChatLayoutData 形式に変換
         const chatData: ChatLayoutData = {
@@ -228,7 +226,6 @@ export default function ChatPage() {
       }
 
       const responseData = await response.json();
-      console.log('📩 API Response:', responseData);
 
       // バックエンドの実際のレスポンス形式に合わせて処理
       if (responseData.userMessage && responseData.aiResponse) {
@@ -271,23 +268,12 @@ export default function ChatPage() {
       }
 
     } catch (error) {
-      console.error('Message send error:', error);
-      console.error('Error type:', typeof error);
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-      
-      // レスポンスエラーの詳細も取得を試行
-      if (error instanceof Error) {
-        console.error('Error message:', error.message);
-        console.error('Error name:', error.name);
-      }
       
       setChatData(prev => prev ? {
         ...prev,
         messages: prev.messages.filter(m => m.id !== tempUserMessage.id)
       } : null);
 
-      // エラーの詳細確認用ログ
-      console.error('🚫 Message send error details:', error);
       
       if (typeof error === 'object' && error !== null && 'code' in error) {
         const apiError = error as any;
@@ -304,7 +290,7 @@ export default function ChatPage() {
         }, 'メッセージの送信に失敗しました');
       }
     }
-  }, [chatData, characterId, showApiError]);
+  }, [chatData?.character?._id, characterId, showApiError]); // chatDataの特定フィールドのみを依存関係にして適切な更新を実現
 
   useEffect(() => {
     loadChatData();
@@ -337,10 +323,6 @@ export default function ChatPage() {
   }
 
 
-  // デバッグ: キャラクター情報を確認
-  console.log('ChatPage - character data:', chatData.character);
-  console.log('ChatPage - character name type:', typeof chatData.character.name);
-  console.log('ChatPage - character name value:', chatData.character.name);
 
   return (
     <ChatLayout

@@ -27,6 +27,21 @@ export function useRealtimeChat(characterId: string): RealtimeChatState & Realti
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const activityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // アクティビティ更新
+  const updateActivity = useCallback(() => {
+    setLastActivity(new Date());
+    
+    // アクティビティタイムアウトをリセット
+    if (activityTimeoutRef.current) {
+      clearTimeout(activityTimeoutRef.current);
+    }
+    
+    // 10分後にアクティビティをクリア
+    activityTimeoutRef.current = setTimeout(() => {
+      setLastActivity(null);
+    }, 10 * 60 * 1000);
+  }, []);
+
   // ユーザーのタイピング開始
   const startTyping = useCallback(() => {
     setIsUserTyping(true);
@@ -41,7 +56,7 @@ export function useRealtimeChat(characterId: string): RealtimeChatState & Realti
     typingTimeoutRef.current = setTimeout(() => {
       setIsUserTyping(false);
     }, 3000);
-  }, []);
+  }, [updateActivity]);
 
   // ユーザーのタイピング停止
   const stopTyping = useCallback(() => {
@@ -55,21 +70,6 @@ export function useRealtimeChat(characterId: string): RealtimeChatState & Realti
   // キャラクターのタイピング状態設定
   const setCharacterTyping = useCallback((typing: boolean) => {
     setIsCharacterTyping(typing);
-  }, []);
-
-  // アクティビティ更新
-  const updateActivity = useCallback(() => {
-    setLastActivity(new Date());
-    
-    // アクティビティタイムアウトをリセット
-    if (activityTimeoutRef.current) {
-      clearTimeout(activityTimeoutRef.current);
-    }
-    
-    // 10分後にアクティビティをクリア
-    activityTimeoutRef.current = setTimeout(() => {
-      setLastActivity(null);
-    }, 10 * 60 * 1000);
   }, []);
 
   // クリーンアップ

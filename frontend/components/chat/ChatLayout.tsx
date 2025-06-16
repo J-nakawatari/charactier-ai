@@ -126,12 +126,15 @@ export function ChatLayout({
       });
       if (response.ok) {
         const userData = await response.json();
-        setCurrentTokens(userData.tokenBalance || userData.user?.tokenBalance || currentTokens);
+        const newTokens = userData.tokenBalance || userData.user?.tokenBalance;
+        if (newTokens !== undefined) {
+          setCurrentTokens(newTokens);
+        }
       }
     } catch (error) {
       console.error('Token balance refresh failed:', error);
     }
-  }, [currentTokens]);
+  }, []); // 依存関係を削除して無限ループを防止
 
   // ページがフォーカスされた時（購入完了から戻ってきた時など）にトークン残高を更新
   useEffect(() => {
@@ -150,7 +153,7 @@ export function ChatLayout({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       clearInterval(interval);
     };
-  }, [refreshTokenBalance]);
+  }, []); // refreshTokenBalance の依存関係を削除して無限ループを防止
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -269,7 +272,7 @@ export function ChatLayout({
             mood={(affinity as any).currentMood || 'neutral'}
             characterId={character._id}
             onAffinityUpdate={(newAffinity) => {
-              console.log('Affinity updated:', newAffinity);
+              // Affinity update handled silently
             }}
           />
         </div>
