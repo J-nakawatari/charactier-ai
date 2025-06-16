@@ -89,22 +89,9 @@ export function ChatLayout({
   // 🎭 親密度ストアの初期化
   const { updateAffinity } = useAffinityStore();
   
-  // 🎨 背景スタイル（画像優先、フォールバックとして感情ベースのグラデーション）
+  // 🎨 感情に基づく背景スタイル
   const currentMood = (affinity as any).currentMood || 'neutral';
   const moodGradient = getMoodBackgroundGradient(currentMood);
-  
-  const backgroundStyle = character.imageChatBackground 
-    ? {
-        backgroundImage: `url(${character.imageChatBackground})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }
-    : {
-        backgroundImage: moodGradient.background,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      };
   
   // リアルタイムチャット機能
   const realtimeChat = useRealtimeChat(character._id);
@@ -226,7 +213,12 @@ export function ChatLayout({
       {/* メインチャットエリア */}
       <div 
         className="flex-1 flex flex-col relative lg:ml-64 transition-all duration-1000 ease-in-out"
-        style={backgroundStyle}
+        style={{
+          backgroundImage: moodGradient.background,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
       >
         {/* 感情に基づく背景オーバーレイ */}
         <div className={`absolute inset-0 backdrop-blur-sm transition-all duration-1000 ease-in-out ${moodGradient.overlay}`}></div>
