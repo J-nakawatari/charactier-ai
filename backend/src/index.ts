@@ -764,6 +764,19 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
     console.log('🔍 Analytics: Fetching data from:', sevenDaysAgo.toISOString());
     
     // チャット統計（日別メッセージ数）
+    // まず全チャットを確認
+    const allChatsForDebug = await ChatModel.find({ userId }).select('messages').lean();
+    const totalMessagesDebug = allChatsForDebug.reduce((sum, chat) => sum + (chat.messages?.length || 0), 0);
+    console.log('🔍 Debug - Total messages in all chats:', totalMessagesDebug);
+    console.log('🔍 Debug - Sample message timestamps:', 
+      allChatsForDebug.slice(0, 2).map(chat => 
+        chat.messages?.slice(0, 2).map(m => ({
+          role: m.role,
+          timestamp: m.timestamp
+        }))
+      )
+    );
+
     const chatStats = await ChatModel.aggregate([
       {
         $match: {
