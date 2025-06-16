@@ -629,7 +629,19 @@ console.log('  GET /api/admin/token-usage/daily-stats');
 // 静的ファイル配信（アップロードされた画像）
 app.use('/uploads', express.static(path.join(__dirname, '../../../uploads'), {
   maxAge: '365d', // 1年キャッシュ
-  etag: true
+  etag: true,
+  setHeaders: (res, filePath) => {
+    // PNGファイルの場合、明示的にContent-Typeを設定
+    if (filePath.toLowerCase().endsWith('.png')) {
+      res.setHeader('Content-Type', 'image/png');
+    } else if (filePath.toLowerCase().endsWith('.jpg') || filePath.toLowerCase().endsWith('.jpeg')) {
+      res.setHeader('Content-Type', 'image/jpeg');
+    } else if (filePath.toLowerCase().endsWith('.gif')) {
+      res.setHeader('Content-Type', 'image/gif');
+    } else if (filePath.toLowerCase().endsWith('.webp')) {
+      res.setHeader('Content-Type', 'image/webp');
+    }
+  }
 }));
 
 // キャラクタールート

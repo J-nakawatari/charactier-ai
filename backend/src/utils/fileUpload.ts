@@ -52,12 +52,14 @@ export const optimizeImage = (width: number = 800, height: number = 800, quality
       await sharp(req.file.path)
         .resize(width, height, { 
           fit: 'inside',
-          withoutEnlargement: true 
+          withoutEnlargement: true,
+          background: { r: 0, g: 0, b: 0, alpha: 0 } // 透明な背景を明示的に設定
         })
         .png({ 
           quality,
           compressionLevel: 6, // 圧縮レベル（0-9）
-          adaptiveFiltering: true // アダプティブフィルタリングで透過部分を最適化
+          adaptiveFiltering: true, // アダプティブフィルタリングで透過部分を最適化
+          force: true // 強制的にPNG形式で出力
         })
         .toFile(tmpPath);
         
