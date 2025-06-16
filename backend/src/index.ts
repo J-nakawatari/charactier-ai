@@ -626,6 +626,7 @@ console.log('  GET /api/admin/token-packs');
 console.log('  POST /api/admin/token-packs');
 console.log('  GET /api/admin/token-usage');
 console.log('  GET /api/admin/token-usage/daily-stats');
+console.log('  GET /api/admin/stats');
 
 // 静的ファイル配信（アップロードされた画像）
 app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {
@@ -4616,6 +4617,7 @@ routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authen
     });
   }
 });
+
 
 // ==================== DEBUG ENDPOINTS ====================
 
