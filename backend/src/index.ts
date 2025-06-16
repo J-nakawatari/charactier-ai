@@ -653,7 +653,8 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
     // ユーザー基本情報を取得
     const user = await UserModel.findById(userId)
       .select('_id email name createdAt lastLogin affinities tokenBalance totalSpent selectedCharacter purchasedCharacters')
-      .populate('purchasedCharacters', '_id name');
+      .populate('purchasedCharacters', '_id name')
+      .populate('affinities.character', '_id name imageCharacterSelect themeColor');
 
     if (!user) {
       res.status(404).json({ error: 'User not found' });
@@ -684,8 +685,39 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
     console.log('🔍 Dashboard API - First Chat characterId:', recentChats[0]?.characterId);
     console.log('🔍 Dashboard API - First Chat characterId type:', typeof recentChats[0]?.characterId);
 
-    // 親密度情報
-    const affinities = user.affinities || [];
+    // 親密度情報をフロントエンドが期待する形式に変換
+    const affinities = await Promise.all((user.affinities || []).map(async (affinity: any) => {
+      // キャラクターがpopulateされていない場合は手動で取得
+      let character = affinity.character;
+      if (!character || typeof character === 'string' || character instanceof mongoose.Types.ObjectId) {
+        console.log('⚠️ Affinity character not populated:', character);
+        const characterDoc = await CharacterModel.findById(character).select('_id name imageCharacterSelect themeColor');
+        if (!characterDoc) {
+          console.error('❌ Character not found for affinity:', character);
+          return null;
+        }
+        character = characterDoc;
+      }
+
+      // デフォルト値を設定
+      return {
+        character: {
+          _id: character._id,
+          name: character.name || { ja: '不明なキャラクター', en: 'Unknown Character' },
+          imageCharacterSelect: character.imageCharacterSelect || '/images/default-avatar.png',
+          themeColor: character.themeColor || '#8B5CF6'
+        },
+        level: affinity.level || 0,
+        experience: affinity.experience || 0,
+        experienceToNext: affinity.experienceToNext || 10,
+        maxExperience: 100, // 固定値
+        unlockedImages: affinity.unlockedImages || [],
+        nextUnlockLevel: Math.floor((affinity.level || 0) / 10 + 1) * 10
+      };
+    }));
+
+    // nullを除外
+    const validAffinities = affinities.filter(a => a !== null);
 
     // recentChatsをフロントエンドが期待する形式に変換
     const formattedRecentChats = await Promise.all(recentChats.map(async (chat) => {
@@ -745,7 +777,7 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
         totalPurchased: user.totalSpent || 0,
         recentUsage: []
       },
-      affinities,
+      affinities: validAffinities,
       recentChats: formattedRecentChats,
       purchaseHistory: [],
       loginHistory: [],
