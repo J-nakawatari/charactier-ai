@@ -31,6 +31,9 @@ interface Character {
   // 🎭 その他のフィールド
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
+  // 🤖 AIモデル情報
+  aiModel?: string;
+  model?: string;
 }
 
 interface UserCharacterAffinity {
@@ -136,6 +139,19 @@ export function ChatLayout({
     });
   }, [character]);
 
+  // 🤖 AIモデル情報のデバッグログ
+  useEffect(() => {
+    const currentModel = character.aiModel || character.model;
+    console.log('🤖 チャット画面 - 使用中AIモデル:', {
+      characterId: character._id,
+      characterName: character.name,
+      aiModel: character.aiModel,
+      model: character.model,
+      currentModel: currentModel || 'undefined',
+      timestamp: new Date().toLocaleTimeString()
+    });
+  }, [character._id, character.name, character.aiModel, character.model]);
+
   // 定期的にトークン残高を更新する関数
   const refreshTokenBalance = useCallback(async () => {
     try {
@@ -194,6 +210,18 @@ export function ChatLayout({
       // メッセージの更新は親コンポーネントで管理される
       const messageToSend = inputMessage.trim();
       setInputMessage('');
+      
+      // 🤖 メッセージ送信時のAIモデル情報をログ出力
+      const currentModel = character.aiModel || character.model;
+      console.log('🤖 メッセージ送信 - 使用AIモデル:', {
+        characterId: character._id,
+        characterName: character.name,
+        aiModel: character.aiModel,
+        model: character.model,
+        currentModel: currentModel || 'undefined',
+        messageToSend: messageToSend.substring(0, 50) + (messageToSend.length > 50 ? '...' : ''),
+        timestamp: new Date().toLocaleTimeString()
+      });
       
       // タイピング停止とキャラクタータイピング開始
       stopTyping();
