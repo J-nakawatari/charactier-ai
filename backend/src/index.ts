@@ -759,6 +759,85 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
       };
     }));
 
+    // アナリティクスデータの生成（過去7日間）
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    console.log('🔍 Analytics: Fetching data from:', sevenDaysAgo.toISOString());
+    
+    // チャット統計（日別メッセージ数）
+    const chatStats = await ChatModel.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId)
+        }
+      },
+      { $unwind: "$messages" },
+      {
+        $match: {
+          "messages.timestamp": { $gte: sevenDaysAgo },
+          "messages.role": "user" // ユーザーメッセージのみカウント
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$messages.timestamp" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]).catch((err) => {
+      console.error('❌ Chat aggregation error:', err);
+      return [];
+    });
+
+    // トークン使用統計（日別）
+    const tokenStats = await TokenUsage.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          createdAt: { $gte: sevenDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          totalTokens: { $sum: "$tokensUsed" },
+          totalCost: { $sum: "$cost" }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]).catch((err) => {
+      console.error('❌ Token aggregation error:', err);
+      return [];
+    });
+
+    // 親密度情報をアナリティクス用に変換
+    const affinityProgress = validAffinities.map(affinity => ({
+      characterName: affinity.character.name.ja || affinity.character.name.en || 'Unknown',
+      level: affinity.level,
+      color: affinity.character.themeColor
+    }));
+
+    const analytics = {
+      chatCountPerDay: chatStats.map(stat => ({
+        date: stat._id,
+        count: stat.count
+      })),
+      tokenUsagePerDay: tokenStats.map(stat => ({
+        date: stat._id,
+        amount: stat.totalTokens || 0
+      })),
+      affinityProgress: affinityProgress
+    };
+
+    console.log('📊 Analytics Data:', {
+      chatStats: chatStats.length,
+      chatStatsDetail: JSON.stringify(chatStats, null, 2),
+      tokenStats: tokenStats.length,
+      affinityProgress: affinityProgress.length,
+      chatCountPerDay: analytics.chatCountPerDay,
+      tokenUsagePerDay: analytics.tokenUsagePerDay
+    });
+
     res.json({
       user: {
         _id: user._id,
@@ -783,7 +862,7 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
       loginHistory: [],
       notifications: [],
       badges: [],
-      analytics: {}
+      analytics: analytics
     });
 
   } catch (error) {
@@ -808,6 +887,54 @@ routeRegistry.define('GET', '/api/debug/current-user', authenticateToken, async 
       }
     });
   } catch (error) {
+    res.status(500).json({ error: error });
+  }
+});
+
+// アナリティクスデバッグ用エンドポイント
+routeRegistry.define('GET', '/api/debug/analytics', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    
+    // すべてのチャットを取得
+    const allChats = await ChatModel.find({ userId }).select('messages lastActivityAt characterId');
+    
+    // メッセージの詳細
+    const messageDetails = allChats.flatMap(chat => 
+      chat.messages.map(msg => ({
+        chatId: chat._id,
+        characterId: chat.characterId,
+        messageId: msg._id,
+        role: msg.role,
+        timestamp: msg.timestamp,
+        content: msg.content.substring(0, 50) + '...'
+      }))
+    );
+
+    // 過去7日間のメッセージ
+    const recentMessages = messageDetails.filter(msg => 
+      new Date(msg.timestamp) >= sevenDaysAgo
+    );
+
+    res.json({
+      totalChats: allChats.length,
+      totalMessages: messageDetails.length,
+      recentMessages: recentMessages.length,
+      messagesByDate: recentMessages.reduce((acc, msg) => {
+        const date = new Date(msg.timestamp).toISOString().split('T')[0];
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+      sampleMessages: recentMessages.slice(0, 5)
+    });
+  } catch (error) {
+    console.error('Debug analytics error:', error);
     res.status(500).json({ error: error });
   }
 });
@@ -2759,7 +2886,7 @@ app.get('/api/debug', (_req: Request, res: Response): void => {
   });
 });
 
-const swaggerDocument = YAML.load(path.resolve(__dirname, '../../../docs/openapi.yaml'));
+const swaggerDocument = YAML.load(path.resolve(__dirname, '../../docs/openapi.yaml'));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // 管理者作成API
