@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+import { backendClient } from '@/utils/backend-client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,16 +9,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Authorization header required' }, { status: 401 });
     }
 
-    const body = await request.json();
-
-    const response = await fetch(`${BACKEND_URL}/api/admin/models/set-model`, {
-      method: 'POST',
-      headers: {
-        'Authorization': authHeader,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
+    const response = await backendClient.proxyRequest(request, '/api/admin/models/set-model');
 
     const data = await response.json();
     
