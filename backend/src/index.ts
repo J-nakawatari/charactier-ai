@@ -1291,6 +1291,7 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
       description: character.description,
       personality: character.personalityPreset,
       model: character.aiModel,
+      aiModel: character.aiModel, // フロントエンドの互換性のため両方返す
       imageChatAvatar: character.imageChatAvatar,
       imageChatBackground: character.imageChatBackground,
       themeColor: character.themeColor,
