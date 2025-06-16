@@ -105,27 +105,40 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
     }
   };
 
+  // 現在のチャットキャラクターIDを取得
+  const getCurrentCharacterId = () => {
+    // URLからキャラクターIDを抽出
+    const match = pathname.match(/\/characters\/([^\/]+)\/chat/);
+    if (match && match[1]) {
+      console.log('🔍 UserSidebar - Current character ID from URL:', match[1]);
+      return match[1];
+    }
+    
+    // URLにない場合はselectedCharacterを使用
+    console.log('🔍 UserSidebar - Using selectedCharacter:', user?.selectedCharacter);
+    return user?.selectedCharacter;
+  };
+
   // selectedCharacterに基づく動的なチャットリンク
   const getChatHref = () => {
-    console.log('🔍 UserSidebar getChatHref - user.selectedCharacter:', user?.selectedCharacter);
-    if (user?.selectedCharacter) {
-      const chatUrl = `/${currentLocale}/characters/${user.selectedCharacter}/chat`;
+    const currentCharacterId = getCurrentCharacterId();
+    console.log('🔍 UserSidebar getChatHref - currentCharacterId:', currentCharacterId);
+    
+    if (currentCharacterId) {
+      const chatUrl = `/${currentLocale}/characters/${currentCharacterId}/chat`;
       console.log('🔍 UserSidebar generating chat URL:', chatUrl);
       return chatUrl;
     }
     
     // キャラクター未選択の場合は一覧へ
-    console.log('🔍 UserSidebar - no selectedCharacter, redirecting to character list');
+    console.log('🔍 UserSidebar - no character selected, redirecting to character list');
     return `/${currentLocale}/characters?from=chat`;
   };
 
   const sidebarItems = [
     { id: 'home', href: `/${currentLocale}/dashboard`, icon: Home, label: t('home') },
     { id: 'characters', href: `/${currentLocale}/characters`, icon: Users, label: t('characters') },
-    { id: 'chat', href: null, icon: MessageSquare, label: t('chatHistory'), onClick: () => {
-      const chatUrl = getChatHref();
-      window.location.href = chatUrl;
-    }},
+    { id: 'chat', href: getChatHref(), icon: MessageSquare, label: t('chatHistory') },
     { id: 'library', href: `/${currentLocale}/library`, icon: Images, label: t('library') },
     { id: 'tokens', href: null, icon: Coins, label: t('tokens'), onClick: () => setShowPurchaseModal(true) },
     { id: 'purchase-history', href: `/${currentLocale}/purchase-history`, icon: ShoppingCart, label: t('purchaseHistory') },
