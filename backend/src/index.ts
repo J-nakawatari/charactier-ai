@@ -1279,6 +1279,7 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
       personality: character.personalityPreset,
       model: character.aiModel,
       imageChatAvatar: character.imageChatAvatar,
+      imageChatBackground: character.imageChatBackground,
       themeColor: character.themeColor
     };
 
