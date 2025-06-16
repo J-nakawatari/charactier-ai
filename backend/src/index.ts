@@ -39,6 +39,12 @@ import {
 import { applyMoodTrigger } from './services/moodEngine';
 import { startAllMoodJobs, startExchangeRateJob } from './scripts/moodDecay';
 import { initializeExchangeRate } from './scripts/exchangeRateJob';
+import { 
+  errorLoggingMiddleware, 
+  responseTimeMiddleware, 
+  statusCodeLoggerMiddleware 
+} from './middleware/errorLogger';
+import { APIErrorModel } from './models/APIError';
 import { calcTokensToGive, logTokenConfig } from './config/tokenConfig';
 const TokenService = require('../services/tokenService');
 import routeRegistry from './core/RouteRegistry';
@@ -330,6 +336,10 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'x-auth-token', 'stripe-signature']
 }));
+
+// エラーロギング用ミドルウェア（CORS後、認証前に設定）
+app.use(responseTimeMiddleware);
+app.use(statusCodeLoggerMiddleware);
 
 // ⚠️ IMPORTANT: Stripe webhook MUST come BEFORE express.json()
 // Stripe webhook endpoint (needs raw body)
@@ -4630,6 +4640,35 @@ app.get('/api/admin/test-errors', authenticateToken, async (req: AuthRequest, re
 });
 
 /**
+ * 📊 APIエラー統計取得
+ */
+app.get('/api/admin/error-stats', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('📊 API error stats requested by admin:', req.user?._id);
+    
+    const timeRange = (req.query.range as string) || '24h';
+    const errorStats = await (APIErrorModel as any).getErrorStats(timeRange);
+    
+    res.json({
+      success: true,
+      data: {
+        timeRange,
+        stats: errorStats,
+        timestamp: new Date().toISOString()
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching API error stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'APIエラー統計の取得に失敗しました'
+    });
+  }
+});
+
+/**
  * 📅 クーロンジョブ状態確認
  */
 app.get('/api/admin/cron-status', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
@@ -4918,6 +4957,9 @@ routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authen
 
 
 
+
+// グローバルエラーハンドリングミドルウェア（最後に設定）
+app.use(errorLoggingMiddleware);
 
 app.listen(PORT, async () => {
   console.log('✅ Server is running on:', { port: PORT, url: `http://localhost:${PORT}` });
