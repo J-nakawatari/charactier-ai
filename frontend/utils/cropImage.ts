@@ -21,38 +21,44 @@ export const getCroppedImg = async (
 ): Promise<Blob> => {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: true }); // アルファチャンネルを明示的に有効化
 
   if (!ctx) {
     throw new Error('Could not get canvas context');
   }
 
-  const maxSize = Math.max(image.width, image.height);
-  const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
-
-  canvas.width = safeArea;
-  canvas.height = safeArea;
-
-  ctx.translate(safeArea / 2, safeArea / 2);
-  ctx.rotate((rotation * Math.PI) / 180);
-  ctx.translate(-safeArea / 2, -safeArea / 2);
-
-  ctx.drawImage(
-    image,
-    safeArea / 2 - image.width * 0.5,
-    safeArea / 2 - image.height * 0.5
-  );
-
-  const data = ctx.getImageData(0, 0, safeArea, safeArea);
-
+  // Canvas全体を透明にクリア
   canvas.width = pixelCrop.width;
   canvas.height = pixelCrop.height;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  ctx.putImageData(
-    data,
-    Math.round(0 - safeArea / 2 + image.width * 0.5 - pixelCrop.x),
-    Math.round(0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y)
+  // 透過情報を保持するためのコンポジット設定
+  ctx.globalCompositeOperation = 'source-over';
+
+  // 回転が必要な場合の処理
+  if (rotation !== 0) {
+    ctx.save();
+    ctx.translate(pixelCrop.width / 2, pixelCrop.height / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.translate(-pixelCrop.width / 2, -pixelCrop.height / 2);
+  }
+
+  // 直接クロップされた領域を描画
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    pixelCrop.width,
+    pixelCrop.height
   );
+
+  if (rotation !== 0) {
+    ctx.restore();
+  }
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -61,6 +67,6 @@ export const getCroppedImg = async (
       } else {
         reject(new Error('Canvas is empty'));
       }
-    }, 'image/png', 1.0);
+    }, 'image/png', 1.0); // PNG形式で最高品質、透過情報保持
   });
 };
