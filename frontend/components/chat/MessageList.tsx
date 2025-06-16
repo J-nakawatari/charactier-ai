@@ -130,7 +130,7 @@ export function MessageList({
           <div className="text-center py-12 bg-white/85 backdrop-blur-sm rounded-2xl mx-auto max-w-md shadow-lg border border-white/50 relative z-30">
             <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-lg">
               <Image 
-                src={character.imageChatAvatar} 
+                src={character.imageChatAvatar || '/images/default-character.png'} 
                 alt={character.name}
                 width={80}
                 height={80}
@@ -160,7 +160,7 @@ export function MessageList({
           <div className="flex items-start space-x-2 sm:space-x-3">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
               <Image 
-                src={character.imageChatAvatar} 
+                src={character.imageChatAvatar || '/images/default-character.png'} 
                 alt={character.name}
                 width={40}
                 height={40}

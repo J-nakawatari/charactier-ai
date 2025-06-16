@@ -15,6 +15,9 @@ interface Character {
   characterAccessType: 'free' | 'purchaseOnly';
   isActive: boolean;
   imageCharacterSelect?: string;
+  imageDashboard?: string;
+  imageChatBackground?: string;
+  imageChatAvatar?: string;
   totalConversations?: number;
   averageAffinity?: number;
   createdAt: string;
