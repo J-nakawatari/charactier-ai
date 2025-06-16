@@ -731,6 +731,56 @@ routeRegistry.define('GET', '/api/debug/current-user', authenticateToken, async 
 
 
 
+// ユーザープロフィール取得
+routeRegistry.define('GET', '/api/user/profile', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // ユーザー基本情報を取得
+    const user = await UserModel.findById(userId)
+      .select('_id email name createdAt lastLogin affinities tokenBalance totalSpent selectedCharacter purchasedCharacters')
+      .populate('purchasedCharacters', '_id');
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // purchasedCharactersからIDの配列を作成
+    const purchasedCharacterIds = user.purchasedCharacters?.map((char: any) => {
+      if (typeof char === 'string') return char;
+      return char._id?.toString() || char.id?.toString() || char;
+    }) || [];
+
+    res.json({
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt,
+        lastLogin: user.lastLogin,
+        selectedCharacter: user.selectedCharacter,
+        tokenBalance: user.tokenBalance || 0,
+        totalSpent: user.totalSpent || 0
+      },
+      tokenBalance: user.tokenBalance || 0,
+      affinities: user.affinities || [],
+      purchasedCharacters: purchasedCharacterIds
+    });
+
+  } catch (error) {
+    console.error('Profile GET error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // ユーザープロフィール更新
 routeRegistry.define('PUT', '/api/user/profile', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
