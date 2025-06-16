@@ -235,6 +235,7 @@ export function ChatLayout({
                 height={48}
                 className="w-full h-full object-cover"
                 style={{ backgroundColor: 'transparent' }}
+                unoptimized={true}
               />
             </div>
             <div className="hidden sm:block">
@@ -292,8 +293,8 @@ export function ChatLayout({
       {/* メッセージエリア */}
       <div className="flex-1 relative z-10 overflow-hidden">
         {/* キャラクター画像（真ん中に配置） */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="h-full w-auto">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ backgroundColor: 'transparent' }}>
+          <div className="h-full w-auto" style={{ backgroundColor: 'transparent' }}>
             <Image 
               src={character.imageChatBackground || character.imageChatAvatar}
               alt={character.name}
@@ -301,6 +302,8 @@ export function ChatLayout({
               height={600}
               className="h-full w-auto object-contain"
               style={{ backgroundColor: 'transparent' }}
+              unoptimized={true}
+              priority={true}
             />
           </div>
         </div>
