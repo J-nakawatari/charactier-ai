@@ -27,9 +27,19 @@ export const compressImage = async (
     maxSizeKB = 500 // 500KB制限
   } = options;
 
+  console.log('🔍 compressImage: 開始', {
+    fileName: file.name,
+    fileType: file.type,
+    fileSize: Math.round(file.size / 1024) + 'KB'
+  });
+
+  // PNG画像で透過の可能性がある場合は、圧縮を軽くするか避ける
+  const isPng = file.type === 'image/png';
+  const shouldPreserveAlpha = isPng;
+
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: shouldPreserveAlpha });
     const img = new Image();
 
     img.onload = () => {
@@ -46,41 +56,82 @@ export const compressImage = async (
       canvas.width = width;
       canvas.height = height;
 
+      // Canvas を透明にクリア（PNG の場合）
+      if (shouldPreserveAlpha) {
+        ctx?.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
       // 画像を描画
       ctx?.drawImage(img, 0, 0, width, height);
 
-      // 品質を段階的に下げて目標サイズ以下にする
-      let currentQuality = quality;
-      const compressStep = () => {
+      console.log('🔍 compressImage: Canvas準備完了', {
+        canvasSize: `${width}x${height}`,
+        shouldPreserveAlpha,
+        contextAlpha: ctx?.getContextAttributes()?.alpha
+      });
+
+      // PNG の場合は透過を保持、JPEG の場合は従来通り
+      if (shouldPreserveAlpha) {
+        // PNG: 透過を保持したまま圧縮
         canvas.toBlob((blob) => {
           if (!blob) {
-            // フォールバック: 元のファイルを返す
+            console.log('🔍 compressImage: PNG Blob作成失敗、元ファイルを返す');
             resolve(file);
             return;
           }
 
           const sizeKB = blob.size / 1024;
-          
-          if (sizeKB <= maxSizeKB || currentQuality <= 0.1) {
-            // 目標サイズ以下 or 最低品質に到達
-            const compressedFile = new File([blob], file.name, {
-              type: 'image/jpeg',
-              lastModified: Date.now()
-            });
-            resolve(compressedFile);
-          } else {
-            // まだ大きい場合は品質を下げて再試行
-            currentQuality -= 0.1;
-            compressStep();
-          }
-        }, 'image/jpeg', currentQuality);
-      };
+          console.log('🔍 compressImage: PNG圧縮完了', {
+            originalSize: Math.round(file.size / 1024) + 'KB',
+            compressedSize: Math.round(sizeKB) + 'KB',
+            compressionRatio: Math.round((1 - blob.size / file.size) * 100) + '%'
+          });
 
-      compressStep();
+          const compressedFile = new File([blob], file.name, {
+            type: 'image/png',
+            lastModified: Date.now()
+          });
+          resolve(compressedFile);
+        }, 'image/png', 1.0); // PNG は品質パラメータ不要、最高品質で出力
+        
+      } else {
+        // JPEG: 従来通りの圧縮
+        let currentQuality = quality;
+        const compressStep = () => {
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              resolve(file);
+              return;
+            }
+
+            const sizeKB = blob.size / 1024;
+            
+            if (sizeKB <= maxSizeKB || currentQuality <= 0.1) {
+              console.log('🔍 compressImage: JPEG圧縮完了', {
+                originalSize: Math.round(file.size / 1024) + 'KB',
+                compressedSize: Math.round(sizeKB) + 'KB',
+                quality: currentQuality
+              });
+              
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              });
+              resolve(compressedFile);
+            } else {
+              // まだ大きい場合は品質を下げて再試行
+              currentQuality -= 0.1;
+              compressStep();
+            }
+          }, 'image/jpeg', currentQuality);
+        };
+
+        compressStep();
+      }
     };
 
     img.onerror = () => {
-      // エラー時は元のファイルを返す
+      console.log('🔍 compressImage: 画像読み込みエラー、元ファイルを返す');
       resolve(file);
     };
 

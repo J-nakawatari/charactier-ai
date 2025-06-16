@@ -338,6 +338,14 @@ export default function CharacterNewPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, imageType: string, galleryIndex?: number) => {
     const file = e.target.files?.[0];
     if (file) {
+      // 🔍 デバッグ: 元ファイルの情報を確認
+      console.log('🔍 選択されたファイル:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified
+      });
+      
       if (file.size > 5 * 1024 * 1024) { // 5MB制限
         error('ファイルエラー', '画像ファイルは5MB以下にしてください');
         return;
@@ -351,6 +359,13 @@ export default function CharacterNewPage() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageSrc = e.target?.result as string;
+        console.log('🔍 FileReader結果:', {
+          type: typeof imageSrc,
+          starts: imageSrc.substring(0, 50) + '...',
+          length: imageSrc.length,
+          mimeFromDataUrl: imageSrc.split(';')[0]
+        });
+        
         setCropperImageSrc(imageSrc);
         setCurrentImageType(imageType);
         setCurrentGalleryIndex(galleryIndex ?? -1);
