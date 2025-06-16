@@ -332,16 +332,16 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
                 type="text"
                 value={priceIdInput}
                 onChange={(e) => setPriceIdInput(e.target.value)}
-                disabled={editingPack !== null}
+                disabled={false}
                 className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:outline-none text-gray-900 bg-white ${
                   errors.priceId ? 'border-red-500' : 'border-gray-300'
-                } ${editingPack ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                }`}
                 placeholder="price_1RVCyQ1qmMqgQ3qQkRzWRIQU"
               />
               <button
                 type="button"
                 onClick={handleSetPriceId}
-                disabled={priceLoading || !priceIdInput.trim() || editingPack !== null}
+                disabled={priceLoading || !priceIdInput.trim()}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {priceLoading ? '取得中...' : 'IDを設定'}
@@ -349,11 +349,6 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
             </div>
             {errors.priceId && (
               <p className="mt-1 text-sm text-red-600">{errors.priceId}</p>
-            )}
-            {editingPack && (
-              <p className="mt-1 text-sm text-gray-500">
-                編集時はPrice IDの変更はできません
-              </p>
             )}
           </div>
 
@@ -387,7 +382,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
                 <AlertCircle className="w-5 h-5 mt-0.5 text-green-600" />
                 <div className="flex-1">
                   <h4 className="font-medium text-green-800">
-                    50%利益ルール適合済み
+                    90%利益ルール適合済み
                   </h4>
                   <div className="mt-2 text-sm space-y-1">
                     <p className="text-green-700">
