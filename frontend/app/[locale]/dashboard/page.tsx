@@ -67,16 +67,31 @@ export default function DashboardPage() {
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Dashboard API error:', response.status, errorData);
+          throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`);
         }
 
         const data = await response.json();
+        console.log('Dashboard data received:', data);
+        
+        // データ構造の検証
+        if (!data || typeof data !== 'object') {
+          throw new Error('Invalid dashboard data format');
+        }
+        
         setDashboardData(data);
       } catch (error) {
         console.error('Dashboard data fetch error:', error);
-        // エラー時は認証が必要であることを明確に表示
-        console.error('Dashboard data fetch failed - authentication required');
-        router.push(`/${locale}/login`);
+        
+        // 401エラーの場合のみログインページへリダイレクト
+        if (error instanceof Error && error.message.includes('401')) {
+          console.error('Dashboard data fetch failed - authentication required');
+          router.push(`/${locale}/login`);
+        } else {
+          // その他のエラーの場合はエラーメッセージを表示
+          setDashboardData(null);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -113,7 +128,10 @@ export default function DashboardPage() {
   };
 
   const isLowTokenWarning = () => {
-    return !!(dashboardData && dashboardData.tokens.balance <= (dashboardData.tokens.totalPurchased * 0.2));
+    if (!dashboardData || !dashboardData.tokens) return false;
+    const totalPurchased = dashboardData.tokens.totalPurchased || 0;
+    const balance = dashboardData.tokens.balance || 0;
+    return totalPurchased > 0 && balance <= (totalPurchased * 0.2);
   };
 
   return (

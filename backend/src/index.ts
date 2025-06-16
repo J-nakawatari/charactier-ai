@@ -674,13 +674,24 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
 
     // 最近のチャット（最新3件）
     const recentChats = await ChatModel.find({ userId })
-      .populate('characterId', 'name imageChatAvatar')
-      .sort({ lastActivity: -1 })
+      .populate('characterId', 'name imageCharacterSelect')
+      .sort({ lastActivityAt: -1 })
       .limit(3)
-      .select('characterId lastActivity messageCount');
+      .select('characterId lastActivityAt messages');
 
     // 親密度情報
     const affinities = user.affinities || [];
+
+    // recentChatsをフロントエンドが期待する形式に変換
+    const formattedRecentChats = recentChats.map(chat => ({
+      _id: chat._id,
+      character: chat.characterId,
+      lastMessage: chat.messages && chat.messages.length > 0 
+        ? chat.messages[chat.messages.length - 1].content 
+        : '',
+      lastMessageAt: chat.lastActivityAt,
+      messageCount: chat.messages ? chat.messages.length : 0
+    }));
 
     res.json({
       user: {
@@ -688,7 +699,7 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
         email: user.email,
         name: user.name,
         createdAt: user.createdAt,
-        lastLogin: user.lastLogin,
+        lastLoginAt: user.lastLogin,
         selectedCharacter: user.selectedCharacter,
         tokenBalance: user.tokenBalance || 0,
         totalSpent: user.totalSpent || 0,
@@ -697,10 +708,16 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
       tokens: {
         balance: user.tokenBalance || 0,
         totalUsed: tokenUsage[0]?.totalUsed || 0,
-        totalPurchased: user.totalSpent || 0
+        totalPurchased: user.totalSpent || 0,
+        recentUsage: []
       },
       affinities,
-      recentChats
+      recentChats: formattedRecentChats,
+      purchaseHistory: [],
+      loginHistory: [],
+      notifications: [],
+      badges: [],
+      analytics: {}
     });
 
   } catch (error) {
