@@ -1238,6 +1238,7 @@ export default function CharacterEditPage() {
           onCancel={handleCropCancel}
           onSave={handleCropSave}
           isLoading={isUploading}
+          imageType={currentImageType}
         />
       )}
     </div>

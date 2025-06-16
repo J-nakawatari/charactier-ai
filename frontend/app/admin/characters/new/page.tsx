@@ -1138,6 +1138,7 @@ export default function CharacterNewPage() {
           onCropComplete={handleCropComplete}
           onCancel={handleCropCancel}
           onSave={handleCropSave}
+          imageType={currentImageType}
         />
       )}
     </div>

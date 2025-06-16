@@ -17,6 +17,7 @@ interface ImageCropperProps {
   onCancel: () => void;
   onSave: () => void;
   isLoading?: boolean;
+  imageType?: string; // 画像タイプを追加
 }
 
 export default function ImageCropper({ 
@@ -24,11 +25,29 @@ export default function ImageCropper({
   onCropComplete, 
   onCancel, 
   onSave,
-  isLoading = false
+  isLoading = false,
+  imageType = ''
 }: ImageCropperProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
+
+  // 画像タイプに応じて形状とアスペクト比を決定
+  const getCropSettings = (type: string) => {
+    switch (type) {
+      case 'imageCharacterSelect':
+      case 'imageDashboard':
+        return { shape: 'rect' as const, aspect: 1, label: '正方形' }; // 四角形（正方形）
+      case 'imageChatBackground':
+        return { shape: 'rect' as const, aspect: 16/9, label: '16:9' }; // 四角形（16:9）
+      case 'imageChatAvatar':
+        return { shape: 'round' as const, aspect: 1, label: '円形' }; // 円形
+      default:
+        return { shape: 'rect' as const, aspect: 1, label: '正方形' }; // デフォルト
+    }
+  };
+
+  const cropSettings = getCropSettings(imageType);
 
   const onCropCompleteHandler = useCallback(
     (croppedArea: Area, croppedAreaPixels: Area) => {
@@ -52,7 +71,10 @@ export default function ImageCropper({
       >
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">画像をトリミング</h3>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">画像をトリミング</h3>
+            <p className="text-sm text-gray-500 mt-1">形状: {cropSettings.label}</p>
+          </div>
           <div className="flex items-center space-x-2">
             <button
               onClick={handleRotate}
@@ -77,13 +99,13 @@ export default function ImageCropper({
             crop={crop}
             zoom={zoom}
             rotation={rotation}
-            aspect={1} // 正方形にクロップ
+            aspect={cropSettings.aspect}
             onCropChange={setCrop}
             onCropComplete={onCropCompleteHandler}
             onZoomChange={setZoom}
             onRotationChange={setRotation}
-            cropShape="round" // 円形にクロップ
-            showGrid={false}
+            cropShape={cropSettings.shape}
+            showGrid={cropSettings.shape === 'rect'}
             style={{
               containerStyle: {
                 background: 'transparent',
