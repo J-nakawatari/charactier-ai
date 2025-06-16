@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { Send, Heart, Zap, Settings, Eye, EyeOff } from 'lucide-react';
 import { MessageList } from './MessageList';
@@ -84,6 +84,7 @@ export function ChatLayout({
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [currentTokens, setCurrentTokens] = useState(tokenStatus.tokensRemaining);
   const [showAdvanced, setShowAdvanced] = useState(false); // 🎯 高度機能表示切り替え
+  const refreshTokenBalanceRef = useRef<() => Promise<void>>();
   
   // 🎭 親密度ストアの初期化
   const { updateAffinity } = useAffinityStore();
@@ -136,24 +137,33 @@ export function ChatLayout({
     }
   }, []); // 依存関係を削除して無限ループを防止
 
+  // ref に最新の関数を保持
+  refreshTokenBalanceRef.current = refreshTokenBalance;
+
   // ページがフォーカスされた時（購入完了から戻ってきた時など）にトークン残高を更新
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        refreshTokenBalance();
+      if (!document.hidden && refreshTokenBalanceRef.current) {
+        refreshTokenBalanceRef.current();
+      }
+    };
+
+    const intervalHandler = () => {
+      if (refreshTokenBalanceRef.current) {
+        refreshTokenBalanceRef.current();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     // 定期的な更新（30秒間隔）
-    const interval = setInterval(refreshTokenBalance, 30000);
+    const interval = setInterval(intervalHandler, 30000);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       clearInterval(interval);
     };
-  }, []); // refreshTokenBalance の依存関係を削除して無限ループを防止
+  }, []); // 依存関係を削除してrefパターンを使用
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
