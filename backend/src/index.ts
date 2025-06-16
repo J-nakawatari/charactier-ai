@@ -1414,7 +1414,7 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
 
     // 🔒 チャット権限チェック（制裁状態の確認）
     console.log('🔍 Chat permission check started');
-    const permissionCheck = checkChatPermission(req.user);
+    const permissionCheck = checkChatPermission(dbUser);
     if (!permissionCheck.allowed) {
       console.log('🚫 Chat permission denied:', permissionCheck.reason);
       res.status(403).json({
@@ -4977,6 +4977,46 @@ routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authen
 
 
 // ==================== DEBUG ENDPOINTS ====================
+
+// デバッグ用：ユーザーの違反記録確認API（一時的）
+app.get('/api/debug/user-violations/:userId', authenticateToken, requireRole('admin'), async (req: Request, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { userId } = req.params;
+
+  try {
+    const user = await UserModel.findById(userId);
+    const violations = await ViolationRecordModel.find({ userId }).sort({ timestamp: -1 });
+    const stats = await getViolationStats(new mongoose.Types.ObjectId(userId));
+
+    res.json({
+      user: {
+        id: user?._id,
+        name: user?.name,
+        violationCount: user?.violationCount,
+        accountStatus: user?.accountStatus,
+        suspensionEndDate: user?.suspensionEndDate,
+        lastViolationDate: user?.lastViolationDate
+      },
+      violations: violations.map(v => ({
+        id: v._id,
+        type: v.violationType,
+        reason: v.reason,
+        detectedWord: v.detectedWord,
+        timestamp: v.timestamp,
+        isResolved: v.isResolved
+      })),
+      stats,
+      dbViolationCount: violations.length
+    });
+  } catch (error) {
+    console.error('Debug API error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 
 

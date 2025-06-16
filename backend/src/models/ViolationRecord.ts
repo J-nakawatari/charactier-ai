@@ -133,7 +133,7 @@ violationRecordSchema.virtual('timeElapsed').get(function() {
 
 // 静的メソッド：ユーザーの違反回数取得
 violationRecordSchema.statics.getViolationCount = async function(userId: mongoose.Types.ObjectId, timeframe?: number) {
-  const query: any = { userId, isResolved: false };
+  const query: any = { userId };
   
   if (timeframe) {
     const timeLimit = new Date(Date.now() - timeframe);

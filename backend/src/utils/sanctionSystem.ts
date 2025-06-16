@@ -73,7 +73,11 @@ export async function recordViolation(violationData: ViolationData): Promise<IVi
   });
 
   await violation.save();
+  
+  // 現在の違反件数を確認
+  const totalViolations = await ViolationRecordModel.countDocuments({ userId });
   console.log(`📝 違反記録作成: ユーザー${userId}, タイプ:${type}, 理由:${violationReason}`);
+  console.log(`📊 ユーザーの総違反件数: ${totalViolations}件`);
   
   return violation;
 }
@@ -88,11 +92,11 @@ export async function applySanction(userId: mongoose.Types.ObjectId): Promise<Sa
     throw new Error('ユーザーが見つかりません');
   }
 
-  // 違反回数を取得
-  const violationCount = await ViolationRecordModel.countDocuments({ userId, isResolved: false });
+  // 違反回数を取得（すべての違反記録をカウント）
+  const violationCount = await ViolationRecordModel.countDocuments({ userId });
   
-  // ユーザーの違反回数を更新
-  user.violationCount = violationCount + 1;
+  // ユーザーの違反回数を更新（既に記録済みの違反も含めて正確にカウント）
+  user.violationCount = violationCount;
   user.lastViolationDate = new Date();
 
   const currentViolationCount = user.violationCount;
@@ -100,6 +104,7 @@ export async function applySanction(userId: mongoose.Types.ObjectId): Promise<Sa
   let message: string | null = null;
 
   console.log(`⚖️ 制裁判定開始: ユーザー${userId}, 違反回数:${currentViolationCount}`);
+  console.log(`📊 ViolationRecordから取得した違反回数: ${violationCount}`);
 
   // 段階的制裁の判定
   if (currentViolationCount >= SANCTION_RULES.RECORD_ONLY.min && currentViolationCount <= SANCTION_RULES.RECORD_ONLY.max) {
@@ -280,8 +285,10 @@ export async function getViolationStats(userId: mongoose.Types.ObjectId): Promis
     }
   ]);
 
+  const totalViolations = await ViolationRecordModel.countDocuments({ userId: new mongoose.Types.ObjectId(userId) });
+
   return {
     violationRecords: stats,
-    totalViolations: stats.reduce((sum, stat) => sum + stat.count, 0)
+    totalViolations: totalViolations
   };
 }
