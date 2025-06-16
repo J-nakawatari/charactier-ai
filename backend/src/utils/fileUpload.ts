@@ -5,7 +5,7 @@ import sharp from 'sharp';
 import { Request, Response, NextFunction } from 'express';
 
 const createUploadDir = (dir: string): string => {
-  const uploadDir = path.join(__dirname, '../../../uploads', dir);
+  const uploadDir = path.join(__dirname, '../../../../uploads', dir);
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
