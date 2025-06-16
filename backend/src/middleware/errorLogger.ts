@@ -41,7 +41,7 @@ export const errorLoggingMiddleware = (
   }
 
   // APIエラーをログに記録（非同期、エラーは無視）
-  APIErrorModel.logError({
+  (APIErrorModel as any).logError({
     endpoint: req.originalUrl || req.url,
     method: req.method,
     statusCode,
@@ -131,7 +131,7 @@ function logIfError(req: ErrorRequest, res: Response, body: any): void {
     }
 
     // 非同期でエラーログを記録
-    APIErrorModel.logError({
+    (APIErrorModel as any).logError({
       endpoint: req.originalUrl || req.url,
       method: req.method,
       statusCode,
