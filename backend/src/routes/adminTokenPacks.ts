@@ -55,7 +55,7 @@ router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, r
 
     // 現在の為替レートを取得して実際の利益率を計算
     const { calcTokensToGive } = require('../config/tokenConfig');
-    const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+    const currentModel = 'o4-mini'; // 明示的にo4-miniを指定
     
     // 各パックの実際の利益率を計算（固定90%）
     const tokenPacksWithProfitMargin = await Promise.all(tokenPacks.map(async (pack) => {

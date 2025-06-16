@@ -1998,7 +1998,7 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
       });
       
       // 新トークン計算システムに基づくトークン数計算（利益率90%）
-      const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+      const currentModel = 'o4-mini'; // 明示的にo4-miniを指定
       const calculatedTokens = await calcTokensToGive(priceInMainUnit, currentModel);
       
       // 実際の利益率は90%固定
