@@ -8,6 +8,7 @@ import NotificationList from '@/components/admin/NotificationList';
 import SecurityAlerts from '@/components/admin/SecurityAlerts';
 import QuickStats from '@/components/admin/QuickStats';
 import CharacterTable from '@/components/admin/CharacterTable';
+import CronJobMonitor from '@/components/admin/CronJobMonitor';
 import type { DashboardStats, UserStats, TokenUsage, Character, SecurityEvent, Notification } from '@/types/common';
 
 export default function AdminDashboard() {
@@ -198,6 +199,9 @@ export default function AdminDashboard() {
                 
                 {/* キャラクターテーブル */}
                 <CharacterTable characters={characters} />
+                
+                {/* クーロンジョブ監視 */}
+                <CronJobMonitor />
               </div>
               
               {/* 右エリア - サイドウィジェット */}

@@ -4532,6 +4532,75 @@ app.get('/api/admin/cache/invalidation-stats', authenticateToken, async (req: Au
 });
 
 /**
+ * 📅 クーロンジョブ状態確認
+ */
+app.get('/api/admin/cron-status', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('📅 Cron job status requested by admin:', req.user?._id);
+    
+    const now = new Date();
+    const jstOffset = 9 * 60; // JST = UTC+9
+    const jstNow = new Date(now.getTime() + jstOffset * 60000);
+    
+    // 次回実行時刻の計算（概算）
+    const nextMoodDecay = new Date(Math.ceil(jstNow.getTime() / (10 * 60 * 1000)) * (10 * 60 * 1000));
+    const nextInactivity = new Date(jstNow);
+    nextInactivity.setHours(9, 0, 0, 0);
+    if (jstNow.getHours() >= 9) {
+      nextInactivity.setDate(nextInactivity.getDate() + 1);
+    }
+    
+    const status = {
+      serverTime: now.toISOString(),
+      serverTimeJST: jstNow.toISOString().replace('Z', '+09:00'),
+      jobs: [
+        {
+          id: 'mood-decay',
+          name: '気分減衰クリーンアップ',
+          schedule: '*/10 * * * *',
+          description: '10分毎に期限切れの気分修飾子をクリーンアップ',
+          frequency: '10分毎',
+          nextRunJST: nextMoodDecay.toISOString().replace('Z', '+09:00'),
+          isActive: true,
+          lastRunTime: 'ログを確認してください'
+        },
+        {
+          id: 'inactivity-mood',
+          name: '非アクティブユーザー処理',
+          schedule: '0 9 * * *',
+          description: '毎日9時に7日以上非アクティブなユーザーの気分を調整',
+          frequency: '毎日 9:00',
+          nextRunJST: nextInactivity.toISOString().replace('Z', '+09:00'),
+          isActive: true,
+          lastRunTime: 'ログを確認してください'
+        }
+      ],
+      monitoring: {
+        note: 'クーロンジョブの詳細な実行状況はサーバーログで確認できます',
+        logMessages: [
+          '🎭 Starting Mood Decay Cron Job (起動時)',
+          '🧹 Running mood decay cleanup... (10分毎)',
+          '😔 Checking for inactive users... (毎日9時)'
+        ]
+      }
+    };
+
+    res.json({
+      success: true,
+      data: status,
+      timestamp: now.toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ Cron status error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'クーロンジョブ状態取得に失敗しました'
+    });
+  }
+});
+
+/**
  * 🧹 キャッシュクリーンアップ実行
  */
 app.post('/api/admin/cache/cleanup', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
