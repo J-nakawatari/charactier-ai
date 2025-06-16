@@ -641,6 +641,77 @@ routeRegistry.mount('/api/notifications', notificationRoutes);
 // Dashboard API
 // routeRegistry.mount('/api/user/dashboard', dashboardRoutes);
 
+// ユーザーダッシュボード情報取得
+routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // ユーザー基本情報を取得
+    const user = await UserModel.findById(userId)
+      .select('_id email name createdAt lastLogin affinities tokenBalance totalSpent selectedCharacter purchasedCharacters')
+      .populate('purchasedCharacters', '_id name');
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // トークン使用状況
+    const tokenUsage = await TokenUsage.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+      { 
+        $group: {
+          _id: null,
+          totalUsed: { $sum: '$tokensUsed' },
+          totalCost: { $sum: '$cost' }
+        }
+      }
+    ]);
+
+    // 最近のチャット（最新3件）
+    const recentChats = await ChatModel.find({ userId })
+      .populate('characterId', 'name imageChatAvatar')
+      .sort({ lastActivity: -1 })
+      .limit(3)
+      .select('characterId lastActivity messageCount');
+
+    // 親密度情報
+    const affinities = user.affinities || [];
+
+    res.json({
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt,
+        lastLogin: user.lastLogin,
+        selectedCharacter: user.selectedCharacter,
+        tokenBalance: user.tokenBalance || 0,
+        totalSpent: user.totalSpent || 0,
+        purchasedCharacters: user.purchasedCharacters || []
+      },
+      tokens: {
+        balance: user.tokenBalance || 0,
+        totalUsed: tokenUsage[0]?.totalUsed || 0,
+        totalPurchased: user.totalSpent || 0
+      },
+      affinities,
+      recentChats
+    });
+
+  } catch (error) {
+    console.error('Dashboard API error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // 現在のユーザー情報確認エンドポイント（デバッグ用）
 routeRegistry.define('GET', '/api/debug/current-user', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
