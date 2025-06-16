@@ -41,13 +41,15 @@ export default function AdminDashboard() {
         console.log('📡 Fetching data from APIs...');
         
         // 既存の管理者用APIエンドポイントを呼び出し
-        const [overviewRes, charactersRes] = await Promise.all([
+        const [overviewRes, usersRes, charactersRes] = await Promise.all([
           fetch('/api/admin/token-analytics/overview', { headers }),
-          fetch('/api/admin/characters', { headers })
+          fetch('/api/admin/users', { headers }),
+          fetch('/api/characters', { headers }) // 公開キャラクター一覧API
         ]);
         
         console.log('📡 API responses received:', {
           overviewStatus: overviewRes.status,
+          usersStatus: usersRes.status,
           charactersStatus: charactersRes.status
         });
 
@@ -62,47 +64,60 @@ export default function AdminDashboard() {
           throw new Error(`統計データの取得に失敗しました (${overviewRes.status})`);
         }
 
-        if (!charactersRes.ok) {
-          const errorText = await charactersRes.text();
-          console.error('❌ Characters API error:', {
-            status: charactersRes.status,
-            statusText: charactersRes.statusText,
+        if (!usersRes.ok) {
+          const errorText = await usersRes.text();
+          console.error('❌ Users API error:', {
+            status: usersRes.status,
+            statusText: usersRes.statusText,
             errorResponse: errorText
           });
-          throw new Error(`キャラクターデータの取得に失敗しました (${charactersRes.status})`);
+          throw new Error(`ユーザーデータの取得に失敗しました (${usersRes.status})`);
+        }
+
+        // キャラクターAPIはエラーでも続行（統計表示用）
+        let charactersData = { characters: [] };
+        if (charactersRes.ok) {
+          charactersData = await charactersRes.json();
+        } else {
+          console.warn('⚠️ Characters API not available, proceeding with 0 characters');
         }
 
         // レスポンスをパース
         const overviewData = await overviewRes.json();
-        const charactersData = await charactersRes.json();
+        const usersData = await usersRes.json();
 
         console.log('📊 Admin Dashboard - Overview data:', overviewData);
-        console.log('👥 Admin Dashboard - Characters data:', charactersData);
+        console.log('👥 Admin Dashboard - Users data:', usersData);
+        console.log('🎭 Admin Dashboard - Characters data:', charactersData);
 
         // 🔍 デバッグ: APIレスポンス構造を詳細確認
         console.log('🔎 Overview API full response:', JSON.stringify(overviewData, null, 2));
+        console.log('🔎 Users API full response:', JSON.stringify(usersData, null, 2));
         console.log('🔎 Characters API full response:', JSON.stringify(charactersData, null, 2));
         
         // 既存のトークン分析APIから統計データを抽出
         const dailyBreakdown = overviewData.breakdown?.daily || [];
         const uniqueUsersToday = dailyBreakdown.length > 0 ? dailyBreakdown[dailyBreakdown.length - 1]?.uniqueUsers || 0 : 0;
-        const totalUniqueUsers = dailyBreakdown.reduce((acc: number, day: any) => {
-          return Math.max(acc, day.uniqueUsers || 0);
-        }, 0);
+        
+        // ユーザーAPIから総ユーザー数を取得
+        const totalUsers = usersData.pagination?.total || usersData.users?.length || 0;
+        
+        // キャラクター数を取得
+        const totalCharacters = charactersData.characters?.length || 0;
         
         setDashboardStats({
-          totalUsers: totalUniqueUsers,
+          totalUsers: totalUsers,
           activeUsers: uniqueUsersToday,
           totalTokensUsed: overviewData.overview?.totalTokensUsed || 0,
-          totalCharacters: charactersData.characters?.length || 0,
+          totalCharacters: totalCharacters,
           apiErrors: 0 // 現在利用可能なデータなし
         });
         
         console.log('📊 Calculated dashboard stats:', {
-          totalUsers: totalUniqueUsers,
+          totalUsers: totalUsers,
           activeUsers: uniqueUsersToday,
           totalTokensUsed: overviewData.overview?.totalTokensUsed || 0,
-          totalCharacters: charactersData.characters?.length || 0
+          totalCharacters: totalCharacters
         });
 
         // キャラクターデータを設定
