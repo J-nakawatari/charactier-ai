@@ -42,16 +42,18 @@ export default function AdminDashboard() {
         console.log('📡 Fetching data from APIs...');
         
         // 既存の管理者用APIエンドポイントを呼び出し
-        const [overviewRes, usersRes, charactersRes] = await Promise.all([
+        const [overviewRes, usersRes, charactersRes, errorStatsRes] = await Promise.all([
           fetch('/api/admin/token-analytics/overview', { headers }),
           fetch('/api/admin/users', { headers }),
-          fetch('/api/characters', { headers }) // 公開キャラクター一覧API
+          fetch('/api/characters', { headers }), // 公開キャラクター一覧API
+          fetch('/api/admin/error-stats?range=24h', { headers }) // APIエラー統計
         ]);
         
         console.log('📡 API responses received:', {
           overviewStatus: overviewRes.status,
           usersStatus: usersRes.status,
-          charactersStatus: charactersRes.status
+          charactersStatus: charactersRes.status,
+          errorStatsStatus: errorStatsRes.status
         });
 
         // エラーチェック
@@ -83,6 +85,14 @@ export default function AdminDashboard() {
           console.warn('⚠️ Characters API not available, proceeding with 0 characters');
         }
 
+        // エラー統計APIもエラーでも続行
+        let errorStatsData = { data: { stats: { totalErrors: 0 } } };
+        if (errorStatsRes.ok) {
+          errorStatsData = await errorStatsRes.json();
+        } else {
+          console.warn('⚠️ Error stats API not available, proceeding with 0 errors');
+        }
+
         // レスポンスをパース
         const overviewData = await overviewRes.json();
         const usersData = await usersRes.json();
@@ -111,14 +121,15 @@ export default function AdminDashboard() {
           activeUsers: uniqueUsersToday,
           totalTokensUsed: overviewData.overview?.totalTokensUsed || 0,
           totalCharacters: totalCharacters,
-          apiErrors: 0 // 現在利用可能なデータなし
+          apiErrors: errorStatsData.data?.stats?.totalErrors || 0
         });
         
         console.log('📊 Calculated dashboard stats:', {
           totalUsers: totalUsers,
           activeUsers: uniqueUsersToday,
           totalTokensUsed: overviewData.overview?.totalTokensUsed || 0,
-          totalCharacters: totalCharacters
+          totalCharacters: totalCharacters,
+          apiErrors: errorStatsData.data?.stats?.totalErrors || 0
         });
 
         // キャラクターデータを設定
