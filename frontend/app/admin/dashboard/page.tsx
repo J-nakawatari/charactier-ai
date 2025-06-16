@@ -24,32 +24,104 @@ export default function AdminDashboard() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API calls
-        // const [statsRes, userRes, tokenRes, notifRes, securityRes, charRes] = await Promise.all([
-        //   fetch('/api/admin/stats'),
-        //   fetch('/api/admin/user-stats'),
-        //   fetch('/api/admin/token-usage'),
-        //   fetch('/api/admin/notifications'),
-        //   fetch('/api/admin/security-events'),
-        //   fetch('/api/admin/characters')
-        // ]);
+        console.log('🚀 Admin Dashboard - データ取得開始');
         
-        // For now, using empty data until APIs are implemented
-        setDashboardStats({
-          totalUsers: 0,
-          activeUsers: 0,
-          totalTokensUsed: 0,
-          totalCharacters: 0,
-          apiErrors: 0
+        const token = localStorage.getItem('accessToken');
+        console.log('🔑 Token exists:', !!token);
+        
+        if (!token) {
+          throw new Error('認証トークンが見つかりません');
+        }
+
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        console.log('📡 Fetching data from APIs...');
+        
+        // 既存の管理者用APIエンドポイントを呼び出し
+        const [overviewRes, charactersRes] = await Promise.all([
+          fetch('/api/admin/token-analytics/overview', { headers }),
+          fetch('/api/admin/characters', { headers })
+        ]);
+        
+        console.log('📡 API responses received:', {
+          overviewStatus: overviewRes.status,
+          charactersStatus: charactersRes.status
         });
+
+        // エラーチェック
+        if (!overviewRes.ok) {
+          const errorText = await overviewRes.text();
+          console.error('❌ Overview API error:', {
+            status: overviewRes.status,
+            statusText: overviewRes.statusText,
+            errorResponse: errorText
+          });
+          throw new Error(`統計データの取得に失敗しました (${overviewRes.status})`);
+        }
+
+        if (!charactersRes.ok) {
+          const errorText = await charactersRes.text();
+          console.error('❌ Characters API error:', {
+            status: charactersRes.status,
+            statusText: charactersRes.statusText,
+            errorResponse: errorText
+          });
+          throw new Error(`キャラクターデータの取得に失敗しました (${charactersRes.status})`);
+        }
+
+        // レスポンスをパース
+        const overviewData = await overviewRes.json();
+        const charactersData = await charactersRes.json();
+
+        console.log('📊 Admin Dashboard - Overview data:', overviewData);
+        console.log('👥 Admin Dashboard - Characters data:', charactersData);
+
+        // 🔍 デバッグ: APIレスポンス構造を詳細確認
+        console.log('🔎 Overview API full response:', JSON.stringify(overviewData, null, 2));
+        console.log('🔎 Characters API full response:', JSON.stringify(charactersData, null, 2));
+        
+        // 既存のトークン分析APIから統計データを抽出
+        const dailyBreakdown = overviewData.breakdown?.daily || [];
+        const uniqueUsersToday = dailyBreakdown.length > 0 ? dailyBreakdown[dailyBreakdown.length - 1]?.uniqueUsers || 0 : 0;
+        const totalUniqueUsers = dailyBreakdown.reduce((acc: number, day: any) => {
+          return Math.max(acc, day.uniqueUsers || 0);
+        }, 0);
+        
+        setDashboardStats({
+          totalUsers: totalUniqueUsers,
+          activeUsers: uniqueUsersToday,
+          totalTokensUsed: overviewData.overview?.totalTokensUsed || 0,
+          totalCharacters: charactersData.characters?.length || 0,
+          apiErrors: 0 // 現在利用可能なデータなし
+        });
+        
+        console.log('📊 Calculated dashboard stats:', {
+          totalUsers: totalUniqueUsers,
+          activeUsers: uniqueUsersToday,
+          totalTokensUsed: overviewData.overview?.totalTokensUsed || 0,
+          totalCharacters: charactersData.characters?.length || 0
+        });
+
+        // キャラクターデータを設定
+        setCharacters(charactersData.characters || []);
+
+        // TODO: 以下のAPIが実装されたら有効化
         setUserStats([]);
         setTokenUsage([]);
         setNotifications([]);
         setSecurityEvents([]);
-        setCharacters([]);
       } catch (err) {
-        setError('ダッシュボードデータの読み込みに失敗しました');
-        console.error('Dashboard data fetch error:', err);
+        console.error('💥 Dashboard data fetch error:', err);
+        const errorMessage = err instanceof Error ? err.message : 'ダッシュボードデータの読み込みに失敗しました';
+        setError(errorMessage);
+        console.log('🔍 Error details:', {
+          errorType: typeof err,
+          errorMessage: errorMessage,
+          errorStack: err instanceof Error ? err.stack : 'No stack trace'
+        });
       } finally {
         setLoading(false);
       }
