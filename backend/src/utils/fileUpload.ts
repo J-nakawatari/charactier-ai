@@ -46,24 +46,22 @@ export const optimizeImage = (width: number = 800, height: number = 800, quality
         return;
       }
 
+      // 透過PNG画像の場合は処理をスキップして元ファイルをそのまま使用
+      if (req.file.mimetype === 'image/png') {
+        console.log('透過PNG画像検出: 最適化をスキップして元ファイルを保持');
+        next();
+        return;
+      }
+
       const tmpPath = req.file.path + '.tmp';
       
-      // 透過情報を保持するためPNG形式で処理
+      // PNG以外の画像のみ処理
       await sharp(req.file.path)
-        .ensureAlpha() // アルファチャンネルを確実に保持
         .resize(width, height, { 
           fit: 'inside',
-          withoutEnlargement: true,
-          background: { r: 0, g: 0, b: 0, alpha: 0 } // 透明な背景を明示的に設定
+          withoutEnlargement: true
         })
-        .png({ 
-          compressionLevel: 6, // 圧縮レベル（0-9）
-          adaptiveFiltering: true, // アダプティブフィルタリングで透過部分を最適化
-          force: true, // 強制的にPNG形式で出力
-          palette: false, // パレットモードを無効化してフルカラー+アルファチャンネルを使用
-          colours: 256, // 色数を制限せずフルカラー
-          effort: 10 // 最高品質の圧縮
-        })
+        .png()
         .toFile(tmpPath);
         
       await fs.promises.rename(tmpPath, req.file.path);

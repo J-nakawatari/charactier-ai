@@ -7,6 +7,47 @@ import { uploadImage, optimizeImage } from '../utils/fileUpload';
 
 const router: Router = Router();
 
+// テスト用の画像アップロードエンドポイント（認証なし）
+router.post('/test-upload/image', uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: any, res: Response): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({
+        error: 'No image file',
+        message: '画像ファイルがアップロードされていません'
+      });
+      return;
+    }
+    
+    const imageUrl = `/uploads/images/${req.file.filename}`;
+    console.log('✅ Test image uploaded successfully:', {
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      path: req.file.path,
+      url: imageUrl
+    });
+    
+    res.json({
+      success: true,
+      message: '画像のアップロードが完了しました',
+      imageUrl: imageUrl,
+      debug: {
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size
+      }
+    });
+  } catch (error) {
+    console.error('❌ Test image upload error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: '画像のアップロードに失敗しました'
+    });
+  }
+});
+
 // キャラクター作成（管理者のみ）
 router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
