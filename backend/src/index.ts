@@ -26,7 +26,8 @@ import notificationRoutes from './routes/notifications';
 // const userRoutes = require('./routes/user');
 // const dashboardRoutes = require('./routes/dashboard');
 import { validateMessage } from './utils/contentFilter';
-import { recordViolation, applySanction, checkChatPermission } from './utils/sanctionSystem';
+import { recordViolation, applySanction, checkChatPermission, getViolationStats } from './utils/sanctionSystem';
+import { ViolationRecordModel } from './models/ViolationRecord';
 import TokenUsage from '../models/TokenUsage';
 import CharacterPromptCache from '../models/CharacterPromptCache';
 import {
@@ -4979,9 +4980,9 @@ routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authen
 // ==================== DEBUG ENDPOINTS ====================
 
 // デバッグ用：ユーザーの違反記録確認API（一時的）
-app.get('/api/debug/user-violations/:userId', authenticateToken, requireRole('admin'), async (req: Request, res: Response): Promise<void> => {
-  if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+app.get('/api/debug/user-violations/:userId', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
     return;
   }
 
