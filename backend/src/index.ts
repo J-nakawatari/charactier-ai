@@ -4,6 +4,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import Stripe from 'stripe';
 import mongoose from 'mongoose';
 import OpenAI from 'openai';
@@ -2946,8 +2947,19 @@ app.get('/api/debug', (_req: Request, res: Response): void => {
   });
 });
 
-const swaggerDocument = YAML.load(path.resolve(__dirname, '../../docs/openapi.yaml'));
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// Swagger UI setup (optional)
+try {
+  const openApiPath = path.resolve(__dirname, '../../docs/openapi.yaml');
+  if (fs.existsSync(openApiPath)) {
+    const swaggerDocument = YAML.load(openApiPath);
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    console.log('📚 Swagger UI available at /api-docs');
+  } else {
+    console.log('⚠️  OpenAPI file not found, Swagger UI disabled');
+  }
+} catch (error) {
+  console.log('⚠️  Failed to load OpenAPI documentation:', error.message);
+}
 
 // 管理者作成API
 app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {

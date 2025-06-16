@@ -383,8 +383,8 @@ export default function CharacterNewPage() {
         croppedAreaPixels
       );
       
-      const croppedFile = new File([croppedImage], `${currentImageType}.jpg`, {
-        type: 'image/jpeg',
+      const croppedFile = new File([croppedImage], `${currentImageType}.png`, {
+        type: 'image/png',
       });
       
       if (currentImageType === 'gallery' && currentGalleryIndex >= 0) {

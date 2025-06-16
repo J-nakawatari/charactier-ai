@@ -11,8 +11,12 @@ interface Character {
   _id: string;
   name: string; // すでに多言語処理済み文字列
   description: string; // すでに多言語処理済み文字列
-  imageChatAvatar: string;
-  imageChatBackground: string;
+  // 🖼️ 画像フィールド（ChatLayoutと一致）
+  imageCharacterSelect?: string;
+  imageDashboard?: string;
+  imageChatBackground?: string;
+  imageChatAvatar?: string;
+  // 🎭 その他のフィールド
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
 }

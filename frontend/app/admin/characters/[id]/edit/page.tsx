@@ -484,8 +484,8 @@ export default function CharacterEditPage() {
       setIsUploading(true);
       
       const croppedImage = await getCroppedImg(cropperImageSrc, croppedAreaPixels);
-      let croppedFile = new File([croppedImage], `${currentImageType}.jpg`, {
-        type: 'image/jpeg',
+      let croppedFile = new File([croppedImage], `${currentImageType}.png`, {
+        type: 'image/png',
       });
       
       // 画像サイズが500KB以上の場合は圧縮

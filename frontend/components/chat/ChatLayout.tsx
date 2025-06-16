@@ -17,13 +17,18 @@ import { useRealtimeChat, useTypingDebounce, useChatConnectionStatus } from '@/h
 import { useAffinityStore } from '@/store/affinityStore';
 import { getMoodBackgroundGradient } from '@/utils/moodUtils';
 import { getAuthHeaders } from '@/utils/auth';
+import { getSafeImageUrl } from '@/utils/imageUtils';
 
 interface Character {
   _id: string;
   name: string;
   description: string;
-  imageChatAvatar: string;
-  imageChatBackground: string;
+  // 🖼️ 画像フィールド（CharacterModel.tsと一致）
+  imageCharacterSelect?: string;
+  imageDashboard?: string;
+  imageChatBackground?: string;
+  imageChatAvatar?: string;
+  // 🎭 その他のフィールド
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
 }
@@ -117,6 +122,19 @@ export function ChatLayout({
       mood: (affinity as any).currentMood || 'neutral'
     });
   }, [affinity, updateAffinity]);
+
+  // 🖼️ キャラクター画像データのデバッグログ
+  useEffect(() => {
+    console.log('🔍 ChatLayout キャラクター画像データ:', {
+      characterId: character._id,
+      name: character.name,
+      imageCharacterSelect: character.imageCharacterSelect,
+      imageDashboard: character.imageDashboard,
+      imageChatBackground: character.imageChatBackground,
+      imageChatAvatar: character.imageChatAvatar,
+      actualDisplayImage: character.imageChatBackground || character.imageChatAvatar || character.imageCharacterSelect
+    });
+  }, [character]);
 
   // 定期的にトークン残高を更新する関数
   const refreshTokenBalance = useCallback(async () => {
@@ -229,13 +247,21 @@ export function ChatLayout({
           <div className="flex items-center space-x-2 sm:space-x-3">
             <div className="hidden sm:block w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
               <Image 
-                src={character.imageChatAvatar} 
+                src={getSafeImageUrl(character.imageChatAvatar || character.imageCharacterSelect, character.name)} 
                 alt={character.name}
                 width={48}
                 height={48}
                 className="w-full h-full object-cover"
                 style={{ backgroundColor: 'transparent' }}
                 unoptimized={true}
+                onError={(e) => {
+                  console.error('🖼️ ChatLayout Avatar画像読み込みエラー:', {
+                    imageChatAvatar: character.imageChatAvatar,
+                    imageCharacterSelect: character.imageCharacterSelect,
+                    characterId: character._id,
+                    finalSrc: getSafeImageUrl(character.imageChatAvatar || character.imageCharacterSelect, character.name)
+                  });
+                }}
               />
             </div>
             <div className="hidden sm:block">
@@ -296,13 +322,22 @@ export function ChatLayout({
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ backgroundColor: 'transparent' }}>
           <div className="h-full w-auto" style={{ backgroundColor: 'transparent' }}>
             <img 
-              src={character.imageChatBackground || character.imageChatAvatar}
+              src={getSafeImageUrl(character.imageChatBackground || character.imageChatAvatar || character.imageCharacterSelect, character.name)}
               alt={character.name}
               className="h-full w-auto object-contain bg-transparent"
               style={{ 
                 backgroundColor: 'transparent',
                 imageRendering: 'auto',
                 mixBlendMode: 'normal'
+              }}
+              onError={(e) => {
+                console.error('🖼️ ChatLayout 背景画像読み込みエラー:', {
+                  imageChatBackground: character.imageChatBackground,
+                  imageChatAvatar: character.imageChatAvatar,
+                  imageCharacterSelect: character.imageCharacterSelect,
+                  characterId: character._id,
+                  finalSrc: getSafeImageUrl(character.imageChatBackground || character.imageChatAvatar || character.imageCharacterSelect, character.name)
+                });
               }}
             />
           </div>

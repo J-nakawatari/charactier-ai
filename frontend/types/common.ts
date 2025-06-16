@@ -196,9 +196,12 @@ export interface Character {
   _id: string;
   name: LocalizedString;
   description: LocalizedString;
-  imageChatAvatar: string;
-  imageChatBackground: string;
+  // 🖼️ 画像フィールド（CharacterModel.tsと一致）
   imageCharacterSelect?: string;
+  imageDashboard?: string;
+  imageChatBackground?: string;
+  imageChatAvatar?: string;
+  // 🎭 その他のフィールド
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
   characterAccessType?: 'free' | 'purchaseOnly';
