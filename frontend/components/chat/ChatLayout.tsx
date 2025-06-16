@@ -207,7 +207,7 @@ export function ChatLayout({
     });
     
     // 7. 認証情報（APIトークン）
-    const authHeaders = getAuthHeaders();
+    const authHeaders = getAuthHeaders() as Record<string, string>;
     console.log('🔐 認証状態:', {
       認証ヘッダー存在: authHeaders.Authorization ? '✅' : '❌',
       トークンタイプ: authHeaders.Authorization ? authHeaders.Authorization.split(' ')[0] : 'なし'
@@ -289,7 +289,7 @@ export function ChatLayout({
       console.log('💰 現在のトークン残高:', tokenStatus.tokensRemaining);
       console.log('❤️ 現在の親密度レベル:', affinity.level);
       console.log('😊 現在の気分:', character.currentMood);
-      console.log('🔐 認証状態:', getAuthHeaders().Authorization ? '✅ 認証済み' : '❌ 未認証');
+      console.log('🔐 認証状態:', (getAuthHeaders() as Record<string, string>).Authorization ? '✅ 認証済み' : '❌ 未認証');
       
       // 禁止用語チェック（フロントエンド側）
       const validation = validateMessageBeforeSend(messageToSend);
