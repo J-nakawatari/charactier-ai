@@ -64,7 +64,7 @@ export default function TokensPage() {
     const fetchTokenData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('adminAccessToken');
+        const token = localStorage.getItem('accessToken');
         
         if (!token) {
           setError('認証トークンが見つかりません');
@@ -76,9 +76,9 @@ export default function TokensPage() {
           'Content-Type': 'application/json'
         };
 
-        // 実際のAPIコールを実行
+        // 実際のAPIコールを実行（既存の動作しているエンドポイントを使用）
         const [tokenRes, usersRes] = await Promise.all([
-          fetch('/api/admin/token-usage', { headers }),
+          fetch('/api/admin/token-analytics/overview', { headers }),
           fetch('/api/admin/users', { headers })
         ]);
 
@@ -94,10 +94,11 @@ export default function TokensPage() {
           usersRes.json()
         ]);
 
-        console.log('🔍 Token usage data:', tokenData);
+        console.log('🔍 Token analytics data:', tokenData);
         console.log('🔍 Users data:', usersData);
 
-        setTokenUsage(tokenData.tokenUsages || []);
+        // token-analytics/overview のデータ構造に合わせて調整
+        setTokenUsage(tokenData.breakdown?.daily || []);
         setUsers(usersData.users || []);
         setTokenStats(usersData.tokenStats || null);
         setError(null);
