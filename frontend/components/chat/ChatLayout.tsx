@@ -18,6 +18,7 @@ import { useAffinityStore } from '@/store/affinityStore';
 import { getMoodBackgroundGradient } from '@/utils/moodUtils';
 import { getAuthHeaders } from '@/utils/auth';
 import { getSafeImageUrl } from '@/utils/imageUtils';
+import { validateMessageBeforeSend } from '@/utils/contentFilter';
 
 interface Character {
   _id: string;
@@ -142,30 +143,81 @@ export function ChatLayout({
     });
   }, [character]);
 
-  // 🤖 AIモデル・プロンプト情報のデバッグログ
+  // 🔍 チャット画面の完全な状態デバッグログ
   useEffect(() => {
-    const currentModel = character.aiModel || character.model;
-    console.log('🤖 チャット画面 - 使用中AIモデル・プロンプト:', {
-      characterId: character._id,
-      characterName: character.name,
-      aiModel: character.aiModel,
-      model: character.model,
-      currentModel: currentModel || 'undefined',
-      personalityPrompt: character.personalityPrompt ? character.personalityPrompt.substring(0, 100) + '...' : 'undefined',
-      adminPrompt: character.adminPrompt ? character.adminPrompt.substring(0, 100) + '...' : 'undefined',
-      timestamp: new Date().toLocaleTimeString()
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🎯 チャット画面 - 完全な状態確認');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
+    // 1. キャラクター基本情報
+    console.log('👤 キャラクター情報:', {
+      id: character._id,
+      name: character.name,
+      description: character.description,
+      currentMood: character.currentMood,
+      themeColor: character.themeColor,
+      images: {
+        avatar: character.imageChatAvatar,
+        background: character.imageChatBackground
+      }
     });
     
-    // 💬 プロンプト詳細を別ログで出力（長いため）
-    if (character.personalityPrompt || character.adminPrompt) {
-      console.log('💬 チャット画面 - プロンプト詳細:', {
-        characterId: character._id,
-        characterName: character.name,
-        personalityPrompt: character.personalityPrompt,
-        adminPrompt: character.adminPrompt
-      });
-    }
-  }, [character._id, character.name, character.aiModel, character.model, character.personalityPrompt, character.adminPrompt]);
+    // 2. AIモデルとプロンプト
+    const currentModel = character.aiModel || character.model;
+    console.log('🤖 AI設定:', {
+      model: currentModel || 'undefined',
+      aiModel: character.aiModel,
+      personalityPrompt: character.personalityPrompt ? '✅ 設定済み（' + character.personalityPrompt.length + '文字）' : '❌ 未設定',
+      adminPrompt: character.adminPrompt ? '✅ 設定済み（' + character.adminPrompt.length + '文字）' : '❌ 未設定'
+    });
+    
+    // 3. トークン情報
+    console.log('💰 トークン状態:', {
+      残高: tokenStatus.tokensRemaining,
+      最終メッセージコスト: tokenStatus.lastMessageCost,
+      残高十分: tokenStatus.tokensRemaining > 0 ? '✅' : '❌'
+    });
+    
+    // 4. 親密度情報
+    console.log('❤️ 親密度情報:', {
+      レベル: affinity.level,
+      現在経験値: affinity.currentExp,
+      次レベル必要経験値: affinity.nextLevelExp,
+      進捗率: Math.round((affinity.currentExp / affinity.nextLevelExp) * 100) + '%',
+      解放済みイラスト数: affinity.unlockedIllustrations?.length || 0,
+      現在の気分: (affinity as any).currentMood || 'unknown'
+    });
+    
+    // 5. メッセージ履歴
+    console.log('💬 メッセージ履歴:', {
+      総メッセージ数: messages.length,
+      ユーザーメッセージ数: messages.filter(m => m.role === 'user').length,
+      AIメッセージ数: messages.filter(m => m.role === 'assistant').length,
+      最新メッセージ: messages.length > 0 ? {
+        role: messages[messages.length - 1].role,
+        content: messages[messages.length - 1].content.substring(0, 50) + '...',
+        timestamp: messages[messages.length - 1].timestamp
+      } : 'なし'
+    });
+    
+    // 6. 接続状態
+    console.log('🌐 接続状態:', {
+      リアルタイム接続: connectionStatus,
+      WebSocket: realtimeChat ? '✅ 接続中' : '❌ 未接続'
+    });
+    
+    // 7. 認証情報（APIトークン）
+    const authHeaders = getAuthHeaders();
+    console.log('🔐 認証状態:', {
+      認証ヘッダー存在: authHeaders.Authorization ? '✅' : '❌',
+      トークンタイプ: authHeaders.Authorization ? authHeaders.Authorization.split(' ')[0] : 'なし'
+    });
+    
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('タイムスタンプ:', new Date().toLocaleString('ja-JP'));
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
+  }, [character, affinity, tokenStatus, messages, connectionStatus, realtimeChat]);
 
   // 定期的にトークン残高を更新する関数
   const refreshTokenBalance = useCallback(async () => {
@@ -226,25 +278,45 @@ export function ChatLayout({
       const messageToSend = inputMessage.trim();
       setInputMessage('');
       
-      // 🤖 メッセージ送信時のAIモデル・プロンプト情報をログ出力
+      // 📤 メッセージ送信時の完全な状態ログ
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📤 メッセージ送信時の状態');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      
       const currentModel = character.aiModel || character.model;
-      console.log('🤖 メッセージ送信 - 使用AIモデル・プロンプト:', {
-        characterId: character._id,
-        characterName: character.name,
-        aiModel: character.aiModel,
-        model: character.model,
-        currentModel: currentModel || 'undefined',
-        personalityPrompt: character.personalityPrompt ? character.personalityPrompt.substring(0, 50) + '...' : 'undefined',
-        adminPrompt: character.adminPrompt ? character.adminPrompt.substring(0, 50) + '...' : 'undefined',
-        messageToSend: messageToSend.substring(0, 50) + (messageToSend.length > 50 ? '...' : ''),
-        timestamp: new Date().toLocaleTimeString()
+      console.log('🤖 使用AIモデル:', currentModel || 'undefined');
+      console.log('💬 送信メッセージ:', messageToSend);
+      console.log('💰 現在のトークン残高:', tokenStatus.tokensRemaining);
+      console.log('❤️ 現在の親密度レベル:', affinity.level);
+      console.log('😊 現在の気分:', character.currentMood);
+      console.log('🔐 認証状態:', getAuthHeaders().Authorization ? '✅ 認証済み' : '❌ 未認証');
+      
+      // 禁止用語チェック（フロントエンド側）
+      const validation = validateMessageBeforeSend(messageToSend);
+      console.log('🚫 禁止用語チェック:', {
+        canSend: validation.canSend ? '✅ 送信可能' : '❌ 送信不可',
+        errorMessage: validation.errorMessage || 'なし'
       });
+      
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('送信時刻:', new Date().toLocaleString('ja-JP'));
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       
       // タイピング停止とキャラクタータイピング開始
       stopTyping();
       realtimeChat.setCharacterTyping(true);
       
       await onSendMessage(messageToSend);
+      
+      // 📥 メッセージ送信後の状態ログ
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📥 メッセージ送信完了後の状態');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✅ 送信成功');
+      console.log('💰 更新後のトークン残高:', tokenStatus.tokensRemaining);
+      console.log('💸 消費トークン数:', tokenStatus.lastMessageCost);
+      console.log('❤️ 更新後の親密度:', affinity.level);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       // レベルアップ演出のトリガー（テスト用）
       if (Math.random() > 0.8) {
@@ -253,7 +325,14 @@ export function ChatLayout({
       }
 
     } catch (error) {
-      console.error('Message send error:', error);
+      // ❌ エラー時の詳細ログ
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('❌ メッセージ送信エラー');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.error('エラー詳細:', error);
+      console.log('エラー種別:', error instanceof Error ? error.name : typeof error);
+      console.log('エラーメッセージ:', error instanceof Error ? error.message : String(error));
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     } finally {
       setIsLoading(false);
       realtimeChat.setCharacterTyping(false);
