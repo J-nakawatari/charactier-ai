@@ -777,10 +777,19 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
       )
     );
 
+    // userIdの文字列変換を確認
+    const userIdString = userId.toString();
+    console.log('🔍 Debug - userId types:', {
+      original: userId,
+      originalType: typeof userId,
+      asObjectId: new mongoose.Types.ObjectId(userId),
+      asString: userIdString
+    });
+
     const chatStats = await ChatModel.aggregate([
       {
         $match: {
-          userId: new mongoose.Types.ObjectId(userId)
+          userId: userIdString // 文字列として比較
         }
       },
       { $unwind: "$messages" },
@@ -842,9 +851,34 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
       affinityProgress: affinityProgress
     };
 
+    // 全期間のメッセージ数も集計（デバッグ用）
+    const allTimeChatStats = await ChatModel.aggregate([
+      {
+        $match: {
+          userId: userIdString
+        }
+      },
+      { $unwind: "$messages" },
+      {
+        $match: {
+          "messages.role": "user" // ユーザーメッセージのみカウント
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalCount: { $sum: 1 }
+        }
+      }
+    ]).catch((err) => {
+      console.error('❌ All-time chat aggregation error:', err);
+      return [];
+    });
+
     console.log('📊 Analytics Data:', {
       chatStats: chatStats.length,
       chatStatsDetail: JSON.stringify(chatStats, null, 2),
+      allTimeUserMessages: allTimeChatStats[0]?.totalCount || 0,
       tokenStats: tokenStats.length,
       affinityProgress: affinityProgress.length,
       chatCountPerDay: analytics.chatCountPerDay,
