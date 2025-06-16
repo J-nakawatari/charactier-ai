@@ -228,12 +228,8 @@ export function ChatLayout({
         className="flex-1 flex flex-col relative lg:ml-64 transition-all duration-1000 ease-in-out"
         style={backgroundStyle}
       >
-        {/* 感情に基づく背景オーバーレイ（画像背景の場合は軽いオーバーレイ） */}
-        <div className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-          character.imageChatBackground 
-            ? 'bg-black/10 backdrop-blur-[2px]' // 画像背景の場合は軽いオーバーレイ
-            : `backdrop-blur-sm ${moodGradient.overlay}` // グラデーション背景の場合は通常のムードオーバーレイ
-        }`}></div>
+        {/* 感情に基づく背景オーバーレイ */}
+        <div className={`absolute inset-0 backdrop-blur-sm transition-all duration-1000 ease-in-out ${moodGradient.overlay}`}></div>
       
       {/* ヘッダー */}
       <header className="relative z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200/50 p-3 sm:p-4">
