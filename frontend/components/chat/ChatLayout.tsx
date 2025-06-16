@@ -234,6 +234,7 @@ export function ChatLayout({
                 width={48}
                 height={48}
                 className="w-full h-full object-cover"
+                style={{ backgroundColor: 'transparent' }}
               />
             </div>
             <div className="hidden sm:block">
@@ -299,6 +300,7 @@ export function ChatLayout({
               width={400}
               height={600}
               className="h-full w-auto object-contain"
+              style={{ backgroundColor: 'transparent' }}
             />
           </div>
         </div>
