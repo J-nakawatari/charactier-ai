@@ -28,6 +28,9 @@ interface ChatLayoutCharacter {
   imageChatBackground: string;
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
+  // 🤖 AIモデル情報
+  aiModel?: string;
+  model?: string;
 }
 
 interface ChatLayoutData {
@@ -67,6 +70,15 @@ export default function ChatPage() {
         
         const apiData = await response.json();
         
+        // 🤖 デバッグ: APIレスポンスのモデル情報を確認
+        console.log('🤖 Chat API レスポンス - モデル情報:', {
+          characterId: apiData.character._id,
+          characterName: getLocalizedString(apiData.character.name, locale),
+          aiModel: apiData.character.aiModel,
+          model: apiData.character.model,
+          fullCharacterData: apiData.character
+        });
+        
         // API レスポンスを ChatLayoutData 形式に変換
         const chatData: ChatLayoutData = {
           character: {
@@ -76,7 +88,10 @@ export default function ChatPage() {
             imageChatAvatar: apiData.character.imageChatAvatar || '/characters/luna.png',
             imageChatBackground: apiData.character.imageChatBackground || apiData.character.imageChatAvatar || '/characters/luna.png',
             currentMood: apiData.userState?.affinity?.mood || 'neutral', // 統一: affinityのmoodを使用
-            themeColor: apiData.character.themeColor || '#8B5CF6'
+            themeColor: apiData.character.themeColor || '#8B5CF6',
+            // 🤖 AIモデル情報を追加
+            aiModel: apiData.character.aiModel,
+            model: apiData.character.model
           },
           affinity: {
             level: apiData.userState?.affinity?.level || 0,
