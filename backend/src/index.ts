@@ -45,6 +45,7 @@ import {
   statusCodeLoggerMiddleware 
 } from './middleware/errorLogger';
 import { APIErrorModel } from './models/APIError';
+import { ExchangeRateModel } from './models/ExchangeRate';
 import { calcTokensToGive, logTokenConfig } from './config/tokenConfig';
 const TokenService = require('../services/tokenService');
 import routeRegistry from './core/RouteRegistry';
@@ -4542,6 +4543,64 @@ app.get('/api/admin/cache/invalidation-stats', authenticateToken, async (req: Au
   }
 });
 
+
+/**
+ * 💱 現在の為替レート取得
+ */
+app.get('/api/admin/exchange-rate', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('💱 Exchange rate requested by admin:', req.user?._id);
+    
+    // 最新の為替レートを取得
+    const latestRate = await ExchangeRateModel.findOne({
+      baseCurrency: 'USD',
+      targetCurrency: 'JPY',
+      isValid: true
+    }).sort({ fetchedAt: -1 });
+
+    // 前回のレートも取得（比較用）
+    const previousRate = await ExchangeRateModel.findOne({
+      baseCurrency: 'USD',
+      targetCurrency: 'JPY',
+      isValid: true,
+      fetchedAt: { $lt: latestRate?.fetchedAt || new Date() }
+    }).sort({ fetchedAt: -1 });
+
+    if (!latestRate) {
+      // フォールバックレートを返す
+      res.json({
+        success: true,
+        data: {
+          rate: 150,
+          source: 'fallback',
+          fetchedAt: new Date().toISOString(),
+          isValid: false,
+          message: '為替レートが未取得です'
+        }
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        rate: latestRate.rate,
+        source: latestRate.source,
+        fetchedAt: latestRate.fetchedAt,
+        isValid: latestRate.isValid,
+        previousRate: previousRate?.rate
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching exchange rate:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: '為替レートの取得に失敗しました'
+    });
+  }
+});
 
 /**
  * 📊 APIエラー統計取得

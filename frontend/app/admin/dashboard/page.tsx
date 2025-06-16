@@ -9,6 +9,7 @@ import SecurityAlerts from '@/components/admin/SecurityAlerts';
 import QuickStats from '@/components/admin/QuickStats';
 import CharacterTable from '@/components/admin/CharacterTable';
 import CronJobMonitor from '@/components/admin/CronJobMonitor';
+import ExchangeRateWidget from '@/components/admin/ExchangeRateWidget';
 import type { DashboardStats, UserStats, TokenUsage, Character, SecurityEvent, Notification } from '@/types/common';
 
 export default function AdminDashboard() {
@@ -219,6 +220,9 @@ export default function AdminDashboard() {
               <div className="xl:col-span-1 space-y-4 md:space-y-6">
                 {/* セキュリティアラート */}
                 <SecurityAlerts events={securityEvents} />
+                
+                {/* 為替レート表示 */}
+                <ExchangeRateWidget />
                 
                 {/* 通知リスト */}
                 <NotificationList notifications={notifications} />
