@@ -399,6 +399,13 @@ export default function CharacterEditPage() {
         imageChatAvatar: formData.imageChatAvatarUrl
       };
       
+      console.log('🔍 保存するbasicData:', basicData);
+      console.log('🔍 フォームの画像URL状態:');
+      console.log('  imageCharacterSelectUrl:', formData.imageCharacterSelectUrl);
+      console.log('  imageDashboardUrl:', formData.imageDashboardUrl);
+      console.log('  imageChatBackgroundUrl:', formData.imageChatBackgroundUrl);
+      console.log('  imageChatAvatarUrl:', formData.imageChatAvatarUrl);
+      
       const basicSaveResponse = await fetch(`${API_BASE_URL}/api/characters/${characterId}`, {
         method: 'PUT',
         headers: {
