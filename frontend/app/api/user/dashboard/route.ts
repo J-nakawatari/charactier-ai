@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { backendClient } from '@/utils/backend-client';
 
 export async function GET(request: NextRequest) {
   try {
-    // 認証ヘッダーを取得
+    // 認証確認
     const authorization = request.headers.get('authorization');
     const authToken = request.headers.get('x-auth-token');
 
@@ -10,26 +11,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    // バックエンドAPIにプロキシ
-    const isProduction = process.env.NODE_ENV === 'production';
-    const backendUrl = isProduction 
-      ? 'https://charactier-ai.com'
-      : (process.env.BACKEND_URL || 'http://localhost:5000');
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-
-    if (authorization) {
-      headers['Authorization'] = authorization;
-    }
-    if (authToken) {
-      headers['x-auth-token'] = authToken;
-    }
-
-    const response = await fetch(`${backendUrl}/api/user/dashboard`, {
-      method: 'GET',
-      headers,
-    });
+    // 統一APIクライアントを使用
+    const response = await backendClient.proxyRequest(request, '/api/user/dashboard');
 
     if (!response.ok) {
       const errorText = await response.text();
