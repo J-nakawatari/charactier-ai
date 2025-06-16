@@ -23,7 +23,7 @@ import characterRoutes from './routes/characters';
 import modelRoutes from './routes/modelSettings';
 import notificationRoutes from './routes/notifications';
 // const userRoutes = require('./routes/user');
-// const dashboardRoutes = require('./routes/dashboard');
+const dashboardRoutes = require('./routes/dashboard');
 import { validateMessage } from './utils/contentFilter';
 import TokenUsage from '../models/TokenUsage';
 import CharacterPromptCache from '../models/CharacterPromptCache';
@@ -639,7 +639,7 @@ routeRegistry.mount('/api/characters', characterRoutes);
 routeRegistry.mount('/api/notifications', notificationRoutes);
 
 // Dashboard API
-// routeRegistry.mount('/api/user/dashboard', dashboardRoutes);
+routeRegistry.mount('/api/user/dashboard', dashboardRoutes);
 
 // 現在のユーザー情報確認エンドポイント（デバッグ用）
 routeRegistry.define('GET', '/api/debug/current-user', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
