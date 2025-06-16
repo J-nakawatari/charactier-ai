@@ -26,6 +26,7 @@ import notificationRoutes from './routes/notifications';
 // const userRoutes = require('./routes/user');
 // const dashboardRoutes = require('./routes/dashboard');
 import { validateMessage } from './utils/contentFilter';
+import { recordViolation, applySanction, checkChatPermission } from './utils/sanctionSystem';
 import TokenUsage from '../models/TokenUsage';
 import CharacterPromptCache from '../models/CharacterPromptCache';
 import {
@@ -620,10 +621,12 @@ app.use('/api/admin', modelRoutes);
 import adminUsersRoutes from './routes/adminUsers';
 import adminTokenPacksRoutes from './routes/adminTokenPacks';
 import adminTokenUsageRoutes from './routes/adminTokenUsage';
+import adminSecurityRoutes from './routes/adminSecurity';
 
 routeRegistry.mount('/admin/users', adminUsersRoutes);
 routeRegistry.mount('/api/admin/token-packs', adminTokenPacksRoutes);
 routeRegistry.mount('/api/admin/token-usage', adminTokenUsageRoutes);
+routeRegistry.mount('/api/admin/security', adminSecurityRoutes);
 
 // デバッグ: 登録されたルートを出力
 console.log('🔧 Registered admin routes:');
@@ -1409,19 +1412,67 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
 
     console.log('💰 Current user token balance:', userTokenBalance);
 
+    // 🔒 チャット権限チェック（制裁状態の確認）
+    console.log('🔍 Chat permission check started');
+    const permissionCheck = checkChatPermission(req.user);
+    if (!permissionCheck.allowed) {
+      console.log('🚫 Chat permission denied:', permissionCheck.reason);
+      res.status(403).json({
+        error: permissionCheck.message,
+        code: 'CHAT_PERMISSION_DENIED',
+        reason: permissionCheck.reason
+      });
+      return;
+    }
+    console.log('✅ Chat permission granted');
+
     // 🔥 禁止用語フィルタリング（メッセージ処理前に実行）
     console.log('🔍 Content filtering check started');
     const { validateMessage: tsValidateMessage } = await import('./utils/contentFilter');
     const validation = tsValidateMessage(message.trim());
     if (!validation.allowed) {
       console.log('🚫 Content violation detected:', validation.reason);
-      res.status(403).json({
-        error: validation.reason,
-        code: 'CONTENT_VIOLATION',
-        violationType: validation.violationType,
-        detectedWord: validation.detectedWord
-      });
-      return;
+      
+      try {
+        // 1. 違反記録を作成
+        const violationRecord = await recordViolation({
+          userId: new mongoose.Types.ObjectId(req.user._id),
+          type: validation.violationType as 'blocked_word' | 'openai_moderation',
+          originalMessage: message.trim(),
+          violationReason: validation.reason || 'メッセージに不適切な内容が含まれています',
+          detectedWords: validation.detectedWord ? [validation.detectedWord] : [],
+          ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
+          userAgent: req.get('User-Agent') || 'unknown'
+        });
+        
+        // 2. 制裁を適用
+        const sanction = await applySanction(new mongoose.Types.ObjectId(req.user._id));
+        
+        console.log(`⚖️ 制裁適用完了: ${sanction.sanctionAction}, 違反回数: ${sanction.violationCount}`);
+        
+        res.status(403).json({
+          error: validation.reason,
+          code: 'CONTENT_VIOLATION',
+          violationType: validation.violationType,
+          detectedWord: validation.detectedWord,
+          sanctionAction: sanction.sanctionAction,
+          sanctionMessage: sanction.message,
+          violationCount: sanction.violationCount,
+          accountStatus: sanction.accountStatus
+        });
+        return;
+        
+      } catch (sanctionError) {
+        console.error('❌ 制裁処理エラー:', sanctionError);
+        // 制裁処理に失敗してもメッセージはブロック
+        res.status(403).json({
+          error: validation.reason,
+          code: 'CONTENT_VIOLATION',
+          violationType: validation.violationType,
+          detectedWord: validation.detectedWord
+        });
+        return;
+      }
     }
     console.log('✅ Content filtering passed');
 
