@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Eye, Edit, MoreHorizontal, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import type { Character } from '@/types/common';
 
 interface CharacterTableProps {
@@ -11,53 +11,35 @@ interface CharacterTableProps {
 export default function CharacterTable({ characters }: CharacterTableProps) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">キャラクター管理</h3>
-          <p className="text-sm text-gray-500">最近のチャット</p>
-        </div>
-        <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
-          新規キャラクター
-        </button>
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-gray-900">キャラクター管理</h3>
+        <p className="text-sm text-gray-500">最近のチャット</p>
       </div>
 
       {/* モバイル用カードビュー */}
       <div className="block lg:hidden space-y-4">
         {characters.map((character) => (
           <div key={character._id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center space-x-3 flex-1">
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center overflow-hidden">
-                  {character.imageCharacterSelect ? (
-                    <Image
-                      src={character.imageCharacterSelect}
-                      alt={character.name.ja}
-                      width={48}
-                      height={48}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-white font-medium">
-                      {character.name.ja.charAt(0)}
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900">{character.name?.ja || 'N/A'}</div>
-                  <div className="text-sm text-gray-500">ID: {character._id ? character._id.slice(-8) : 'N/A'}</div>
-                  <div className="text-sm text-gray-900">{character.personalityPreset || 'N/A'}</div>
-                </div>
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center overflow-hidden">
+                {character.imageCharacterSelect ? (
+                  <Image
+                    src={character.imageCharacterSelect}
+                    alt={character.name.ja}
+                    width={48}
+                    height={48}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-white font-medium">
+                    {character.name.ja.charAt(0)}
+                  </span>
+                )}
               </div>
-              <div className="flex items-center space-x-2">
-                <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                  <Eye className="w-5 h-5" />
-                </button>
-                <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                  <Edit className="w-5 h-5" />
-                </button>
-                <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                  <MoreHorizontal className="w-5 h-5" />
-                </button>
+              <div className="flex-1">
+                <div className="font-medium text-gray-900">{character.name?.ja || 'N/A'}</div>
+                <div className="text-sm text-gray-500">ID: {character._id ? character._id.slice(-8) : 'N/A'}</div>
+                <div className="text-sm text-gray-900">{character.personalityPreset || 'N/A'}</div>
               </div>
             </div>
             
@@ -126,9 +108,6 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
               </th>
               <th className="text-left py-3 px-2 text-sm font-medium text-gray-500 uppercase tracking-wider">
                 ステータス
-              </th>
-              <th className="text-right py-3 px-2 text-sm font-medium text-gray-500 uppercase tracking-wider">
-                アクション
               </th>
             </tr>
           </thead>
@@ -200,19 +179,6 @@ export default function CharacterTable({ characters }: CharacterTableProps) {
                   }`}>
                     {character.isActive ? 'アクティブ' : '非アクティブ'}
                   </span>
-                </td>
-                <td className="py-4 px-2 text-right">
-                  <div className="flex items-center justify-end space-x-2">
-                    <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </div>
                 </td>
               </tr>
             ))}
