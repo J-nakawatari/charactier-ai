@@ -90,16 +90,60 @@ export default function CharacterLibraryPage() {
         );
         setCharacters(charactersWithGallery);
         
-        // ユーザーの親密度データを取得（今後実装予定）
-        // TODO: ユーザーの各キャラクターとの親密度レベルを取得するAPI呼び出し
-        // const affinityResponse = await fetch('/api/user/affinities', { ... });
+        // 🔍 デバッグ: 実際のユーザー親密度データを取得
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('📚 Library API - ユーザー親密度データ取得');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
-        // 仮のデータとして全キャラクターのレベル50を設定
-        const tempAffinities: Record<string, number> = {};
-        charactersWithGallery.forEach((char: Character) => {
-          tempAffinities[char._id] = 50; // 仮のレベル
-        });
-        setUserAffinities(tempAffinities);
+        try {
+          // 実際のユーザー親密度データを取得
+          const affinityResponse = await fetch('/api/user/profile', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (affinityResponse.ok) {
+            const userData = await affinityResponse.json();
+            console.log('👤 Library - ユーザープロファイルレスポンス:', userData);
+            
+            // ユーザーの親密度データを抽出
+            const realAffinities: Record<string, number> = {};
+            if (userData.user?.affinities) {
+              userData.user.affinities.forEach((affinity: any) => {
+                realAffinities[affinity.character] = affinity.level || 0;
+                console.log('❤️ Library - キャラクター親密度:', {
+                  characterId: affinity.character,
+                  level: affinity.level,
+                  experience: affinity.experience
+                });
+              });
+            }
+            
+            console.log('📊 Library - 全体親密度マップ:', realAffinities);
+            setUserAffinities(realAffinities);
+            
+          } else {
+            console.error('❌ Library - 親密度データ取得失敗');
+            // フォールバック: デフォルト値
+            const fallbackAffinities: Record<string, number> = {};
+            charactersWithGallery.forEach((char: Character) => {
+              fallbackAffinities[char._id] = 0;
+            });
+            setUserAffinities(fallbackAffinities);
+          }
+        } catch (error) {
+          console.error('❌ Library - 親密度取得エラー:', error);
+          // フォールバック: デフォルト値
+          const fallbackAffinities: Record<string, number> = {};
+          charactersWithGallery.forEach((char: Character) => {
+            fallbackAffinities[char._id] = 0;
+          });
+          setUserAffinities(fallbackAffinities);
+        }
+        
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         if (charactersWithGallery.length > 0 && !selectedCharacter) {
           setSelectedCharacter(charactersWithGallery[0]);
