@@ -36,7 +36,7 @@ export async function fetchUSDJPYRate(): Promise<number | null> {
       throw new Error(`API responded with status: ${response.status}`);
     }
 
-    const data: ExchangeRateAPIResponse = await response.json();
+    const data = await response.json() as ExchangeRateAPIResponse;
     
     if (!data.rates || !data.rates.JPY) {
       throw new Error('Invalid API response structure');
@@ -74,7 +74,7 @@ export async function fetchUSDJPYRateFromFixer(): Promise<number | null> {
       throw new Error(`Fixer API responded with status: ${response.status}`);
     }
 
-    const data: FixerAPIResponse = await response.json();
+    const data = await response.json() as FixerAPIResponse;
     
     if (!data.success || !data.rates || !data.rates.JPY) {
       throw new Error('Invalid Fixer API response structure');

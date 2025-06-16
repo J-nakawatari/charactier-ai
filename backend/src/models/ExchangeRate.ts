@@ -94,7 +94,7 @@ ExchangeRateSchema.statics.validateRate = async function(
 
   // 前回レートとの比較
   const ExchangeRateModel = this;
-  const previousRate = await ExchangeRateModel.getLatestValidRate(baseCurrency, targetCurrency);
+  const previousRate = await (ExchangeRateModel as any).getLatestValidRate(baseCurrency, targetCurrency);
   if (previousRate) {
     const changePercent = Math.abs(newRate - previousRate) / previousRate * 100;
     
