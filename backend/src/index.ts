@@ -1284,6 +1284,13 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
       return;
     }
 
+    // ユーザーの選択中キャラクターを更新
+    if (user.selectedCharacter !== characterId) {
+      user.selectedCharacter = characterId;
+      await user.save();
+      console.log('✅ Updated user selectedCharacter to:', characterId);
+    }
+
     // キャラクター情報を多言語対応で返す
     const localizedCharacter = {
       _id: character._id,
