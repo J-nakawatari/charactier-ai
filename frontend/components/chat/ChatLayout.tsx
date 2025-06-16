@@ -214,9 +214,7 @@ export function ChatLayout({
       <div 
         className="flex-1 flex flex-col relative lg:ml-64 transition-all duration-1000 ease-in-out"
         style={{
-          backgroundImage: character.imageChatBackground 
-            ? `url(${character.imageChatBackground})`
-            : moodGradient.background,
+          backgroundImage: moodGradient.background,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
@@ -296,7 +294,7 @@ export function ChatLayout({
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="h-full w-auto">
             <Image 
-              src={character.imageChatAvatar}
+              src={character.imageChatBackground || character.imageChatAvatar}
               alt={character.name}
               width={400}
               height={600}
