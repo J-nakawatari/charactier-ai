@@ -35,7 +35,7 @@ export default function ModelsPage() {
   // モデル情報を取得
   const fetchModels = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminAccessToken');
       const response = await fetch('/api/admin/models', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -66,7 +66,7 @@ export default function ModelsPage() {
 
     setIsChanging(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminAccessToken');
       const response = await fetch('/api/admin/models', {
         method: 'POST',
         headers: {

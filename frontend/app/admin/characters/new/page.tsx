@@ -93,7 +93,7 @@ export default function CharacterNewPage() {
   useEffect(() => {
     const fetchAvailableModels = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('adminAccessToken');
         const response = await fetch('/api/admin/models', {
           headers: {
             'Authorization': `Bearer ${token}`,
