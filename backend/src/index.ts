@@ -1317,8 +1317,19 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
       return;
     }
 
+    // 会話履歴を取得（最新20件）
+    const existingChat = await ChatModel.findOne({
+      userId: req.user._id,
+      characterId: characterId
+    });
+    
+    const conversationHistory = existingChat?.messages?.slice(-20).map(msg => ({
+      role: msg.role,
+      content: msg.content
+    })) || [];
+
     // 🚀 プロンプトキャッシュ対応AI応答を生成
-    const aiResponse = await generateChatResponse(characterId, message, [], req.user._id);
+    const aiResponse = await generateChatResponse(characterId, message, conversationHistory, req.user._id);
     
     // トークン消費量の確認
     if (userTokenBalance < aiResponse.tokensUsed) {
