@@ -11,7 +11,8 @@ import {
   Home,
   ShoppingCart,
   History,
-  Images
+  Images,
+  Settings
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
@@ -135,6 +136,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
     { id: 'library', href: `/${currentLocale}/library`, icon: Images, label: t('library') },
     { id: 'tokens', href: null, icon: Coins, label: t('tokens'), onClick: () => setShowPurchaseModal(true) },
     { id: 'purchase-history', href: `/${currentLocale}/purchase-history`, icon: ShoppingCart, label: t('purchaseHistory') },
+    { id: 'settings', href: `/${currentLocale}/settings`, icon: Settings, label: t('settings') },
   ];
 
   return (
@@ -253,7 +255,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 mt-6">
             {t('account')}
           </div>
-          {sidebarItems.slice(4).map((item) => {
+          {sidebarItems.slice(4, 6).map((item) => {
             const isActive = pathname === item.href;
             
             if (item.onClick) {
@@ -275,6 +277,30 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
                 </button>
               );
             }
+            
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                onClick={() => setIsOpen(false)}
+                className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  isActive
+                    ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <item.icon className={`w-5 h-5 ${isActive ? 'text-purple-700' : 'text-gray-400'}`} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+
+          {/* 設定セクション */}
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 mt-6">
+            {t('preferences')}
+          </div>
+          {sidebarItems.slice(6).map((item) => {
+            const isActive = pathname === item.href;
             
             return (
               <Link

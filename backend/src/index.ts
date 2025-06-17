@@ -945,15 +945,7 @@ routeRegistry.define('GET', '/api/user/profile', authenticateToken, async (req: 
 // ユーザープロフィール更新
 routeRegistry.define('PUT', '/api/user/profile', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name } = req.body;
-
-    if (!name || name.trim().length === 0) {
-      res.status(400).json({
-        error: 'Name required',
-        message: '名前を入力してください'
-      });
-      return;
-    }
+    const { name, email } = req.body;
 
     const userId = req.user?._id;
     if (!userId) {
@@ -961,9 +953,61 @@ routeRegistry.define('PUT', '/api/user/profile', authenticateToken, async (req: 
       return;
     }
 
+    // 更新するフィールドを動的に構築
+    const updateData: any = {};
+
+    // 名前の更新
+    if (name !== undefined) {
+      if (!name || name.trim().length === 0) {
+        res.status(400).json({
+          error: 'Name required',
+          message: '名前を入力してください'
+        });
+        return;
+      }
+      updateData.name = name.trim();
+    }
+
+    // メールアドレスの更新
+    if (email !== undefined) {
+      if (!email || !email.includes('@')) {
+        res.status(400).json({
+          error: 'Invalid email',
+          message: '有効なメールアドレスを入力してください'
+        });
+        return;
+      }
+
+      // メールアドレスの重複チェック
+      const existingUser = await UserModel.findOne({
+        email: email.toLowerCase(),
+        _id: { $ne: userId },
+        isActive: { $ne: false }
+      });
+
+      if (existingUser) {
+        res.status(409).json({
+          error: 'Email already exists',
+          message: 'このメールアドレスは既に使用されています'
+        });
+        return;
+      }
+
+      updateData.email = email.toLowerCase();
+    }
+
+    // 更新するデータがない場合
+    if (Object.keys(updateData).length === 0) {
+      res.status(400).json({
+        error: 'No data to update',
+        message: '更新するデータがありません'
+      });
+      return;
+    }
+
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
-      { name: name.trim() },
+      updateData,
       { new: true, select: '-password' }
     );
 
@@ -971,7 +1015,6 @@ routeRegistry.define('PUT', '/api/user/profile', authenticateToken, async (req: 
       res.status(404).json({ error: 'User not found' });
       return;
     }
-
 
     res.json({
       success: true,
@@ -986,7 +1029,140 @@ routeRegistry.define('PUT', '/api/user/profile', authenticateToken, async (req: 
     });
 
   } catch (error) {
-    res.status(500).json({ error: 'Profile update failed' });
+    console.error('Profile update error:', error);
+    res.status(500).json({ 
+      error: 'Profile update failed',
+      message: 'プロフィールの更新に失敗しました'
+    });
+  }
+});
+
+// パスワード変更API
+routeRegistry.define('PUT', '/api/user/change-password', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    // バリデーション
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({
+        error: 'Missing required fields',
+        message: '現在のパスワードと新しいパスワードを入力してください'
+      });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      res.status(400).json({
+        error: 'Password too short',
+        message: '新しいパスワードは8文字以上で入力してください'
+      });
+      return;
+    }
+
+    const userId = req.user?._id;
+    if (!userId) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    // ユーザー情報を取得（パスワード含む）
+    const user = await UserModel.findById(userId).select('+password');
+    if (!user) {
+      res.status(404).json({ 
+        error: 'User not found',
+        message: 'ユーザーが見つかりません' 
+      });
+      return;
+    }
+
+    // 現在のパスワードを確認
+    const bcrypt = require('bcryptjs');
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      res.status(401).json({
+        error: 'Invalid current password',
+        message: '現在のパスワードが間違っています'
+      });
+      return;
+    }
+
+    // 新しいパスワードをハッシュ化
+    const saltRounds = 12;
+    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // パスワードを更新
+    await UserModel.findByIdAndUpdate(userId, {
+      password: hashedNewPassword
+    });
+
+    res.json({
+      success: true,
+      message: 'パスワードを変更しました'
+    });
+
+  } catch (error) {
+    console.error('Password change error:', error);
+    res.status(500).json({ 
+      error: 'Password change failed',
+      message: 'パスワードの変更に失敗しました'
+    });
+  }
+});
+
+// アカウント削除API
+routeRegistry.define('DELETE', '/api/user/delete-account', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    // ユーザーの存在確認
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      res.status(404).json({ 
+        error: 'User not found',
+        message: 'ユーザーが見つかりません' 
+      });
+      return;
+    }
+
+    try {
+      // チャット履歴の削除
+      await ChatModel.deleteMany({ userId: userId });
+
+      // トークン使用履歴の削除
+      await TokenUsage.deleteMany({ userId: userId });
+
+      // 購入履歴の削除
+      await PurchaseHistoryModel.deleteMany({ userId: userId });
+
+      // お知らせ既読状態の削除
+      await UserNotificationReadStatusModel.deleteMany({ userId: userId });
+
+      // ユーザーアカウントの削除
+      await UserModel.findByIdAndDelete(userId);
+
+      res.json({
+        success: true,
+        message: 'アカウントを削除しました'
+      });
+
+    } catch (deleteError) {
+      console.error('Account deletion error:', deleteError);
+      res.status(500).json({
+        error: 'Account deletion failed',
+        message: 'アカウントの削除中にエラーが発生しました'
+      });
+    }
+
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({ 
+      error: 'Account deletion failed',
+      message: 'アカウントの削除に失敗しました'
+    });
   }
 });
 
