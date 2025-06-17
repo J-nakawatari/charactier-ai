@@ -103,6 +103,7 @@
     "tokenBalance": "トークチケット: {count, number}",
     "menu": "メニュー",
     "account": "アカウント",
+    "preferences": "設定",
     "logout": "ログアウト"
   },
   "chat": {
@@ -243,5 +244,29 @@
     "shy": "恥ずかしがり",
     "neutral": "普通",
     "unknown": "不明"
+  },
+  "settings": {
+    "title": "設定",
+    "subtitle": "アカウント情報とセキュリティ設定を管理します",
+    "profile": {
+      "title": "プロフィール",
+      "username": "ユーザー名",
+      "email": "メールアドレス",
+      "save": "保存"
+    },
+    "security": {
+      "title": "セキュリティ",
+      "changePassword": "パスワード変更",
+      "currentPassword": "現在のパスワード",
+      "newPassword": "新しいパスワード",
+      "confirmPassword": "新しいパスワード（確認）"
+    },
+    "account": {
+      "title": "アカウント",
+      "deleteAccount": "アカウント削除",
+      "dangerZone": "危険エリア",
+      "deleteWarning": "アカウントを削除すると、全てのデータが永久に失われます。この操作は取り消せません。",
+      "deleteConfirmation": "アカウント削除を確認するため、下のテキストボックスに「退会する」と入力してください。"
+    }
   }
 }

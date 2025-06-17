@@ -103,6 +103,7 @@
     "tokenBalance": "Talk Tickets: {count, number}",
     "menu": "Menu",
     "account": "Account",
+    "preferences": "Settings",
     "logout": "Logout"
   },
   "chat": {
@@ -243,5 +244,29 @@
     "shy": "Shy",
     "neutral": "Neutral",
     "unknown": "Unknown"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account information and security settings",
+    "profile": {
+      "title": "Profile",
+      "username": "Username",
+      "email": "Email Address",
+      "save": "Save"
+    },
+    "security": {
+      "title": "Security",
+      "changePassword": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password"
+    },
+    "account": {
+      "title": "Account",
+      "deleteAccount": "Delete Account",
+      "dangerZone": "Danger Zone",
+      "deleteWarning": "Deleting your account will permanently lose all data. This action cannot be undone.",
+      "deleteConfirmation": "To confirm account deletion, please type \"退会する\" in the text box below."
+    }
   }
 }
