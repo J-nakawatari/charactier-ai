@@ -713,7 +713,7 @@ export default function CharacterDetail() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Image className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-sm text-gray-500">ギャラリー画像は設定されていません</p>
                 </div>
               )}
