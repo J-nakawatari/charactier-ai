@@ -106,6 +106,25 @@ export default function UsersPage() {
     fetchUsers();
   }, [pagination.page, searchTerm, statusFilter, fetchUsers]);
 
+  // ページがフォーカスされた時に再読み込み（ユーザー詳細から戻った時など）
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchUsers();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        fetchUsers();
+      }
+    });
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', () => {});
+    };
+  }, [fetchUsers]);
+
   // 検索処理
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
