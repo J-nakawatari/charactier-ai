@@ -233,5 +233,15 @@
         "quarter": "3ヶ月"
       }
     }
+  },
+  "moods": {
+    "happy": "嬉しい",
+    "sad": "悲しい",
+    "angry": "怒っている",
+    "excited": "わくわく",
+    "melancholic": "憂鬱",
+    "shy": "恥ずかしがり",
+    "neutral": "普通",
+    "unknown": "不明"
   }
 }

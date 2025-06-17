@@ -45,8 +45,14 @@ export const getMoodIconColor = (mood: string) => {
   }
 };
 
-// ムードラベル取得（統一）
-export const getMoodLabel = (mood: string) => {
+// ムードラベル取得（i18n対応）
+export const getMoodLabel = (mood: string, t?: (key: string) => string) => {
+  // i18n関数が提供されている場合は国際化対応
+  if (t) {
+    return t(`moods.${mood}`) || t('moods.unknown');
+  }
+  
+  // フォールバック: 日本語ハードコード（既存互換性）
   const moodLabels = {
     happy: '嬉しい',
     sad: '悲しい',

@@ -117,7 +117,7 @@ export default function AdvancedChatIndicators({
 
       {/* 詳細パネル */}
       {showDetails && (
-        <div className="absolute top-full left-0 mt-1 w-80 bg-white rounded-lg shadow-lg border border-gray-200 p-4 z-[9999]">
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-[9999]">
           <div className="space-y-3">
             {/* ヘッダー */}
             <div className="flex items-center justify-between">

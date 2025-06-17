@@ -233,5 +233,15 @@
         "quarter": "3 Months"
       }
     }
+  },
+  "moods": {
+    "happy": "Happy",
+    "sad": "Sad",
+    "angry": "Angry",
+    "excited": "Excited",
+    "melancholic": "Melancholic",
+    "shy": "Shy",
+    "neutral": "Neutral",
+    "unknown": "Unknown"
   }
 }
