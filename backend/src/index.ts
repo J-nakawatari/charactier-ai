@@ -140,6 +140,20 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
         systemPrompt = cachedPrompt.systemPrompt;
         cacheHit = true;
         
+        // ユーザー名を動的に追加（キャッシュにはユーザー名を含めない）
+        if (user && user.name) {
+          const userNameInfo = `
+
+【話し相手について】
+あなたが会話している相手の名前は「${user.name}」です。会話の中で自然に名前を呼んであげてください。`;
+          
+          // プロンプトにユーザー名情報を挿入（説明の後、会話スタンスの前）
+          systemPrompt = systemPrompt.replace(
+            '【会話スタンス】',
+            userNameInfo + '\n\n【会話スタンス】'
+          );
+        }
+        
         // キャッシュ使用統計を更新
         cachedPrompt.lastUsed = new Date();
         cachedPrompt.useCount += 1;
@@ -159,12 +173,16 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
   // キャッシュがない場合は新規生成
   if (!systemPrompt) {
     
-    // 🎭 現在の気分状態を取得してプロンプトに反映
+    // 🎭 現在の気分状態とユーザー情報を取得してプロンプトに反映
     let moodInstruction = '';
+    let userName = '';
     if (userId) {
       try {
         const user = await UserModel.findById(userId);
         if (user) {
+          // ユーザー名を取得
+          userName = user.name || '';
+          
           const affinity = user.affinities.find(
             aff => aff.character.toString() === characterId
           );
@@ -190,10 +208,16 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
       }
     }
     
+    // ユーザー名の情報を追加
+    const userNameInfo = userName ? `
+
+【話し相手について】
+あなたが会話している相手の名前は「${userName}」です。会話の中で自然に名前を呼んであげてください。` : '';
+
     systemPrompt = `あなたは${character.name.ja}というキャラクターです。
 性格: ${character.personalityPreset || '優しい'}
 特徴: ${character.personalityTags?.join(', ') || '親しみやすい'}
-説明: ${character.description.ja}${moodInstruction}
+説明: ${character.description.ja}${moodInstruction}${userNameInfo}
 
 【会話スタンス】
 あなたは相手の話し相手として会話します。アドバイスや解決策を提示するのではなく、人間らしい自然な反応や共感を示してください。相手の感情や状況に寄り添い、「そうなんだ」「大変だったね」「わかる」といった、友達同士のような気持ちの共有を大切にしてください。
