@@ -133,7 +133,6 @@ export function ChatLayout({
   // 🎉 レベルアップイベントリスナー
   useEffect(() => {
     const handleLevelUp = (event: CustomEvent) => {
-      console.log('🎉 レベルアップイベント受信:', event.detail);
       setUnlockData({
         level: event.detail.level,
         illustration: event.detail.illustration
@@ -148,94 +147,7 @@ export function ChatLayout({
     };
   }, []);
 
-  // 🖼️ キャラクター画像データのデバッグログ
-  useEffect(() => {
-    console.log('🔍 ChatLayout キャラクター画像データ:', {
-      characterId: character._id,
-      name: character.name,
-      imageCharacterSelect: character.imageCharacterSelect,
-      imageDashboard: character.imageDashboard,
-      imageChatBackground: character.imageChatBackground,
-      imageChatAvatar: character.imageChatAvatar,
-      actualDisplayImage: character.imageChatBackground || character.imageChatAvatar || character.imageCharacterSelect
-    });
-  }, [character]);
 
-  // 🔍 チャット画面の完全な状態デバッグログ
-  useEffect(() => {
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🎯 チャット画面 - 完全な状態確認');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    
-    // 1. キャラクター基本情報
-    console.log('👤 キャラクター情報:', {
-      id: character._id,
-      name: character.name,
-      description: character.description,
-      currentMood: character.currentMood,
-      themeColor: character.themeColor,
-      images: {
-        avatar: character.imageChatAvatar,
-        background: character.imageChatBackground
-      }
-    });
-    
-    // 2. AIモデルとプロンプト
-    const currentModel = character.aiModel || character.model;
-    console.log('🤖 AI設定:', {
-      model: currentModel || 'undefined',
-      aiModel: character.aiModel,
-      personalityPrompt: character.personalityPrompt ? '✅ 設定済み（' + character.personalityPrompt.length + '文字）' : '❌ 未設定',
-      adminPrompt: character.adminPrompt ? '✅ 設定済み（' + character.adminPrompt.length + '文字）' : '❌ 未設定'
-    });
-    
-    // 3. トークン情報
-    console.log('💰 トークン状態:', {
-      残高: tokenStatus.tokensRemaining,
-      最終メッセージコスト: tokenStatus.lastMessageCost,
-      残高十分: tokenStatus.tokensRemaining > 0 ? '✅' : '❌'
-    });
-    
-    // 4. 親密度情報
-    console.log('❤️ 親密度情報:', {
-      レベル: affinity.level,
-      現在経験値: affinity.currentExp,
-      次レベル必要経験値: affinity.nextLevelExp,
-      進捗率: Math.round((affinity.currentExp / affinity.nextLevelExp) * 100) + '%',
-      解放済みイラスト数: affinity.unlockedIllustrations?.length || 0,
-      現在の気分: (affinity as any).currentMood || 'unknown'
-    });
-    
-    // 5. メッセージ履歴
-    console.log('💬 メッセージ履歴:', {
-      総メッセージ数: messages.length,
-      ユーザーメッセージ数: messages.filter(m => m.role === 'user').length,
-      AIメッセージ数: messages.filter(m => m.role === 'assistant').length,
-      最新メッセージ: messages.length > 0 ? {
-        role: messages[messages.length - 1].role,
-        content: messages[messages.length - 1].content.substring(0, 50) + '...',
-        timestamp: messages[messages.length - 1].timestamp
-      } : 'なし'
-    });
-    
-    // 6. 接続状態
-    console.log('🌐 接続状態:', {
-      リアルタイム接続: connectionStatus,
-      WebSocket: realtimeChat ? '✅ 接続中' : '❌ 未接続'
-    });
-    
-    // 7. 認証情報（APIトークン）
-    const authHeaders = getAuthHeaders() as Record<string, string>;
-    console.log('🔐 認証状態:', {
-      認証ヘッダー存在: authHeaders.Authorization ? '✅' : '❌',
-      トークンタイプ: authHeaders.Authorization ? authHeaders.Authorization.split(' ')[0] : 'なし'
-    });
-    
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('タイムスタンプ:', new Date().toLocaleString('ja-JP'));
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    
-  }, [character, affinity, tokenStatus, messages, connectionStatus, realtimeChat]);
 
   // 定期的にトークン残高を更新する関数
   const refreshTokenBalance = useCallback(async () => {
@@ -296,33 +208,11 @@ export function ChatLayout({
       // 親コンポーネントのonSendMessage関数を呼び出し
       // メッセージの更新は親コンポーネントで管理される
       
-      // 📤 メッセージ送信時の完全な状態ログ
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📤 メッセージ送信時の状態');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      
-      const currentModel = character.aiModel || character.model;
-      console.log('🤖 使用AIモデル:', currentModel || 'undefined');
-      console.log('💬 送信メッセージ:', messageToSend);
-      console.log('💰 現在のトークン残高:', tokenStatus.tokensRemaining);
-      console.log('❤️ 現在の親密度レベル:', affinity.level);
-      console.log('😊 現在の気分:', character.currentMood);
-      console.log('🔐 認証状態:', (getAuthHeaders() as Record<string, string>).Authorization ? '✅ 認証済み' : '❌ 未認証');
-      
       // 禁止用語チェック（フロントエンド側）
       const validation = validateMessageBeforeSend(messageToSend);
-      console.log('🚫 禁止用語チェック:', {
-        canSend: validation.canSend ? '✅ 送信可能' : '❌ 送信不可',
-        errorMessage: validation.errorMessage || 'なし'
-      });
       
       // フロントエンドの禁止用語チェックは一時的に無効化
       // バックエンドの制裁システムをテストするため
-      console.log('⚠️ フロントエンド禁止用語チェックを一時的にスキップ（バックエンドテスト用）');
-      
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('送信時刻:', new Date().toLocaleString('ja-JP'));
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       
       // タイピング停止とキャラクタータイピング開始
       stopTyping();
@@ -330,27 +220,11 @@ export function ChatLayout({
       
       await onSendMessage(messageToSend);
       
-      // 📥 メッセージ送信後の状態ログ
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📥 メッセージ送信完了後の状態');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('✅ 送信成功');
-      console.log('💰 更新後のトークン残高:', tokenStatus.tokensRemaining);
-      console.log('💸 消費トークン数:', tokenStatus.lastMessageCost);
-      console.log('❤️ 更新後の親密度:', affinity.level);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       // レベルアップ演出のトリガーは削除（実際のレベルアップ情報に基づいて表示）
 
     } catch (error) {
-      // ❌ エラー時の詳細ログ
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('❌ メッセージ送信エラー');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.error('エラー詳細:', error);
-      console.log('エラー種別:', error instanceof Error ? error.name : typeof error);
-      console.log('エラーメッセージ:', error instanceof Error ? error.message : String(error));
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.error('Message send error:', error);
     } finally {
       setIsLoading(false);
       realtimeChat.setCharacterTyping(false);
@@ -397,9 +271,7 @@ export function ChatLayout({
                 style={{ backgroundColor: 'transparent' }}
                 unoptimized={true}
                 onError={(e) => {
-                  console.error('🖼️ ChatLayout Avatar画像読み込みエラー:', {
-                    imageChatAvatar: character.imageChatAvatar,
-                    imageCharacterSelect: character.imageCharacterSelect,
+                  console.error('ChatLayout Avatar image loading error:', {
                     characterId: character._id,
                     finalSrc: getSafeImageUrl(character.imageChatAvatar || character.imageCharacterSelect, character.name)
                   });
@@ -473,10 +345,7 @@ export function ChatLayout({
                 mixBlendMode: 'normal'
               }}
               onError={(e) => {
-                console.error('🖼️ ChatLayout 背景画像読み込みエラー:', {
-                  imageChatBackground: character.imageChatBackground,
-                  imageChatAvatar: character.imageChatAvatar,
-                  imageCharacterSelect: character.imageCharacterSelect,
+                console.error('ChatLayout background image loading error:', {
                   characterId: character._id,
                   finalSrc: getSafeImageUrl(character.imageChatBackground || character.imageChatAvatar || character.imageCharacterSelect, character.name)
                 });

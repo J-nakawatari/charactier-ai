@@ -73,48 +73,6 @@ export default function ChatPage() {
         
         const apiData = await response.json();
         
-        // 🤖 デバッグ: APIレスポンスの完全な情報を確認
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('🔍 Chat API レスポンス - 完全なデータ確認');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        
-        console.log('📡 API URL:', `/api/chats/${characterId}?locale=${locale}`);
-        console.log('👤 キャラクター情報:', {
-          id: apiData.character._id,
-          name: getLocalizedString(apiData.character.name, locale),
-          aiModel: apiData.character.aiModel,
-          model: apiData.character.model
-        });
-        
-        console.log('❤️ 生のuserState情報:', {
-          fullUserState: apiData.userState,
-          affinity: apiData.userState?.affinity,
-          tokenBalance: apiData.userState?.tokenBalance,
-          unlockedGalleryImages: apiData.userState?.unlockedGalleryImages
-        });
-        
-        console.log('📊 親密度の詳細分析:', {
-          affinityLevel: apiData.userState?.affinity?.level,
-          affinityExperience: apiData.userState?.affinity?.experience,
-          affinityMood: apiData.userState?.affinity?.mood,
-          unlockedImages: apiData.userState?.unlockedGalleryImages,
-          unlockedImagesLength: apiData.userState?.unlockedGalleryImages?.length || 0
-        });
-        
-        console.log('🔍 変換前vs変換後の比較:', {
-          変換前: {
-            level: apiData.userState?.affinity?.level,
-            experience: apiData.userState?.affinity?.experience,
-            unlockedImages: apiData.userState?.unlockedGalleryImages?.length
-          },
-          変換後: {
-            level: apiData.userState?.affinity?.level || 0,
-            experience: apiData.userState?.affinity?.experience || 0,
-            unlockedImages: (apiData.userState?.unlockedGalleryImages || []).length
-          }
-        });
-        
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         // API レスポンスを ChatLayoutData 形式に変換
         const chatData: ChatLayoutData = {
@@ -242,14 +200,7 @@ export default function ChatPage() {
 
     // フロントエンド側でメッセージバリデーション
     const validation = validateMessageBeforeSend(message);
-    console.log('🚨 親コンポーネントでの禁止用語チェック:', {
-      message: message,
-      canSend: validation.canSend,
-      errorMessage: validation.errorMessage
-    });
-    
     // バックエンドの制裁システムをテストするため一時的に無効化
-    console.log('⚠️ 親コンポーネントの禁止用語チェックを一時的にスキップ');
     // if (!validation.canSend) {
     //   showApiError({
     //     code: 'CONTENT_VALIDATION_ERROR',
@@ -284,21 +235,6 @@ export default function ChatPage() {
       });
 
       if (!response.ok) {
-        // デバッグ用：生のレスポンスをログ出力
-        const errorText = await response.clone().text();
-        console.log('🚨 Raw Error Response:', errorText);
-        
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-          console.log('🚨 Parsed Error Data:', errorData);
-          console.log('🚨 Error Code:', errorData.code);
-          console.log('🚨 Sanction Action:', errorData.sanctionAction);
-          console.log('🚨 Violation Count:', errorData.violationCount);
-          console.log('🚨 Account Status:', errorData.accountStatus);
-        } catch (e) {
-          console.log('🚨 Error parsing response:', e);
-        }
         
         const apiError = await handleApiError(response);
         throw apiError;
@@ -345,13 +281,8 @@ export default function ChatPage() {
           }
         } : null);
 
-        // デバッグ用：バックエンドからのレスポンス全体をログ出力
-        console.log('🔍 バックエンドレスポンス全体:', responseData);
-        console.log('🔍 レベルアップ情報:', responseData.levelUp);
-
         // レベルアップ情報の処理
         if (responseData.levelUp) {
-          console.log('🎉 レベルアップ検出:', responseData.levelUp);
           // レベルアップポップアップの表示トリガーをChatLayoutに送信するためのイベントを発火
           const levelUpEvent = new CustomEvent('levelUp', {
             detail: {
@@ -361,9 +292,6 @@ export default function ChatPage() {
             }
           });
           window.dispatchEvent(levelUpEvent);
-        } else {
-          // バックエンドからlevelUp情報が返されていない場合のログ
-          console.log('🔍 レベルアップ情報なし - バックエンドから情報が返されていません');
         }
       }
 
@@ -378,20 +306,12 @@ export default function ChatPage() {
       if (typeof error === 'object' && error !== null && 'code' in error) {
         const apiError = error as any;
         
-        // デバッグ用：エラーオブジェクトをコンソールに出力
-        console.log('🚨 API Error Object:', apiError);
-        console.log('🚨 Error Code:', apiError.code);
-        console.log('🚨 Sanction Action:', apiError.sanctionAction);
-        console.log('🚨 Violation Count:', apiError.violationCount);
-        console.log('🚨 Account Status:', apiError.accountStatus);
         
         // 禁止用語エラーの場合は制裁情報を含む専用メッセージを表示
         if (apiError.code === 'CONTENT_VIOLATION') {
           const violationMessage = formatViolationMessage(apiError);
           const severity = getSanctionSeverity(apiError);
           
-          console.log('🚨 Formatted Violation Message:', violationMessage);
-          console.log('🚨 Severity:', severity);
           
           // 制裁レベルに応じてトーストの種類を変更
           if (severity === 'critical') {

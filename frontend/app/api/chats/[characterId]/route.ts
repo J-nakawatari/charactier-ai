@@ -9,7 +9,6 @@ export async function GET(
     const searchParams = request.nextUrl.searchParams;
     const locale = searchParams.get('locale') || 'ja';
     
-    console.log('🔗 Chat API Route (GET): プロキシ先バックエンド', { characterId, locale });
     
     // バックエンドAPIに転送
     const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/chats/${characterId}?locale=${locale}`;
@@ -79,7 +78,6 @@ export async function POST(
     const { characterId } = await params;
     const body = await request.json();
     
-    console.log('🔗 Chat API Route (POST): プロキシ先バックエンド', { characterId, message: body.message });
     
     // バックエンドAPIに転送
     const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/chats/${characterId}/messages`;

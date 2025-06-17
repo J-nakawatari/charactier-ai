@@ -100,13 +100,6 @@ export function MessageList({
   const userMessageCount = messages.filter(msg => msg.role === 'user').length;
   const shouldShowWelcome = userMessageCount === 0;
 
-  // デバッグログ
-  console.log('🔍 MessageList Debug:', {
-    totalMessages: messages.length,
-    userMessages: userMessageCount,
-    character: character?.name,
-    showWelcome: shouldShowWelcome
-  });
 
   return (
     <div className="relative h-full">

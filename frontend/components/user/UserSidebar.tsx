@@ -71,7 +71,6 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
               tokenBalance: userData.tokenBalance || user.tokenBalance || 0
             };
             
-            console.log('🔍 UserSidebar - setting user data:', { selectedCharacter: userWithTokenBalance.selectedCharacter });
             setUser(userWithTokenBalance);
             setLoading(false);
             return;
@@ -87,7 +86,6 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           return;
         }
         
-        console.log('❌ No user data found');
         setLoading(false);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -110,28 +108,23 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
     // URLからキャラクターIDを抽出
     const match = pathname.match(/\/characters\/([^\/]+)\/chat/);
     if (match && match[1]) {
-      console.log('🔍 UserSidebar - Current character ID from URL:', match[1]);
       return match[1];
     }
     
     // URLにない場合はselectedCharacterを使用
-    console.log('🔍 UserSidebar - Using selectedCharacter:', user?.selectedCharacter);
     return user?.selectedCharacter;
   };
 
   // selectedCharacterに基づく動的なチャットリンク
   const getChatHref = () => {
     const currentCharacterId = getCurrentCharacterId();
-    console.log('🔍 UserSidebar getChatHref - currentCharacterId:', currentCharacterId);
     
     if (currentCharacterId) {
       const chatUrl = `/${currentLocale}/characters/${currentCharacterId}/chat`;
-      console.log('🔍 UserSidebar generating chat URL:', chatUrl);
       return chatUrl;
     }
     
     // キャラクター未選択の場合は一覧へ
-    console.log('🔍 UserSidebar - no character selected, redirecting to character list');
     return `/${currentLocale}/characters?from=chat`;
   };
 
