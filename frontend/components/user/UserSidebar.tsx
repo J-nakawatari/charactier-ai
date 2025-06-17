@@ -302,6 +302,11 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           {sidebarItems.slice(6).map((item) => {
             const isActive = pathname === item.href;
             
+            // hrefがnullの場合はスキップ（設定セクションには該当なし）
+            if (!item.href) {
+              return null;
+            }
+            
             return (
               <Link
                 key={item.id}
