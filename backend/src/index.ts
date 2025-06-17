@@ -688,21 +688,9 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
     // まず全チャットを確認
     const allChatsForDebug = await ChatModel.find({ userId }).select('messages').lean();
     const totalMessagesDebug = allChatsForDebug.reduce((sum, chat) => sum + (chat.messages?.length || 0), 0);
-      allChatsForDebug.slice(0, 2).map(chat => 
-        chat.messages?.slice(0, 2).map(m => ({
-          role: m.role,
-          timestamp: m.timestamp
-        }))
-      )
-    );
 
     // userIdの文字列変換を確認
     const userIdString = userId.toString();
-      original: userId,
-      originalType: typeof userId,
-      asObjectId: new mongoose.Types.ObjectId(userId),
-      asString: userIdString
-    });
 
     const chatStats = await ChatModel.aggregate([
       {
@@ -790,14 +778,6 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
       return [];
     });
 
-      chatStats: chatStats.length,
-      chatStatsDetail: JSON.stringify(chatStats, null, 2),
-      allTimeUserMessages: allTimeChatStats[0]?.totalCount || 0,
-      tokenStats: tokenStats.length,
-      affinityProgress: affinityProgress.length,
-      chatCountPerDay: analytics.chatCountPerDay,
-      tokenUsagePerDay: analytics.tokenUsagePerDay
-    });
 
     res.json({
       user: {
@@ -1048,11 +1028,6 @@ app.post('/api/user/setup-complete', authenticateToken, async (req: Request, res
       res.status(404).json({ error: 'User not found' });
       return;
     }
-
-      id: updatedUser._id, 
-      name: updatedUser.name,
-      selectedCharacter: selectedCharacterId 
-    });
 
     res.json({
       success: true,
@@ -1503,8 +1478,11 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           } else {
           }
         } catch (affinityError) {
+          // Error handling for affinity update
         }
 
+        // Chat response successful
+        console.log("Chat response data:", {
           character: character.name.ja,
           tokensUsed: aiResponse.tokensUsed,
           newBalance,
@@ -1634,6 +1612,7 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           
           await tokenUsageRecord.save();
           
+          console.log("Token usage recorded:", {
             tokensUsed: aiResponse.tokensUsed,
             apiCostYen: Math.round(apiCostYen * 100) / 100,
             profitMargin: Math.round(profitMargin * 100) / 100,
@@ -1818,6 +1797,7 @@ app.get('/api/token-packs', authenticateToken, async (req: Request, res: Respons
         };
       });
 
+      console.log("Token packs processed:", {
         totalPacks: packsWithMetrics.length,
         activeFilter: isActive
       });
@@ -1908,6 +1888,7 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
         priceInMainUnit = Math.floor(price.unit_amount / 100);
       }
       
+      console.log("Price conversion:", {
         unit_amount: price.unit_amount,
         currency: price.currency,
         converted_amount: priceInMainUnit
@@ -1922,6 +1903,7 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
       const tokenPerYen = await calcTokensToGive(1, currentModel); // 1円あたりのトークン数
       
       // デバッグログ追加
+      console.log("Token calculation debug:", {
         model: currentModel,
         priceInMainUnit,
         calculatedTokens,
@@ -1934,6 +1916,7 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
         ? price.product.name 
         : 'Unknown Product';
       
+      console.log("Price processing result:", {
         priceId,
         amount: priceInMainUnit,
         currency: price.currency,
@@ -2023,6 +2006,7 @@ app.post('/api/purchase/create-checkout-session', authenticateToken, async (req:
         }
       });
       
+      console.log("Checkout session created:", {
         sessionId: session.id,
         url: session.url
       });
@@ -2124,6 +2108,7 @@ app.post('/api/purchase/create-character-checkout-session', authenticateToken, a
       return;
     }
     
+    console.log("Character purchase request:", {
       characterId,
       priceId,
       characterName: character.name.ja
@@ -2152,6 +2137,7 @@ app.post('/api/purchase/create-character-checkout-session', authenticateToken, a
       }
     });
     
+    console.log("Character checkout session created:", {
       sessionId: session.id,
       url: session.url,
       characterName: character.name.ja
@@ -2164,6 +2150,7 @@ app.post('/api/purchase/create-character-checkout-session', authenticateToken, a
     });
     
   } catch (error) {
+    console.error("Character purchase error:", {
       name: error instanceof Error ? error.name : 'Unknown',
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined
@@ -2252,7 +2239,7 @@ app.get('/api/admin/stripe/product-price/:id', authenticateToken, async (req: Re
       return;
     }
     
-      id,
+    console.log("Price info retrieved:", {
       priceAmount,
       currency,
       priceId: price.id
@@ -2265,6 +2252,7 @@ app.get('/api/admin/stripe/product-price/:id', authenticateToken, async (req: Re
     });
     
   } catch (error) {
+    console.error("Price retrieval error:", error);
     res.status(500).json({
       success: false,
       message: '価格情報の取得に失敗しました'
@@ -2330,6 +2318,7 @@ app.post('/api/user/process-session', authenticateToken, async (req: Request, re
           }
           await user.save();
           
+          console.log("Tokens added to user:", {
             sessionId,
             tokensAdded: tokensToAdd,
             newBalance: user.tokenBalance
@@ -2407,6 +2396,7 @@ app.post('/api/user/add-tokens', authenticateToken, async (req: Request, res: Re
       
       await user.save();
       
+      console.log("Admin token grant completed:", {
         userId: user._id,
         newBalance: user.tokenBalance,
         addedTokens: tokens
@@ -2590,6 +2580,7 @@ app.post('/admin/users/:userId/reset-tokens', authenticateToken, async (req: Req
       user.tokenBalance = 0;
       await user.save();
       
+      console.log("Token balance reset:", {
         userId: user._id,
         previousBalance,
         newBalance: 0
@@ -4255,6 +4246,7 @@ app.get('/api/admin/cache/performance', authenticateToken, async (req: AuthReque
 
     const metrics = await getCachePerformanceMetrics(timeframe);
     
+    console.log("Cache performance metrics:", {
       totalCaches: metrics.totalCaches,
       hitRatio: metrics.hitRatio,
       charactersAnalyzed: metrics.cachesByCharacter.length
@@ -4695,6 +4687,7 @@ routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authen
     const { characterId } = req.params;
     const reason = req.body.reason || 'manual_admin_action';
     
+    console.log("Cache invalidation request:", {
       characterId,
       reason,
       adminId: req.user?._id
