@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Orbitron } from 'next/font/google';
@@ -31,18 +31,18 @@ export default function HomePage() {
   const [rightVisible, setRightVisible] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   
-  const videoSources = [
+  const videoSources = useMemo(() => [
     '/video/hero-videos_01.mp4',
     '/video/hero-videos_02.mp4',
     '/video/hero-videos_03.mp4'
-  ];
+  ], []);
 
   // Fallback images for mobile
-  const fallbackImages = [
+  const fallbackImages = useMemo(() => [
     '/images/hero/hero-fallback_01.jpg',
     '/images/hero/hero-fallback_02.jpg', 
     '/images/hero/hero-fallback_03.jpg'
-  ];
+  ], []);
   
   const chatMessages = t.raw('chatMessages') as string[];
   

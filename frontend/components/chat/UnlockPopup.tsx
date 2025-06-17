@@ -38,7 +38,7 @@ export function UnlockPopup({ level, illustration, characterName, onClose }: Unl
       clearTimeout(confettiTimer);
       clearTimeout(autoCloseTimer);
     };
-  }, []); // handleClose を依存関係から削除して初期化時のみ実行
+  }, [handleClose]);
 
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${

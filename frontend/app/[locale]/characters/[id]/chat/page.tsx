@@ -339,7 +339,7 @@ export default function ChatPage() {
         }, 'メッセージの送信に失敗しました');
       }
     }
-  }, [chatData?.character?._id, characterId, showApiError]); // chatDataの特定フィールドのみを依存関係にして適切な更新を実現
+  }, [chatData, showError, showWarning, showApiError, characterId]);
 
   useEffect(() => {
     loadChatData();

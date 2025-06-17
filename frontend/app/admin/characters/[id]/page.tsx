@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { API_BASE_URL } from '@/lib/api-config';
-import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare, CreditCard, Settings, Brain, Image, Tag, Heart, Award, Users, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare, CreditCard, Settings, Brain, Image as ImageIcon, Tag, Heart, Award, Users, RefreshCw } from 'lucide-react';
+import Image from 'next/image';
 
 // Inline type definitions
 interface Character {
@@ -581,7 +582,7 @@ export default function CharacterDetail() {
           {/* 画像ギャラリーセクション */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center space-x-3 mb-6">
-              <Image className="w-6 h-6 text-gray-400" />
+              <ImageIcon className="w-6 h-6 text-gray-400" />
               <h3 className="text-xl font-bold text-gray-900">画像設定</h3>
             </div>
             
@@ -591,14 +592,15 @@ export default function CharacterDetail() {
                 <p className="text-xs text-gray-500 font-medium">キャラクター選択画像</p>
                 <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                   {character.imageCharacterSelect ? (
-                    <img 
+                    <Image 
                       src={character.imageCharacterSelect && character.imageCharacterSelect.startsWith('http') ? character.imageCharacterSelect : `${API_BASE_URL}${character.imageCharacterSelect || ''}`} 
-                      alt="キャラクター選択"
-                      className="w-full h-full object-cover"
+                      alt="キャラクター選択画像"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
                     <div className="text-center">
-                      <Image className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-xs text-gray-400">画像なし</p>
                     </div>
                   )}
@@ -609,14 +611,15 @@ export default function CharacterDetail() {
                 <p className="text-xs text-gray-500 font-medium">ダッシュボード画像</p>
                 <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                   {character.imageDashboard ? (
-                    <img 
+                    <Image 
                       src={character.imageDashboard && character.imageDashboard.startsWith('http') ? character.imageDashboard : `${API_BASE_URL}${character.imageDashboard || ''}`} 
-                      alt="ダッシュボード"
-                      className="w-full h-full object-cover"
+                      alt="ダッシュボード画像"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
                     <div className="text-center">
-                      <Image className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-xs text-gray-400">画像なし</p>
                     </div>
                   )}
@@ -627,14 +630,15 @@ export default function CharacterDetail() {
                 <p className="text-xs text-gray-500 font-medium">チャット背景画像</p>
                 <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                   {character.imageChatBackground ? (
-                    <img 
+                    <Image 
                       src={character.imageChatBackground && character.imageChatBackground.startsWith('http') ? character.imageChatBackground : `${API_BASE_URL}${character.imageChatBackground || ''}`} 
-                      alt="チャット背景"
-                      className="w-full h-full object-cover"
+                      alt="チャット背景画像"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
                     <div className="text-center">
-                      <Image className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-xs text-gray-400">画像なし</p>
                     </div>
                   )}
@@ -645,14 +649,15 @@ export default function CharacterDetail() {
                 <p className="text-xs text-gray-500 font-medium">チャットアバター画像</p>
                 <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                   {character.imageChatAvatar ? (
-                    <img 
+                    <Image 
                       src={character.imageChatAvatar && character.imageChatAvatar.startsWith('http') ? character.imageChatAvatar : `${API_BASE_URL}${character.imageChatAvatar || ''}`} 
-                      alt="チャットアバター"
-                      className="w-full h-full object-cover"
+                      alt="チャットアバター画像"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
                     <div className="text-center">
-                      <Image className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-xs text-gray-400">画像なし</p>
                     </div>
                   )}
@@ -669,14 +674,15 @@ export default function CharacterDetail() {
                     <div key={index} className="space-y-2">
                       <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                         {image && image.url ? (
-                          <img 
+                          <Image 
                             src={image.url.startsWith('http') ? image.url : `${API_BASE_URL}${image.url}`} 
                             alt={typeof image.title === 'string' ? image.title : (image.title?.ja || `ギャラリー画像 ${index + 1}`)}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                            fill
+                            className="object-cover hover:scale-105 transition-transform cursor-pointer"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Image className="w-8 h-8 text-gray-400" />
+                            <ImageIcon className="w-8 h-8 text-gray-400" />
                           </div>
                         )}
                       </div>

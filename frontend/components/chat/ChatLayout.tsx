@@ -334,11 +334,12 @@ export function ChatLayout({
       <div className="flex-1 relative z-10 overflow-hidden" style={{ backgroundColor: 'transparent' }}>
         {/* キャラクター画像（真ん中に配置） */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ backgroundColor: 'transparent' }}>
-          <div className="h-full w-auto" style={{ backgroundColor: 'transparent' }}>
-            <img 
+          <div className="relative h-full w-auto" style={{ backgroundColor: 'transparent' }}>
+            <Image 
               src={getSafeImageUrl(character.imageChatBackground || character.imageChatAvatar || character.imageCharacterSelect, character.name)}
-              alt={character.name}
-              className="h-full w-auto object-contain bg-transparent"
+              alt={`${character.name}のキャラクター画像`}
+              fill
+              className="object-contain bg-transparent"
               style={{ 
                 backgroundColor: 'transparent',
                 imageRendering: 'auto',

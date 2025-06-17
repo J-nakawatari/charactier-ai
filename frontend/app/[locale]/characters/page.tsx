@@ -145,7 +145,7 @@ function CharactersPageContent({
         fetchCharacters();
       }, 1000);
     }
-  }, []);  // 空の依存配列に変更
+  }, [fetchCharacters, fetchUserData]);
 
   // 購入完了イベントリスナー
   useEffect(() => {
@@ -159,7 +159,7 @@ function CharactersPageContent({
     return () => {
       window.removeEventListener('characterPurchaseCompleted', handlePurchaseComplete);
     };
-  }, []);  // 空の依存配列に変更
+  }, [fetchCharacters, fetchUserData]);
 
   // ページフォーカス時の再取得（購入完了後に戻ってきた場合）
   useEffect(() => {
@@ -172,7 +172,7 @@ function CharactersPageContent({
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);  // 空の依存配列に変更
+  }, [fetchUserData]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -182,7 +182,7 @@ function CharactersPageContent({
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [filters.keyword, filters.characterType, filters.sort]);  // 関数依存を削除
+  }, [filters.keyword, filters.characterType, filters.sort, fetchCharacters]);
 
   const handleCharacterClick = (character: Character) => {
     if (character.characterAccessType === 'purchaseOnly') {

@@ -36,7 +36,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
     } finally {
       setIsRefreshing(false);
     }
-  }, [onTokenUpdate]); // isRefreshingを依存関係から削除して無限ループを防止
+  }, [onTokenUpdate, isRefreshing]);
 
   // ref＆最新の関数を保持
   refreshTokenBalanceRef.current = refreshTokenBalance;
@@ -44,7 +44,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
   // 初期ロード時に実際の残高を取得
   useEffect(() => {
     refreshTokenBalance();
-  }, []); // 依存関係を空にして初期ロード時のみ実行
+  }, [refreshTokenBalance]);
   
   // ページのフォーカス時に自動更新
   useEffect(() => {
