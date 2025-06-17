@@ -236,6 +236,18 @@ export default function CharacterDetailPage() {
   console.log('🔍 Character before render:', character);
   console.log('🔍 Character name before render:', character?.name);
   
+  // 一時的にシンプルな表示に変更してエラー箇所を特定
+  return (
+    <div className="flex-1 flex flex-col">
+      <div className="p-4">
+        <h1>キャラクター詳細</h1>
+        <p>名前: {typeof character.name === 'string' ? character.name : (character.name?.ja || '未設定')}</p>
+        <p>ID: {character._id}</p>
+      </div>
+    </div>
+  );
+  
+  /* 元のコンテンツは一時的にコメントアウト
   return (
     <div className="flex-1 flex flex-col">
       {/* ヘッダー */}
@@ -847,4 +859,5 @@ export default function CharacterDetailPage() {
       </main>
     </div>
   );
+  */
 }
