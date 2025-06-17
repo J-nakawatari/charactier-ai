@@ -96,6 +96,27 @@ export interface DashboardStats {
   totalTokensUsed: number;
   totalCharacters: number;
   apiErrors: number;
+  trends?: {
+    userGrowth?: number;
+    tokenUsageGrowth?: number;
+    apiErrorTrend?: number;
+    characterPopularity?: number;
+  };
+  financial?: {
+    totalRevenue?: number;
+    availableBalance?: number;
+    creditLimit?: number;
+    outstandingDebt?: number;
+    projectedBalance14Days?: number;
+  };
+  evaluation?: {
+    overallScore?: number;
+    breakdown?: {
+      excellent?: number;
+      good?: number;
+      needsImprovement?: number;
+    };
+  };
 }
 
 /**
