@@ -236,6 +236,7 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
         
       } catch (saveError) {
         // キャッシュ保存エラーは無視して続行
+        console.error('⚠️ CharacterPromptCache save error:', saveError);
       }
     }
   }
