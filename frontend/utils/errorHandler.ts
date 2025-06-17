@@ -8,6 +8,13 @@ export interface ApiError {
   message: string;
   details?: any;
   status?: number;
+  // 制裁関連情報
+  sanctionAction?: string;
+  sanctionMessage?: string;
+  violationCount?: number;
+  accountStatus?: string;
+  detectedWord?: string;
+  violationType?: string;
 }
 
 export interface ErrorResponse {
@@ -25,7 +32,14 @@ export function parseApiError(response: Response, errorData?: any): ApiError {
     code: errorData?.code || 'API_ERROR',
     message: errorData?.error || errorData?.message || 'APIエラーが発生しました',
     status: response.status,
-    details: errorData?.details
+    details: errorData?.details,
+    // 制裁関連情報を抽出
+    sanctionAction: errorData?.sanctionAction,
+    sanctionMessage: errorData?.sanctionMessage,
+    violationCount: errorData?.violationCount,
+    accountStatus: errorData?.accountStatus,
+    detectedWord: errorData?.detectedWord,
+    violationType: errorData?.violationType
   };
 
   // ステータスコード別の処理
@@ -194,7 +208,7 @@ export function formatErrorMessage(error: ApiError): string {
       return 'トークンが不足しています。トークンを購入してから再試行してください。';
     
     case 'CONTENT_VIOLATION':
-      return 'メッセージが利用規約に違反しています。内容を確認して修正してください。';
+      return formatViolationMessage(error);
     
     case 'RATE_LIMITED':
       return 'リクエストが多すぎます。少し時間をおいてから再試行してください。';
@@ -204,6 +218,60 @@ export function formatErrorMessage(error: ApiError): string {
     
     default:
       return error.message;
+  }
+}
+
+/**
+ * 制裁情報を含むメッセージをフォーマット
+ */
+export function formatViolationMessage(error: ApiError): string {
+  let message = error.message || 'メッセージが利用規約に違反しています。';
+  
+  // 違反回数を追加
+  if (error.violationCount) {
+    message += ` (違反回数: ${error.violationCount}回)`;
+  }
+  
+  // 制裁メッセージがある場合は追加
+  if (error.sanctionMessage) {
+    message += '\n\n' + error.sanctionMessage;
+  }
+  
+  // 制裁アクションに応じた追加メッセージ
+  switch (error.sanctionAction) {
+    case 'warning':
+      message += '\n⚠️ 警告: 今後気をつけてください。';
+      break;
+    case 'chat_suspension':
+      message += '\n🚫 チャット機能が24時間停止されました。';
+      break;
+    case 'account_suspension':
+      message += '\n⛔ アカウントが7日間停止されました。';
+      break;
+    case 'ban':
+      message += '\n🔒 アカウントが永久停止されました。';
+      break;
+  }
+  
+  return message;
+}
+
+/**
+ * 制裁レベルを判定
+ */
+export function getSanctionSeverity(error: ApiError): 'low' | 'medium' | 'high' | 'critical' {
+  switch (error.sanctionAction) {
+    case 'record_only':
+      return 'low';
+    case 'warning':
+      return 'medium';
+    case 'chat_suspension':
+      return 'high';
+    case 'account_suspension':
+    case 'ban':
+      return 'critical';
+    default:
+      return 'medium';
   }
 }
 

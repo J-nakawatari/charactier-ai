@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 // import { useTranslations } from 'next-intl';
 import { ChatLayout } from '@/components/chat/ChatLayout';
 import { getAuthHeaders, getCurrentUser, isDevelopment } from '@/utils/auth';
-import { handleApiError } from '@/utils/errorHandler';
+import { handleApiError, formatViolationMessage, getSanctionSeverity } from '@/utils/errorHandler';
 import { useToast } from '@/contexts/ToastContext';
 import { validateMessageBeforeSend } from '@/utils/contentFilter';
 import { ChatPaginationService, PaginationState } from '@/utils/chatPagination';
@@ -332,9 +332,27 @@ export default function ChatPage() {
       
       if (typeof error === 'object' && error !== null && 'code' in error) {
         const apiError = error as any;
-        // 禁止用語エラーの場合は専用メッセージを表示
+        // 禁止用語エラーの場合は制裁情報を含む専用メッセージを表示
         if (apiError.code === 'CONTENT_VIOLATION') {
-          showApiError(apiError, apiError.message || 'メッセージが利用規約に違反しています');
+          const violationMessage = formatViolationMessage(apiError);
+          const severity = getSanctionSeverity(apiError);
+          
+          // 制裁レベルに応じてトーストの種類を変更
+          if (severity === 'critical') {
+            showApiError(apiError, violationMessage, 'error');
+          } else if (severity === 'high') {
+            showApiError(apiError, violationMessage, 'warning');
+          } else {
+            showApiError(apiError, violationMessage);
+          }
+          
+          // チャット停止またはアカウント停止の場合は追加の処理
+          if (apiError.sanctionAction === 'chat_suspension' || 
+              apiError.sanctionAction === 'account_suspension' || 
+              apiError.sanctionAction === 'ban') {
+            // チャット機能を無効化するロジックを後で実装
+            console.log('Chat suspended due to violation:', apiError);
+          }
         } else {
           showApiError(apiError, 'メッセージの送信に失敗しました');
         }
