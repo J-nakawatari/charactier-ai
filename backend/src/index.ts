@@ -1588,6 +1588,16 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           }
         );
 
+        // UserModelから現在の親密度を取得（ChatModelではなくUserModelが正確な値）
+        const userAffinityData = await UserModel.findOne({
+          _id: req.user._id,
+          'affinities.character': characterId 
+        });
+        
+        const currentUserAffinity = userAffinityData?.affinities?.find(
+          (aff: any) => aff.character.toString() === characterId
+        )?.level || 0;
+        
         // レベル帯別の親密度上昇量を計算
         function calculateAffinityIncrease(currentLevel: number): number {
           if (currentLevel >= 90) {
@@ -1609,16 +1619,6 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         const affinityIncrease = calculateAffinityIncrease(currentLevel);
         
         console.log(`📊 Affinity calculation: Current level ${currentLevel}, Increase amount: ${affinityIncrease}`);
-        
-        // UserModelから現在の親密度を取得（ChatModelではなくUserModelが正確な値）
-        const userAffinityData = await UserModel.findOne({
-          _id: req.user._id,
-          'affinities.character': characterId 
-        });
-        
-        const currentUserAffinity = userAffinityData?.affinities?.find(
-          (aff: any) => aff.character.toString() === characterId
-        )?.level || 0;
         
         const previousAffinity = currentUserAffinity;
         const newAffinity = Math.min(100, currentUserAffinity + affinityIncrease);
