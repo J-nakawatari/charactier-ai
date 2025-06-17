@@ -292,11 +292,9 @@ export default function TokensPage() {
                       const totalUsers = usersData.pagination?.total || usersData.users?.length || 0;
                       
                       setTokenStats({
-                        totalBalance: totalUsers,
-                        activeUsers: 0,
-                        totalTokensUsed: tokenData.overview?.totalTokensUsed || 0,
-                        totalCharacters: 0,
-                        apiErrors: 0
+                        totalBalance: usersData.tokenStats?.totalBalance || 0,
+                        totalUsers: totalUsers,
+                        averageBalance: usersData.tokenStats?.averageBalance || 0
                       });
 
                       setUsers(usersData.users || []);
