@@ -327,7 +327,7 @@ export default function SettingsPage() {
                                 id="name"
                                 value={profileData.name}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                                className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                                className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
                                 placeholder="ユーザー名を入力"
                               />
                             ) : (
@@ -350,7 +350,7 @@ export default function SettingsPage() {
                                 id="email"
                                 value={profileData.email}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                                className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                                className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
                                 placeholder="メールアドレスを入力"
                               />
                             ) : (
@@ -404,7 +404,7 @@ export default function SettingsPage() {
                               id="currentPassword"
                               value={passwordData.currentPassword}
                               onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                              className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                              className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
                               placeholder="現在のパスワード"
                             />
                             <button
@@ -428,7 +428,7 @@ export default function SettingsPage() {
                               id="newPassword"
                               value={passwordData.newPassword}
                               onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                              className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                              className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
                               placeholder="新しいパスワード（8文字以上）"
                             />
                             <button
@@ -452,7 +452,7 @@ export default function SettingsPage() {
                               id="confirmPassword"
                               value={passwordData.confirmPassword}
                               onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                              className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                              className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
                               placeholder="新しいパスワード（確認）"
                             />
                             <button
@@ -507,7 +507,7 @@ export default function SettingsPage() {
                             type="text"
                             value={deleteConfirmation}
                             onChange={(e) => setDeleteConfirmation(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 text-gray-900 bg-white"
                             placeholder="退会する"
                           />
                         </div>
