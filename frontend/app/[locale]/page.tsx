@@ -76,82 +76,92 @@ export default function HomePage() {
     let currentIndex = 0;
     let isVideo1Active = true;
     
-    // Reset video styles
-    video1.style.opacity = '0';
-    video1.style.zIndex = '0';
-    video2.style.opacity = '0';
-    video2.style.zIndex = '0';
+    // Reset and configure videos
+    video1.style.opacity = '1';
+    video1.style.zIndex = '2';
+    video1.loop = true;
+    video1.muted = true;
+    video1.playsInline = true;
     
-    // Initialize first video
+    video2.style.opacity = '0';
+    video2.style.zIndex = '1';
+    video2.loop = true;
+    video2.muted = true;
+    video2.playsInline = true;
+    
+    // Initialize and start first video
     video1.src = videoSources[0];
     video1.load();
     
     const startFirstVideo = () => {
-      video1.play().then(() => {
-        video1.style.opacity = '1';
-        video1.style.zIndex = '1';
-        console.log('First video started successfully');
-      }).catch((error) => {
+      video1.play().catch((error) => {
         console.error('Error playing first video:', error);
       });
     };
     
-    // Wait a bit for the video to load
-    setTimeout(startFirstVideo, 500);
+    // Wait for video to load before playing
+    video1.addEventListener('canplay', startFirstVideo, { once: true });
     
     const switchVideo = () => {
       currentIndex = (currentIndex + 1) % videoSources.length;
       console.log(`Switching to video ${currentIndex + 1}: ${videoSources[currentIndex]}`);
       
       if (isVideo1Active) {
-        // Prepare video2
+        // Prepare video2 for next transition
         video2.src = videoSources[currentIndex];
-        video2.style.zIndex = '1';
         video2.load();
         
-        video2.addEventListener('canplay', () => {
+        const onVideo2Ready = () => {
           video2.play().then(() => {
-            // Fade transition using CSS classes
+            // Smooth fade transition
+            video2.style.opacity = '1';
+            video1.style.opacity = '0';
+            
+            // Switch z-index after fade completes
             setTimeout(() => {
-              video2.style.opacity = '1';
-              setTimeout(() => {
-                video1.style.opacity = '0';
-                video1.style.zIndex = '0';
-              }, 50);
-            }, 100);
-            isVideo1Active = false;
-            console.log('Switched to video2');
+              video2.style.zIndex = '2';
+              video1.style.zIndex = '1';
+              isVideo1Active = false;
+            }, 1000);
           }).catch((error) => {
             console.error('Error playing video2:', error);
           });
-        }, { once: true });
+        };
+        
+        video2.addEventListener('canplay', onVideo2Ready, { once: true });
         
       } else {
-        // Prepare video1
+        // Prepare video1 for next transition
         video1.src = videoSources[currentIndex];
-        video1.style.zIndex = '1';
         video1.load();
         
-        video1.addEventListener('canplay', () => {
+        const onVideo1Ready = () => {
           video1.play().then(() => {
-            // Fade transition
+            // Smooth fade transition
             video1.style.opacity = '1';
             video2.style.opacity = '0';
-            video2.style.zIndex = '0';
-            isVideo1Active = true;
-            console.log('Switched to video1');
+            
+            // Switch z-index after fade completes
+            setTimeout(() => {
+              video1.style.zIndex = '2';
+              video2.style.zIndex = '1';
+              isVideo1Active = true;
+            }, 1000);
           }).catch((error) => {
             console.error('Error playing video1:', error);
           });
-        }, { once: true });
+        };
+        
+        video1.addEventListener('canplay', onVideo1Ready, { once: true });
       }
     };
     
-    // Set up video switching interval (8 seconds for better loading)
-    const interval = setInterval(switchVideo, 8000);
+    // Set up video switching interval (7 seconds)
+    const interval = setInterval(switchVideo, 7000);
     
     return () => {
       clearInterval(interval);
+      video1.removeEventListener('canplay', startFirstVideo);
     };
   }, [mounted, isMobile, videoSources]);
 
@@ -267,16 +277,14 @@ export default function HomePage() {
           <>
             <video
               id="video1"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-in-out"
-              style={{ opacity: 0, zIndex: 0 }}
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out"
               muted
               loop
               playsInline
             />
             <video
               id="video2"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-in-out"
-              style={{ opacity: 0, zIndex: 0 }}
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out"
               muted
               loop
               playsInline
@@ -301,17 +309,13 @@ export default function HomePage() {
         {!mounted && (
           <>
             <video
-              id="video1"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-in-out"
-              style={{ opacity: 0, zIndex: 0 }}
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out opacity-0"
               muted
               loop
               playsInline
             />
             <video
-              id="video2"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-in-out"
-              style={{ opacity: 0, zIndex: 0 }}
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out opacity-0"
               muted
               loop
               playsInline
