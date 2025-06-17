@@ -57,6 +57,7 @@ export const authenticateToken = async (
     console.log('🔍 Admin found by userId:', admin ? `${admin.email} (${admin.role})` : 'null');
     if (admin && admin.isActive) {
       // 管理者として認証成功
+      console.log('✅ Admin authentication successful, skipping user checks');
       req.admin = admin;
       // req.userに管理者情報とisAdminフラグを確実に設定
       req.user = {
@@ -70,6 +71,8 @@ export const authenticateToken = async (
       next();
       return;
     }
+    
+    console.log('🔍 Admin not found or inactive, checking as regular user');
     
     // 管理者で見つからない場合は一般ユーザーとして検索
     const user = await UserModel.findById(decoded.userId);

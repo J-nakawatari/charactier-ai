@@ -72,6 +72,12 @@ export function parseApiError(response: Response, errorData?: any): ApiError {
     case 403:
       // 強制ログアウトが必要な場合（BANされたユーザー等）
       if (errorData?.forceLogout) {
+        console.log('🚨 Force logout triggered:', {
+          accountStatus: errorData?.accountStatus,
+          currentUrl: typeof window !== 'undefined' ? window.location.href : 'unknown',
+          errorData: errorData
+        });
+        
         // ローカルストレージのトークンをクリア
         if (typeof window !== 'undefined') {
           localStorage.removeItem('accessToken');
