@@ -19,6 +19,7 @@ interface Character {
   imageChatBackground?: string;
   imageChatAvatar?: string;
   totalMessages?: number;
+  totalUsers?: number;
   averageAffinityLevel?: number;
   createdAt: string;
   updatedAt: string;
