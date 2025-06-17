@@ -1413,21 +1413,7 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
 
     console.log('💰 Current user token balance:', userTokenBalance);
 
-    // 🔒 チャット権限チェック（制裁状態の確認）
-    console.log('🔍 Chat permission check started');
-    const permissionCheck = checkChatPermission(dbUser);
-    if (!permissionCheck.allowed) {
-      console.log('🚫 Chat permission denied:', permissionCheck.reason);
-      res.status(403).json({
-        error: permissionCheck.message,
-        code: 'CHAT_PERMISSION_DENIED',
-        reason: permissionCheck.reason
-      });
-      return;
-    }
-    console.log('✅ Chat permission granted');
-
-    // 🔥 禁止用語フィルタリング（メッセージ処理前に実行）
+    // 🔥 禁止用語フィルタリング（制裁状態に関係なく先に実行）
     console.log('🔍 Content filtering check started');
     const { validateMessage: tsValidateMessage } = await import('./utils/contentFilter');
     const validation = tsValidateMessage(message.trim());
@@ -1476,6 +1462,20 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
       }
     }
     console.log('✅ Content filtering passed');
+
+    // 🔒 チャット権限チェック（禁止用語チェック後に実行）
+    console.log('🔍 Chat permission check started');
+    const permissionCheck = checkChatPermission(dbUser);
+    if (!permissionCheck.allowed) {
+      console.log('🚫 Chat permission denied:', permissionCheck.reason);
+      res.status(403).json({
+        error: permissionCheck.message,
+        code: 'CHAT_PERMISSION_DENIED',
+        reason: permissionCheck.reason
+      });
+      return;
+    }
+    console.log('✅ Chat permission granted');
 
     // 🚀 プロンプトキャッシュ対応AI応答を生成
     const aiResponse = await generateChatResponse(characterId, message, [], req.user._id);
