@@ -1323,14 +1323,14 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
       characterId: characterId
     });
     
-    // 会話履歴を8件に調整（記憶力とコストのバランス）
-    const conversationHistory = existingChat?.messages?.slice(-8).map(msg => ({
+    // 会話履歴を12件に拡張（1000トークン許容で会話品質重視）
+    const conversationHistory = existingChat?.messages?.slice(-12).map(msg => ({
       role: msg.role,
-      content: msg.content.length > 150 ? msg.content.substring(0, 150) + '...' : msg.content
+      content: msg.content.length > 200 ? msg.content.substring(0, 200) + '...' : msg.content
     })) || [];
 
-    // 事前トークン残高チェック（最小限必要量）
-    const minimumTokensRequired = 150; // 基本的なメッセージに必要な最小トークン
+    // 事前トークン残高チェック（1000トークン許容基準）
+    const minimumTokensRequired = 1000; // 高品質な会話に必要なトークン
     if (userTokenBalance < minimumTokensRequired) {
       res.status(402).json({ 
         error: 'Insufficient tokens',
