@@ -34,8 +34,8 @@ interface Character {
   imageChatAvatar?: string;
   galleryImages?: Array<{
     file: string;
-    title: string;
-    description: string;
+    title: string | { ja: string; en: string };
+    description: string | { ja: string; en: string };
   }>;
   adminPrompt?: { ja: string; en: string };
   defaultMessage?: { ja: string; en: string };
@@ -583,13 +583,17 @@ export default function CharacterDetail() {
                       <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                         <img 
                           src={image.file} 
-                          alt={image.title || `ギャラリー画像 ${index + 1}`}
+                          alt={typeof image.title === 'string' ? image.title : (image.title?.ja || `ギャラリー画像 ${index + 1}`)}
                           className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
                         />
                       </div>
                       <div className="space-y-1">
-                        <p className="text-xs font-medium text-gray-900 truncate">{image.title || '無題'}</p>
-                        <p className="text-xs text-gray-500 line-clamp-2">{image.description || '説明なし'}</p>
+                        <p className="text-xs font-medium text-gray-900 truncate">
+                          {typeof image.title === 'string' ? image.title : (image.title?.ja || '無題')}
+                        </p>
+                        <p className="text-xs text-gray-500 line-clamp-2">
+                          {typeof image.description === 'string' ? image.description : (image.description?.ja || '説明なし')}
+                        </p>
                       </div>
                     </div>
                   ))}
