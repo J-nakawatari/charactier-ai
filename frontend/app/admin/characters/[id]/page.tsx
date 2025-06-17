@@ -102,6 +102,8 @@ export default function CharacterDetailPage() {
         }
         
         const data = await response.json();
+        console.log('🔍 Character data structure:', data);
+        console.log('🔍 Character name:', data.character?.name || data.name);
         setCharacter(data.character || data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'キャラクターデータの読み込みに失敗しました');
@@ -231,6 +233,9 @@ export default function CharacterDetailPage() {
     );
   };
 
+  console.log('🔍 Character before render:', character);
+  console.log('🔍 Character name before render:', character?.name);
+  
   return (
     <div className="flex-1 flex flex-col">
       {/* ヘッダー */}
