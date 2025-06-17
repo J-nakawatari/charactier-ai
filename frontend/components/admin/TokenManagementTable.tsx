@@ -31,7 +31,7 @@ export default function TokenManagementTable({ users }: TokenManagementTableProp
       suspended: { label: '停止中', color: 'bg-red-100 text-red-800' }
     };
     
-    const config = statusConfig[status as keyof typeof statusConfig];
+    const config = statusConfig[status as keyof typeof statusConfig] || { label: '不明', color: 'bg-gray-100 text-gray-800' };
     
     return (
       <div className="flex space-x-1">
