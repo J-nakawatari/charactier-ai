@@ -1323,9 +1323,10 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
       characterId: characterId
     });
     
-    const conversationHistory = existingChat?.messages?.slice(-20).map(msg => ({
+    // 会話履歴を5件に制限（トークン効率化）
+    const conversationHistory = existingChat?.messages?.slice(-5).map(msg => ({
       role: msg.role,
-      content: msg.content
+      content: msg.content.length > 100 ? msg.content.substring(0, 100) + '...' : msg.content
     })) || [];
 
     // 事前トークン残高チェック（最小限必要量）
