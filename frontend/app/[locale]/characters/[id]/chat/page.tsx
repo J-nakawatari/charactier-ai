@@ -320,6 +320,20 @@ export default function ChatPage() {
               : prev.affinity.currentExp
           }
         } : null);
+
+        // レベルアップ情報の処理
+        if (responseData.levelUp) {
+          console.log('🎉 レベルアップ検出:', responseData.levelUp);
+          // レベルアップポップアップの表示トリガーをChatLayoutに送信するためのイベントを発火
+          const levelUpEvent = new CustomEvent('levelUp', {
+            detail: {
+              level: responseData.levelUp.newLevel,
+              illustration: responseData.levelUp.unlockReward,
+              characterName: chatData?.character.name || 'キャラクター'
+            }
+          });
+          window.dispatchEvent(levelUpEvent);
+        }
       }
 
     } catch (error) {

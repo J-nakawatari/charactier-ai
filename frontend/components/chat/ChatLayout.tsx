@@ -130,6 +130,24 @@ export function ChatLayout({
     });
   }, [affinity, updateAffinity]);
 
+  // 🎉 レベルアップイベントリスナー
+  useEffect(() => {
+    const handleLevelUp = (event: CustomEvent) => {
+      console.log('🎉 レベルアップイベント受信:', event.detail);
+      setUnlockData({
+        level: event.detail.level,
+        illustration: event.detail.illustration
+      });
+      setShowUnlockPopup(true);
+    };
+
+    window.addEventListener('levelUp', handleLevelUp as EventListener);
+    
+    return () => {
+      window.removeEventListener('levelUp', handleLevelUp as EventListener);
+    };
+  }, []);
+
   // 🖼️ キャラクター画像データのデバッグログ
   useEffect(() => {
     console.log('🔍 ChatLayout キャラクター画像データ:', {
@@ -318,11 +336,7 @@ export function ChatLayout({
       console.log('❤️ 更新後の親密度:', affinity.level);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-      // レベルアップ演出のトリガー（テスト用）
-      if (Math.random() > 0.8) {
-        setUnlockData({ level: affinity.level + 1, illustration: 'new_smile' });
-        setShowUnlockPopup(true);
-      }
+      // レベルアップ演出のトリガーは削除（実際のレベルアップ情報に基づいて表示）
 
     } catch (error) {
       // ❌ エラー時の詳細ログ

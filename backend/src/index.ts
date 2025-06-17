@@ -1554,7 +1554,7 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
             },
             $inc: { 
               totalTokensUsed: aiResponse.tokensUsed,
-              currentAffinity: 1 // メッセージごとに1ポイント増加
+              currentAffinity: 3 // メッセージごとに3ポイント増加（テスト用に増量）
             },
             $set: { lastActivityAt: new Date() }
           },
@@ -1564,7 +1564,7 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           }
         );
 
-        const affinityIncrease = 1; // 固定で1ポイント増加
+        const affinityIncrease = 3; // 固定で3ポイント増加（テスト用に増量）
         const previousAffinity = Math.max(0, (updatedChat.currentAffinity || 0) - affinityIncrease);
         const newAffinity = Math.min(100, updatedChat.currentAffinity);
 
@@ -1638,20 +1638,33 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         });
 
         // 🎭 レベルアップ検出とムードトリガー適用
+        let levelUpInfo = null;
         try {
           const previousLevel = Math.floor(previousAffinity / 10);
           const currentLevel = Math.floor(newAffinity / 10);
           
           console.log(`🔍 Level check: previous affinity=${previousAffinity} (level ${previousLevel}), new affinity=${newAffinity} (level ${currentLevel})`);
+          console.log(`🔍 Level calculation details: previousAffinity=${previousAffinity} ÷ 10 = ${previousLevel}, newAffinity=${newAffinity} ÷ 10 = ${currentLevel}`);
           
           if (currentLevel > previousLevel) {
             // レベルアップが発生
+            levelUpInfo = {
+              previousLevel,
+              newLevel: currentLevel,
+              unlockReward: `特別イラスト「レベル${currentLevel}記念」`
+            };
+            
+            console.log(`🎉 LEVEL UP DETECTED! ${previousLevel} → ${currentLevel}`);
+            console.log('🎉 Level up info:', levelUpInfo);
+            
             await applyMoodTrigger(
               req.user._id.toString(),
               characterId,
               { kind: 'LEVEL_UP', newLevel: currentLevel }
             );
             console.log(`📈 Level up mood trigger applied: level ${previousLevel} → ${currentLevel}`);
+          } else {
+            console.log(`❌ No level up: current level ${currentLevel} not greater than previous level ${previousLevel}`);
           }
         } catch (levelUpMoodError) {
           console.error('❌ Failed to apply level up mood trigger:', levelUpMoodError);
@@ -1778,7 +1791,8 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
             level: newAffinity,
             increase: affinityIncrease
           },
-          tokenBalance: newBalance
+          tokenBalance: newBalance,
+          levelUp: levelUpInfo // レベルアップ情報を追加
         });
 
       } catch (dbError) {
