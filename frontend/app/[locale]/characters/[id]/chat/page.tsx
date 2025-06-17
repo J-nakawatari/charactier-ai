@@ -332,10 +332,21 @@ export default function ChatPage() {
       
       if (typeof error === 'object' && error !== null && 'code' in error) {
         const apiError = error as any;
+        
+        // デバッグ用：エラーオブジェクトをコンソールに出力
+        console.log('🚨 API Error Object:', apiError);
+        console.log('🚨 Error Code:', apiError.code);
+        console.log('🚨 Sanction Action:', apiError.sanctionAction);
+        console.log('🚨 Violation Count:', apiError.violationCount);
+        console.log('🚨 Account Status:', apiError.accountStatus);
+        
         // 禁止用語エラーの場合は制裁情報を含む専用メッセージを表示
         if (apiError.code === 'CONTENT_VIOLATION') {
           const violationMessage = formatViolationMessage(apiError);
           const severity = getSanctionSeverity(apiError);
+          
+          console.log('🚨 Formatted Violation Message:', violationMessage);
+          console.log('🚨 Severity:', severity);
           
           // 制裁レベルに応じてトーストの種類を変更
           if (severity === 'critical') {
