@@ -82,6 +82,7 @@ export default function CharacterDetail() {
         console.log('🔍 Character data structure:', data);
         console.log('🔍 Character name:', data.character?.name || data.name);
         console.log('🔍 Gallery images:', data.character?.galleryImages || data.galleryImages);
+        console.log('🔍 First gallery image:', (data.character?.galleryImages || data.galleryImages)?.[0]);
         setCharacter(data.character || data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'キャラクターデータの読み込みに失敗しました');
@@ -579,23 +580,31 @@ export default function CharacterDetail() {
               <h4 className="text-sm font-medium text-gray-500 mb-4">ギャラリー画像</h4>
               {character.galleryImages && character.galleryImages.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {character.galleryImages.filter(image => image && image.file).map((image, index) => (
+                  {character.galleryImages.map((image, index) => (
                     <div key={index} className="space-y-2">
                       <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                        <img 
-                          src={image.file && image.file.startsWith('http') ? image.file : `${API_BASE_URL}${image.file || ''}`} 
-                          alt={typeof image.title === 'string' ? image.title : (image.title?.ja || `ギャラリー画像 ${index + 1}`)}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
-                        />
+                        {image && image.file ? (
+                          <img 
+                            src={image.file.startsWith('http') ? image.file : `${API_BASE_URL}${image.file}`} 
+                            alt={typeof image.title === 'string' ? image.title : (image.title?.ja || `ギャラリー画像 ${index + 1}`)}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Image className="w-8 h-8 text-gray-400" />
+                          </div>
+                        )}
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-gray-900 truncate">
-                          {typeof image.title === 'string' ? image.title : (image.title?.ja || '無題')}
-                        </p>
-                        <p className="text-xs text-gray-500 line-clamp-2">
-                          {typeof image.description === 'string' ? image.description : (image.description?.ja || '説明なし')}
-                        </p>
-                      </div>
+                      {image && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-gray-900 truncate">
+                            {typeof image.title === 'string' ? image.title : (image.title?.ja || '無題')}
+                          </p>
+                          <p className="text-xs text-gray-500 line-clamp-2">
+                            {typeof image.description === 'string' ? image.description : (image.description?.ja || '説明なし')}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
