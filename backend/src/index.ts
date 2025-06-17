@@ -2680,30 +2680,16 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
       // MongoDB実装
       
       const query: any = {
-        // BANされたユーザーも管理画面に表示する（管理者による意図的削除のみ除外）
-        $or: [
-          { isActive: { $ne: false } }, // アクティブユーザー
-          { accountStatus: { $in: ['banned', 'suspended'] } } // BAN・停止ユーザーも表示
-        ]
+        // 管理者による論理削除のみ除外、その他は全て表示
+        isActive: { $ne: false }
       };
       
-      // 検索フィルター（既存の表示条件と組み合わせ）
+      // 検索フィルター
       if (search) {
-        query.$and = [
-          {
-            $or: [
-              { isActive: { $ne: false } }, // アクティブユーザー
-              { accountStatus: { $in: ['banned', 'suspended'] } } // BAN・停止ユーザーも表示
-            ]
-          },
-          {
-            $or: [
-              { name: { $regex: search, $options: 'i' } },
-              { email: { $regex: search, $options: 'i' } }
-            ]
-          }
+        query.$or = [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
         ];
-        delete query.$or; // $andを使うので$orを削除
       }
       
       // ステータスフィルター（管理者は停止ユーザーも含めて表示）
@@ -2892,6 +2878,16 @@ routeRegistry.define('PUT', '/api/admin/users/:id/status', authenticateToken, as
     if (status === 'active') {
       updateData.suspensionEndDate = undefined;
       updateData.banReason = undefined;
+      updateData.violationCount = 0; // アカウント復活時に違反回数をリセット
+      
+      // 違反記録も削除（完全な復活）
+      try {
+        await ViolationRecordModel.deleteMany({ userId: id });
+        console.log(`Deleted violation records for user ${id} on account restoration`);
+      } catch (violationDeleteError) {
+        console.error('Error deleting violation records:', violationDeleteError);
+        // 違反記録削除に失敗してもアカウント復活は続行
+      }
     }
 
     const user = await UserModel.findByIdAndUpdate(
