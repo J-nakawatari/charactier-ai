@@ -286,11 +286,11 @@ export default function CharacterDetailPage() {
               <div className="flex items-center space-x-4">
                 <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-2xl font-medium">
-                    {(character.name?.ja || character.name || '未設定').charAt(0)}
+                    {(typeof character.name === 'string' ? character.name : (character.name?.ja || '未設定')).charAt(0)}
                   </span>
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">{character.name?.ja || character.name || '未設定'}</h2>
+                  <h2 className="text-3xl font-bold text-gray-900">{typeof character.name === 'string' ? character.name : (character.name?.ja || '未設定')}</h2>
                   <p className="text-lg text-gray-600 mt-1">{character.personalityType}</p>
                   <div className="mt-3">
                     {getStatusBadge(character.isActive, character.isFree)}
