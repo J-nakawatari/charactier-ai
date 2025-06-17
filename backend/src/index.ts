@@ -2480,15 +2480,30 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
       // MongoDB実装
       
       const query: any = {
-        isActive: { $ne: false } // 論理削除されたユーザーを除外
+        // BANされたユーザーも管理画面に表示する（管理者による意図的削除のみ除外）
+        $or: [
+          { isActive: { $ne: false } }, // アクティブユーザー
+          { accountStatus: { $in: ['banned', 'suspended'] } } // BAN・停止ユーザーも表示
+        ]
       };
       
-      // 検索フィルター
+      // 検索フィルター（既存の表示条件と組み合わせ）
       if (search) {
-        query.$or = [
-          { name: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
+        query.$and = [
+          {
+            $or: [
+              { isActive: { $ne: false } }, // アクティブユーザー
+              { accountStatus: { $in: ['banned', 'suspended'] } } // BAN・停止ユーザーも表示
+            ]
+          },
+          {
+            $or: [
+              { name: { $regex: search, $options: 'i' } },
+              { email: { $regex: search, $options: 'i' } }
+            ]
+          }
         ];
+        delete query.$or; // $andを使うので$orを削除
       }
       
       // ステータスフィルター（管理者は停止ユーザーも含めて表示）

@@ -82,7 +82,7 @@ export default function TokenStats({ tokenUsage, users, tokenStats }: TokenStats
     },
     {
       title: '総ユーザー数',
-      value: safeUsers.length.toLocaleString(),
+      value: (tokenStats?.totalUsers ?? safeUsers.length).toLocaleString(),
       icon: Users,
       color: 'bg-orange-500',
       bgColor: 'bg-orange-50',

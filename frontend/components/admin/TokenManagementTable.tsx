@@ -9,7 +9,7 @@ interface UserData {
   id: string;
   name: string;
   email: string;
-  status: 'active' | 'inactive' | 'suspended';
+  status: 'active' | 'inactive' | 'suspended' | 'banned';
   isTrialUser: boolean;
   tokenBalance: number;
   totalSpent: number;
@@ -30,7 +30,8 @@ export default function TokenManagementTable({ users, onUserUpdate }: TokenManag
     const statusConfig = {
       active: { label: 'アクティブ', color: 'bg-green-100 text-green-800' },
       inactive: { label: '非アクティブ', color: 'bg-gray-100 text-gray-800' },
-      suspended: { label: '停止中', color: 'bg-red-100 text-red-800' }
+      suspended: { label: '停止中', color: 'bg-yellow-100 text-yellow-800' },
+      banned: { label: 'BAN', color: 'bg-red-100 text-red-800' }
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || { label: '不明', color: 'bg-gray-100 text-gray-800' };
