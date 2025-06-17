@@ -1673,6 +1673,131 @@ paths:
                     type: string
 
   # ======================================
+  # 管理者ダッシュボード統計API
+  # ======================================
+  
+  /api/admin/dashboard/stats:
+    get:
+      summary: 管理者ダッシュボード統計情報取得
+      description: ダッシュボードに表示する各種統計情報を取得します
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 統計情報取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stats:
+                    type: object
+                    properties:
+                      totalUsers:
+                        type: number
+                        description: 総ユーザー数
+                      activeUsers:
+                        type: number
+                        description: アクティブユーザー数（7日以内にログイン）
+                      totalTokensUsed:
+                        type: number
+                        description: 総トークン使用量
+                      totalCharacters:
+                        type: number
+                        description: 総キャラクター数
+                      apiErrors:
+                        type: number
+                        description: APIエラー数（24時間以内）
+                  trends:
+                    type: object
+                    properties:
+                      userGrowth:
+                        type: number
+                        description: ユーザー成長率（%）
+                      tokenUsageGrowth:
+                        type: number
+                        description: トークン使用量成長率（%）
+                      apiErrorTrend:
+                        type: number
+                        description: APIエラー増減率（%）
+                      characterPopularity:
+                        type: number
+                        description: キャラクター利用率成長（%）
+                  financial:
+                    type: object
+                    properties:
+                      totalRevenue:
+                        type: number
+                        description: 総売上
+                      availableBalance:
+                        type: number
+                        description: 利用可能残高
+                      creditLimit:
+                        type: number
+                        description: クレジット上限
+                      outstandingDebt:
+                        type: number
+                        description: 未払い債務
+                      projectedBalance14Days:
+                        type: number
+                        description: 14日後予測残高
+                  evaluation:
+                    type: object
+                    properties:
+                      overallScore:
+                        type: number
+                        description: 総合評価スコア（0-100）
+                      breakdown:
+                        type: object
+                        properties:
+                          excellent:
+                            type: number
+                            description: 優秀（%）
+                          good:
+                            type: number
+                            description: 良好（%）
+                          needsImprovement:
+                            type: number
+                            description: 要改善（%）
+        '401':
+          description: 認証エラー
+        '403':
+          description: 権限エラー
+
+  /api/admin/characters/update-stats:
+    post:
+      summary: キャラクター統計情報更新
+      description: 全キャラクターの統計情報（totalMessages、averageAffinityLevel等）を集計・更新します
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 統計更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  updated:
+                    type: number
+                    description: 更新されたキャラクター数
+                  stats:
+                    type: object
+                    properties:
+                      totalCharacters:
+                        type: number
+                      totalMessages:
+                        type: number
+                      averageMessages:
+                        type: number
+        '401':
+          description: 認証エラー
+        '403':
+          description: 権限エラー
+
+  # ======================================
   # 管理者ユーザー関連API修正
   # ======================================
   

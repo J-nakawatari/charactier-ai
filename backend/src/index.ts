@@ -4991,6 +4991,237 @@ routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authen
 });
 
 
+// ==================== ADMIN DASHBOARD ENDPOINTS ====================
+
+// 管理者ダッシュボード統計情報API
+app.get('/api/admin/dashboard/stats', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 管理者権限チェック
+    if (!req.user || !(req.user as any).isAdmin) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    if (!isMongoConnected) {
+      res.status(503).json({ error: 'Database not connected' });
+      return;
+    }
+
+    // 現在の日時と比較日時を設定
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    // 基本統計の集計
+    const [
+      totalUsers,
+      activeUsers,
+      totalCharacters,
+      activeCharacters,
+      totalTokenUsage,
+      recentErrors
+    ] = await Promise.all([
+      UserModel.countDocuments(),
+      UserModel.countDocuments({ lastLoginAt: { $gte: sevenDaysAgo } }),
+      CharacterModel.countDocuments(),
+      CharacterModel.countDocuments({ isActive: true }),
+      TokenUsage.aggregate([
+        { $group: { _id: null, total: { $sum: '$tokensUsed' } } }
+      ]),
+      APIErrorModel.countDocuments({ createdAt: { $gte: twentyFourHoursAgo } })
+    ]);
+
+    // 前期間との比較用データ取得
+    const [
+      prevTotalUsers,
+      prevActiveUsers,
+      prevTokenUsage,
+      prevErrors
+    ] = await Promise.all([
+      UserModel.countDocuments({ createdAt: { $lt: thirtyDaysAgo } }),
+      UserModel.countDocuments({ 
+        lastLoginAt: { $gte: new Date(thirtyDaysAgo.getTime() - 7 * 24 * 60 * 60 * 1000), $lt: thirtyDaysAgo }
+      }),
+      TokenUsage.aggregate([
+        { $match: { createdAt: { $lt: thirtyDaysAgo } } },
+        { $group: { _id: null, total: { $sum: '$tokensUsed' } } }
+      ]),
+      APIErrorModel.countDocuments({ 
+        createdAt: { 
+          $gte: new Date(twentyFourHoursAgo.getTime() - 24 * 60 * 60 * 1000), 
+          $lt: twentyFourHoursAgo 
+        } 
+      })
+    ]);
+
+    // トレンド計算
+    const calculateTrend = (current: number, previous: number): number => {
+      if (previous === 0) return current > 0 ? 100 : 0;
+      return Number(((current - previous) / previous * 100).toFixed(1));
+    };
+
+    // 財務情報の集計
+    const totalRevenue = await PurchaseHistoryModel.aggregate([
+      { $match: { status: 'completed' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+
+    // 評価スコアの計算（シンプルな実装）
+    const calculateEvaluationScore = () => {
+      let score = 50; // 基本スコア
+      
+      // アクティブユーザー率で加点
+      const activeUserRate = totalUsers > 0 ? (activeUsers / totalUsers) : 0;
+      score += activeUserRate * 30; // 最大30点
+      
+      // エラー率で減点
+      const errorRate = recentErrors / Math.max(activeUsers, 1);
+      score -= Math.min(errorRate * 10, 20); // 最大-20点
+      
+      return Math.max(0, Math.min(100, Math.round(score)));
+    };
+
+    const evaluationScore = calculateEvaluationScore();
+
+    res.json({
+      stats: {
+        totalUsers,
+        activeUsers,
+        totalTokensUsed: totalTokenUsage[0]?.total || 0,
+        totalCharacters,
+        apiErrors: recentErrors
+      },
+      trends: {
+        userGrowth: calculateTrend(totalUsers, prevTotalUsers),
+        tokenUsageGrowth: calculateTrend(
+          totalTokenUsage[0]?.total || 0,
+          prevTokenUsage[0]?.total || 0
+        ),
+        apiErrorTrend: calculateTrend(recentErrors, prevErrors),
+        characterPopularity: calculateTrend(activeCharacters, totalCharacters * 0.8)
+      },
+      financial: {
+        totalRevenue: totalRevenue[0]?.total || 0,
+        availableBalance: 1768, // TODO: 実際の残高計算を実装
+        creditLimit: 3000, // TODO: 実際の上限を設定
+        outstandingDebt: -1232, // TODO: 実際の債務計算を実装
+        projectedBalance14Days: 1543 // TODO: 予測計算を実装
+      },
+      evaluation: {
+        overallScore: evaluationScore,
+        breakdown: {
+          excellent: evaluationScore >= 80 ? evaluationScore - 80 : 0,
+          good: evaluationScore >= 50 && evaluationScore < 80 ? evaluationScore - 50 : 0,
+          needsImprovement: evaluationScore < 50 ? 50 - evaluationScore : 0
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Dashboard stats API error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'ダッシュボード統計の取得に失敗しました'
+    });
+  }
+});
+
+// キャラクター統計更新API
+app.post('/api/admin/characters/update-stats', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 管理者権限チェック
+    if (!req.user || !(req.user as any).isAdmin) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    if (!isMongoConnected) {
+      res.status(503).json({ error: 'Database not connected' });
+      return;
+    }
+
+    console.log('📊 Starting character stats update...');
+
+    // 全キャラクターを取得
+    const characters = await CharacterModel.find({});
+    let updatedCount = 0;
+    let totalMessagesCount = 0;
+
+    // 各キャラクターの統計を更新
+    for (const character of characters) {
+      // このキャラクターに関連するチャット統計を集計
+      const stats = await ChatModel.aggregate([
+        { $match: { characterId: character._id } },
+        { $unwind: '$messages' },
+        { $match: { 'messages.sender': { $ne: 'system' } } },
+        { $group: {
+          _id: '$characterId',
+          totalMessages: { $sum: 1 },
+          uniqueUsers: { $addToSet: '$userId' }
+        }}
+      ]);
+
+      // このキャラクターのユーザーごとの親密度を集計
+      const affinityStats = await UserModel.aggregate([
+        { $unwind: '$affinities' },
+        { $match: { 'affinities.character': character._id } },
+        { $group: {
+          _id: null,
+          avgLevel: { $avg: '$affinities.level' },
+          totalUsers: { $sum: 1 },
+          maxLevel: { $max: '$affinities.level' }
+        }}
+      ]);
+
+      const characterStats = stats[0] || { totalMessages: 0, uniqueUsers: [] };
+      const affinityData = affinityStats[0] || { avgLevel: 0, totalUsers: 0, maxLevel: 0 };
+
+      // キャラクターの統計を更新
+      character.totalMessages = characterStats.totalMessages;
+      character.totalUsers = characterStats.uniqueUsers.length;
+      character.averageAffinityLevel = Number(affinityData.avgLevel.toFixed(1));
+      
+      // 総収益の計算（このキャラクターの購入履歴から）
+      const revenueStats = await PurchaseHistoryModel.aggregate([
+        { 
+          $match: { 
+            type: 'character',
+            characterId: character._id,
+            status: 'completed'
+          } 
+        },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]);
+      
+      character.totalRevenue = revenueStats[0]?.total || 0;
+
+      await character.save();
+      updatedCount++;
+      totalMessagesCount += characterStats.totalMessages;
+
+      console.log(`✅ Updated stats for ${character.name?.ja || character.name}: ${characterStats.totalMessages} messages, ${character.totalUsers} users`);
+    }
+
+    res.json({
+      success: true,
+      updated: updatedCount,
+      stats: {
+        totalCharacters: characters.length,
+        totalMessages: totalMessagesCount,
+        averageMessages: characters.length > 0 ? Math.round(totalMessagesCount / characters.length) : 0
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Character stats update error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'キャラクター統計の更新に失敗しました'
+    });
+  }
+});
+
 // ==================== DEBUG ENDPOINTS ====================
 
 // デバッグ用：ユーザーの違反記録確認API（一時的）

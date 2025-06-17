@@ -8,6 +8,12 @@ interface DashboardStats {
   totalTokensUsed: number;
   totalCharacters: number;
   apiErrors: number;
+  trends?: {
+    userGrowth?: number;
+    tokenUsageGrowth?: number;
+    apiErrorTrend?: number;
+    characterPopularity?: number;
+  };
 }
 
 interface StatsCardsProps {
@@ -24,14 +30,21 @@ export default function StatsCards({ stats }: StatsCardsProps) {
     apiErrors: 0
   };
 
+  // トレンドデータの整形
+  const formatTrend = (trend?: number) => {
+    if (trend === undefined || trend === null) return '0%';
+    const sign = trend >= 0 ? '+' : '';
+    return `${sign}${trend}%`;
+  };
+
   const cards = [
     {
       title: '総ユーザー数',
       value: safeStats.totalUsers.toLocaleString(),
       subValue: `アクティブ: ${safeStats.activeUsers.toLocaleString()}`,
       icon: Users,
-      trend: '+12%',
-      trendUp: true,
+      trend: formatTrend(safeStats.trends?.userGrowth),
+      trendUp: (safeStats.trends?.userGrowth || 0) >= 0,
       color: 'bg-blue-500'
     },
     {
@@ -39,8 +52,8 @@ export default function StatsCards({ stats }: StatsCardsProps) {
       value: `${(safeStats.totalTokensUsed / 1000000).toFixed(1)}M`,
       subValue: '今月累計',
       icon: Coins,
-      trend: '+8.5%',
-      trendUp: true,
+      trend: formatTrend(safeStats.trends?.tokenUsageGrowth),
+      trendUp: (safeStats.trends?.tokenUsageGrowth || 0) >= 0,
       color: 'bg-green-500'
     },
     {
@@ -48,8 +61,8 @@ export default function StatsCards({ stats }: StatsCardsProps) {
       value: safeStats.totalCharacters.toString(),
       subValue: 'アクティブ',
       icon: MessageSquare,
-      trend: '+2',
-      trendUp: true,
+      trend: formatTrend(safeStats.trends?.characterPopularity),
+      trendUp: (safeStats.trends?.characterPopularity || 0) >= 0,
       color: 'bg-purple-500'
     },
     {
@@ -57,8 +70,8 @@ export default function StatsCards({ stats }: StatsCardsProps) {
       value: safeStats.apiErrors.toString(),
       subValue: '24時間',
       icon: AlertTriangle,
-      trend: '-15%',
-      trendUp: false,
+      trend: formatTrend(safeStats.trends?.apiErrorTrend),
+      trendUp: false, // エラーは減少が良いので常にfalse
       color: 'bg-red-500'
     }
   ];

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { API_BASE_URL } from '@/lib/api-config';
-import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare, CreditCard, Settings, Brain, Image, Tag, Heart, Award, Users } from 'lucide-react';
+import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare, CreditCard, Settings, Brain, Image, Tag, Heart, Award, Users, RefreshCw } from 'lucide-react';
 
 // Inline type definitions
 interface Character {
@@ -61,6 +61,7 @@ export default function CharacterDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [character, setCharacter] = useState<Character | null>(null);
+  const [updatingStats, setUpdatingStats] = useState(false);
 
   useEffect(() => {
     const fetchCharacter = async () => {
@@ -163,6 +164,50 @@ export default function CharacterDetail() {
       warning('キャラクター非公開', `${characterName}を非公開にしました`);
     } else {
       success('キャラクター公開', `${characterName}を公開しました`);
+    }
+  };
+
+  const handleUpdateStats = async () => {
+    try {
+      setUpdatingStats(true);
+      
+      const adminToken = localStorage.getItem('adminAccessToken');
+      if (!adminToken) {
+        throw new Error('管理者認証が必要です');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/admin/characters/update-stats`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('統計更新に失敗しました');
+      }
+
+      const result = await response.json();
+      success('統計更新完了', `${result.updated}個のキャラクターの統計を更新しました`);
+      
+      // 現在のキャラクターを再読み込み
+      const updatedResponse = await fetch(`${API_BASE_URL}/api/characters/${params.id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        }
+      });
+      
+      if (updatedResponse.ok) {
+        const updatedData = await updatedResponse.json();
+        setCharacter(updatedData.character || updatedData);
+      }
+    } catch (error) {
+      console.error('Statistics update error:', error);
+      warning('統計更新エラー', error instanceof Error ? error.message : '統計の更新に失敗しました');
+    } finally {
+      setUpdatingStats(false);
     }
   };
   
@@ -300,7 +345,24 @@ export default function CharacterDetail() {
           </div>
 
           {/* 統計情報カード */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="relative">
+            {/* 統計更新ボタン */}
+            <div className="absolute top-0 right-0 -mt-4">
+              <button
+                onClick={handleUpdateStats}
+                disabled={updatingStats}
+                className={`flex items-center space-x-2 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                  updatingStats 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <RefreshCw className={`w-4 h-4 ${updatingStats ? 'animate-spin' : ''}`} />
+                <span>{updatingStats ? '更新中...' : '統計を更新'}</span>
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center">
                 <div className="bg-blue-500 p-3 rounded-lg">
@@ -349,6 +411,7 @@ export default function CharacterDetail() {
                   <p className="text-2xl font-bold text-orange-700">{character.totalUsers?.toLocaleString() || '0'}</p>
                 </div>
               </div>
+            </div>
             </div>
           </div>
 

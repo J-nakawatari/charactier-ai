@@ -43,18 +43,20 @@ export default function AdminDashboard() {
         console.log('📡 Fetching data from APIs...');
         
         // 既存の管理者用APIエンドポイントを呼び出し
-        const [overviewRes, usersRes, charactersRes, errorStatsRes] = await Promise.all([
+        const [overviewRes, usersRes, charactersRes, errorStatsRes, dashboardStatsRes] = await Promise.all([
           fetch('/api/admin/token-analytics/overview', { headers }),
           fetch('/api/admin/users', { headers }),
           fetch('/api/characters', { headers }), // 公開キャラクター一覧API
-          fetch('/api/admin/error-stats?range=24h', { headers }) // APIエラー統計
+          fetch('/api/admin/error-stats?range=24h', { headers }), // APIエラー統計
+          fetch('/api/admin/dashboard/stats', { headers }) // 新しい統合ダッシュボード統計API
         ]);
         
         console.log('📡 API responses received:', {
           overviewStatus: overviewRes.status,
           usersStatus: usersRes.status,
           charactersStatus: charactersRes.status,
-          errorStatsStatus: errorStatsRes.status
+          errorStatsStatus: errorStatsRes.status,
+          dashboardStatsStatus: dashboardStatsRes.status
         });
 
         // エラーチェック
@@ -97,6 +99,15 @@ export default function AdminDashboard() {
         // レスポンスをパース
         const overviewData = await overviewRes.json();
         const usersData = await usersRes.json();
+        
+        // 新しいダッシュボード統計APIのレスポンスをパース
+        let dashboardData = null;
+        if (dashboardStatsRes.ok) {
+          dashboardData = await dashboardStatsRes.json();
+          console.log('📊 Dashboard Stats API data:', dashboardData);
+        } else {
+          console.warn('⚠️ Dashboard Stats API not available, using fallback');
+        }
 
         console.log('📊 Admin Dashboard - Overview data:', overviewData);
         console.log('👥 Admin Dashboard - Users data:', usersData);
@@ -117,13 +128,29 @@ export default function AdminDashboard() {
         // キャラクター数を取得
         const totalCharacters = charactersData.characters?.length || 0;
         
-        setDashboardStats({
-          totalUsers: totalUsers,
-          activeUsers: uniqueUsersToday,
-          totalTokensUsed: overviewData.overview?.totalTokensUsed || 0,
-          totalCharacters: totalCharacters,
-          apiErrors: errorStatsData.data?.stats?.totalErrors || 0
-        });
+        // 新しい統合APIが利用可能な場合はそちらを使用、なければフォールバック
+        if (dashboardData && dashboardData.stats) {
+          setDashboardStats({
+            totalUsers: dashboardData.stats.totalUsers,
+            activeUsers: dashboardData.stats.activeUsers,
+            totalTokensUsed: dashboardData.stats.totalTokensUsed,
+            totalCharacters: dashboardData.stats.totalCharacters,
+            apiErrors: dashboardData.stats.apiErrors,
+            // トレンドデータも含める
+            trends: dashboardData.trends,
+            financial: dashboardData.financial,
+            evaluation: dashboardData.evaluation
+          });
+        } else {
+          // フォールバック: 既存のAPIから集計
+          setDashboardStats({
+            totalUsers: totalUsers,
+            activeUsers: uniqueUsersToday,
+            totalTokensUsed: overviewData.overview?.totalTokensUsed || 0,
+            totalCharacters: totalCharacters,
+            apiErrors: errorStatsData.data?.stats?.totalErrors || 0
+          });
+        }
         
         console.log('📊 Calculated dashboard stats:', {
           totalUsers: totalUsers,
@@ -228,7 +255,10 @@ export default function AdminDashboard() {
                 <NotificationList notifications={notifications} />
                 
                 {/* クイック統計 */}
-                <QuickStats />
+                <QuickStats 
+                  financial={dashboardStats?.financial}
+                  evaluation={dashboardStats?.evaluation}
+                />
               </div>
             </div>
           </div>
