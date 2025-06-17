@@ -5144,7 +5144,15 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
     console.log('📊 Starting character stats update...');
 
     // 全キャラクターを取得
-    const characters = await CharacterModel.find({});
+    let characters = [];
+    try {
+      characters = await CharacterModel.find({});
+      console.log(`📊 Found ${characters.length} characters to update`);
+    } catch (charError) {
+      console.error('❌ Error fetching characters:', charError);
+      throw new Error('Failed to fetch characters: ' + (charError instanceof Error ? charError.message : String(charError)));
+    }
+    
     let updatedCount = 0;
     let totalMessagesCount = 0;
 
@@ -5180,16 +5188,21 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
       }
 
       // このキャラクターのユーザーごとの親密度を集計
-      const affinityStats = await UserModel.aggregate([
-        { $unwind: '$affinities' },
-        { $match: { 'affinities.character': character._id } },
-        { $group: {
-          _id: null,
-          avgLevel: { $avg: '$affinities.level' },
-          totalUsers: { $sum: 1 },
-          maxLevel: { $max: '$affinities.level' }
-        }}
-      ]);
+      let affinityStats = [];
+      try {
+        affinityStats = await UserModel.aggregate([
+          { $unwind: '$affinities' },
+          { $match: { 'affinities.character': character._id } },
+          { $group: {
+            _id: null,
+            avgLevel: { $avg: '$affinities.level' },
+            totalUsers: { $sum: 1 },
+            maxLevel: { $max: '$affinities.level' }
+          }}
+        ]);
+      } catch (affinityError) {
+        console.error(`  ⚠️ Error aggregating affinity stats for ${character.name?.ja || character.name}:`, affinityError);
+      }
 
       const affinityData = affinityStats[0] || { avgLevel: 0, totalUsers: 0, maxLevel: 0 };
 
@@ -5233,9 +5246,11 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
 
   } catch (error) {
     console.error('❌ Character stats update error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     res.status(500).json({ 
       error: 'Internal server error',
-      message: 'キャラクター統計の更新に失敗しました'
+      message: 'キャラクター統計の更新に失敗しました',
+      details: error instanceof Error ? error.message : String(error)
     });
   }
 });
