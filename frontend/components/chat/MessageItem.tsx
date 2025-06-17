@@ -98,18 +98,6 @@ export function MessageItem({ message, character, showAdvanced = false, affinity
             {/* 🎯 高度情報表示 */}
             {showAdvanced && characterState && (
               <>
-                {/* ムード状態 */}
-                <div className="flex items-center space-x-1">
-                  {(() => {
-                    const IconComponent = getMoodIcon(characterState.mood);
-                    const colorClass = getMoodIconColor(characterState.mood);
-                    return <IconComponent className={`w-3 h-3 ${colorClass}`} />;
-                  })()}
-                  <span className="text-xs">
-                    {getMoodLabel(characterState.mood)}
-                  </span>
-                </div>
-                
                 {/* キャッシュ状態 */}
                 <div className="flex items-center space-x-1">
                   <Database className={`w-3 h-3 ${characterState.cacheStatus.isHit ? 'text-green-500' : 'text-red-500'}`} />
