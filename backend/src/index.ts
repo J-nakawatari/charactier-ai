@@ -2507,10 +2507,14 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
       // ユーザーデータを管理画面用の形式に変換（UserTokenPackから正確なトークン残高を取得）
       const UserTokenPack = require('../models/UserTokenPack');
       const formattedUsers = await Promise.all(users.map(async (user) => {
-        let actualTokenBalance = user.tokenBalance || 0; // fallback
+        let actualTokenBalance = 0; // デフォルト値
         try {
           actualTokenBalance = await UserTokenPack.calculateUserTokenBalance(user._id);
+          console.log(`🔍 User ${user.email}: UserTokenPack残高 = ${actualTokenBalance}`);
         } catch (error) {
+          console.error(`❌ UserTokenPack計算エラー (${user.email}):`, error.message);
+          // エラーの場合はUserModelの値を使わずに0を使用（正確性を優先）
+          actualTokenBalance = 0;
         }
         
         return {
@@ -2534,23 +2538,16 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
       }));
       
 
-      // トークン残高の集計をバックエンドで実行（表示対象ユーザーと同じフィルタを適用）
-      const tokenSummary = await UserModel.aggregate([
-        { $match: query }, // 表示対象と同じフィルタを適用
-        { 
-          $group: { 
-            _id: null, 
-            totalTokenBalance: { $sum: "$tokenBalance" },
-            totalUsers: { $sum: 1 },
-            averageBalance: { $avg: "$tokenBalance" }
-          } 
-        }
-      ]);
+      // 正確なトークン残高の集計（UserTokenPackを基準）
+      let totalActualBalance = 0;
+      for (const user of formattedUsers) {
+        totalActualBalance += user.tokenBalance; // すでにUserTokenPack.calculateUserTokenBalanceで計算済み
+      }
 
-      const tokenStats = tokenSummary.length > 0 ? tokenSummary[0] : {
-        totalTokenBalance: 0,
-        totalUsers: 0,
-        averageBalance: 0
+      const tokenStats = {
+        totalTokenBalance: totalActualBalance,
+        totalUsers: formattedUsers.length,
+        averageBalance: formattedUsers.length > 0 ? totalActualBalance / formattedUsers.length : 0
       };
 
       res.json({
