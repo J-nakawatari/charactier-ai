@@ -1467,12 +1467,12 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
               'affinities.character': characterId 
             },
             {
-              $inc: { 'affinities.$.level': affinityIncrease },
+              $inc: { 
+                'affinities.$.level': affinityIncrease,
+                'affinities.$.totalMessages': 1
+              },
               $set: { 
                 'affinities.$.lastInteraction': new Date()
-              },
-              $inc: {
-                'affinities.$.totalMessages': 1
               }
             },
             { new: true }
