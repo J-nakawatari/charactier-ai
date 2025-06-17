@@ -8,6 +8,7 @@ import CharacterGrid from '@/components/characters/CharacterGrid';
 import CharacterFilters from '@/components/characters/CharacterFilters';
 import UserSidebar from '@/components/user/UserSidebar';
 import { getAuthHeaders } from '@/utils/auth';
+import { handleFetchError } from '@/utils/errorHandler';
 
 interface Character {
   _id: string;
@@ -72,6 +73,7 @@ function CharactersPageContent({
         setUserAffinities(userData.affinities || []);
         setUserPurchasedCharacters(userData.purchasedCharacters?.map((id: string) => id.toString()) || []);
       } else {
+        await handleFetchError(response);
       }
     } catch (err) {
       console.error('ユーザー情報取得エラー:', err);
@@ -99,7 +101,8 @@ function CharactersPageContent({
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const apiError = await handleFetchError(response);
+        throw new Error(apiError.message);
       }
 
       const data = await response.json();
