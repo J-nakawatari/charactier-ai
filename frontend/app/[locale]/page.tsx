@@ -76,51 +76,79 @@ export default function HomePage() {
     let currentIndex = 0;
     let isVideo1Active = true;
     
+    // Reset video styles
+    video1.style.opacity = '0';
+    video1.style.zIndex = '0';
+    video2.style.opacity = '0';
+    video2.style.zIndex = '0';
+    
     // Initialize first video
     video1.src = videoSources[0];
-    video1.style.opacity = '1';
-    video1.style.zIndex = '1';
     video1.load();
-    video1.play().catch(() => {
-      // Ignore play errors
-    });
+    
+    const startFirstVideo = () => {
+      video1.play().then(() => {
+        video1.style.opacity = '1';
+        video1.style.zIndex = '1';
+        console.log('First video started successfully');
+      }).catch((error) => {
+        console.error('Error playing first video:', error);
+      });
+    };
+    
+    // Wait a bit for the video to load
+    setTimeout(startFirstVideo, 500);
     
     const switchVideo = () => {
       currentIndex = (currentIndex + 1) % videoSources.length;
+      console.log(`Switching to video ${currentIndex + 1}: ${videoSources[currentIndex]}`);
       
       if (isVideo1Active) {
-        // Switch to video2
+        // Prepare video2
         video2.src = videoSources[currentIndex];
-        video2.style.zIndex = '2';
+        video2.style.zIndex = '1';
         video2.load();
-        video2.play().catch(() => {});
         
-        // Fade transition
-        setTimeout(() => {
-          video2.style.opacity = '1';
-          video1.style.opacity = '0';
-        }, 100);
+        video2.addEventListener('canplay', () => {
+          video2.play().then(() => {
+            // Fade transition using CSS classes
+            setTimeout(() => {
+              video2.style.opacity = '1';
+              setTimeout(() => {
+                video1.style.opacity = '0';
+                video1.style.zIndex = '0';
+              }, 50);
+            }, 100);
+            isVideo1Active = false;
+            console.log('Switched to video2');
+          }).catch((error) => {
+            console.error('Error playing video2:', error);
+          });
+        }, { once: true });
         
-        isVideo1Active = false;
       } else {
-        // Switch to video1
+        // Prepare video1
         video1.src = videoSources[currentIndex];
-        video1.style.zIndex = '2';
+        video1.style.zIndex = '1';
         video1.load();
-        video1.play().catch(() => {});
         
-        // Fade transition
-        setTimeout(() => {
-          video1.style.opacity = '1';
-          video2.style.opacity = '0';
-        }, 100);
-        
-        isVideo1Active = true;
+        video1.addEventListener('canplay', () => {
+          video1.play().then(() => {
+            // Fade transition
+            video1.style.opacity = '1';
+            video2.style.opacity = '0';
+            video2.style.zIndex = '0';
+            isVideo1Active = true;
+            console.log('Switched to video1');
+          }).catch((error) => {
+            console.error('Error playing video1:', error);
+          });
+        }, { once: true });
       }
     };
     
-    // Set up video switching interval (6 seconds)
-    const interval = setInterval(switchVideo, 6000);
+    // Set up video switching interval (8 seconds for better loading)
+    const interval = setInterval(switchVideo, 8000);
     
     return () => {
       clearInterval(interval);
