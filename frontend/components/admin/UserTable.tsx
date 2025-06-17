@@ -16,7 +16,7 @@ interface UserData {
   createdAt: string;
 }
 import { useToast } from '@/contexts/ToastContext';
-import { Eye, Ban, Unlock, Trash2 } from 'lucide-react';
+import { Eye, Ban, Unlock } from 'lucide-react';
 import { ensureUserNameString } from '@/utils/userUtils';
 import { API_BASE_URL } from '@/lib/api-config';
 
@@ -109,43 +109,6 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
     }
   };
 
-  // ⚠️ 一時的機能：トークンリセット
-  const handleResetTokens = async (user: UserData) => {
-    if (!confirm(`⚠️ ${ensureUserNameString(user.name)}のトークン残高(${formatNumber(user.tokenBalance)}枚)を0にリセットしますか？\n\n※これは開発用の一時的機能です`)) {
-      return;
-    }
-
-    try {
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
-      if (!adminToken) {
-        error('認証エラー', '管理者認証が必要です');
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/admin/users/${user.id}/reset-tokens`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Token reset failed');
-      }
-
-      const result = await response.json();
-      success('トークンリセット完了', `${ensureUserNameString(user.name)}のトークン残高を${formatNumber(result.previousBalance)}から0にリセットしました`);
-      
-      // ユーザー一覧を更新
-      onUserUpdate?.();
-      
-    } catch (err) {
-      error('リセットエラー', 'トークンのリセットに失敗しました');
-      console.error('Token reset error:', err);
-    }
-  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -321,15 +284,6 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
                       title="ユーザー詳細"
                     >
                       <Eye className="w-4 h-4" />
-                    </button>
-                    
-                    {/* ⚠️ 一時的機能：トークンリセット */}
-                    <button 
-                      onClick={() => handleResetTokens(user)}
-                      className="text-gray-400 hover:text-orange-600 transition-colors"
-                      title="⚠️ 開発用：トークンを0にリセット"
-                    >
-                      <Trash2 className="w-4 h-4" />
                     </button>
                     
                     {user.status === 'suspended' ? (

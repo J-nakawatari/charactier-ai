@@ -1,8 +1,9 @@
 'use client';
 
 import { useToast } from '@/contexts/ToastContext';
-import { Eye, Edit, CreditCard, Plus, Minus } from 'lucide-react';
+import { CreditCard, Trash2 } from 'lucide-react';
 import { ensureUserNameString } from '@/utils/userUtils';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface UserData {
   id: string;
@@ -18,10 +19,11 @@ interface UserData {
 
 interface TokenManagementTableProps {
   users: UserData[];
+  onUserUpdate?: () => void;
 }
 
-export default function TokenManagementTable({ users }: TokenManagementTableProps) {
-  const { success, warning, info } = useToast();
+export default function TokenManagementTable({ users, onUserUpdate }: TokenManagementTableProps) {
+  const { success, error } = useToast();
   
   // 統一されたユーティリティ関数を使用
   const getStatusBadge = (status: string, isTrialUser: boolean) => {
@@ -61,20 +63,42 @@ export default function TokenManagementTable({ users }: TokenManagementTableProp
     return 'text-green-600';
   };
 
-  const handleViewUser = (user: UserData) => {
-    info('ユーザー詳細', `${ensureUserNameString(user.name)}のトークン詳細を表示しました`);
-  };
+  // トークンリセット機能
+  const handleResetTokens = async (user: UserData) => {
+    if (!confirm(`⚠️ ${ensureUserNameString(user.name)}のトークン残高(${formatNumber(user.tokenBalance)}枚)を0にリセットしますか？\n\n※これは開発用の一時的機能です`)) {
+      return;
+    }
 
-  const handleEditUser = (user: UserData) => {
-    success('編集モード', `${ensureUserNameString(user.name)}の情報編集画面を開きました`);
-  };
+    try {
+      const adminToken = localStorage.getItem('adminAccessToken');
+      
+      if (!adminToken) {
+        error('認証エラー', '管理者認証が必要です');
+        return;
+      }
 
-  const handleAddTokens = (user: UserData) => {
-    success('トークン追加', `${ensureUserNameString(user.name)}にトークンを追加しました`);
-  };
+      const response = await fetch(`${API_BASE_URL}/admin/users/${user.id}/reset-tokens`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        }
+      });
 
-  const handleRemoveTokens = (user: UserData) => {
-    warning('トークン減算', `${ensureUserNameString(user.name)}からトークンを減算しました`);
+      if (!response.ok) {
+        throw new Error('Token reset failed');
+      }
+
+      const result = await response.json();
+      success('トークンリセット完了', `${ensureUserNameString(user.name)}のトークン残高を${formatNumber(result.previousBalance)}から0にリセットしました`);
+      
+      // ユーザー一覧を更新
+      onUserUpdate?.();
+      
+    } catch (err) {
+      error('リセットエラー', 'トークンのリセットに失敗しました');
+      console.error('Token reset error:', err);
+    }
   };
 
   return (
@@ -107,7 +131,7 @@ export default function TokenManagementTable({ users }: TokenManagementTableProp
                 最終ログイン
               </th>
               <th className="px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                操作
+                トークンリセット
               </th>
             </tr>
           </thead>
@@ -150,36 +174,13 @@ export default function TokenManagementTable({ users }: TokenManagementTableProp
                   {formatDate(user.lastLogin)}
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end space-x-2">
-                    <button 
-                      onClick={() => handleViewUser(user)}
-                      className="text-gray-400 hover:text-gray-600" 
-                      title="詳細表示"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleEditUser(user)}
-                      className="text-gray-400 hover:text-purple-600" 
-                      title="編集"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleAddTokens(user)}
-                      className="text-gray-400 hover:text-green-600" 
-                      title="トークン追加"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleRemoveTokens(user)}
-                      className="text-gray-400 hover:text-red-600" 
-                      title="トークン減算"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <button 
+                    onClick={() => handleResetTokens(user)}
+                    className="text-gray-400 hover:text-orange-600 transition-colors" 
+                    title="⚠️ 開発用：トークンを0にリセット"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </td>
               </tr>
             ))}

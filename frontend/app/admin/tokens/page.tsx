@@ -255,11 +255,61 @@ export default function TokensPage() {
           
           {/* タブコンテンツ */}
           {activeTab === 'users' ? (
-            <TokenManagementTable users={users.map(user => ({
-              ...user,
-              id: user.id || user._id,
-              status: user.status || (user.isActive ? 'active' : 'inactive')
-            }))} />
+            <TokenManagementTable 
+              users={users.map(user => ({
+                ...user,
+                id: user.id || user._id,
+                status: user.status || (user.isActive ? 'active' : 'inactive')
+              }))} 
+              onUserUpdate={() => {
+                // データを再取得
+                const fetchTokenData = async () => {
+                  try {
+                    setLoading(true);
+                    const token = localStorage.getItem('adminAccessToken');
+                    
+                    if (!token) {
+                      setError('認証トークンが見つかりません');
+                      return;
+                    }
+
+                    const headers = {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
+                    };
+
+                    const [tokenRes, usersRes] = await Promise.all([
+                      fetch('/api/admin/token-analytics/overview', { headers }),
+                      fetch('/api/admin/users', { headers })
+                    ]);
+
+                    if (tokenRes.ok && usersRes.ok) {
+                      const [tokenData, usersData] = await Promise.all([
+                        tokenRes.json(),
+                        usersRes.json()
+                      ]);
+
+                      const totalUsers = usersData.pagination?.total || usersData.users?.length || 0;
+                      
+                      setTokenStats({
+                        totalBalance: totalUsers,
+                        activeUsers: 0,
+                        totalTokensUsed: tokenData.overview?.totalTokensUsed || 0,
+                        totalCharacters: 0,
+                        apiErrors: 0
+                      });
+
+                      setUsers(usersData.users || []);
+                    }
+                  } catch (err) {
+                    console.error('Token data refresh error:', err);
+                  } finally {
+                    setLoading(false);
+                  }
+                };
+                fetchTokenData();
+              }}
+            />
           ) : (
             <TokenPackTable 
               ref={tokenPackTableRef}
