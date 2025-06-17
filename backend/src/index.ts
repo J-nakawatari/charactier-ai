@@ -4495,6 +4495,138 @@ app.get('/api/admin/error-stats', authenticateToken, async (req: AuthRequest, re
 });
 
 /**
+ * 🔧 エラー管理API - エラー解決マーク
+ */
+app.post('/api/admin/errors/resolve', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || !(req.user as any).isAdmin) {
+      res.status(401).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const { errorIds, resolutionCategory, notes } = req.body;
+    
+    if (!errorIds || !Array.isArray(errorIds) || errorIds.length === 0) {
+      res.status(400).json({
+        success: false,
+        message: 'エラーIDの配列が必要です'
+      });
+      return;
+    }
+
+    const validCategories = ['fixed', 'duplicate', 'invalid', 'wont_fix', 'not_reproducible'];
+    if (resolutionCategory && !validCategories.includes(resolutionCategory)) {
+      res.status(400).json({
+        success: false,
+        message: '無効な解決カテゴリです'
+      });
+      return;
+    }
+
+    // エラーを解決済みにマーク
+    const result = await (APIErrorModel as any).updateMany(
+      { _id: { $in: errorIds }, resolved: false },
+      {
+        $set: {
+          resolved: true,
+          resolvedAt: new Date(),
+          resolvedBy: req.user._id,
+          resolutionCategory: resolutionCategory || 'fixed',
+          notes: notes || '管理者により手動解決'
+        }
+      }
+    );
+
+    res.json({
+      success: true,
+      message: `${result.modifiedCount}件のエラーを解決済みにマークしました`,
+      modifiedCount: result.modifiedCount
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'エラー解決処理に失敗しました'
+    });
+  }
+});
+
+/**
+ * 🔧 エラー管理API - エラー詳細取得
+ */
+app.get('/api/admin/errors/details', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || !(req.user as any).isAdmin) {
+      res.status(401).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const { page = 1, limit = 20, resolved, errorType, timeRange = '7d' } = req.query;
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+
+    // 時間範囲の計算
+    let startDate: Date;
+    switch (timeRange) {
+      case '1h': startDate = new Date(Date.now() - 60 * 60 * 1000); break;
+      case '24h': startDate = new Date(Date.now() - 24 * 60 * 60 * 1000); break;
+      case '7d': startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); break;
+      case '30d': startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); break;
+      default: startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    }
+
+    // フィルター条件
+    const filter: any = {
+      timestamp: { $gte: startDate }
+    };
+
+    if (resolved !== undefined) {
+      filter.resolved = resolved === 'true';
+    }
+
+    if (errorType) {
+      filter.errorType = errorType;
+    }
+
+    // エラー一覧取得
+    const errors = await (APIErrorModel as any).find(filter)
+      .sort({ timestamp: -1 })
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .select('endpoint method statusCode errorType errorMessage timestamp resolved resolutionCategory notes resolvedAt')
+      .lean();
+
+    const totalErrors = await (APIErrorModel as any).countDocuments(filter);
+
+    res.json({
+      success: true,
+      data: {
+        errors,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: totalErrors,
+          pages: Math.ceil(totalErrors / limitNum)
+        },
+        filter: {
+          timeRange,
+          resolved,
+          errorType
+        }
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'エラー詳細取得に失敗しました'
+    });
+  }
+});
+
+/**
  * 📅 クーロンジョブ状態確認
  */
 app.get('/api/admin/cron-status', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {

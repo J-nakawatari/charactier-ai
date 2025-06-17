@@ -50,17 +50,11 @@ export const authenticateToken = async (
 
     // トークンをデコード
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    console.log('🔍 JWT decoded userId:', decoded.userId);
-    console.log('🔍 Request URL:', req.url);
-    console.log('🔍 Request path:', req.path);
     
     // まず管理者として検索
     const admin = await AdminModel.findById(decoded.userId);
-    console.log('🔍 Admin found by userId:', admin ? `${admin.email} (${admin.role})` : 'null');
     if (admin && admin.isActive) {
       // 管理者として認証成功
-      console.log('✅ Admin authentication successful, skipping user checks');
-      console.log('✅ Admin details:', { id: admin._id, email: admin.email, role: admin.role, isActive: admin.isActive });
       req.admin = admin;
       // req.userに管理者情報とisAdminフラグを確実に設定
       req.user = {
@@ -75,15 +69,8 @@ export const authenticateToken = async (
       return;
     }
     
-    if (admin && !admin.isActive) {
-      console.log('❌ Admin found but inactive:', { id: admin._id, email: admin.email, isActive: admin.isActive });
-    }
-    
-    console.log('🔍 Admin not found or inactive, checking as regular user');
-    
     // 管理者で見つからない場合は一般ユーザーとして検索
     const user = await UserModel.findById(decoded.userId);
-    console.log('🔍 User found by userId:', user ? `${user.email}` : 'null');
     if (user) {
       // アカウント状態チェック（停止・削除ユーザーのアクセス拒否）
       if (!user.isActive || user.accountStatus === 'suspended' || user.accountStatus === 'banned') {
