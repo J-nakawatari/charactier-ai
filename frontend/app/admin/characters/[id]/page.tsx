@@ -81,6 +81,7 @@ export default function CharacterDetail() {
         const data = await response.json();
         console.log('🔍 Character data structure:', data);
         console.log('🔍 Character name:', data.character?.name || data.name);
+        console.log('🔍 Gallery images:', data.character?.galleryImages || data.galleryImages);
         setCharacter(data.character || data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'キャラクターデータの読み込みに失敗しました');
@@ -505,7 +506,7 @@ export default function CharacterDetail() {
                 <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                   {character.imageCharacterSelect ? (
                     <img 
-                      src={character.imageCharacterSelect.startsWith('http') ? character.imageCharacterSelect : `${API_BASE_URL}${character.imageCharacterSelect}`} 
+                      src={character.imageCharacterSelect && character.imageCharacterSelect.startsWith('http') ? character.imageCharacterSelect : `${API_BASE_URL}${character.imageCharacterSelect || ''}`} 
                       alt="キャラクター選択"
                       className="w-full h-full object-cover"
                     />
@@ -523,7 +524,7 @@ export default function CharacterDetail() {
                 <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                   {character.imageDashboard ? (
                     <img 
-                      src={character.imageDashboard.startsWith('http') ? character.imageDashboard : `${API_BASE_URL}${character.imageDashboard}`} 
+                      src={character.imageDashboard && character.imageDashboard.startsWith('http') ? character.imageDashboard : `${API_BASE_URL}${character.imageDashboard || ''}`} 
                       alt="ダッシュボード"
                       className="w-full h-full object-cover"
                     />
@@ -541,7 +542,7 @@ export default function CharacterDetail() {
                 <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                   {character.imageChatBackground ? (
                     <img 
-                      src={character.imageChatBackground.startsWith('http') ? character.imageChatBackground : `${API_BASE_URL}${character.imageChatBackground}`} 
+                      src={character.imageChatBackground && character.imageChatBackground.startsWith('http') ? character.imageChatBackground : `${API_BASE_URL}${character.imageChatBackground || ''}`} 
                       alt="チャット背景"
                       className="w-full h-full object-cover"
                     />
@@ -559,7 +560,7 @@ export default function CharacterDetail() {
                 <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                   {character.imageChatAvatar ? (
                     <img 
-                      src={character.imageChatAvatar.startsWith('http') ? character.imageChatAvatar : `${API_BASE_URL}${character.imageChatAvatar}`} 
+                      src={character.imageChatAvatar && character.imageChatAvatar.startsWith('http') ? character.imageChatAvatar : `${API_BASE_URL}${character.imageChatAvatar || ''}`} 
                       alt="チャットアバター"
                       className="w-full h-full object-cover"
                     />
@@ -578,11 +579,11 @@ export default function CharacterDetail() {
               <h4 className="text-sm font-medium text-gray-500 mb-4">ギャラリー画像</h4>
               {character.galleryImages && character.galleryImages.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {character.galleryImages.map((image, index) => (
+                  {character.galleryImages.filter(image => image && image.file).map((image, index) => (
                     <div key={index} className="space-y-2">
                       <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                         <img 
-                          src={image.file.startsWith('http') ? image.file : `${API_BASE_URL}${image.file}`} 
+                          src={image.file && image.file.startsWith('http') ? image.file : `${API_BASE_URL}${image.file || ''}`} 
                           alt={typeof image.title === 'string' ? image.title : (image.title?.ja || `ギャラリー画像 ${index + 1}`)}
                           className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
                         />
