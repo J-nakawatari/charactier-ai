@@ -104,21 +104,29 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
   let systemPrompt = '';
   let cacheHit = false;
+  let userAffinityLevel = 0; // 共通変数として定義
 
   // 🔧 プロンプトキャッシュシステムの実装
   if (userId && isMongoConnected) {
     try {
+      // 実際のユーザー親密度を取得
+      const user = await UserModel.findById(userId);
+      if (user) {
+        const affinity = user.affinities.find(
+          aff => aff.character.toString() === characterId
+        );
+        userAffinityLevel = affinity?.level || 0;
+      }
       
       // キャッシュ検索（親密度レベル±5で検索）
-      const baseAffinityLevel = 50; // デフォルト親密度（実際のユーザー親密度に後で置き換え）
       const affinityRange = 5;
       
       const cachedPrompt = await CharacterPromptCache.findOne({
         userId: userId,
         characterId: characterId,
         'promptConfig.affinityLevel': {
-          $gte: Math.max(0, baseAffinityLevel - affinityRange),
-          $lte: Math.min(100, baseAffinityLevel + affinityRange)
+          $gte: Math.max(0, userAffinityLevel - affinityRange),
+          $lte: Math.min(100, userAffinityLevel + affinityRange)
         },
         'promptConfig.languageCode': 'ja',
         ttl: { $gt: new Date() }, // TTL未期限切れ
@@ -215,9 +223,13 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
           characterId: characterId,
           systemPrompt: systemPrompt,
           promptConfig: {
-            affinityLevel: 50, // デフォルト親密度
+            affinityLevel: userAffinityLevel, // 実際のユーザー親密度
             personalityTags: character.personalityTags || [],
-            toneStyle: '時々タメ口を交えた親しみやすい口調', // デフォルト倴40-59レベル
+            toneStyle: userAffinityLevel >= 85 ? '恋人のように甘く親密な口調' :
+                      userAffinityLevel >= 60 ? '親友のようにフレンドリーで親しみやすい口調' :
+                      userAffinityLevel >= 40 ? '時々タメ口を交えた親しみやすい口調' :
+                      userAffinityLevel >= 20 ? '少しだけ砕けた丁寧語' :
+                      '丁寧語で礼儀正しい口調', // 親密度レベルに応じたトーン
             moodModifiers: [],
             languageCode: 'ja'
           },
