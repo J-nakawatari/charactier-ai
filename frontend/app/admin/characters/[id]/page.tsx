@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { API_BASE_URL } from '@/lib/api-config';
-import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare, CreditCard, Settings, Brain, Image, Tag } from 'lucide-react';
+import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare, CreditCard, Settings, Brain, Image, Tag, Heart, Award } from 'lucide-react';
 
 // Inline type definitions
 interface Character {
@@ -451,6 +451,155 @@ export default function CharacterDetail() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* 親密度設定セクション */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center space-x-3 mb-6">
+              <Heart className="w-6 h-6 text-gray-400" />
+              <h3 className="text-xl font-bold text-gray-900">親密度設定</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                  <span className="text-sm text-gray-500">最大レベル</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {character.affinitySettings?.maxLevel || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-3">
+                  <span className="text-sm text-gray-500">経験値倍率</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {character.affinitySettings?.experienceMultiplier ? `${character.affinitySettings.experienceMultiplier}x` : 'N/A'}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 mb-3">レベル報酬設定</p>
+                <div className="p-3 bg-yellow-50 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Award className="w-4 h-4 text-yellow-600" />
+                    <span className="text-sm text-yellow-800">
+                      {character.levelRewards && character.levelRewards.length > 0 
+                        ? `${character.levelRewards.length}個の報酬が設定済み` 
+                        : '報酬設定なし'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 画像ギャラリーセクション */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center space-x-3 mb-6">
+              <Image className="w-6 h-6 text-gray-400" />
+              <h3 className="text-xl font-bold text-gray-900">画像設定</h3>
+            </div>
+            
+            {/* メイン画像 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="space-y-2">
+                <p className="text-xs text-gray-500 font-medium">キャラクター選択画像</p>
+                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                  {character.imageCharacterSelect ? (
+                    <img 
+                      src={character.imageCharacterSelect} 
+                      alt="キャラクター選択"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <Image className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-xs text-gray-400">画像なし</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs text-gray-500 font-medium">ダッシュボード画像</p>
+                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                  {character.imageDashboard ? (
+                    <img 
+                      src={character.imageDashboard} 
+                      alt="ダッシュボード"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <Image className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-xs text-gray-400">画像なし</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs text-gray-500 font-medium">チャット背景画像</p>
+                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                  {character.imageChatBackground ? (
+                    <img 
+                      src={character.imageChatBackground} 
+                      alt="チャット背景"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <Image className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-xs text-gray-400">画像なし</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs text-gray-500 font-medium">チャットアバター画像</p>
+                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                  {character.imageChatAvatar ? (
+                    <img 
+                      src={character.imageChatAvatar} 
+                      alt="チャットアバター"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <Image className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-xs text-gray-400">画像なし</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* ギャラリー画像 */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-500 mb-4">ギャラリー画像</h4>
+              {character.galleryImages && character.galleryImages.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {character.galleryImages.map((image, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                        <img 
+                          src={image.file} 
+                          alt={image.title || `ギャラリー画像 ${index + 1}`}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-gray-900 truncate">{image.title || '無題'}</p>
+                        <p className="text-xs text-gray-500 line-clamp-2">{image.description || '説明なし'}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Image className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500">ギャラリー画像は設定されていません</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
