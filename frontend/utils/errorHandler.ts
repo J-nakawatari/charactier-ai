@@ -87,6 +87,7 @@ export function parseApiError(response: Response, errorData?: any): ApiError {
             // 管理画面では何もしない（LocalStorageもクリアしない）
           } else {
             // 一般ユーザー画面でのみ強制ログアウト実行
+            // 管理者トークンは保護し、ユーザートークンのみクリア
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
             // ログインページにリダイレクト

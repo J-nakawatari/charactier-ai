@@ -23,7 +23,11 @@ export interface AuthState {
  * 認証ヘッダーを取得
  */
 export function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem('accessToken');
+  // 管理画面では専用のトークンキーを使用
+  const isAdminPage = typeof window !== 'undefined' && window.location.pathname.includes('/admin');
+  const tokenKey = isAdminPage ? 'adminAccessToken' : 'accessToken';
+  const token = localStorage.getItem(tokenKey);
+  
   if (token) {
     return {
       'Authorization': `Bearer ${token}`,
