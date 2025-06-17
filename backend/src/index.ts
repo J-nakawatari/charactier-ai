@@ -217,7 +217,7 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
           promptConfig: {
             affinityLevel: 50, // デフォルト親密度
             personalityTags: character.personalityTags || [],
-            toneStyle: 'friendly',
+            toneStyle: '時々タメ口を交えた親しみやすい口調', // デフォルト倴40-59レベル
             moodModifiers: [],
             languageCode: 'ja'
           },
