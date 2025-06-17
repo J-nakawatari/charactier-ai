@@ -5227,7 +5227,19 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
       
       character.totalRevenue = revenueStats[0]?.total || 0;
 
-      await character.save();
+      // 統計フィールドのみを更新（他のフィールドは変更しない）
+      await CharacterModel.updateOne(
+        { _id: character._id },
+        {
+          $set: {
+            totalMessages: character.totalMessages,
+            totalUsers: character.totalUsers,
+            averageAffinityLevel: character.averageAffinityLevel,
+            totalRevenue: character.totalRevenue
+          }
+        }
+      );
+      
       updatedCount++;
       totalMessagesCount += totalMessages;
 
