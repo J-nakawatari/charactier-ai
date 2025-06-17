@@ -1328,10 +1328,22 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
       content: msg.content
     })) || [];
 
+    // 事前トークン残高チェック（最小限必要量）
+    const minimumTokensRequired = 150; // 基本的なメッセージに必要な最小トークン
+    if (userTokenBalance < minimumTokensRequired) {
+      res.status(402).json({ 
+        error: 'Insufficient tokens',
+        message: 'トークンが不足しています。トークンパックを購入してください。',
+        tokensNeeded: minimumTokensRequired,
+        currentBalance: userTokenBalance
+      });
+      return;
+    }
+
     // 🚀 プロンプトキャッシュ対応AI応答を生成
     const aiResponse = await generateChatResponse(characterId, message, conversationHistory, req.user._id);
     
-    // トークン消費量の確認
+    // 正確なトークン消費量の確認
     if (userTokenBalance < aiResponse.tokensUsed) {
       res.status(402).json({ 
         error: 'Insufficient tokens',
@@ -1457,8 +1469,10 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
             {
               $inc: { 'affinities.$.level': affinityIncrease },
               $set: { 
-                'affinities.$.lastInteraction': new Date(),
-                'affinities.$.totalMessages': { $inc: 1 }
+                'affinities.$.lastInteraction': new Date()
+              },
+              $inc: {
+                'affinities.$.totalMessages': 1
               }
             },
             { new: true }
