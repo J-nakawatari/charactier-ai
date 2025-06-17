@@ -331,7 +331,7 @@ export default function SettingsPage() {
                                 placeholder="ユーザー名を入力"
                               />
                             ) : (
-                              <div className="pl-10 w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900">
+                              <div className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800 font-medium">
                                 {userData?.name || 'ユーザー名が設定されていません'}
                               </div>
                             )}
@@ -354,7 +354,7 @@ export default function SettingsPage() {
                                 placeholder="メールアドレスを入力"
                               />
                             ) : (
-                              <div className="pl-10 w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900">
+                              <div className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800 font-medium">
                                 {userData?.email || 'メールアドレスが設定されていません'}
                               </div>
                             )}
