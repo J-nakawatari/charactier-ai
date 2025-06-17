@@ -308,15 +308,6 @@ export default function CharacterLibraryPage() {
             </div>
           </div>
           
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              {viewMode === 'grid' ? <List className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
-              <span className="hidden sm:inline">{viewMode === 'grid' ? 'リスト' : 'グリッド'}</span>
-            </button>
-          </div>
         </div>
       </header>
 
@@ -517,6 +508,15 @@ export default function CharacterLibraryPage() {
                       <p className="text-sm text-gray-500 mt-1">
                         親密度を上げると解放される{lockedImages.length}枚の画像
                       </p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                        className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+                      >
+                        {viewMode === 'grid' ? <List className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
+                        <span className="hidden sm:inline">{viewMode === 'grid' ? 'リスト' : 'グリッド'}</span>
+                      </button>
                     </div>
                   </div>
 
