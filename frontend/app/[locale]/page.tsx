@@ -73,7 +73,10 @@ export default function HomePage() {
     
     if (!video1 || !video2) return;
     
-    // Simple video setup - just play the first video
+    let currentIndex = 0;
+    let isVideo1Active = true;
+    
+    // Initialize first video
     video1.src = videoSources[0];
     video1.style.opacity = '1';
     video1.style.zIndex = '1';
@@ -82,11 +85,74 @@ export default function HomePage() {
       // Ignore play errors
     });
     
-    // Don't do switching for now - just show first video
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted, isMobile]); // Add dependencies
+    const switchVideo = () => {
+      currentIndex = (currentIndex + 1) % videoSources.length;
+      
+      if (isVideo1Active) {
+        // Switch to video2
+        video2.src = videoSources[currentIndex];
+        video2.style.zIndex = '2';
+        video2.load();
+        video2.play().catch(() => {});
+        
+        // Fade transition
+        setTimeout(() => {
+          video2.style.opacity = '1';
+          video1.style.opacity = '0';
+        }, 100);
+        
+        isVideo1Active = false;
+      } else {
+        // Switch to video1
+        video1.src = videoSources[currentIndex];
+        video1.style.zIndex = '2';
+        video1.load();
+        video1.play().catch(() => {});
+        
+        // Fade transition
+        setTimeout(() => {
+          video1.style.opacity = '1';
+          video2.style.opacity = '0';
+        }, 100);
+        
+        isVideo1Active = true;
+      }
+    };
+    
+    // Set up video switching interval (6 seconds)
+    const interval = setInterval(switchVideo, 6000);
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, [mounted, isMobile, videoSources]);
 
-  // Mobile uses static image - no switching needed
+  // Mobile image switching effect
+  useEffect(() => {
+    if (!mounted || !isMobile) return;
+    
+    let currentIndex = 0;
+    
+    const switchImage = () => {
+      currentIndex = (currentIndex + 1) % fallbackImages.length;
+      const heroImage = document.getElementById('hero-image') as HTMLImageElement;
+      
+      if (heroImage) {
+        heroImage.style.opacity = '0';
+        setTimeout(() => {
+          heroImage.src = fallbackImages[currentIndex];
+          heroImage.style.opacity = '1';
+        }, 1000);
+      }
+    };
+    
+    // Set up image switching interval (6 seconds)
+    const interval = setInterval(switchImage, 6000);
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, [mounted, isMobile, fallbackImages]);
   
   // Chat bubble animation
   useEffect(() => {
