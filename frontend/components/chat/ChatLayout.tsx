@@ -316,6 +316,10 @@ export function ChatLayout({
         errorMessage: validation.errorMessage || 'なし'
       });
       
+      // フロントエンドの禁止用語チェックは一時的に無効化
+      // バックエンドの制裁システムをテストするため
+      console.log('⚠️ フロントエンド禁止用語チェックを一時的にスキップ（バックエンドテスト用）');
+      
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('送信時刻:', new Date().toLocaleString('ja-JP'));
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
