@@ -232,11 +232,11 @@ export default function CharacterDetail() {
                     <div className="space-y-2">
                       <div>
                         <span className="text-xs text-gray-400">日本語:</span>
-                        <p className="text-gray-900 font-medium">{character.name?.ja || '未設定'}</p>
+                        <p className="text-gray-900 font-medium">{typeof character.name === 'string' ? character.name : (character.name?.ja || '未設定')}</p>
                       </div>
                       <div>
                         <span className="text-xs text-gray-400">英語:</span>
-                        <p className="text-gray-900 font-medium">{character.name?.en || '未設定'}</p>
+                        <p className="text-gray-900 font-medium">{typeof character.name === 'string' ? '-' : (character.name?.en || '未設定')}</p>
                       </div>
                     </div>
                   </div>
