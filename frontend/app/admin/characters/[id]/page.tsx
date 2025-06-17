@@ -85,7 +85,10 @@ export default function CharacterDetail() {
         console.log('🔍 Character name:', data.character?.name || data.name);
         console.log('🔍 Gallery images:', data.character?.galleryImages || data.galleryImages);
         console.log('🔍 First gallery image:', (data.character?.galleryImages || data.galleryImages)?.[0]);
-        setCharacter(data.character || data);
+        const characterData = data.character || data;
+        console.log('🔍 Stats - totalChats:', characterData.totalChats, 'avgIntimacy:', characterData.avgIntimacy);
+        console.log('🔍 All character keys:', Object.keys(characterData));
+        setCharacter(characterData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'キャラクターデータの読み込みに失敗しました');
         console.error('Character fetch error:', err);
