@@ -1553,8 +1553,8 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
               messages: { $each: [userMsg, assistantMsg] }
             },
             $inc: { 
-              totalTokensUsed: aiResponse.tokensUsed,
-              currentAffinity: 3 // メッセージごとに3ポイント増加（テスト用に増量）
+              totalTokensUsed: aiResponse.tokensUsed
+              // currentAffinityの更新を削除（UserModelで一元管理）
             },
             $set: { lastActivityAt: new Date() }
           },
@@ -1565,8 +1565,19 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         );
 
         const affinityIncrease = 3; // 固定で3ポイント増加（テスト用に増量）
-        const previousAffinity = Math.max(0, (updatedChat.currentAffinity || 0) - affinityIncrease);
-        const newAffinity = Math.min(100, updatedChat.currentAffinity);
+        
+        // UserModelから現在の親密度を取得（ChatModelではなくUserModelが正確な値）
+        const userAffinityData = await UserModel.findOne({
+          _id: req.user._id,
+          'affinities.character': characterId 
+        });
+        
+        const currentUserAffinity = userAffinityData?.affinities?.find(
+          (aff: any) => aff.character.toString() === characterId
+        )?.level || 0;
+        
+        const previousAffinity = currentUserAffinity;
+        const newAffinity = Math.min(100, currentUserAffinity + affinityIncrease);
 
         // UserModelの親密度データも更新
         try {
