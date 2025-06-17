@@ -33,9 +33,11 @@ interface Character {
   imageChatBackground?: string;
   imageChatAvatar?: string;
   galleryImages?: Array<{
-    file: string;
+    url: string;
+    unlockLevel: number;
     title: string | { ja: string; en: string };
     description: string | { ja: string; en: string };
+    rarity?: string;
   }>;
   adminPrompt?: { ja: string; en: string };
   defaultMessage?: { ja: string; en: string };
@@ -583,9 +585,9 @@ export default function CharacterDetail() {
                   {character.galleryImages.map((image, index) => (
                     <div key={index} className="space-y-2">
                       <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                        {image && image.file ? (
+                        {image && image.url ? (
                           <img 
-                            src={image.file.startsWith('http') ? image.file : `${API_BASE_URL}${image.file}`} 
+                            src={image.url.startsWith('http') ? image.url : `${API_BASE_URL}${image.url}`} 
                             alt={typeof image.title === 'string' ? image.title : (image.title?.ja || `ギャラリー画像 ${index + 1}`)}
                             className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
                           />
@@ -603,6 +605,18 @@ export default function CharacterDetail() {
                           <p className="text-xs text-gray-500 line-clamp-2">
                             {typeof image.description === 'string' ? image.description : (image.description?.ja || '説明なし')}
                           </p>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-xs text-gray-400">Lv.{image.unlockLevel || 0}</span>
+                            {image.rarity && (
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                image.rarity === 'rare' ? 'bg-purple-100 text-purple-700' :
+                                image.rarity === 'epic' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-gray-100 text-gray-700'
+                              }`}>
+                                {image.rarity}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
