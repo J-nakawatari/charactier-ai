@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { API_BASE_URL } from '@/lib/api-config';
-import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare, CreditCard } from 'lucide-react';
+import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare, CreditCard, Settings, Brain, Image, Tag } from 'lucide-react';
 
 // Inline type definitions
 interface Character {
@@ -323,6 +323,132 @@ export default function CharacterDetail() {
                   <p className="text-2xl font-bold text-green-700">
                     {character.isFree ? '無料' : `¥${character.price?.toLocaleString() || '0'}`}
                   </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 設定情報セクション */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* 技術設定 */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center space-x-3 mb-6">
+                <Settings className="w-6 h-6 text-gray-400" />
+                <h3 className="text-xl font-bold text-gray-900">技術設定</h3>
+              </div>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                  <span className="text-sm text-gray-500">AIモデル</span>
+                  <span className="text-sm font-medium text-gray-900">{character.aiModel || character.model || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                  <span className="text-sm text-gray-500">アクセスタイプ</span>
+                  <span className="text-sm font-medium text-gray-900">{character.characterAccessType || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                  <span className="text-sm text-gray-500">Stripe価格ID</span>
+                  <span className="text-sm font-medium text-gray-900 truncate">{character.stripePriceId || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center py-3">
+                  <span className="text-sm text-gray-500">作成日時</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {character.createdAt ? new Date(character.createdAt).toLocaleDateString('ja-JP') : 'N/A'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 性格タグ */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center space-x-3 mb-6">
+                <Tag className="w-6 h-6 text-gray-400" />
+                <h3 className="text-xl font-bold text-gray-900">性格タグ</h3>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-500 mb-3">性格プリセット</p>
+                  <span className="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full">
+                    {character.personalityPreset || 'N/A'}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-3">特徴タグ</p>
+                  <div className="flex flex-wrap gap-2">
+                    {character.traits && character.traits.length > 0 ? (
+                      character.traits.map((trait, index) => (
+                        <span key={index} className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
+                          {trait}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-400">設定なし</span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-3">性格タグ</p>
+                  <div className="flex flex-wrap gap-2">
+                    {character.personalityTags && character.personalityTags.length > 0 ? (
+                      character.personalityTags.map((tag, index) => (
+                        <span key={index} className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                          {tag}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-400">設定なし</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* プロンプト設定セクション */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center space-x-3 mb-6">
+              <Brain className="w-6 h-6 text-gray-400" />
+              <h3 className="text-xl font-bold text-gray-900">AIプロンプト設定</h3>
+            </div>
+            <div className="space-y-6">
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-3">管理者プロンプト</h4>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <span className="text-xs text-gray-400 block mb-2">日本語</span>
+                    <p className="text-sm text-gray-900 whitespace-pre-wrap">{character.adminPrompt?.ja || 'N/A'}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <span className="text-xs text-gray-400 block mb-2">英語</span>
+                    <p className="text-sm text-gray-900 whitespace-pre-wrap">{character.adminPrompt?.en || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-3">デフォルトメッセージ</h4>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <span className="text-xs text-gray-400 block mb-2">日本語</span>
+                    <p className="text-sm text-gray-900">{character.defaultMessage?.ja || 'N/A'}</p>
+                  </div>
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <span className="text-xs text-gray-400 block mb-2">英語</span>
+                    <p className="text-sm text-gray-900">{character.defaultMessage?.en || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-3">制限時メッセージ</h4>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="p-4 bg-red-50 rounded-lg">
+                    <span className="text-xs text-gray-400 block mb-2">日本語</span>
+                    <p className="text-sm text-gray-900">{character.limitMessage?.ja || 'N/A'}</p>
+                  </div>
+                  <div className="p-4 bg-red-50 rounded-lg">
+                    <span className="text-xs text-gray-400 block mb-2">英語</span>
+                    <p className="text-sm text-gray-900">{character.limitMessage?.en || 'N/A'}</p>
+                  </div>
                 </div>
               </div>
             </div>
