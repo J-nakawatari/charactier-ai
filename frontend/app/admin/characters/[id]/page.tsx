@@ -291,11 +291,19 @@ export default function CharacterDetailPage() {
               <div className="flex items-center space-x-4">
                 <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-2xl font-medium">
-                    {(typeof character.name === 'string' ? character.name : (character.name?.ja || '未設定')).charAt(0)}
+                    {(() => {
+                      const displayName = typeof character.name === 'string' ? character.name : (character.name?.ja || '未設定');
+                      console.log('🔍 Display name for charAt:', displayName, typeof displayName);
+                      return displayName.charAt(0);
+                    })()}
                   </span>
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">{typeof character.name === 'string' ? character.name : (character.name?.ja || '未設定')}</h2>
+                  <h2 className="text-3xl font-bold text-gray-900">{(() => {
+                    const titleName = typeof character.name === 'string' ? character.name : (character.name?.ja || '未設定');
+                    console.log('🔍 Title name:', titleName, typeof titleName);
+                    return titleName;
+                  })()}</h2>
                   <p className="text-lg text-gray-600 mt-1">{character.personalityType}</p>
                   <div className="mt-3">
                     {getStatusBadge(character.isActive, character.isFree)}
@@ -408,11 +416,19 @@ export default function CharacterDetailPage() {
                     <div className="space-y-2">
                       <div>
                         <span className="text-xs text-gray-400">日本語:</span>
-                        <p className="text-gray-900 font-medium">{character.name?.ja || '未設定'}</p>
+                        <p className="text-gray-900 font-medium">{(() => {
+                          const nameJa = character.name?.ja || '未設定';
+                          console.log('🔍 Name JA:', nameJa, typeof nameJa);
+                          return nameJa;
+                        })()}</p>
                       </div>
                       <div>
                         <span className="text-xs text-gray-400">英語:</span>
-                        <p className="text-gray-900 font-medium">{character.name?.en || '未設定'}</p>
+                        <p className="text-gray-900 font-medium">{(() => {
+                          const nameEn = character.name?.en || '未設定';
+                          console.log('🔍 Name EN:', nameEn, typeof nameEn);
+                          return nameEn;
+                        })()}</p>
                       </div>
                     </div>
                   </div>
