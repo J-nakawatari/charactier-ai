@@ -110,8 +110,10 @@ export default function CharacterLibraryPage() {
             
             // ユーザーの親密度データを抽出
             const realAffinities: Record<string, number> = {};
-            if (userData.user?.affinities) {
-              userData.user.affinities.forEach((affinity: any) => {
+            // userData.affinities または userData.user.affinities の両方をチェック
+            const affinitiesData = userData.affinities || userData.user?.affinities;
+            if (affinitiesData && Array.isArray(affinitiesData)) {
+              affinitiesData.forEach((affinity: any) => {
                 realAffinities[affinity.character] = affinity.level || 0;
                 console.log('❤️ Library - キャラクター親密度:', {
                   characterId: affinity.character,
