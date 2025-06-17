@@ -361,8 +361,8 @@ export default function HomePage() {
           <h1 
             className={`${orbitron.className} text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold mb-6`}
             style={{
-              color: '#F4B3C2',
-              textShadow: '0 0 20px rgba(244, 179, 194, 0.5), 0 0 40px rgba(244, 179, 194, 0.3)'
+              color: '#E95295',
+              textShadow: '0 0 20px rgba(233, 82, 149, 0.5), 0 0 40px rgba(233, 82, 149, 0.3)'
             }}
           >
             {t('mainTitle')}
@@ -387,7 +387,7 @@ export default function HomePage() {
             onClick={() => router.push(`/${locale}/login`)}
             className="flex items-center justify-center gap-3 text-white font-bold py-3 md:py-4 px-6 rounded-lg text-base md:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl mb-6 mx-auto w-full max-w-xs"
             style={{
-              backgroundColor: '#F4B3C2',
+              backgroundColor: '#E95295',
               borderRadius: '8px'
             }}
           >
@@ -406,7 +406,7 @@ export default function HomePage() {
             <button
               onClick={() => router.push(`/${locale}/register`)}
               className="text-base md:text-lg font-bold mb-1 hover:opacity-80 transition-colors underline cursor-pointer"
-              style={{ color: '#F4B3C2' }}
+              style={{ color: '#E95295' }}
             >
               {t('newUserPromo')}
             </button>
@@ -414,7 +414,7 @@ export default function HomePage() {
               <div 
                 className="px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm md:text-base font-semibold"
                 style={{ 
-                  color: '#F4B3C2',
+                  color: '#E95295',
                   backgroundColor: 'rgba(255, 255, 255, 0.2)',
                   backdropFilter: 'blur(4px)'
                 }}

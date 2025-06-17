@@ -297,7 +297,7 @@ export default function RegisterPage() {
             {/* Title */}
             <h1 
               className={`${orbitron.className} text-center text-2xl md:text-3xl font-bold mb-4`}
-              style={{ color: '#F4B3C2' }}
+              style={{ color: '#E95295' }}
             >
               {t('title')}
             </h1>
@@ -305,7 +305,7 @@ export default function RegisterPage() {
             {/* Subtitle */}
             <p 
               className="text-center text-sm mb-6 font-medium"
-              style={{ color: '#F4B3C2' }}
+              style={{ color: '#E95295' }}
             >
               {t('subtitle')}
             </p>
@@ -335,14 +335,14 @@ export default function RegisterPage() {
                   }`}
                 />
                 {fieldErrors.email && (
-                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#F4B3C2' }}>
+                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E95295' }}>
                     <p className="text-white text-sm font-medium">{fieldErrors.email}</p>
                     <div 
                       className="absolute left-4 -top-2 w-0 h-0"
                       style={{
                         borderLeft: '8px solid transparent',
                         borderRight: '8px solid transparent',
-                        borderBottom: '8px solid #F4B3C2'
+                        borderBottom: '8px solid #E95295'
                       }}
                     />
                   </div>
@@ -365,14 +365,14 @@ export default function RegisterPage() {
                   }`}
                 />
                 {fieldErrors.password && (
-                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#F4B3C2' }}>
+                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E95295' }}>
                     <p className="text-white text-sm font-medium">{fieldErrors.password}</p>
                     <div 
                       className="absolute left-4 -top-2 w-0 h-0"
                       style={{
                         borderLeft: '8px solid transparent',
                         borderRight: '8px solid transparent',
-                        borderBottom: '8px solid #F4B3C2'
+                        borderBottom: '8px solid #E95295'
                       }}
                     />
                   </div>
@@ -395,14 +395,14 @@ export default function RegisterPage() {
                   }`}
                 />
                 {fieldErrors.confirmPassword && (
-                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#F4B3C2' }}>
+                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E95295' }}>
                     <p className="text-white text-sm font-medium">{fieldErrors.confirmPassword}</p>
                     <div 
                       className="absolute left-4 -top-2 w-0 h-0"
                       style={{
                         borderLeft: '8px solid transparent',
                         borderRight: '8px solid transparent',
-                        borderBottom: '8px solid #F4B3C2'
+                        borderBottom: '8px solid #E95295'
                       }}
                     />
                   </div>
@@ -416,7 +416,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   className="underline hover:opacity-80 transition-colors"
-                  style={{ color: '#F4B3C2' }}
+                  style={{ color: '#E95295' }}
                   onClick={() => {
                     // TODO: 利用規約・プライバシーポリシーページを開く
                     console.log('利用規約・プライバシーポリシーを開く');
@@ -432,7 +432,7 @@ export default function RegisterPage() {
                 type="submit"
                 disabled={isLoading}
                 className="w-full py-3 px-4 rounded-lg text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-6"
-                style={{ backgroundColor: '#F4B3C2' }}
+                style={{ backgroundColor: '#E95295' }}
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
@@ -453,7 +453,7 @@ export default function RegisterPage() {
               <button
                 onClick={() => router.push(`/${locale}/login`)}
                 className="ml-1 font-bold text-sm hover:opacity-80 transition-colors"
-                style={{ color: '#F4B3C2' }}
+                style={{ color: '#E95295' }}
               >
                 {t('login')}
               </button>

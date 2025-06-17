@@ -251,7 +251,7 @@ export default function LoginPage() {
             {/* Title */}
             <h1 
               className={`${orbitron.className} text-center text-2xl md:text-3xl font-bold mb-8`}
-              style={{ color: '#F4B3C2' }}
+              style={{ color: '#E95295' }}
             >
               {t('title')}
             </h1>
@@ -300,7 +300,7 @@ export default function LoginPage() {
                 type="submit"
                 disabled={isLoading}
                 className="w-full py-3 px-4 rounded-lg text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                style={{ backgroundColor: '#F4B3C2' }}
+                style={{ backgroundColor: '#E95295' }}
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
@@ -321,7 +321,7 @@ export default function LoginPage() {
               <button
                 onClick={() => router.push(`/${locale}/register`)}
                 className="ml-1 font-bold text-sm hover:opacity-80 transition-colors"
-                style={{ color: '#F4B3C2' }}
+                style={{ color: '#E95295' }}
               >
                 {t('register')}
               </button>
