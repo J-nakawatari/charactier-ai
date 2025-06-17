@@ -108,7 +108,6 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
   // 🔧 プロンプトキャッシュシステムの実装
   if (userId && isMongoConnected) {
     try {
-      console.log('🔍 Checking CharacterPromptCache...');
       
       // キャッシュ検索（親密度レベル±5で検索）
       const baseAffinityLevel = 50; // デフォルト親密度（実際のユーザー親密度に後で置き換え）
@@ -177,11 +176,9 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
 現在このキャラクターのムードは「${affinity.emotionalState}」です。
 ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
             
-            console.log(`🎭 Mood applied to system prompt: ${affinity.emotionalState}`);
           }
         }
       } catch (moodError) {
-        console.error('❌ Failed to apply mood to system prompt:', moodError);
       }
     }
     
@@ -236,10 +233,6 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
         });
         
         await newCache.save();
-        console.log('💾 New prompt cached:', {
-          promptLength: systemPrompt.length,
-          generationTime: generationTime
-        });
         
       } catch (saveError) {
         // キャッシュ保存エラーは無視して続行
@@ -335,34 +328,27 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     
     if (!stripe || !webhookSecret) {
-      console.error('❌ Stripe or webhook secret not configured');
       res.status(500).json({ error: 'Stripe not configured' });
       return;
     }
     
-    console.log('🔥 Stripe signature verification');
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    console.log('✅ Stripe signature verified');
 
     // Handle different event types
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log('💳 チェックアウトセッション完了:', session.id);
-        console.log('🔥 新しいwebhook処理が実行されています！');
         
         const userId = session.metadata?.userId;
         const purchaseAmountYen = session.amount_total;
         const sessionId = session.id;
         
         if (!userId || !purchaseAmountYen) {
-          console.error('❌ 必要な購入データが不足:', { userId, purchaseAmountYen });
           break;
         }
         
         // 価格IDから購入タイプを判別
         if (!stripe) {
-          console.error('❌ Stripe not initialized');
           break;
         }
         
@@ -371,17 +357,11 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
         });
         
         if (!fullSession.line_items?.data?.[0]?.price?.id) {
-          console.error('❌ 価格ID取得失敗');
           break;
         }
         
         const priceId = fullSession.line_items.data[0].price.id;
         
-        console.log('🔍 決済詳細:', {
-          sessionId: sessionId,
-          priceId: priceId,
-          amount: purchaseAmountYen
-        });
         
         // 価格IDからキャラクター購入かトークン購入かを判別
         const character = await CharacterModel.findOne({ stripeProductId: priceId });
@@ -390,28 +370,23 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
         if (character) {
           purchaseType = 'character';
           characterId = character._id;
-          console.log(`🎭 キャラクター購入検出: ${character.name.ja || character.name.en}`);
         } else {
           purchaseType = 'token';
-          console.log('🎁 トークン購入検出');
         }
         
         if (purchaseType === 'character' && character && characterId) {
           // キャラクター購入処理
-          console.log(`🎭 キャラクター購入処理開始: ${characterId}`);
           
           try {
             // ユーザーの購入済みキャラクターに追加
             const user = await UserModel.findById(userId);
             if (!user) {
-              console.error('❌ ユーザーが見つかりません:', userId);
               break;
             }
             
             if (!user.purchasedCharacters.includes(characterId)) {
               user.purchasedCharacters.push(characterId);
               await user.save();
-              console.log('✅ キャラクター購入完了:', character.name.ja || character.name.en);
             }
             
             // キャラクター購入履歴を記録
@@ -439,12 +414,6 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
               }
             });
             
-            console.log('✅ キャラクター購入履歴記録成功:', {
-              recordId: purchaseRecord._id,
-              userId: userId,
-              type: 'character',
-              characterName: character.name.ja || character.name.en
-            });
             
             // SSE用キャラクター購入完了データをRedisに保存
             try {
@@ -460,18 +429,14 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
               
               // SSE用データを保存（60秒で自動削除）
               await redis.set(`purchase:${sessionId}`, JSON.stringify(purchaseCompleteData), { EX: 60 });
-              console.log('✅ SSE用キャラクター購入完了データ保存:', sessionId);
             } catch (sseError) {
-              console.error('⚠️ SSE用データ保存失敗:', sseError);
             }
             
           } catch (error) {
-            console.error('❌ キャラクター購入処理エラー:', error);
           }
           
         } else {
           // トークン購入処理（従来の処理）
-          console.log('🎁 トークン付与処理...');
           
           // 現在の使用モデルを取得（環境変数 or デフォルト）
           const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
@@ -480,7 +445,6 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
           const grantResult = await TokenService.grantTokens(userId, sessionId, purchaseAmountYen, currentModel);
         
           if (grantResult.success) {
-            console.log('✅ トークン付与完了:', grantResult.tokensGranted);
             
             // 🎭 購入金額に基づいてGIFTムードトリガーを適用
             if (purchaseAmountYen >= 500) {
@@ -492,16 +456,13 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
                     user.selectedCharacter.toString(),
                     { kind: 'GIFT', value: purchaseAmountYen }
                   );
-                  console.log('🎭 GIFT ムードトリガー適用完了');
                 }
               } catch (moodError) {
-                console.error('⚠️ ムードトリガー適用失敗:', moodError);
               }
             }
             
             // 📝 購入履歴をデータベースに記録
             try {
-              console.log('📝 購入履歴記録処理開始...');
               
               const purchaseRecord = await PurchaseHistoryModel.createFromStripeSession({
                 userId: new mongoose.Types.ObjectId(userId),
@@ -528,21 +489,8 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
                 }
               });
               
-              console.log('✅ 購入履歴記録成功:', {
-                recordId: purchaseRecord._id,
-                userId: userId,
-                type: 'token',
-                amount: grantResult.tokensGranted,
-                price: purchaseAmountYen
-              });
               
             } catch (purchaseHistoryError) {
-              console.error('⚠️ 購入履歴記録エラー（トークン付与は成功）:', purchaseHistoryError);
-              console.error('🔍 購入履歴エラー詳細:', {
-                userId: userId,
-                sessionId: sessionId,
-                error: purchaseHistoryError instanceof Error ? purchaseHistoryError.message : String(purchaseHistoryError)
-              });
             }
 
             // SSE用購入完了データをRedis/メモリに保存
@@ -559,9 +507,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
               
               // SSE用データを保存（60秒で自動削除）
               await redis.set(`purchase:${sessionId}`, JSON.stringify(purchaseCompleteData), { EX: 60 });
-              console.log('✅ SSE用購入完了データ保存:', sessionId);
             } catch (sseError) {
-              console.error('⚠️ SSE用データ保存失敗:', sseError);
             }
           }
         }
@@ -569,17 +515,11 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
       }
       
       default:
-        console.log(`⚠️ 未処理のWebhookイベント: ${event.type}`);
     }
 
     res.status(200).json({ received: true });
     
   } catch (error) {
-    console.error('❌ Webhook処理エラー:', error);
-    console.error('❌ エラー詳細:', {
-      message: (error as Error).message,
-      stack: (error as Error).stack
-    });
     res.status(400).json({ error: 'Webhook processing failed' });
   }
 });
@@ -608,20 +548,6 @@ routeRegistry.mount('/api/admin/token-packs', adminTokenPacksRoutes);
 routeRegistry.mount('/api/admin/token-usage', adminTokenUsageRoutes);
 routeRegistry.mount('/api/admin/security', adminSecurityRoutes);
 
-// デバッグ: 登録されたルートを出力
-console.log('🔧 Registered admin routes:');
-console.log('  GET /api/admin/models');
-console.log('  GET /api/admin/models/current');
-console.log('  POST /api/admin/models/set-model');
-console.log('  POST /api/admin/models/simulate');
-console.log('  GET /admin/users');
-console.log('  POST /admin/users/:userId/reset-tokens');
-console.log('  PUT /admin/users/:userId/status');
-console.log('  GET /api/admin/token-packs');
-console.log('  POST /api/admin/token-packs');
-console.log('  GET /api/admin/token-usage');
-console.log('  GET /api/admin/token-usage/daily-stats');
-console.log('  GET /api/admin/stats');
 
 // 静的ファイル配信（アップロードされた画像）
 app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {
@@ -690,19 +616,14 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
       .select('characterId lastActivityAt messages');
 
     // デバッグログ：populateの結果を確認
-    console.log('🔍 Dashboard API - Recent Chats Raw:', JSON.stringify(recentChats, null, 2));
-    console.log('🔍 Dashboard API - First Chat characterId:', recentChats[0]?.characterId);
-    console.log('🔍 Dashboard API - First Chat characterId type:', typeof recentChats[0]?.characterId);
 
     // 親密度情報をフロントエンドが期待する形式に変換
     const affinities = await Promise.all((user.affinities || []).map(async (affinity: any) => {
       // キャラクターがpopulateされていない場合は手動で取得
       let character = affinity.character;
       if (!character || typeof character === 'string' || character instanceof mongoose.Types.ObjectId) {
-        console.log('⚠️ Affinity character not populated:', character);
         const characterDoc = await CharacterModel.findById(character).select('_id name imageCharacterSelect themeColor');
         if (!characterDoc) {
-          console.error('❌ Character not found for affinity:', character);
           return null;
         }
         character = characterDoc;
@@ -731,23 +652,15 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
     // recentChatsをフロントエンドが期待する形式に変換
     const formattedRecentChats = await Promise.all(recentChats.map(async (chat) => {
       // デバッグログ：各チャットのcharacterIdを確認
-      console.log('🔍 Formatting chat:', {
-        chatId: chat._id,
-        characterId: chat.characterId,
-        characterIdType: typeof chat.characterId,
-        isPopulated: chat.characterId && typeof chat.characterId === 'object'
-      });
 
       // populateが失敗した場合の処理
       let character: any = chat.characterId;
       if (typeof character === 'string' || character instanceof mongoose.Types.ObjectId) {
         // characterIdが文字列またはObjectIdの場合（populate失敗）、手動でCharacterを取得
-        console.log('⚠️ Populate failed for characterId:', character, '- Fetching manually');
         const characterDoc = await CharacterModel.findById(character).select('name imageCharacterSelect');
         if (characterDoc) {
           character = characterDoc;
         } else {
-          console.error('❌ Character not found:', character);
           // デフォルトのキャラクター情報を返す
           character = {
             _id: character.toString(),
@@ -770,14 +683,11 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
 
     // アナリティクスデータの生成（過去7日間）
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    console.log('🔍 Analytics: Fetching data from:', sevenDaysAgo.toISOString());
     
     // チャット統計（日別メッセージ数）
     // まず全チャットを確認
     const allChatsForDebug = await ChatModel.find({ userId }).select('messages').lean();
     const totalMessagesDebug = allChatsForDebug.reduce((sum, chat) => sum + (chat.messages?.length || 0), 0);
-    console.log('🔍 Debug - Total messages in all chats:', totalMessagesDebug);
-    console.log('🔍 Debug - Sample message timestamps:', 
       allChatsForDebug.slice(0, 2).map(chat => 
         chat.messages?.slice(0, 2).map(m => ({
           role: m.role,
@@ -788,7 +698,6 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
 
     // userIdの文字列変換を確認
     const userIdString = userId.toString();
-    console.log('🔍 Debug - userId types:', {
       original: userId,
       originalType: typeof userId,
       asObjectId: new mongoose.Types.ObjectId(userId),
@@ -816,7 +725,6 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
       },
       { $sort: { _id: 1 } }
     ]).catch((err) => {
-      console.error('❌ Chat aggregation error:', err);
       return [];
     });
 
@@ -837,7 +745,6 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
       },
       { $sort: { _id: 1 } }
     ]).catch((err) => {
-      console.error('❌ Token aggregation error:', err);
       return [];
     });
 
@@ -880,11 +787,9 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
         }
       }
     ]).catch((err) => {
-      console.error('❌ All-time chat aggregation error:', err);
       return [];
     });
 
-    console.log('📊 Analytics Data:', {
       chatStats: chatStats.length,
       chatStatsDetail: JSON.stringify(chatStats, null, 2),
       allTimeUserMessages: allTimeChatStats[0]?.totalCount || 0,
@@ -922,7 +827,6 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
     });
 
   } catch (error) {
-    console.error('Dashboard API error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -990,7 +894,6 @@ routeRegistry.define('GET', '/api/debug/analytics', authenticateToken, async (re
       sampleMessages: recentMessages.slice(0, 5)
     });
   } catch (error) {
-    console.error('Debug analytics error:', error);
     res.status(500).json({ error: error });
   }
 });
@@ -1039,7 +942,6 @@ routeRegistry.define('GET', '/api/user/profile', authenticateToken, async (req: 
     });
 
   } catch (error) {
-    console.error('Profile GET error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -1077,7 +979,6 @@ routeRegistry.define('PUT', '/api/user/profile', authenticateToken, async (req: 
       return;
     }
 
-    console.log('✅ Profile updated:', { id: updatedUser._id, name: updatedUser.name });
 
     res.json({
       success: true,
@@ -1092,7 +993,6 @@ routeRegistry.define('PUT', '/api/user/profile', authenticateToken, async (req: 
     });
 
   } catch (error) {
-    console.error('❌ Profile update error:', error);
     res.status(500).json({ error: 'Profile update failed' });
   }
 });
@@ -1149,7 +1049,6 @@ app.post('/api/user/setup-complete', authenticateToken, async (req: Request, res
       return;
     }
 
-    console.log('✅ Setup completed:', { 
       id: updatedUser._id, 
       name: updatedUser.name,
       selectedCharacter: selectedCharacterId 
@@ -1169,7 +1068,6 @@ app.post('/api/user/setup-complete', authenticateToken, async (req: Request, res
     });
 
   } catch (error) {
-    console.error('❌ Setup completion error:', error);
     res.status(500).json({ error: 'Setup completion failed' });
   }
 });
@@ -1182,7 +1080,6 @@ app.post('/api/user/setup-complete', authenticateToken, async (req: Request, res
 
 // User API endpoints
 app.get('/api/auth/user', authenticateToken, (req: Request, res: Response): void => {
-  console.log('👤 ユーザー情報取得');
   if (!req.user) {
     res.status(401).json({ msg: 'Unauthorized' });
     return;
@@ -1200,9 +1097,6 @@ app.get('/api/auth/user', authenticateToken, (req: Request, res: Response): void
 
 // Chat API endpoints
 app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  console.log('💬 Chat history API called');
-  console.log('🔍 Requested characterId:', req.params.characterId);
-  console.log('🔍 User ID:', req.user?._id);
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -1215,7 +1109,6 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
   try {
     // キャラクター情報を取得
     const character = await CharacterModel.findById(characterId);
-    console.log('🔍 Found character:', character ? { _id: character._id, name: character.name } : 'NOT FOUND');
     if (!character || !character.isActive) {
       res.status(404).json({ error: 'Character not found' });
       return;
@@ -1230,7 +1123,6 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
           userId: req.user._id, 
           characterId: characterId 
         });
-        console.log('🔍 Found chat data:', chatData ? { characterId: chatData.characterId, messagesCount: chatData.messages?.length } : 'NOT FOUND');
         
         if (!chatData) {
           // 初回アクセス時は新しいチャットセッションを作成
@@ -1252,12 +1144,9 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
           });
           
           await chatData.save();
-          console.log('💬 New chat session created for user:', req.user._id);
         } else {
-          console.log('💬 Existing chat session found with', chatData.messages.length, 'messages');
         }
       } catch (dbError) {
-        console.error('❌ MongoDB chat lookup failed:', dbError);
         // フォールバックでモックデータを作成
         chatData = null;
       }
@@ -1265,7 +1154,6 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
 
     // MongoDB が利用できない場合はエラー
     if (!chatData) {
-      console.error('❌ MongoDB unavailable and mock data disabled');
       res.status(500).json({ 
         error: 'Database connection required',
         message: 'チャット機能を利用するにはデータベース接続が必要です'
@@ -1284,7 +1172,6 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
     if (user.selectedCharacter !== characterId) {
       user.selectedCharacter = characterId;
       await user.save();
-      console.log('✅ Updated user selectedCharacter to:', characterId);
     }
 
     // キャラクター情報を多言語対応で返す
@@ -1319,7 +1206,6 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
       unlockedGalleryImages: characterAffinity?.unlockedRewards || []
     };
 
-    console.log('🔍 Sending response with character:', { _id: localizedCharacter._id, name: localizedCharacter.name });
     res.json({
       chat: {
         _id: chatData._id,
@@ -1330,13 +1216,11 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
     });
 
   } catch (error) {
-    console.error('❌ Chat history fetch error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  console.log('💬 Send message API called');
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -1370,7 +1254,6 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
 
     // ユーザーのトークン残高確認（MongoDB必須）
     if (!isMongoConnected) {
-      console.error('❌ MongoDB connection required for user data');
       res.status(500).json({ 
         error: 'Database connection required',
         message: 'ユーザーデータの取得にはデータベース接続が必要です'
@@ -1380,7 +1263,6 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
 
     const dbUser = await UserModel.findById(req.user._id);
     if (!dbUser) {
-      console.error('❌ User not found in database:', req.user._id);
       res.status(404).json({ 
         error: 'User not found',
         message: 'ユーザーが見つかりません'
@@ -1390,14 +1272,11 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
 
     const userTokenBalance = dbUser.tokenBalance;
 
-    console.log('💰 Current user token balance:', userTokenBalance);
 
     // 🔥 禁止用語フィルタリング（制裁状態に関係なく先に実行）
-    console.log('🔍 Content filtering check started');
     const { validateMessage: tsValidateMessage } = await import('./utils/contentFilter');
     const validation = tsValidateMessage(message.trim());
     if (!validation.allowed) {
-      console.log('🚫 Content violation detected:', validation.reason);
       
       try {
         // 1. 違反記録を作成
@@ -1414,7 +1293,6 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         // 2. 制裁を適用
         const sanction = await applySanction(new mongoose.Types.ObjectId(req.user._id));
         
-        console.log(`⚖️ 制裁適用完了: ${sanction.sanctionAction}, 違反回数: ${sanction.violationCount}`);
         
         res.status(403).json({
           error: validation.reason,
@@ -1429,7 +1307,6 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         return;
         
       } catch (sanctionError) {
-        console.error('❌ 制裁処理エラー:', sanctionError);
         // 制裁処理に失敗してもメッセージはブロック
         res.status(403).json({
           error: validation.reason,
@@ -1440,13 +1317,10 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         return;
       }
     }
-    console.log('✅ Content filtering passed');
 
     // 🔒 チャット権限チェック（禁止用語チェック後に実行）
-    console.log('🔍 Chat permission check started');
     const permissionCheck = checkChatPermission(dbUser);
     if (!permissionCheck.allowed) {
-      console.log('🚫 Chat permission denied:', permissionCheck.reason);
       res.status(403).json({
         error: permissionCheck.message,
         code: 'CHAT_PERMISSION_DENIED',
@@ -1454,7 +1328,6 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
       });
       return;
     }
-    console.log('✅ Chat permission granted');
 
     // 🚀 プロンプトキャッシュ対応AI応答を生成
     const aiResponse = await generateChatResponse(characterId, message, [], req.user._id);
@@ -1478,9 +1351,7 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         await UserModel.findByIdAndUpdate(req.user._id, {
           tokenBalance: newBalance
         });
-        console.log('💰 Token balance updated in MongoDB');
       } catch (updateError) {
-        console.error('❌ Failed to update token balance in MongoDB:', updateError);
       }
     }
 
@@ -1573,7 +1444,6 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         const currentLevel = Math.floor(currentUserAffinity / 10);
         const affinityIncrease = calculateAffinityIncrease(currentLevel);
         
-        console.log(`📊 Affinity calculation: Current level ${currentLevel}, Increase amount: ${affinityIncrease}`);
         
         const previousAffinity = currentUserAffinity;
         const newAffinity = Math.min(100, currentUserAffinity + affinityIncrease);
@@ -1630,15 +1500,11 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
               },
               { new: true }
             );
-            console.log('✅ Created new affinity data for character:', characterId);
           } else {
-            console.log('✅ Updated existing affinity data for character:', characterId);
           }
         } catch (affinityError) {
-          console.error('❌ Failed to update user affinity:', affinityError);
         }
 
-        console.log('✅ Chat messages saved to MongoDB:', {
           character: character.name.ja,
           tokensUsed: aiResponse.tokensUsed,
           newBalance,
@@ -1653,8 +1519,6 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           const previousLevel = Math.floor(previousAffinity / 10);
           const currentLevel = Math.floor(newAffinity / 10);
           
-          console.log(`🔍 Level check: previous affinity=${previousAffinity} (level ${previousLevel}), new affinity=${newAffinity} (level ${currentLevel})`);
-          console.log(`🔍 Level calculation details: previousAffinity=${previousAffinity} ÷ 10 = ${previousLevel}, newAffinity=${newAffinity} ÷ 10 = ${currentLevel}`);
           
           if (currentLevel > previousLevel) {
             // レベルアップが発生
@@ -1664,20 +1528,15 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
               unlockReward: `特別イラスト「レベル${currentLevel}記念」`
             };
             
-            console.log(`🎉 LEVEL UP DETECTED! ${previousLevel} → ${currentLevel}`);
-            console.log('🎉 Level up info:', levelUpInfo);
             
             await applyMoodTrigger(
               req.user._id.toString(),
               characterId,
               { kind: 'LEVEL_UP', newLevel: currentLevel }
             );
-            console.log(`📈 Level up mood trigger applied: level ${previousLevel} → ${currentLevel}`);
           } else {
-            console.log(`❌ No level up: current level ${currentLevel} not greater than previous level ${previousLevel}`);
           }
         } catch (levelUpMoodError) {
-          console.error('❌ Failed to apply level up mood trigger:', levelUpMoodError);
         }
 
         // 🎭 ネガティブ感情検出とムードトリガー適用
@@ -1701,16 +1560,13 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
                 characterId,
                 { kind: 'USER_SENTIMENT', sentiment: 'neg' }
               );
-              console.log('😞 Negative sentiment mood trigger applied');
             }
           }
         } catch (sentimentMoodError) {
-          console.error('❌ Failed to apply sentiment mood trigger:', sentimentMoodError);
         }
 
         // 🚀 詳細TokenUsage記録（仕様書に基づく高度トラッキング）
         try {
-          console.log('📊 Recording detailed TokenUsage tracking...');
           
           // API費用計算
           const model = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
@@ -1778,7 +1634,6 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           
           await tokenUsageRecord.save();
           
-          console.log('✅ Detailed TokenUsage recorded:', {
             tokensUsed: aiResponse.tokensUsed,
             apiCostYen: Math.round(apiCostYen * 100) / 100,
             profitMargin: Math.round(profitMargin * 100) / 100,
@@ -1789,7 +1644,6 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           });
           
         } catch (tokenUsageError) {
-          console.error('⚠️ Failed to record TokenUsage (non-critical):', tokenUsageError);
           // TokenUsage記録の失敗はチャット機能に影響させない
         }
 
@@ -1806,7 +1660,6 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         });
 
       } catch (dbError) {
-        console.error('❌ Failed to save chat messages to MongoDB:', dbError);
         
         // DB保存に失敗した場合はエラーを返す（MongoDB必須のため）
         res.status(500).json({ 
@@ -1817,7 +1670,6 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
       }
     } else {
       // MongoDB が利用できない場合はエラー
-      console.error('❌ MongoDB unavailable and mock data disabled');
       res.status(500).json({ 
         error: 'Database connection required',
         message: 'メッセージの保存にはデータベース接続が必要です'
@@ -1826,7 +1678,6 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
     }
 
   } catch (error) {
-    console.error('❌ Send message error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: 'メッセージの送信に失敗しました。しばらくしてから再度お試しください。'
@@ -1843,7 +1694,6 @@ app.get('/api/ping', (_req: Request, res: Response): void => {
 
 // Purchase History API
 app.get('/api/user/purchase-history', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  console.log('📋 Purchase History API called');
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -1918,11 +1768,9 @@ app.get('/api/user/purchase-history', authenticateToken, async (req: Request, re
       totalPurchases: summary.totalPurchases
     };
 
-    console.log(`✅ Purchase history retrieved: ${purchases.length} items`);
     res.json(response);
 
   } catch (error) {
-    console.error('🚨 Purchase history API error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: 'Failed to retrieve purchase history'
@@ -1933,7 +1781,6 @@ app.get('/api/user/purchase-history', authenticateToken, async (req: Request, re
 
 // Token Pack Management APIs
 app.get('/api/token-packs', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  console.log('📦 User Token Packs API called');
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -1947,7 +1794,6 @@ app.get('/api/token-packs', authenticateToken, async (req: Request, res: Respons
     
     if (isMongoConnected) {
       // MongoDB実装
-      console.log('🍃 Using MongoDB for user token packs', { isActive, limit });
       
       // ユーザー向けはアクティブなパックのみ表示
       const filter: any = { isActive };
@@ -1972,7 +1818,6 @@ app.get('/api/token-packs', authenticateToken, async (req: Request, res: Respons
         };
       });
 
-      console.log('✅ User Token Packs 取得完了:', {
         totalPacks: packsWithMetrics.length,
         activeFilter: isActive
       });
@@ -1983,12 +1828,10 @@ app.get('/api/token-packs', authenticateToken, async (req: Request, res: Respons
       });
       
     } else {
-      console.log('❌ MongoDB not connected for user token packs');
       res.status(500).json({ error: 'Database not connected' });
     }
     
   } catch (error) {
-    console.error('❌ User Token Packs取得エラー:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -2019,7 +1862,6 @@ const validateTokenPriceRatio = async (tokens: number, price: number): Promise<b
 
 // Stripe Price API endpoint
 app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  console.log('💳 Stripe Price 取得 API called:', { priceId: req.params.priceId });
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -2043,7 +1885,6 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
         throw new Error('Stripe が正しく初期化されていません');
       }
       
-      console.log('🔥 実際のStripe APIでPrice情報を取得します:', priceId);
       
       const price = await stripe.prices.retrieve(priceId, {
         expand: ['product']
@@ -2067,7 +1908,6 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
         priceInMainUnit = Math.floor(price.unit_amount / 100);
       }
       
-      console.log('💰 Stripe価格情報:', {
         unit_amount: price.unit_amount,
         currency: price.currency,
         converted_amount: priceInMainUnit
@@ -2082,7 +1922,6 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
       const tokenPerYen = await calcTokensToGive(1, currentModel); // 1円あたりのトークン数
       
       // デバッグログ追加
-      console.log('🔍 Token Calculation Debug:', {
         model: currentModel,
         priceInMainUnit,
         calculatedTokens,
@@ -2095,7 +1934,6 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
         ? price.product.name 
         : 'Unknown Product';
       
-      console.log('✅ 実際のStripe Price データ取得完了:', {
         priceId,
         amount: priceInMainUnit,
         currency: price.currency,
@@ -2124,7 +1962,6 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
     }
     
   } catch (error: any) {
-    console.error('❌ Stripe Price 取得エラー:', error);
     res.status(500).json({
       success: false,
       message: 'Price情報の取得に失敗しました',
@@ -2136,7 +1973,6 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
 
 // Stripe Checkout Session作成API
 app.post('/api/purchase/create-checkout-session', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  console.log('🛒 Checkout Session 作成 API called:', req.body);
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -2164,7 +2000,6 @@ app.post('/api/purchase/create-checkout-session', authenticateToken, async (req:
     
     {
       // 実際のStripe API呼び出し
-      console.log('🔥 実際のStripe APIでCheckout Session作成:', priceId);
       
       if (!stripe) {
         res.status(500).json({ error: 'Stripe not initialized' });
@@ -2188,7 +2023,6 @@ app.post('/api/purchase/create-checkout-session', authenticateToken, async (req:
         }
       });
       
-      console.log('✅ Stripe Checkout Session 作成完了:', {
         sessionId: session.id,
         url: session.url
       });
@@ -2201,7 +2035,6 @@ app.post('/api/purchase/create-checkout-session', authenticateToken, async (req:
     }
     
   } catch (error) {
-    console.error('❌ Checkout Session 作成エラー:', error);
     res.status(500).json({
       success: false,
       message: 'チェックアウトセッションの作成に失敗しました'
@@ -2211,7 +2044,6 @@ app.post('/api/purchase/create-checkout-session', authenticateToken, async (req:
 
 // キャラクター購入用チェックアウトセッション作成API
 app.post('/api/purchase/create-character-checkout-session', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  console.log('🛒 キャラクター購入 Checkout Session 作成 API called:', req.body);
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -2262,10 +2094,8 @@ app.post('/api/purchase/create-character-checkout-session', authenticateToken, a
     if (character.stripeProductId.startsWith('price_')) {
       // 価格IDが直接保存されている場合
       priceId = character.stripeProductId;
-      console.log('🏷️ 価格IDを直接使用:', priceId);
     } else if (character.stripeProductId.startsWith('prod_')) {
       // 商品IDから価格を取得する場合
-      console.log('📦 商品IDから価格取得:', character.stripeProductId);
       
       if (!stripe) {
         res.status(500).json({ error: 'Stripe not initialized' });
@@ -2294,7 +2124,6 @@ app.post('/api/purchase/create-character-checkout-session', authenticateToken, a
       return;
     }
     
-    console.log('🔥 実際のStripe APIでキャラクター購入Checkout Session作成:', {
       characterId,
       priceId,
       characterName: character.name.ja
@@ -2323,7 +2152,6 @@ app.post('/api/purchase/create-character-checkout-session', authenticateToken, a
       }
     });
     
-    console.log('✅ キャラクター購入 Stripe Checkout Session 作成完了:', {
       sessionId: session.id,
       url: session.url,
       characterName: character.name.ja
@@ -2336,8 +2164,6 @@ app.post('/api/purchase/create-character-checkout-session', authenticateToken, a
     });
     
   } catch (error) {
-    console.error('❌ キャラクター購入 Checkout Session 作成エラー:', error);
-    console.error('❌ エラー詳細:', {
       name: error instanceof Error ? error.name : 'Unknown',
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined
@@ -2352,7 +2178,6 @@ app.post('/api/purchase/create-character-checkout-session', authenticateToken, a
 
 // Stripe価格情報取得API（商品IDまたは価格IDに対応・管理者専用）
 app.get('/api/admin/stripe/product-price/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  console.log('🔍 Stripe価格取得 API called:', req.params.id);
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -2384,7 +2209,6 @@ app.get('/api/admin/stripe/product-price/:id', authenticateToken, async (req: Re
     
     if (id.startsWith('price_')) {
       // 価格IDが直接渡された場合
-      console.log('🏷️ 価格IDから直接取得:', id);
       
       if (!stripe) {
         res.status(500).json({ error: 'Stripe not initialized' });
@@ -2397,7 +2221,6 @@ app.get('/api/admin/stripe/product-price/:id', authenticateToken, async (req: Re
       
     } else if (id.startsWith('prod_')) {
       // 商品IDから価格を取得する場合
-      console.log('📦 商品IDから価格取得:', id);
       
       if (!stripe) {
         res.status(500).json({ error: 'Stripe not initialized' });
@@ -2429,7 +2252,6 @@ app.get('/api/admin/stripe/product-price/:id', authenticateToken, async (req: Re
       return;
     }
     
-    console.log('✅ Stripe価格取得成功:', {
       id,
       priceAmount,
       currency,
@@ -2443,7 +2265,6 @@ app.get('/api/admin/stripe/product-price/:id', authenticateToken, async (req: Re
     });
     
   } catch (error) {
-    console.error('❌ Stripe価格取得エラー:', error);
     res.status(500).json({
       success: false,
       message: '価格情報の取得に失敗しました'
@@ -2454,7 +2275,6 @@ app.get('/api/admin/stripe/product-price/:id', authenticateToken, async (req: Re
 
 // 開発用：Session IDを使って手動でトークンを付与するAPI
 app.post('/api/user/process-session', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  console.log('🔍 Session処理 API called:', req.body);
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -2510,7 +2330,6 @@ app.post('/api/user/process-session', authenticateToken, async (req: Request, re
           }
           await user.save();
           
-          console.log('✅ MongoDB: Manual token grant successful', {
             sessionId,
             tokensAdded: tokensToAdd,
             newBalance: user.tokenBalance
@@ -2541,7 +2360,6 @@ app.post('/api/user/process-session', authenticateToken, async (req: Request, re
       });
     }
   } catch (error) {
-    console.error('❌ Session processing error:', error);
     res.status(500).json({
       success: false,
       message: 'Session processing failed'
@@ -2551,7 +2369,6 @@ app.post('/api/user/process-session', authenticateToken, async (req: Request, re
 
 // ユーザートークン残高更新API
 app.post('/api/user/add-tokens', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  console.log('💰 ユーザートークン追加 API called:', req.body);
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -2571,7 +2388,6 @@ app.post('/api/user/add-tokens', authenticateToken, async (req: Request, res: Re
   try {
     if (isMongoConnected) {
       // MongoDB実装
-      console.log('🍃 Using MongoDB for user token update');
       
       // ユーザーを検索または作成
       let user = await UserModel.findById(req.user._id);
@@ -2591,7 +2407,6 @@ app.post('/api/user/add-tokens', authenticateToken, async (req: Request, res: Re
       
       await user.save();
       
-      console.log('✅ MongoDB User Token 更新完了:', {
         userId: user._id,
         newBalance: user.tokenBalance,
         addedTokens: tokens
@@ -2612,7 +2427,6 @@ app.post('/api/user/add-tokens', authenticateToken, async (req: Request, res: Re
     }
     
   } catch (error) {
-    console.error('❌ User Token 更新エラー:', error);
     res.status(500).json({
       success: false,
       message: 'トークン残高の更新に失敗しました'
@@ -2622,7 +2436,6 @@ app.post('/api/user/add-tokens', authenticateToken, async (req: Request, res: Re
 
 // 管理者用：ユーザー一覧取得
 app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
-  console.log('👥 管理者用ユーザー一覧 API called');
   
   if (!req.user || !(req.user as any).isAdmin) {
     res.status(401).json({ error: 'Admin access required' });
@@ -2636,7 +2449,6 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
   try {
     if (isMongoConnected) {
       // MongoDB実装
-      console.log('🍃 Using MongoDB for admin users list');
       
       const query: any = {
         isActive: { $ne: false } // 論理削除されたユーザーを除外
@@ -2670,7 +2482,6 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
         try {
           actualTokenBalance = await UserTokenPack.calculateUserTokenBalance(user._id);
         } catch (error) {
-          console.error('❌ Failed to calculate token balance for user:', user._id, error);
         }
         
         return {
@@ -2693,11 +2504,8 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
         };
       }));
       
-      console.log('✅ MongoDB Users retrieved:', formattedUsers.length);
-      console.log('🔍 Admin: First user token balance:', formattedUsers[0]?.tokenBalance);
 
       // トークン残高の集計をバックエンドで実行（表示対象ユーザーと同じフィルタを適用）
-      console.log('💰 Admin: Starting token aggregation with query:', query);
       const tokenSummary = await UserModel.aggregate([
         { $match: query }, // 表示対象と同じフィルタを適用
         { 
@@ -2709,7 +2517,6 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
           } 
         }
       ]);
-      console.log('💰 Admin: Token aggregation result:', tokenSummary[0]);
 
       const tokenStats = tokenSummary.length > 0 ? tokenSummary[0] : {
         totalTokenBalance: 0,
@@ -2740,7 +2547,6 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
     }
     
   } catch (error) {
-    console.error('❌ Admin Users List エラー:', error);
     res.status(500).json({
       error: 'ユーザー一覧の取得に失敗しました'
     });
@@ -2749,7 +2555,6 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
 
 // ⚠️ 管理者用：ユーザーのトークンをゼロにリセット（一時的機能）
 app.post('/admin/users/:userId/reset-tokens', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  console.log('🔥 管理者用トークンリセット API called:', req.params.userId);
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -2771,7 +2576,6 @@ app.post('/admin/users/:userId/reset-tokens', authenticateToken, async (req: Req
     
     if (isMongoConnected) {
       // MongoDB実装
-      console.log('🍃 Using MongoDB for token reset');
       
       const user = await UserModel.findById(userId);
       if (!user) {
@@ -2786,7 +2590,6 @@ app.post('/admin/users/:userId/reset-tokens', authenticateToken, async (req: Req
       user.tokenBalance = 0;
       await user.save();
       
-      console.log('✅ MongoDB User Token リセット完了:', {
         userId: user._id,
         previousBalance,
         newBalance: 0
@@ -2807,7 +2610,6 @@ app.post('/admin/users/:userId/reset-tokens', authenticateToken, async (req: Req
     });
     
   } catch (error) {
-    console.error('❌ Token Reset エラー:', error);
     res.status(500).json({
       success: false,
       message: 'トークンリセットに失敗しました'
@@ -2864,7 +2666,6 @@ routeRegistry.define('PUT', '/api/admin/users/:id/status', authenticateToken, as
       return;
     }
 
-    console.log('✅ User status updated:', { id, status, banReason });
 
     res.json({
       success: true,
@@ -2880,7 +2681,6 @@ routeRegistry.define('PUT', '/api/admin/users/:id/status', authenticateToken, as
     });
 
   } catch (error) {
-    console.error('❌ User status update error:', error);
     res.status(500).json({
       error: 'Server error',
       message: 'ユーザーステータスの更新に失敗しました'
@@ -2918,23 +2718,19 @@ routeRegistry.define('DELETE', '/api/admin/users/:id', authenticateToken, async 
       // チャット履歴を削除
       if (ChatModel) {
         const deletedChats = await ChatModel.deleteMany({ userId: id });
-        console.log('✅ Deleted chats:', deletedChats.deletedCount);
       }
       
       // トークン使用履歴を削除
       if (TokenUsage) {
         const deletedTokenUsage = await TokenUsage.deleteMany({ userId: id });
-        console.log('✅ Deleted token usage records:', deletedTokenUsage.deletedCount);
       }
     } catch (relatedDataError) {
-      console.warn('⚠️ Warning: Failed to delete some related data:', relatedDataError);
       // 関連データの削除に失敗してもユーザー削除は続行
     }
     
     // ユーザーを物理削除
     await UserModel.findByIdAndDelete(id);
 
-    console.log('✅ User completely deleted:', { id, name: user.name, email: user.email });
 
     res.json({
       success: true,
@@ -2942,9 +2738,6 @@ routeRegistry.define('DELETE', '/api/admin/users/:id', authenticateToken, async 
     });
 
   } catch (error) {
-    console.error('❌ User deletion error:', error);
-    console.error('❌ Error details:', error instanceof Error ? error.message : error);
-    console.error('❌ Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
     res.status(500).json({
       error: 'Server error',
       message: 'ユーザーの削除に失敗しました',
@@ -2987,10 +2780,7 @@ app.get('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res:
     try {
       const UserTokenPack = require('../models/UserTokenPack');
       actualTokenBalance = await UserTokenPack.calculateUserTokenBalance(user._id);
-      console.log('🔍 Admin API: UserTokenPack calculated balance:', actualTokenBalance);
-      console.log('🔍 Admin API: UserModel.tokenBalance:', user.tokenBalance);
     } catch (error) {
-      console.error('❌ Failed to calculate token balance from UserTokenPack:', error);
     }
 
     res.json({
@@ -3022,7 +2812,6 @@ app.get('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res:
         };
       }) || [],
       affinities: user.affinities.map(aff => {
-        console.log('🐛 Affinity character data:', typeof aff.character, aff.character);
         const character = aff.character as any;
         return {
           characterId: typeof character === 'object' ? character._id : character,
@@ -3038,7 +2827,6 @@ app.get('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res:
     });
 
   } catch (error) {
-    console.error('❌ User detail fetch error:', error);
     res.status(500).json({
       error: 'Server error',
       message: 'ユーザー詳細の取得に失敗しました'
@@ -3062,17 +2850,13 @@ try {
   if (fs.existsSync(openApiPath)) {
     const swaggerDocument = YAML.load(openApiPath);
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-    console.log('📚 Swagger UI available at /api-docs');
   } else {
-    console.log('⚠️  OpenAPI file not found, Swagger UI disabled');
   }
 } catch (error) {
-  console.log('⚠️  Failed to load OpenAPI documentation:', error.message);
 }
 
 // 管理者作成API
 app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
-  console.log('👤 管理者作成 API called:', req.body);
   
   if (!req.user || !(req.user as any).isAdmin) {
     res.status(401).json({ error: 'Admin access required' });
@@ -3136,7 +2920,6 @@ app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, 
       });
 
       const savedAdmin = await newAdmin.save();
-      console.log('✅ 新しい管理者を作成しました:', { id: savedAdmin._id, email: savedAdmin.email });
 
       res.status(201).json({
         success: true,
@@ -3168,7 +2951,6 @@ app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, 
       });
     }
   } catch (error) {
-    console.error('❌ 管理者作成エラー:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: '管理者の作成に失敗しました'
@@ -3178,7 +2960,6 @@ app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, 
 
 // 管理者一覧取得API
 app.get('/api/admin/admins', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
-  console.log('👤 管理者一覧取得 API called');
   
   if (!req.user || !(req.user as any).isAdmin) {
     res.status(401).json({ error: 'Admin access required' });
@@ -3209,7 +2990,6 @@ app.get('/api/admin/admins', authenticateToken, async (req: AuthRequest, res: Re
         .limit(limitNum)
         .lean();
 
-      console.log(`📊 Found ${admins.length} admins (total: ${totalAdmins})`);
 
       res.json({
         success: true,
@@ -3237,7 +3017,6 @@ app.get('/api/admin/admins', authenticateToken, async (req: AuthRequest, res: Re
       });
     }
   } catch (error) {
-    console.error('❌ 管理者一覧取得エラー:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: '管理者一覧の取得に失敗しました'
@@ -3266,7 +3045,6 @@ app.get('/api/admin/security/events-stream', async (req: Request, res: Response)
       return;
     }
 
-    console.log('🛡️ リアルタイムセキュリティストリーム開始');
 
     // SSEヘッダー設定
     res.writeHead(200, {
@@ -3288,7 +3066,6 @@ app.get('/api/admin/security/events-stream', async (req: Request, res: Response)
     const handleSecurityEvent = (message: string, channel: string) => {
       try {
         const eventData = JSON.parse(message);
-        console.log('🛡️ セキュリティイベント受信:', eventData.type);
         
         // SSEフォーマットで送信
         res.write(`data: ${JSON.stringify({
@@ -3297,20 +3074,16 @@ app.get('/api/admin/security/events-stream', async (req: Request, res: Response)
           timestamp: new Date().toISOString()
         })}\n\n`);
       } catch (error) {
-        console.error('SSE security event error:', error);
       }
     };
 
     await subscriber.subscribe('security:events', handleSecurityEvent);
-    console.log('📡 セキュリティイベント購読開始');
 
     // 接続終了時のクリーンアップ
     req.on('close', async () => {
       try {
         await subscriber.unsubscribe('security:events', handleSecurityEvent);
-        console.log('🛡️ セキュリティストリーム終了');
       } catch (error) {
-        console.error('Security stream cleanup error:', error);
       }
     });
 
@@ -3324,7 +3097,6 @@ app.get('/api/admin/security/events-stream', async (req: Request, res: Response)
     });
 
   } catch (error) {
-    console.error('❌ セキュリティストリームエラー:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: 'セキュリティストリームの開始に失敗しました'
@@ -3367,7 +3139,6 @@ app.get('/api/admin/security-events', authenticateToken, async (req: AuthRequest
       resolvedAt: event.resolvedAt
     }));
 
-    console.log('📊 Security events API called:', { eventsCount: formattedEvents.length });
     
     res.json({
       events: formattedEvents,
@@ -3381,7 +3152,6 @@ app.get('/api/admin/security-events', authenticateToken, async (req: AuthRequest
     });
 
   } catch (error) {
-    console.error('❌ Security events API error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: 'セキュリティイベントの取得に失敗しました'
@@ -3418,7 +3188,6 @@ app.post('/api/admin/resolve-violation/:id', authenticateToken, async (req: Auth
       return;
     }
 
-    console.log('✅ Violation resolved:', { violationId: id, resolvedBy: req.user?._id });
     
     res.json({
       success: true,
@@ -3432,7 +3201,6 @@ app.post('/api/admin/resolve-violation/:id', authenticateToken, async (req: Auth
     });
 
   } catch (error) {
-    console.error('❌ Resolve violation API error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: '違反の解決処理に失敗しました'
@@ -3470,7 +3238,6 @@ app.get('/api/admin/security-stats', authenticateToken, async (req: AuthRequest,
     });
 
   } catch (error) {
-    console.error('❌ Security stats API error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: 'セキュリティ統計の取得に失敗しました'
@@ -3770,7 +3537,6 @@ app.get('/api/admin/token-analytics/overview', authenticateToken, async (req: Au
     });
 
   } catch (error) {
-    console.error('❌ Token analytics overview API error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: 'トークン分析データの取得に失敗しました'
@@ -3969,7 +3735,6 @@ app.get('/api/admin/token-analytics/profit-analysis', authenticateToken, async (
     });
 
   } catch (error) {
-    console.error('❌ Profit analysis API error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: '利益分析データの取得に失敗しました'
@@ -4173,7 +3938,6 @@ app.get('/api/admin/token-analytics/usage-trends', authenticateToken, async (req
     });
 
   } catch (error) {
-    console.error('❌ Usage trends API error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: '使用量トレンドデータの取得に失敗しました'
@@ -4462,7 +4226,6 @@ app.get('/api/admin/token-analytics/anomaly-detection', authenticateToken, async
     });
 
   } catch (error) {
-    console.error('❌ Anomaly detection API error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: '異常検知データの取得に失敗しました'
@@ -4479,7 +4242,6 @@ app.get('/api/admin/token-analytics/anomaly-detection', authenticateToken, async
  */
 app.get('/api/admin/cache/performance', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('📊 Cache performance metrics requested by admin:', req.user?._id);
     
     const timeframe = parseInt(req.query.timeframe as string) || 30; // デフォルト30日
     
@@ -4493,7 +4255,6 @@ app.get('/api/admin/cache/performance', authenticateToken, async (req: AuthReque
 
     const metrics = await getCachePerformanceMetrics(timeframe);
     
-    console.log('✅ Cache performance metrics retrieved:', {
       totalCaches: metrics.totalCaches,
       hitRatio: metrics.hitRatio,
       charactersAnalyzed: metrics.cachesByCharacter.length
@@ -4507,7 +4268,6 @@ app.get('/api/admin/cache/performance', authenticateToken, async (req: AuthReque
     });
 
   } catch (error) {
-    console.error('❌ Cache performance metrics error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: 'キャッシュパフォーマンス取得に失敗しました'
@@ -4520,7 +4280,6 @@ app.get('/api/admin/cache/performance', authenticateToken, async (req: AuthReque
  */
 app.get('/api/admin/cache/characters', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('📈 Character cache stats requested by admin:', req.user?._id);
     
     const timeframe = parseInt(req.query.timeframe as string) || 30;
     
@@ -4535,7 +4294,6 @@ app.get('/api/admin/cache/characters', authenticateToken, async (req: AuthReques
     const characters = await CharacterModel.find({ isActive: true });
     const characterStats = await getCacheStatsByCharacter(characters, timeframe);
     
-    console.log('✅ Character cache stats retrieved for', characterStats.length, 'characters');
 
     res.json({
       success: true,
@@ -4545,7 +4303,6 @@ app.get('/api/admin/cache/characters', authenticateToken, async (req: AuthReques
     });
 
   } catch (error) {
-    console.error('❌ Character cache stats error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: 'キャラクター別キャッシュ統計取得に失敗しました'
@@ -4558,7 +4315,6 @@ app.get('/api/admin/cache/characters', authenticateToken, async (req: AuthReques
  */
 app.get('/api/admin/cache/top-performing', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('🏆 Top performing caches requested by admin:', req.user?._id);
     
     const limit = parseInt(req.query.limit as string) || 20;
     
@@ -4573,7 +4329,6 @@ app.get('/api/admin/cache/top-performing', authenticateToken, async (req: AuthRe
     const characters = await CharacterModel.find({ isActive: true });
     const topCaches = await getTopPerformingCaches(characters, limit);
     
-    console.log('✅ Top performing caches retrieved:', topCaches.length);
 
     res.json({
       success: true,
@@ -4583,7 +4338,6 @@ app.get('/api/admin/cache/top-performing', authenticateToken, async (req: AuthRe
     });
 
   } catch (error) {
-    console.error('❌ Top performing caches error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: 'トップパフォーマンスキャッシュ取得に失敗しました'
@@ -4596,7 +4350,6 @@ app.get('/api/admin/cache/top-performing', authenticateToken, async (req: AuthRe
  */
 app.get('/api/admin/cache/invalidation-stats', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('🗑️ Cache invalidation stats requested by admin:', req.user?._id);
     
     const timeframe = parseInt(req.query.timeframe as string) || 30;
     
@@ -4610,7 +4363,6 @@ app.get('/api/admin/cache/invalidation-stats', authenticateToken, async (req: Au
 
     const invalidationStats = await getCacheInvalidationStats(timeframe);
     
-    console.log('✅ Cache invalidation stats retrieved');
 
     res.json({
       success: true,
@@ -4620,7 +4372,6 @@ app.get('/api/admin/cache/invalidation-stats', authenticateToken, async (req: Au
     });
 
   } catch (error) {
-    console.error('❌ Cache invalidation stats error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: 'キャッシュ無効化統計取得に失敗しました'
@@ -4634,7 +4385,6 @@ app.get('/api/admin/cache/invalidation-stats', authenticateToken, async (req: Au
  */
 app.get('/api/admin/exchange-rate', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('💱 Exchange rate requested by admin:', req.user?._id);
     
     // 最新の為替レートを取得
     const latestRate = await ExchangeRateModel.findOne({
@@ -4678,7 +4428,6 @@ app.get('/api/admin/exchange-rate', authenticateToken, async (req: AuthRequest, 
     });
     
   } catch (error) {
-    console.error('❌ Error fetching exchange rate:', error);
     res.status(500).json({
       success: false,
       error: 'Internal Server Error',
@@ -4692,7 +4441,6 @@ app.get('/api/admin/exchange-rate', authenticateToken, async (req: AuthRequest, 
  */
 app.get('/api/admin/error-stats', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('📊 API error stats requested by admin:', req.user?._id);
     
     const timeRange = (req.query.range as string) || '24h';
     const errorStats = await (APIErrorModel as any).getErrorStats(timeRange);
@@ -4707,7 +4455,6 @@ app.get('/api/admin/error-stats', authenticateToken, async (req: AuthRequest, re
     });
     
   } catch (error) {
-    console.error('❌ Error fetching API error stats:', error);
     res.status(500).json({
       success: false,
       error: 'Internal Server Error',
@@ -4721,7 +4468,6 @@ app.get('/api/admin/error-stats', authenticateToken, async (req: AuthRequest, re
  */
 app.get('/api/admin/cron-status', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('📅 Cron job status requested by admin:', req.user?._id);
     
     const now = new Date();
     const jstOffset = 9 * 60; // JST = UTC+9
@@ -4810,7 +4556,6 @@ app.get('/api/admin/cron-status', authenticateToken, async (req: AuthRequest, re
     });
 
   } catch (error) {
-    console.error('❌ Cron status error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: 'クーロンジョブ状態取得に失敗しました'
@@ -4823,7 +4568,6 @@ app.get('/api/admin/cron-status', authenticateToken, async (req: AuthRequest, re
  */
 app.get('/api/admin/logs', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('📋 Server logs requested by admin:', req.user?._id);
     
     const lines = parseInt(req.query.lines as string) || 100;
     const filter = req.query.filter as string || '';
@@ -4882,7 +4626,6 @@ app.get('/api/admin/logs', authenticateToken, async (req: AuthRequest, res: Resp
       
     } catch (pm2Error) {
       // PM2が利用できない場合は、Console.logの履歴を返す
-      console.warn('PM2 logs not available, returning recent console output');
       
       const recentLogs = [
         { timestamp: new Date().toISOString(), type: 'info', message: 'PM2ログにアクセスできません', isCronRelated: false },
@@ -4905,7 +4648,6 @@ app.get('/api/admin/logs', authenticateToken, async (req: AuthRequest, res: Resp
     }
 
   } catch (error) {
-    console.error('❌ Server logs error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: 'サーバーログ取得に失敗しました'
@@ -4918,7 +4660,6 @@ app.get('/api/admin/logs', authenticateToken, async (req: AuthRequest, res: Resp
  */
 app.post('/api/admin/cache/cleanup', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('🧹 Cache cleanup requested by admin:', req.user?._id);
     
     if (!isMongoConnected) {
       res.status(503).json({
@@ -4930,7 +4671,6 @@ app.post('/api/admin/cache/cleanup', authenticateToken, async (req: AuthRequest,
 
     const cleanupResult = await performCacheCleanup();
     
-    console.log('✅ Cache cleanup completed:', cleanupResult);
 
     res.json({
       success: true,
@@ -4940,7 +4680,6 @@ app.post('/api/admin/cache/cleanup', authenticateToken, async (req: AuthRequest,
     });
 
   } catch (error) {
-    console.error('❌ Cache cleanup error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: 'キャッシュクリーンアップに失敗しました'
@@ -4956,7 +4695,6 @@ routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authen
     const { characterId } = req.params;
     const reason = req.body.reason || 'manual_admin_action';
     
-    console.log('🎯 Character cache invalidation requested:', {
       characterId,
       reason,
       adminId: req.user?._id
@@ -4982,7 +4720,6 @@ routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authen
 
     const invalidationResult = await invalidateCharacterCache(characterId, reason);
     
-    console.log('✅ Character cache invalidation completed:', invalidationResult);
 
     res.json({
       success: true,
@@ -4992,7 +4729,6 @@ routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authen
     });
 
   } catch (error) {
-    console.error('❌ Character cache invalidation error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: 'キャラクターキャッシュ無効化に失敗しました'
@@ -5129,7 +4865,6 @@ app.get('/api/admin/dashboard/stats', authenticateToken, async (req: AuthRequest
     });
 
   } catch (error) {
-    console.error('❌ Dashboard stats API error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: 'ダッシュボード統計の取得に失敗しました'
@@ -5151,15 +4886,12 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
       return;
     }
 
-    console.log('📊 Starting character stats update...');
 
     // 全キャラクターを取得
     let characters = [];
     try {
       characters = await CharacterModel.find({});
-      console.log(`📊 Found ${characters.length} characters to update`);
     } catch (charError) {
-      console.error('❌ Error fetching characters:', charError);
       throw new Error('Failed to fetch characters: ' + (charError instanceof Error ? charError.message : String(charError)));
     }
     
@@ -5168,12 +4900,10 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
 
     // 各キャラクターの統計を更新
     for (const character of characters) {
-      console.log(`📊 Processing character: ${character.name?.ja || character.name}`);
       
       // このキャラクターに関連するチャット統計を集計
       // ChatModelからデータを取得
       const chats = await ChatModel.find({ characterId: character._id });
-      console.log(`  Found ${chats.length} chats in ChatModel`);
       
       // チャット統計を手動で集計
       let totalMessages = 0;
@@ -5188,7 +4918,6 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
       const tokenUsageData = await TokenUsage.find({
         'characterInfo.id': character._id.toString()
       });
-      console.log(`  Found ${tokenUsageData.length} token usage records for this character`);
       
       // トークン使用データからユーザーを追加
       for (const usage of tokenUsageData) {
@@ -5211,7 +4940,6 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
           }}
         ]);
       } catch (affinityError) {
-        console.error(`  ⚠️ Error aggregating affinity stats for ${character.name?.ja || character.name}:`, affinityError);
       }
 
       const affinityData = affinityStats[0] || { avgLevel: 0, totalUsers: 0, maxLevel: 0 };
@@ -5221,7 +4949,6 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
       character.totalUsers = uniqueUsers.size;
       character.averageAffinityLevel = Number(affinityData.avgLevel.toFixed(1));
       
-      console.log(`  Updated stats - Messages: ${totalMessages}, Users: ${uniqueUsers.size}, Avg Affinity: ${character.averageAffinityLevel}`);
       
       // 総収益の計算（このキャラクターの購入履歴から）
       const revenueStats = await PurchaseHistoryModel.aggregate([
@@ -5253,7 +4980,6 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
       updatedCount++;
       totalMessagesCount += totalMessages;
 
-      console.log(`✅ Updated stats for ${character.name?.ja || character.name}: ${totalMessages} messages, ${character.totalUsers} users`);
     }
 
     res.json({
@@ -5267,8 +4993,6 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
     });
 
   } catch (error) {
-    console.error('❌ Character stats update error:', error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     res.status(500).json({ 
       error: 'Internal server error',
       message: 'キャラクター統計の更新に失敗しました',
@@ -5314,7 +5038,6 @@ app.get('/api/debug/user-violations/:userId', authenticateToken, async (req: Aut
       dbViolationCount: violations.length
     });
   } catch (error) {
-    console.error('Debug API error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -5326,7 +5049,6 @@ app.get('/api/debug/user-violations/:userId', authenticateToken, async (req: Aut
 app.use(errorLoggingMiddleware);
 
 app.listen(PORT, async () => {
-  console.log('✅ Server is running on:', { port: PORT, url: `http://localhost:${PORT}` });
   
   // 🎭 MoodEngine Cronジョブを開始
   startAllMoodJobs();
