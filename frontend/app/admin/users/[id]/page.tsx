@@ -157,7 +157,11 @@ export default function UserDetailPage() {
     const newStatus = user.status === 'suspended' ? 'active' : 'suspended';
     const action = newStatus === 'active' ? '復活' : '停止';
     
-    if (!confirm(`${ensureUserNameString(user.name)}のアカウントを${action}しますか？`)) {
+    const confirmMessage = newStatus === 'active' 
+      ? `${ensureUserNameString(user.name)}のアカウントを復活させますか？\n\n※ 違反回数・違反記録も完全にリセットされます`
+      : `${ensureUserNameString(user.name)}のアカウントを停止しますか？`;
+    
+    if (!confirm(confirmMessage)) {
       return;
     }
     
@@ -188,10 +192,17 @@ export default function UserDetailPage() {
       const result = await response.json();
       
       // ユーザー情報を更新
-      setUser(prev => prev ? { ...prev, status: newStatus } : null);
+      setUser(prev => prev ? { 
+        ...prev, 
+        status: newStatus,
+        // アカウント復活時は違反回数もリセット
+        ...(newStatus === 'active' && { violationCount: 0 }),
+        // 停止解除時は停止関連情報をクリア
+        ...(newStatus === 'active' && { suspensionEndDate: undefined, banReason: undefined })
+      } : null);
       
       if (newStatus === 'active') {
-        success('アカウント復活', `${ensureUserNameString(user.name)}のアカウントを復活させました`);
+        success('アカウント復活', `${ensureUserNameString(user.name)}のアカウントを復活させました（違反回数・違反記録もリセットされました）`);
       } else {
         showError('アカウント停止', `${ensureUserNameString(user.name)}のアカウントを停止しました`);
       }
@@ -517,6 +528,11 @@ export default function UserDetailPage() {
                   <div>
                     <p className="text-sm text-gray-500">違反履歴</p>
                     <p className="text-gray-900">{user.violationCount || 0}回</p>
+                    {user.status === 'suspended' && (user.violationCount || 0) > 0 && (
+                      <p className="text-xs text-orange-600 mt-1">
+                        ※ アカウント復活時にリセットされます
+                      </p>
+                    )}
                   </div>
                 </div>
                 
