@@ -264,7 +264,7 @@ export default function SetupPage() {
                 {/* Step 1: 名前入力 */}
                 <h1 
                   className={`${orbitron.className} text-center text-2xl md:text-3xl font-bold mb-4`}
-                  style={{ color: '#E91E63' }}
+                  style={{ color: '#F4B3C2' }}
                 >
                   はじめまして！
                 </h1>
@@ -293,7 +293,7 @@ export default function SetupPage() {
                       onChange={(e) => setName(e.target.value)}
                       placeholder="例：太郎"
                       className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg outline-none text-gray-900 focus:ring-2"
-                      style={{ '--tw-ring-color': '#E91E63' } as React.CSSProperties}
+                      style={{ '--tw-ring-color': '#F4B3C2' } as React.CSSProperties}
                       autoFocus
                     />
                   </div>
@@ -301,7 +301,7 @@ export default function SetupPage() {
                   <button
                     type="submit"
                     className="w-full py-3 px-4 rounded-lg text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                    style={{ backgroundColor: '#E91E63' }}
+                    style={{ backgroundColor: '#F4B3C2' }}
                   >
                     次へ
                   </button>
@@ -312,7 +312,7 @@ export default function SetupPage() {
                 {/* Step 2: キャラ選択 */}
                 <h1 
                   className="text-center text-2xl md:text-3xl font-bold mb-4"
-                  style={{ color: '#E91E63' }}
+                  style={{ color: '#F4B3C2' }}
                 >
                   こんにちは、{name}さん！
                 </h1>
@@ -390,7 +390,7 @@ export default function SetupPage() {
                   onClick={handleSetupComplete}
                   disabled={!selectedCharacter || isLoading}
                   className="w-full py-3 px-4 rounded-lg text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                  style={{ backgroundColor: '#E91E63' }}
+                  style={{ backgroundColor: '#F4B3C2' }}
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center">

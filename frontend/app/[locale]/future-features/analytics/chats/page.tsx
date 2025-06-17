@@ -69,7 +69,7 @@ export default function ChatAnalyticsPage() {
         conversations: 45, 
         averageLength: 18.5, 
         emotionalState: 'happy',
-        color: '#E91E63' 
+        color: '#F4B3C2' 
       },
       { 
         characterName: 'ミコ', 
@@ -166,7 +166,7 @@ export default function ChatAnalyticsPage() {
   const EMOTION_COLORS = {
     happiness: '#FFC107',
     excitement: '#FF5722',
-    affection: '#E91E63'
+    affection: '#F4B3C2'
   };
 
   const DEPTH_COLORS = ['#81C784', '#64B5F6', '#FFB74D', '#F06292'];

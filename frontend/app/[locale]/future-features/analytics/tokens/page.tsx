@@ -77,7 +77,7 @@ export default function TokenAnalyticsPage() {
     }
 
     const characterUsage = [
-      { characterName: 'ルナ', amount: 4850, percentage: 45, color: '#E91E63' },
+      { characterName: 'ルナ', amount: 4850, percentage: 45, color: '#F4B3C2' },
       { characterName: 'ミコ', amount: 3240, percentage: 30, color: '#9C27B0' },
       { characterName: 'ゼン', amount: 1620, percentage: 15, color: '#2196F3' },
       { characterName: 'アリス', amount: 1080, percentage: 10, color: '#4CAF50' }
@@ -110,7 +110,7 @@ export default function TokenAnalyticsPage() {
     };
   };
 
-  const COLORS = ['#E91E63', '#9C27B0', '#2196F3', '#4CAF50', '#FF9800', '#F44336'];
+  const COLORS = ['#F4B3C2', '#9C27B0', '#2196F3', '#4CAF50', '#FF9800', '#F44336'];
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
