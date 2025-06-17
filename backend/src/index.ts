@@ -159,6 +159,11 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
         cachedPrompt.useCount += 1;
         await cachedPrompt.save();
         
+        // キャッシュから取得したプロンプトをログに表示
+        console.log('📝 ========== CACHED SYSTEM PROMPT ==========');
+        console.log(systemPrompt);
+        console.log('📝 ========== END CACHED PROMPT ==========');
+        
       } else {
         console.log('❌ CharacterPromptCache MISS - generating new prompt...');
       }
@@ -217,6 +222,11 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
 - 約50-150文字程度で返答してください
 - 絵文字を適度に使用してください`;
 
+    // 新規生成されたプロンプトをログに表示
+    console.log('📝 ========== GENERATED SYSTEM PROMPT ==========');
+    console.log(systemPrompt);
+    console.log('📝 ========== END GENERATED PROMPT ==========');
+    
     // キャッシュサイズ制限（8000文字超の場合は要約）
     if (systemPrompt.length > 8000) {
       console.log(`⚠️ System prompt too long (${systemPrompt.length} chars), truncating to 8000`);
@@ -279,6 +289,20 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
         ...conversationHistory,
         { role: 'user' as const, content: userMessage }
       ];
+
+      // OpenAIに送信する直前にプロンプト全体をログ出力
+      console.log('🤖 ========== FINAL PROMPT TO OPENAI ==========');
+      console.log('SYSTEM PROMPT:');
+      console.log(systemPrompt);
+      console.log('');
+      console.log('CONVERSATION HISTORY:');
+      conversationHistory.forEach((msg, index) => {
+        console.log(`${index + 1}. ${msg.role}: ${msg.content}`);
+      });
+      console.log('');
+      console.log('USER MESSAGE:');
+      console.log(userMessage);
+      console.log('🤖 ========== END OPENAI PROMPT ==========');
 
       const completion = await openai.chat.completions.create({
         model: model,
@@ -1564,7 +1588,27 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           }
         );
 
-        const affinityIncrease = 3; // 固定で3ポイント増加（テスト用に増量）
+        // レベル帯別の親密度上昇量を計算
+        function calculateAffinityIncrease(currentLevel: number): number {
+          if (currentLevel >= 90) {
+            return 0.1; // レベル90-100: 非常に困難（1000回のメッセージで1レベル）
+          } else if (currentLevel >= 80) {
+            return 0.2; // レベル80-89: 困難（500回のメッセージで1レベル）
+          } else if (currentLevel >= 60) {
+            return 0.5; // レベル60-79: やや困難（200回のメッセージで1レベル）
+          } else if (currentLevel >= 40) {
+            return 0.8; // レベル40-59: 普通（125回のメッセージで1レベル）
+          } else if (currentLevel >= 20) {
+            return 1.0; // レベル20-39: やや簡単（100回のメッセージで1レベル）
+          } else {
+            return 1.5; // レベル0-19: 簡単（67回のメッセージで1レベル）
+          }
+        }
+        
+        const currentLevel = Math.floor(currentUserAffinity / 10);
+        const affinityIncrease = calculateAffinityIncrease(currentLevel);
+        
+        console.log(`📊 Affinity calculation: Current level ${currentLevel}, Increase amount: ${affinityIncrease}`);
         
         // UserModelから現在の親密度を取得（ChatModelではなくUserModelが正確な値）
         const userAffinityData = await UserModel.findOne({
