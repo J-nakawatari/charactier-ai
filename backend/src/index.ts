@@ -62,17 +62,11 @@ const PORT = process.env.PORT || 5000;
 // MongoDB接続
 let isMongoConnected = false;
 const connectMongoDB = async () => {
-  console.log('🔍 MongoDB connection attempt...');
-  console.log('🔍 MONGO_URI exists:', !!process.env.MONGO_URI);
-  
   if (process.env.MONGO_URI) {
     try {
-      console.log('🔄 Connecting to MongoDB...');
       await mongoose.connect(process.env.MONGO_URI);
       isMongoConnected = true;
-      console.log('🍃 MongoDB connected successfully');
     } catch (error) {
-      console.error('❌ MongoDB connection failed:', error);
       throw error; // Fail if MongoDB connection fails
     }
   } else {
@@ -86,9 +80,6 @@ if (process.env.STRIPE_SECRET_KEY) {
   stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
     apiVersion: '2025-05-28.basil' // 最新のAPIバージョン
   });
-  console.log('🔥 Stripe SDK initialized with real API');
-} else {
-  console.error('❌ STRIPE_SECRET_KEY is required');
 }
 
 // OpenAI インスタンス初期化
@@ -97,12 +88,8 @@ if (process.env.OPENAI_API_KEY) {
   openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
   });
-  console.log('🤖 OpenAI SDK initialized');
-} else {
-  console.error('❌ OPENAI_API_KEY is required');
 }
 
-console.log('🚀 PORT:', PORT);
 
 // 🚀 プロンプトキャッシュ対応チャット応答生成関数
 const generateChatResponse = async (characterId: string, userMessage: string, conversationHistory: any[] = [], userId?: string): Promise<{ content: string; tokensUsed: number; systemPrompt: string; cacheHit: boolean }> => {
@@ -143,14 +130,6 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
       });
 
       if (cachedPrompt) {
-        // 🎯 キャッシュヒット！
-        console.log('✅ CharacterPromptCache HIT:', {
-          cacheId: cachedPrompt._id,
-          useCount: cachedPrompt.useCount,
-          affinityLevel: cachedPrompt.promptConfig.affinityLevel,
-          generationTime: cachedPrompt.generationTime
-        });
-        
         systemPrompt = cachedPrompt.systemPrompt;
         cacheHit = true;
         
@@ -164,17 +143,14 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
         console.log(systemPrompt);
         console.log('📝 ========== END CACHED PROMPT ==========');
         
-      } else {
-        console.log('❌ CharacterPromptCache MISS - generating new prompt...');
       }
     } catch (cacheError) {
-      console.error('⚠️ CharacterPromptCache error (non-critical):', cacheError);
+      // キャッシュエラーは無視して続行
     }
   }
 
   // キャッシュがない場合は新規生成
   if (!systemPrompt) {
-    console.log('🔨 Generating new system prompt...');
     
     // 🎭 現在の気分状態を取得してプロンプトに反映
     let moodInstruction = '';
@@ -229,7 +205,6 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
     
     // キャッシュサイズ制限（8000文字超の場合は要約）
     if (systemPrompt.length > 8000) {
-      console.log(`⚠️ System prompt too long (${systemPrompt.length} chars), truncating to 8000`);
       systemPrompt = systemPrompt.substring(0, 8000) + '...';
     }
 
@@ -267,7 +242,7 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
         });
         
       } catch (saveError) {
-        console.error('⚠️ Failed to save prompt cache (non-critical):', saveError);
+        // キャッシュ保存エラーは無視して続行
       }
     }
   }
@@ -275,14 +250,6 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
   if (openai) {
     // 実際のOpenAI API呼び出し
     try {
-      console.log('🤖 Using OpenAI API:', model, cacheHit ? '(Cache HIT)' : '(Cache MISS)');
-      
-      // 実際に生成されたプロンプトをログ出力
-      console.log('🎭 Generated system prompt for character:', character.name.ja);
-      console.log('📝 System prompt content:');
-      console.log('='.repeat(50));
-      console.log(systemPrompt);
-      console.log('='.repeat(50));
 
       const messages = [
         { role: 'system' as const, content: systemPrompt },
@@ -314,12 +281,6 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
       const responseContent = completion.choices[0]?.message?.content || 'すみません、うまく答えられませんでした...';
       const tokensUsed = completion.usage?.total_tokens || 150;
 
-      console.log('✅ OpenAI API response generated:', {
-        character: character.name.ja,
-        tokensUsed,
-        responseLength: responseContent.length
-      });
-
       return {
         content: responseContent,
         tokensUsed,
@@ -328,7 +289,6 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
       };
 
     } catch (error) {
-      console.error('❌ OpenAI API error:', error);
       throw new Error('AI応答の生成に失敗しました');
     }
   } else {
@@ -341,12 +301,8 @@ const requiredEnvVars = ['JWT_SECRET'];
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 
 if (missingEnvVars.length > 0) {
-  console.error('❌ Missing required environment variables:', missingEnvVars);
-  console.error('Please set these variables in your .env file');
   process.exit(1);
 }
-
-console.log('✅ All required environment variables are set');
 
 // MongoDB接続を初期化
 connectMongoDB();
@@ -371,7 +327,6 @@ app.use(statusCodeLoggerMiddleware);
 // ⚠️ IMPORTANT: Stripe webhook MUST come BEFORE express.json()
 // Stripe webhook endpoint (needs raw body)
 app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req: Request, res: Response): Promise<void> => {
-  console.log('🔔 Stripe Webhook received (CLI)');
   
   const sig = req.headers['stripe-signature'] as string;
   let event: Stripe.Event;
