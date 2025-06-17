@@ -505,7 +505,7 @@ export default function CharacterDetail() {
                 <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                   {character.imageCharacterSelect ? (
                     <img 
-                      src={character.imageCharacterSelect} 
+                      src={character.imageCharacterSelect.startsWith('http') ? character.imageCharacterSelect : `${API_BASE_URL}${character.imageCharacterSelect}`} 
                       alt="キャラクター選択"
                       className="w-full h-full object-cover"
                     />
@@ -523,7 +523,7 @@ export default function CharacterDetail() {
                 <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                   {character.imageDashboard ? (
                     <img 
-                      src={character.imageDashboard} 
+                      src={character.imageDashboard.startsWith('http') ? character.imageDashboard : `${API_BASE_URL}${character.imageDashboard}`} 
                       alt="ダッシュボード"
                       className="w-full h-full object-cover"
                     />
@@ -541,7 +541,7 @@ export default function CharacterDetail() {
                 <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                   {character.imageChatBackground ? (
                     <img 
-                      src={character.imageChatBackground} 
+                      src={character.imageChatBackground.startsWith('http') ? character.imageChatBackground : `${API_BASE_URL}${character.imageChatBackground}`} 
                       alt="チャット背景"
                       className="w-full h-full object-cover"
                     />
@@ -559,7 +559,7 @@ export default function CharacterDetail() {
                 <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                   {character.imageChatAvatar ? (
                     <img 
-                      src={character.imageChatAvatar} 
+                      src={character.imageChatAvatar.startsWith('http') ? character.imageChatAvatar : `${API_BASE_URL}${character.imageChatAvatar}`} 
                       alt="チャットアバター"
                       className="w-full h-full object-cover"
                     />
@@ -582,7 +582,7 @@ export default function CharacterDetail() {
                     <div key={index} className="space-y-2">
                       <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                         <img 
-                          src={image.file} 
+                          src={image.file.startsWith('http') ? image.file : `${API_BASE_URL}${image.file}`} 
                           alt={typeof image.title === 'string' ? image.title : (image.title?.ja || `ギャラリー画像 ${index + 1}`)}
                           className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
                         />
