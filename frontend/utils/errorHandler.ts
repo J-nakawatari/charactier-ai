@@ -15,6 +15,8 @@ export interface ApiError {
   accountStatus?: string;
   detectedWord?: string;
   violationType?: string;
+  // 強制ログアウト
+  forceLogout?: boolean;
 }
 
 export interface ErrorResponse {
@@ -39,7 +41,9 @@ export function parseApiError(response: Response, errorData?: any): ApiError {
     violationCount: errorData?.violationCount,
     accountStatus: errorData?.accountStatus,
     detectedWord: errorData?.detectedWord,
-    violationType: errorData?.violationType
+    violationType: errorData?.violationType,
+    // 強制ログアウト情報を抽出
+    forceLogout: errorData?.forceLogout
   };
 
   // ステータスコード別の処理
@@ -66,10 +70,22 @@ export function parseApiError(response: Response, errorData?: any): ApiError {
       };
     
     case 403:
+      // 強制ログアウトが必要な場合（BANされたユーザー等）
+      if (errorData?.forceLogout) {
+        // ローカルストレージのトークンをクリア
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          // ログインページにリダイレクト
+          window.location.href = '/ja/login?reason=account_banned';
+        }
+      }
+      
       return {
         ...baseError,
         code: errorData?.code || 'FORBIDDEN',
-        message: errorData?.error || 'アクセスが拒否されました'
+        message: errorData?.error || 'アクセスが拒否されました',
+        forceLogout: errorData?.forceLogout
       };
     
     case 404:
