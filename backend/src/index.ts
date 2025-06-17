@@ -2879,6 +2879,7 @@ routeRegistry.define('PUT', '/api/admin/users/:id/status', authenticateToken, as
       updateData.suspensionEndDate = undefined;
       updateData.banReason = undefined;
       updateData.violationCount = 0; // アカウント復活時に違反回数をリセット
+      updateData.isActive = true; // アカウント復活時にisActiveも有効化
       
       // 違反記録も削除（完全な復活）
       try {
