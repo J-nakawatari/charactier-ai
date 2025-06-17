@@ -5166,21 +5166,16 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
         totalMessages += chat.messages.length;
       }
       
-      // UserModelのconversationsフィールドからもチェック
-      const usersWithConversations = await UserModel.find({
-        'conversations.characterId': character._id
+      // TokenUsageモデルからもこのキャラクターに関連するチャットを確認
+      const tokenUsageData = await TokenUsage.find({
+        'characterInfo.id': character._id.toString()
       });
-      console.log(`  Found ${usersWithConversations.length} users with conversations in UserModel`);
+      console.log(`  Found ${tokenUsageData.length} token usage records for this character`);
       
-      // conversationsフィールドからの統計も集計
-      for (const user of usersWithConversations) {
-        if (user.conversations) {
-          for (const conv of user.conversations) {
-            if (conv.characterId.toString() === character._id.toString()) {
-              uniqueUsers.add(user._id.toString());
-              totalMessages += conv.messages?.length || 0;
-            }
-          }
+      // トークン使用データからユーザーを追加
+      for (const usage of tokenUsageData) {
+        if (usage.userId) {
+          uniqueUsers.add(usage.userId);
         }
       }
 
