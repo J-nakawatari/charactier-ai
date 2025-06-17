@@ -19,7 +19,7 @@ export default function ExchangeRateWidget() {
   const fetchExchangeRate = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('adminAccessToken');
       
       const response = await fetch('/api/admin/exchange-rate', {
         headers: {

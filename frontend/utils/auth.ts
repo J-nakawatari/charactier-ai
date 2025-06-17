@@ -28,18 +28,27 @@ export function getAuthHeaders(): HeadersInit {
   const tokenKey = isAdminPage ? 'adminAccessToken' : 'accessToken';
   const token = localStorage.getItem(tokenKey);
   
-  // デバッグログ追加
-  console.log('🔍 getAuthHeaders debug:', {
-    currentPath: typeof window !== 'undefined' ? window.location.pathname : 'undefined',
-    isAdminPage,
-    tokenKey,
-    tokenExists: !!token,
-    tokenPreview: token ? token.substring(0, 50) + '...' : 'null'
-  });
-  
   if (token) {
     return {
       'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+  }
+
+  return {
+    'Content-Type': 'application/json'
+  };
+}
+
+/**
+ * 管理画面専用の認証ヘッダーを取得（確実にadminAccessTokenを使用）
+ */
+export function getAdminAuthHeaders(): HeadersInit {
+  const adminToken = localStorage.getItem('adminAccessToken');
+  
+  if (adminToken) {
+    return {
+      'Authorization': `Bearer ${adminToken}`,
       'Content-Type': 'application/json'
     };
   }

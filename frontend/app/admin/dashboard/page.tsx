@@ -28,11 +28,11 @@ export default function AdminDashboard() {
         setLoading(true);
         console.log('🚀 Admin Dashboard - データ取得開始');
         
-        const token = localStorage.getItem('accessToken');
-        console.log('🔑 Token exists:', !!token);
+        const token = localStorage.getItem('adminAccessToken');
+        console.log('🔑 Admin token exists:', !!token);
         
         if (!token) {
-          throw new Error('認証トークンが見つかりません');
+          throw new Error('管理者認証トークンが見つかりません');
         }
 
         const headers = {

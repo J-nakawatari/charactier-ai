@@ -64,7 +64,7 @@ export default function TokensPage() {
     const fetchTokenData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('adminAccessToken');
         
         if (!token) {
           setError('認証トークンが見つかりません');
