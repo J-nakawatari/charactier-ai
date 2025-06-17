@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { API_BASE_URL } from '@/lib/api-config';
-import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare, CreditCard } from 'lucide-react';
 
 // Inline type definitions
 interface Character {
@@ -282,6 +282,47 @@ export default function CharacterDetail() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 統計情報カード */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center">
+                <div className="bg-blue-500 p-3 rounded-lg">
+                  <MessageSquare className="w-6 h-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">総チャット数</p>
+                  <p className="text-2xl font-bold text-blue-700">{character.totalChats?.toLocaleString() || '0'}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center">
+                <div className="bg-purple-500 p-3 rounded-lg">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">平均親密度</p>
+                  <p className="text-2xl font-bold text-purple-700">{character.avgIntimacy?.toFixed(1) || '0.0'}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center">
+                <div className="bg-green-500 p-3 rounded-lg">
+                  <CreditCard className="w-6 h-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">価格</p>
+                  <p className="text-2xl font-bold text-green-700">
+                    {character.isFree ? '無料' : `¥${character.price?.toLocaleString() || '0'}`}
+                  </p>
                 </div>
               </div>
             </div>
