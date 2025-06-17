@@ -321,6 +321,10 @@ export default function ChatPage() {
           }
         } : null);
 
+        // デバッグ用：バックエンドからのレスポンス全体をログ出力
+        console.log('🔍 バックエンドレスポンス全体:', responseData);
+        console.log('🔍 レベルアップ情報:', responseData.levelUp);
+
         // レベルアップ情報の処理
         if (responseData.levelUp) {
           console.log('🎉 レベルアップ検出:', responseData.levelUp);
@@ -333,6 +337,9 @@ export default function ChatPage() {
             }
           });
           window.dispatchEvent(levelUpEvent);
+        } else {
+          // バックエンドからlevelUp情報が返されていない場合のログ
+          console.log('🔍 レベルアップ情報なし - バックエンドから情報が返されていません');
         }
       }
 
