@@ -28,6 +28,15 @@ export function getAuthHeaders(): HeadersInit {
   const tokenKey = isAdminPage ? 'adminAccessToken' : 'accessToken';
   const token = localStorage.getItem(tokenKey);
   
+  // デバッグログ追加
+  console.log('🔍 getAuthHeaders debug:', {
+    currentPath: typeof window !== 'undefined' ? window.location.pathname : 'undefined',
+    isAdminPage,
+    tokenKey,
+    tokenExists: !!token,
+    tokenPreview: token ? token.substring(0, 50) + '...' : 'null'
+  });
+  
   if (token) {
     return {
       'Authorization': `Bearer ${token}`,
