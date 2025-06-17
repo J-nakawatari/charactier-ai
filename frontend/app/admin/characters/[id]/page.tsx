@@ -17,7 +17,9 @@ interface Character {
   traits: string[];
   isActive: boolean;
   isFree: boolean;
-  price: number;
+  price?: number;
+  purchasePrice?: number;
+  requiresUnlock?: boolean;
   totalMessages: number;
   averageAffinityLevel: number;
   totalUsers: number;
@@ -89,6 +91,7 @@ export default function CharacterDetail() {
         console.log('🔍 First gallery image:', (data.character?.galleryImages || data.galleryImages)?.[0]);
         const characterData = data.character || data;
         console.log('🔍 Stats - totalMessages:', characterData.totalMessages, 'averageAffinityLevel:', characterData.averageAffinityLevel);
+        console.log('🔍 Price info - purchasePrice:', characterData.purchasePrice, 'requiresUnlock:', characterData.requiresUnlock, 'characterAccessType:', characterData.characterAccessType);
         console.log('🔍 All character keys:', Object.keys(characterData));
         setCharacter(characterData);
       } catch (err) {
@@ -330,7 +333,7 @@ export default function CharacterDetail() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">価格</p>
                   <p className="text-2xl font-bold text-green-700">
-                    {character.isFree ? '無料' : `¥${character.price?.toLocaleString() || '0'}`}
+                    {character.characterAccessType === 'free' || !character.requiresUnlock ? '無料' : `¥${(character.purchasePrice || character.price || 0).toLocaleString()}`}
                   </p>
                 </div>
               </div>
