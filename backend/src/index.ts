@@ -5175,7 +5175,7 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
       // トークン使用データからユーザーを追加
       for (const usage of tokenUsageData) {
         if (usage.userId) {
-          uniqueUsers.add(usage.userId);
+          uniqueUsers.add(usage.userId.toString());
         }
       }
 
