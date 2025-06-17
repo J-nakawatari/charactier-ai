@@ -13,7 +13,9 @@ import {
   Save, 
   Eye, 
   EyeOff,
-  UserX 
+  UserX,
+  Edit3,
+  X
 } from 'lucide-react';
 
 interface UserData {
@@ -42,6 +44,7 @@ export default function SettingsPage() {
   // プロフィール更新用
   const [profileData, setProfileData] = useState({ name: '', email: '' });
   const [profileLoading, setProfileLoading] = useState(false);
+  const [isProfileEditing, setIsProfileEditing] = useState(false);
   
   // パスワード変更用
   const [passwordData, setPasswordData] = useState<PasswordData>({
@@ -134,6 +137,7 @@ export default function SettingsPage() {
 
       const updatedUser = await response.json();
       setUserData(updatedUser.user);
+      setIsProfileEditing(false);
       success('プロフィールを更新しました');
     } catch (err) {
       console.error('Error updating profile:', err);
@@ -141,6 +145,14 @@ export default function SettingsPage() {
     } finally {
       setProfileLoading(false);
     }
+  };
+
+  // プロフィール編集キャンセル
+  const handleProfileEditCancel = () => {
+    if (userData) {
+      setProfileData({ name: userData.name || '', email: userData.email || '' });
+    }
+    setIsProfileEditing(false);
   };
 
   // パスワード変更
@@ -289,7 +301,18 @@ export default function SettingsPage() {
                 {activeTab === 'profile' && (
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">プロフィール情報</h3>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-medium text-gray-900">プロフィール情報</h3>
+                        {!isProfileEditing && (
+                          <button
+                            onClick={() => setIsProfileEditing(true)}
+                            className="flex items-center space-x-2 px-3 py-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-md transition-colors"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                            <span>プロフィールを編集</span>
+                          </button>
+                        )}
+                      </div>
                       
                       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
@@ -298,14 +321,20 @@ export default function SettingsPage() {
                           </label>
                           <div className="relative">
                             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                              type="text"
-                              id="name"
-                              value={profileData.name}
-                              onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                              className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                              placeholder="ユーザー名を入力"
-                            />
+                            {isProfileEditing ? (
+                              <input
+                                type="text"
+                                id="name"
+                                value={profileData.name}
+                                onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                                className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                                placeholder="ユーザー名を入力"
+                              />
+                            ) : (
+                              <div className="pl-10 w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900">
+                                {userData?.name || 'ユーザー名が設定されていません'}
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -315,28 +344,44 @@ export default function SettingsPage() {
                           </label>
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                              type="email"
-                              id="email"
-                              value={profileData.email}
-                              onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                              className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                              placeholder="メールアドレスを入力"
-                            />
+                            {isProfileEditing ? (
+                              <input
+                                type="email"
+                                id="email"
+                                value={profileData.email}
+                                onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                                className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                                placeholder="メールアドレスを入力"
+                              />
+                            ) : (
+                              <div className="pl-10 w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900">
+                                {userData?.email || 'メールアドレスが設定されていません'}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
 
-                      <div className="mt-6">
-                        <button
-                          onClick={handleProfileUpdate}
-                          disabled={profileLoading}
-                          className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <Save className="w-4 h-4" />
-                          <span>{profileLoading ? '保存中...' : 'プロフィールを保存'}</span>
-                        </button>
-                      </div>
+                      {isProfileEditing && (
+                        <div className="mt-6 flex space-x-3">
+                          <button
+                            onClick={handleProfileUpdate}
+                            disabled={profileLoading}
+                            className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Save className="w-4 h-4" />
+                            <span>{profileLoading ? '保存中...' : 'プロフィールを保存'}</span>
+                          </button>
+                          <button
+                            onClick={handleProfileEditCancel}
+                            disabled={profileLoading}
+                            className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <X className="w-4 h-4" />
+                            <span>キャンセル</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

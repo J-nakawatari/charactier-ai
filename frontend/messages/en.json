@@ -252,7 +252,9 @@
       "title": "Profile",
       "username": "Username",
       "email": "Email Address",
-      "save": "Save"
+      "edit": "Edit Profile",
+      "save": "Save Profile",
+      "cancel": "Cancel"
     },
     "security": {
       "title": "Security",
