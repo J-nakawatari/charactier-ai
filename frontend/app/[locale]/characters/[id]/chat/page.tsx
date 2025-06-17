@@ -46,7 +46,7 @@ interface ChatLayoutData {
 export default function ChatPage() {
   const params = useParams();
   // const t = useTranslations('chat');
-  const { handleApiError: showApiError, success } = useToast();
+  const { handleApiError: showApiError, success, error: showError, warning: showWarning } = useToast();
   const [chatData, setChatData] = useState<ChatLayoutData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -339,9 +339,9 @@ export default function ChatPage() {
           
           // 制裁レベルに応じてトーストの種類を変更
           if (severity === 'critical') {
-            showApiError(apiError, violationMessage, 'error');
+            showError('重大な違反', violationMessage);
           } else if (severity === 'high') {
-            showApiError(apiError, violationMessage, 'warning');
+            showWarning('警告', violationMessage);
           } else {
             showApiError(apiError, violationMessage);
           }
