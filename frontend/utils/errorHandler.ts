@@ -78,12 +78,20 @@ export function parseApiError(response: Response, errorData?: any): ApiError {
           errorData: errorData
         });
         
-        // ローカルストレージのトークンをクリア
+        // 管理画面では強制ログアウトをスキップ
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          // ログインページにリダイレクト
-          window.location.href = '/ja/login?reason=account_banned';
+          const isAdminPage = window.location.pathname.includes('/admin');
+          
+          if (isAdminPage) {
+            console.log('⚠️ Admin page detected - skipping force logout to prevent affecting admin session');
+            // 管理画面では何もしない（LocalStorageもクリアしない）
+          } else {
+            // 一般ユーザー画面でのみ強制ログアウト実行
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            // ログインページにリダイレクト
+            window.location.href = '/ja/login?reason=account_banned';
+          }
         }
       }
       
