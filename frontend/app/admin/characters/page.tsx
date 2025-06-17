@@ -18,8 +18,8 @@ interface Character {
   imageDashboard?: string;
   imageChatBackground?: string;
   imageChatAvatar?: string;
-  totalConversations?: number;
-  averageAffinity?: number;
+  totalMessages?: number;
+  averageAffinityLevel?: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -230,8 +230,8 @@ export interface Character {
   personalityPreset?: string;
   personalityTags?: string[];
   // 管理画面・統計用プロパティ
-  totalChats?: number;
-  avgIntimacy?: number;
+  totalMessages?: number;
+  averageAffinityLevel?: number;
   isFree?: boolean;
   price?: number;
   isActive?: boolean;

@@ -16,8 +16,8 @@ interface Character {
   imageDashboard?: string;
   imageChatBackground?: string;
   imageChatAvatar?: string;
-  totalConversations?: number;
-  averageAffinity?: number;
+  totalMessages?: number;
+  averageAffinityLevel?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -167,17 +167,17 @@ export default function CharacterManagementTable({ characters }: CharacterManage
               </div>
               <div>
                 <div className="text-xs text-gray-500">チャット数</div>
-                <div className="text-sm font-medium text-gray-900">{(character.totalConversations || 0).toLocaleString()}</div>
+                <div className="text-sm font-medium text-gray-900">{(character.totalMessages || 0).toLocaleString()}</div>
               </div>
               <div className="col-span-2">
                 <div className="text-xs text-gray-500 mb-1">平均親密度</div>
                 <div className="flex items-center">
                   <Heart className="w-4 h-4 text-pink-500 mr-1" />
-                  <div className="text-sm font-medium text-gray-900 mr-2">{(character.averageAffinity || 0).toFixed(1)}%</div>
+                  <div className="text-sm font-medium text-gray-900 mr-2">{(character.averageAffinityLevel || 0).toFixed(1)}%</div>
                   <div className="flex-1 bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-pink-500 h-2 rounded-full" 
-                      style={{ width: `${character.averageAffinity || 0}%` }}
+                      style={{ width: `${character.averageAffinityLevel || 0}%` }}
                     ></div>
                   </div>
                 </div>
@@ -270,16 +270,16 @@ export default function CharacterManagementTable({ characters }: CharacterManage
                   {character.characterAccessType === 'free' ? 'ベースキャラ' : 'プレミアムキャラ'}
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {(character.totalConversations || 0).toLocaleString()}
+                  {(character.totalMessages || 0).toLocaleString()}
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <Heart className="w-4 h-4 text-pink-500 mr-1" />
-                    <div className="text-sm text-gray-900">{(character.averageAffinity || 0).toFixed(1)}%</div>
+                    <div className="text-sm text-gray-900">{(character.averageAffinityLevel || 0).toFixed(1)}%</div>
                     <div className="ml-2 w-12 md:w-16 bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-pink-500 h-2 rounded-full" 
-                        style={{ width: `${character.averageAffinity || 0}%` }}
+                        style={{ width: `${character.averageAffinityLevel || 0}%` }}
                       ></div>
                     </div>
                   </div>
