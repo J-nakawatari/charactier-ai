@@ -242,13 +242,21 @@ export default function ChatPage() {
 
     // フロントエンド側でメッセージバリデーション
     const validation = validateMessageBeforeSend(message);
-    if (!validation.canSend) {
-      showApiError({
-        code: 'CONTENT_VALIDATION_ERROR',
-        message: validation.errorMessage || 'メッセージに問題があります'
-      }, validation.errorMessage || 'メッセージの送信に失敗しました');
-      return;
-    }
+    console.log('🚨 親コンポーネントでの禁止用語チェック:', {
+      message: message,
+      canSend: validation.canSend,
+      errorMessage: validation.errorMessage
+    });
+    
+    // バックエンドの制裁システムをテストするため一時的に無効化
+    console.log('⚠️ 親コンポーネントの禁止用語チェックを一時的にスキップ');
+    // if (!validation.canSend) {
+    //   showApiError({
+    //     code: 'CONTENT_VALIDATION_ERROR',
+    //     message: validation.errorMessage || 'メッセージに問題があります'
+    //   }, validation.errorMessage || 'メッセージの送信に失敗しました');
+    //   return;
+    // }
 
     // ユーザーメッセージを即座に表示
     const tempUserMessage: Message = {
