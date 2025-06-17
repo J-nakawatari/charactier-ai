@@ -5150,17 +5150,39 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
 
     // 各キャラクターの統計を更新
     for (const character of characters) {
+      console.log(`📊 Processing character: ${character.name?.ja || character.name}`);
+      
       // このキャラクターに関連するチャット統計を集計
-      const stats = await ChatModel.aggregate([
-        { $match: { characterId: character._id } },
-        { $unwind: '$messages' },
-        { $match: { 'messages.sender': { $ne: 'system' } } },
-        { $group: {
-          _id: '$characterId',
-          totalMessages: { $sum: 1 },
-          uniqueUsers: { $addToSet: '$userId' }
-        }}
-      ]);
+      // ChatModelからデータを取得
+      const chats = await ChatModel.find({ characterId: character._id });
+      console.log(`  Found ${chats.length} chats in ChatModel`);
+      
+      // チャット統計を手動で集計
+      let totalMessages = 0;
+      const uniqueUsers = new Set<string>();
+      
+      for (const chat of chats) {
+        uniqueUsers.add(chat.userId);
+        totalMessages += chat.messages.length;
+      }
+      
+      // UserModelのconversationsフィールドからもチェック
+      const usersWithConversations = await UserModel.find({
+        'conversations.characterId': character._id
+      });
+      console.log(`  Found ${usersWithConversations.length} users with conversations in UserModel`);
+      
+      // conversationsフィールドからの統計も集計
+      for (const user of usersWithConversations) {
+        if (user.conversations) {
+          for (const conv of user.conversations) {
+            if (conv.characterId.toString() === character._id.toString()) {
+              uniqueUsers.add(user._id.toString());
+              totalMessages += conv.messages?.length || 0;
+            }
+          }
+        }
+      }
 
       // このキャラクターのユーザーごとの親密度を集計
       const affinityStats = await UserModel.aggregate([
@@ -5174,13 +5196,14 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
         }}
       ]);
 
-      const characterStats = stats[0] || { totalMessages: 0, uniqueUsers: [] };
       const affinityData = affinityStats[0] || { avgLevel: 0, totalUsers: 0, maxLevel: 0 };
 
       // キャラクターの統計を更新
-      character.totalMessages = characterStats.totalMessages;
-      character.totalUsers = characterStats.uniqueUsers.length;
+      character.totalMessages = totalMessages;
+      character.totalUsers = uniqueUsers.size;
       character.averageAffinityLevel = Number(affinityData.avgLevel.toFixed(1));
+      
+      console.log(`  Updated stats - Messages: ${totalMessages}, Users: ${uniqueUsers.size}, Avg Affinity: ${character.averageAffinityLevel}`);
       
       // 総収益の計算（このキャラクターの購入履歴から）
       const revenueStats = await PurchaseHistoryModel.aggregate([
@@ -5198,9 +5221,9 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
 
       await character.save();
       updatedCount++;
-      totalMessagesCount += characterStats.totalMessages;
+      totalMessagesCount += totalMessages;
 
-      console.log(`✅ Updated stats for ${character.name?.ja || character.name}: ${characterStats.totalMessages} messages, ${character.totalUsers} users`);
+      console.log(`✅ Updated stats for ${character.name?.ja || character.name}: ${totalMessages} messages, ${character.totalUsers} users`);
     }
 
     res.json({
