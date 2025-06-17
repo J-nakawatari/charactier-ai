@@ -276,6 +276,22 @@ export default function ChatPage() {
       });
 
       if (!response.ok) {
+        // デバッグ用：生のレスポンスをログ出力
+        const errorText = await response.clone().text();
+        console.log('🚨 Raw Error Response:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+          console.log('🚨 Parsed Error Data:', errorData);
+          console.log('🚨 Error Code:', errorData.code);
+          console.log('🚨 Sanction Action:', errorData.sanctionAction);
+          console.log('🚨 Violation Count:', errorData.violationCount);
+          console.log('🚨 Account Status:', errorData.accountStatus);
+        } catch (e) {
+          console.log('🚨 Error parsing response:', e);
+        }
+        
         const apiError = await handleApiError(response);
         throw apiError;
       }
