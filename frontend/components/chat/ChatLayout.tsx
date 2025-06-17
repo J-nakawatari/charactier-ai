@@ -287,14 +287,14 @@ export function ChatLayout({
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
+    // メッセージを保存してから入力をクリア
+    const messageToSend = inputMessage.trim();
     setInputMessage('');
     setIsLoading(true);
 
     try {
       // 親コンポーネントのonSendMessage関数を呼び出し
       // メッセージの更新は親コンポーネントで管理される
-      const messageToSend = inputMessage.trim();
-      setInputMessage('');
       
       // 📤 メッセージ送信時の完全な状態ログ
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
