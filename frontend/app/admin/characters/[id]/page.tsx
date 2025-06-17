@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { API_BASE_URL } from '@/lib/api-config';
-import { ArrowLeft, Edit, Play, Pause } from 'lucide-react';
+import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare } from 'lucide-react';
 
 // Inline type definitions
 interface Character {
@@ -199,14 +199,92 @@ export default function CharacterDetail() {
         </div>
       </header>
 
-      {/* シンプルなメインコンテンツ */}
+      {/* メインコンテンツ */}
       <main className="flex-1 p-4 md:p-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* 基本情報カード - エラーが発生する可能性が高い部分 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">基本情報（テスト）</h3>
-            <p>名前: {typeof character.name === 'string' ? character.name : (character.name?.ja || '未設定')}</p>
-            <p>ID: {character._id}</p>
-            <p>ステータス: {character.isActive ? '公開中' : '非公開'}</p>
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-2xl font-medium">
+                    {(typeof character.name === 'string' ? character.name : (character.name?.ja || '未設定')).charAt(0)}
+                  </span>
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">{typeof character.name === 'string' ? character.name : (character.name?.ja || '未設定')}</h2>
+                  <p className="text-lg text-gray-600 mt-1">{character.personalityType}</p>
+                  <div className="mt-3">
+                    <span className="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800">
+                      {character.isActive ? '公開中' : '非公開'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="flex items-start space-x-3 mb-4">
+                  <Globe className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-500 mb-1">キャラクター名</p>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-xs text-gray-400">日本語:</span>
+                        <p className="text-gray-900 font-medium">{character.name?.ja || '未設定'}</p>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-400">英語:</span>
+                        <p className="text-gray-900 font-medium">{character.name?.en || '未設定'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-start space-x-3 mb-4">
+                  <User className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-500 mb-2">基本設定</p>
+                    <div className="space-y-1">
+                      <div>
+                        <span className="text-xs text-gray-400">性別設定:</span>
+                        <p className="text-gray-900 font-medium">{character.gender || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-400">年齢設定:</span>
+                        <p className="text-gray-900 font-medium">{character.age || 'N/A'}</p>
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <span className="text-xs text-gray-400">職業設定:</span>
+                      <p className="text-gray-900 font-medium">{character.occupation || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
+                <div className="flex items-start space-x-3">
+                  <MessageSquare className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-500 mb-1">説明</p>
+                    <div className="space-y-3">
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <span className="text-xs text-gray-400 block mb-1">日本語:</span>
+                        <p className="text-gray-900 text-sm">{character.description?.ja || 'N/A'}</p>
+                      </div>
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <span className="text-xs text-gray-400 block mb-1">英語:</span>
+                        <p className="text-gray-900 text-sm">{character.description?.en || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>
