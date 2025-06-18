@@ -259,18 +259,6 @@ export default function TopBar() {
                     ))}
                   </div>
                 )}
-                
-                <div className="px-4 py-3 border-t border-gray-200">
-                  <button
-                    onClick={() => {
-                      setIsNotificationOpen(false);
-                      router.push('/admin/notifications');
-                    }}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    すべてのお知らせを見る →
-                  </button>
-                </div>
               </div>
             )}
           </div>
