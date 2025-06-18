@@ -346,24 +346,7 @@ export default function CharacterDetail() {
           </div>
 
           {/* 統計情報カード */}
-          <div className="relative">
-            {/* 統計更新ボタン */}
-            <div className="absolute top-0 right-0 -mt-4">
-              <button
-                onClick={handleUpdateStats}
-                disabled={updatingStats}
-                className={`flex items-center space-x-2 px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                  updatingStats 
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                <RefreshCw className={`w-4 h-4 ${updatingStats ? 'animate-spin' : ''}`} />
-                <span>{updatingStats ? '更新中...' : '統計を更新'}</span>
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center">
                 <div className="bg-blue-500 p-3 rounded-lg">

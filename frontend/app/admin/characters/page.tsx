@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import CharacterStats from '@/components/admin/CharacterStats';
 import CharacterManagementTable from '@/components/admin/CharacterManagementTable';
 import { useToast } from '@/contexts/ToastContext';
-import { Search, Filter, Plus, Download, Users } from 'lucide-react';
+import { Search, Filter, Plus, Download, Users, RefreshCw } from 'lucide-react';
 
 interface Character {
   _id: string;
@@ -26,14 +26,28 @@ interface Character {
 }
 
 export default function CharactersPage() {
-  const { success } = useToast();
+  const { success, warning } = useToast();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatingStats, setUpdatingStats] = useState(false);
+  const [lastStatsUpdate, setLastStatsUpdate] = useState<Date | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // キャラクター一覧を取得
   useEffect(() => {
     fetchCharacters();
+    
+    // 1時間ごとに統計を自動更新
+    intervalRef.current = setInterval(() => {
+      updateAllCharacterStats();
+    }, 60 * 60 * 1000); // 1時間
+    
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
   }, []);
 
   const fetchCharacters = async () => {
@@ -62,16 +76,69 @@ export default function CharactersPage() {
       setIsLoading(false);
     }
   };
+
+  // 全キャラクターの統計を更新
+  const updateAllCharacterStats = async () => {
+    try {
+      setUpdatingStats(true);
+      const token = localStorage.getItem('adminAccessToken');
+      
+      const response = await fetch('/api/admin/characters/update-stats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        success('統計更新完了', `${data.updated}件のキャラクター統計を更新しました`);
+        setLastStatsUpdate(new Date());
+        
+        // キャラクター一覧を再取得
+        await fetchCharacters();
+      } else {
+        const errorData = await response.json();
+        warning('統計更新エラー', errorData.error || '統計の更新に失敗しました');
+      }
+    } catch (error) {
+      console.error('Statistics update error:', error);
+      warning('統計更新エラー', '統計の更新に失敗しました');
+    } finally {
+      setUpdatingStats(false);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col">
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-200 p-4 md:p-6 pr-16 lg:pr-6">
         <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">キャラクター管理</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              AIキャラクターの作成・編集・公開状況管理
-            </p>
+          <div className="flex items-center space-x-4">
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">キャラクター管理</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                AIキャラクターの作成・編集・公開状況管理
+              </p>
+            </div>
+            
+            {/* 統計更新ボタン */}
+            <button
+              onClick={updateAllCharacterStats}
+              disabled={updatingStats}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                updatingStats 
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+              title={lastStatsUpdate ? `最終更新: ${lastStatsUpdate.toLocaleString('ja-JP')}` : '統計を更新'}
+            >
+              <RefreshCw className={`w-4 h-4 ${updatingStats ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline text-sm">
+                {updatingStats ? '更新中...' : '統計を更新'}
+              </span>
+            </button>
           </div>
           
           <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
