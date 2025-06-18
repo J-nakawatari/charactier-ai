@@ -184,6 +184,8 @@ export default function CharacterEditPage() {
             personalityPreset: character.personalityPreset || '',
             personalityTags: character.personalityTags || [],
             gender: character.gender || 'female',
+            age: character.age || '',
+            occupation: character.occupation || '',
             model: character.model || character.aiModel || 'o4-mini',
             characterAccessType: character.characterAccessType || 'free',
             stripeProductId: character.stripeProductId || '',
