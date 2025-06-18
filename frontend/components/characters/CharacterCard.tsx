@@ -12,7 +12,7 @@ import { PriceDisplay } from '../common/PriceDisplay';
 import { BaseCharacter } from '../../types/common';
 import { API_BASE_URL } from '@/lib/api-config';
 import { getSafeImageUrl } from '@/utils/imageUtils';
-import { translatePersonalityTag } from '@/utils/personalityTranslator';
+import { translatePersonalityTag, translatePersonalityPreset } from '@/utils/personalityTranslator';
 
 interface Character extends BaseCharacter {
   affinityStats?: {
@@ -272,7 +272,7 @@ export default function CharacterCard({
           {character.personalityPreset && (
             <div className="mt-1">
               <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${getPersonalityColor(character.personalityPreset)}`}>
-                {character.personalityPreset}
+                {translatePersonalityPreset(character.personalityPreset, locale)}
               </span>
             </div>
           )}
