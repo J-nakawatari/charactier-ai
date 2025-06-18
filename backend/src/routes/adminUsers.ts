@@ -84,6 +84,7 @@ router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, r
     // レスポンス用にデータを整形
     const formattedUsers = users.map(user => ({
       id: user._id.toString(),
+      _id: user._id.toString(), // フロントエンドが期待する_idフィールドを追加
       name: user.name || '名前未設定',
       email: user.email,
       status: user.accountStatus === 'suspended' ? 'suspended' : (user.isActive ? 'active' : 'inactive'),
@@ -91,7 +92,8 @@ router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, r
       tokenBalance: user.tokenBalance || 0,
       totalSpent: user.totalSpent || 0,
       chatCount: user.totalChatMessages || 0,
-      lastLogin: user.lastLogin ? user.lastLogin.toISOString() : user.createdAt.toISOString()
+      lastLogin: user.lastLogin ? user.lastLogin.toISOString() : user.createdAt.toISOString(),
+      createdAt: user.createdAt.toISOString() // createdAtフィールドも追加
     }));
 
     console.log(`✅ Fetched ${formattedUsers.length} users for admin`);
@@ -99,10 +101,10 @@ router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, r
     res.json({
       users: formattedUsers,
       pagination: {
-        currentPage: page,
-        totalPages,
-        totalItems: total,
-        limit
+        total: total, // フロントエンドが期待するフィールド名に変更
+        page: page, // フロントエンドが期待するフィールド名に変更
+        limit: limit,
+        totalPages: totalPages
       }
     });
 
