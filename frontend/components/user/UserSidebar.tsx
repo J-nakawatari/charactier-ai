@@ -37,7 +37,17 @@ interface User {
 export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
   const pathname = usePathname();
   const params = useParams();
-  const currentLocale = locale || params?.locale || 'ja';
+  
+  // パラメータから実際のロケールを取得し、保存する
+  const actualLocale = (params?.locale as string) || locale || 'ja';
+  const currentLocale = actualLocale;
+  
+  // ロケールが変更された時にlocalStorageも更新
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (actualLocale === 'ja' || actualLocale === 'en')) {
+      localStorage.setItem('user-locale', actualLocale);
+    }
+  }, [actualLocale]);
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);

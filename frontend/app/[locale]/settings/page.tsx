@@ -260,20 +260,20 @@ export default function SettingsPage() {
     try {
       setLanguageLoading(true);
       
-      // 現在のパスから言語部分を新しい言語に置き換え
-      const currentPath = window.location.pathname;
-      const pathWithoutLocale = currentPath.replace(`/${locale}`, '');
-      const newPath = `/${selectedLanguage}${pathWithoutLocale}`;
+      // 言語変更ユーティリティを使用して設定を保存し、ページ遷移
+      const { changeLanguage } = await import('@/utils/localeUtils');
       
       success(t('language.languageChanged'));
       
-      // 新しい言語のページにリダイレクト
-      router.push(newPath);
+      // 少し遅延を入れてトーストが表示されるようにする
+      setTimeout(() => {
+        changeLanguage(selectedLanguage as 'ja' | 'en');
+      }, 100);
+      
     } catch (err) {
       console.error('Error changing language:', err);
       error(t('errors.updateFailed'));
       setSelectedLanguage(locale); // エラー時は元の言語に戻す
-    } finally {
       setLanguageLoading(false);
     }
   };
