@@ -21,6 +21,7 @@ import { getMoodBackgroundGradient } from '@/utils/moodUtils';
 import { getAuthHeaders } from '@/utils/auth';
 import { getSafeImageUrl } from '@/utils/imageUtils';
 import { validateMessageBeforeSend } from '@/utils/contentFilter';
+import * as gtag from '@/lib/gtag';
 
 interface Character {
   _id: string;
@@ -125,6 +126,11 @@ export function ChatLayout({
     setCurrentTokens(tokenStatus.tokensRemaining);
   }, [tokenStatus.tokensRemaining]);
 
+  // Google Analytics: チャット開始イベント（初回のみ）
+  useEffect(() => {
+    gtag.trackChatStart(character._id, character.name);
+  }, [character._id, character.name]);
+
   // 🎭 初期データでAffinityStoreを更新
   useEffect(() => {
     updateAffinity({
@@ -142,6 +148,9 @@ export function ChatLayout({
         illustration: event.detail.illustration
       });
       setShowUnlockPopup(true);
+      
+      // Google Analytics: 親密度レベルアップイベント
+      gtag.trackAffinityLevelUp(character._id, event.detail.level);
     };
 
     window.addEventListener('levelUp', handleLevelUp as EventListener);
@@ -221,6 +230,9 @@ export function ChatLayout({
       // タイピング停止とキャラクタータイピング開始
       stopTyping();
       realtimeChat.setCharacterTyping(true);
+      
+      // Google Analytics: メッセージ送信イベント
+      gtag.trackMessageSent(character._id, messageToSend.length);
       
       await onSendMessage(messageToSend);
       

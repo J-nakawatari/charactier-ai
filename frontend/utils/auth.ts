@@ -4,6 +4,7 @@
  */
 
 import { API_BASE_URL } from '@/lib/api-config';
+import * as gtag from '@/lib/gtag';
 
 export interface AuthUser {
   _id: string;
@@ -172,6 +173,9 @@ export async function refreshToken(): Promise<boolean> {
  * ログアウト処理
  */
 export function logout(): void {
+  // Google Analytics: ユーザーIDをクリア（ログアウトイベントは自動送信される）
+  gtag.setUserId(null);
+  
   clearAuth();
   
   // ログインページにリダイレクト

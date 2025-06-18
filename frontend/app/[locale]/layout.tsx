@@ -2,7 +2,9 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { Inter } from 'next/font/google';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import GoogleAnalyticsScript from '@/components/GoogleAnalyticsScript';
 import { getActiveGAId } from '@/lib/ga-settings';
+import { Suspense } from 'react';
 import '../globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -37,6 +39,10 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>
+        {/* クライアントサイドGA機能（SPA対応、user_id設定） */}
+        <Suspense fallback={null}>
+          <GoogleAnalyticsScript />
+        </Suspense>
       </body>
     </html>
   );

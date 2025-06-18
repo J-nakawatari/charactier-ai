@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, Coins, ArrowLeft } from 'lucide-react';
 import { getAuthHeaders } from '@/utils/auth';
 import { API_BASE_URL } from '@/lib/api-config';
+import * as gtag from '@/lib/gtag';
 
 function PurchaseSuccessContent() {
   const searchParams = useSearchParams();
@@ -51,16 +52,46 @@ function PurchaseSuccessContent() {
           
           if (data.addedTokens || data.characterId) {
             console.log('✅ SSE: 購入完了通知受信');
-            setPurchaseData({
+            const purchaseInfo = {
               type: data.type || (data.addedTokens ? 'token' : 'character'),
               addedTokens: data.addedTokens,
               newBalance: data.newBalance,
               characterName: data.characterName,
               characterId: data.characterId
-            });
+            };
+            setPurchaseData(purchaseInfo);
             setProcessing(false);
             eventSource?.close();
             clearTimeout(fallbackTimeout);
+            
+            // Google Analytics: 購入イベント
+            if (purchaseInfo.type === 'token' && data.addedTokens) {
+              gtag.purchase({
+                transaction_id: sessionId || '',
+                value: data.price || data.addedTokens, // 実際の価格を使用
+                currency: 'JPY',
+                items: [{
+                  item_id: 'tokens',
+                  item_name: `${data.addedTokens} トークン`,
+                  item_category: 'tokens',
+                  price: data.price || data.addedTokens,
+                  quantity: 1
+                }]
+              });
+            } else if (purchaseInfo.type === 'character' && data.characterId) {
+              gtag.purchase({
+                transaction_id: sessionId || '',
+                value: data.price || 980, // 実際の価格を使用（デフォルト980円）
+                currency: 'JPY',
+                items: [{
+                  item_id: data.characterId,
+                  item_name: data.characterName || 'キャラクター',
+                  item_category: 'character',
+                  price: data.price || 980,
+                  quantity: 1
+                }]
+              });
+            }
           }
         } catch (parseError) {
           console.error('❌ SSE データ解析エラー:', parseError);

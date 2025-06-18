@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
 import { API_BASE_URL } from '@/lib/api-config';
+import * as gtag from '@/lib/gtag';
 
 const orbitron = Orbitron({ 
   weight: ['400', '700'], 
@@ -156,6 +157,13 @@ export default function LoginPage() {
       console.log('🔍 Stored isSetupComplete:', storedUser.isSetupComplete);
       
       console.log('✅ ログイン成功:', typeof data.user.name === 'string' ? data.user.name : (typeof data.user.name === 'object' && data.user.name?.name ? data.user.name.name : 'ユーザー'));
+      
+      // Google Analytics: ログインイベントとユーザーID設定
+      gtag.setUserId(data.user._id);
+      gtag.setUserProperties({
+        user_type: 'registered',
+        has_setup_complete: data.user.isSetupComplete || false,
+      });
       
       // 初回セットアップが完了していない場合のみセットアップ画面へ
       // 厳密にtrueかどうかをチェック
