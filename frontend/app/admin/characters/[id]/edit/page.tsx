@@ -11,43 +11,14 @@ import ImageCropper from '@/components/admin/ImageCropper';
 import TranslationEditor from '@/components/admin/TranslationEditor';
 import { ArrowLeft, Save, X, Upload } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
-
-// 調査したデータから取得した性格プリセット
-const PERSONALITY_PRESETS = [
-  { value: 'おっとり系', label: 'おっとり系', description: 'おっとりとしていて、ゆったりとした話し方をする' },
-  { value: '元気系', label: '元気系', description: '明るくて活発、エネルギッシュな性格' },
-  { value: 'クール系', label: 'クール系', description: 'クールで落ち着いている、知的な印象' },
-  { value: '真面目系', label: '真面目系', description: '真面目で責任感が強い、丁寧な性格' },
-  { value: 'セクシー系', label: 'セクシー系', description: '魅力的で大人の色気がある' },
-  { value: '天然系', label: '天然系', description: '天然でちょっと抜けているところがある' },
-  { value: 'ボーイッシュ系', label: 'ボーイッシュ系', description: 'ボーイッシュで活発、男の子っぽい性格' },
-  { value: 'お姉さん系', label: 'お姉さん系', description: '包容力があり、面倒見が良い大人の女性' }
-];
-
-// 調査したデータから取得した性格タグ
-const PERSONALITY_TAGS = [
-  { value: '明るい', label: '明るい', description: '明るく前向きな雰囲気を持っている' },
-  { value: 'よく笑う', label: 'よく笑う', description: 'よく笑い、楽しい雰囲気を作る' },
-  { value: '甘えん坊', label: '甘えん坊', description: '甘えるのが上手で、可愛らしい一面がある' },
-  { value: '積極的', label: '積極的', description: '積極的で行動力がある' },
-  { value: '大人っぽい', label: '大人っぽい', description: '大人っぽい落ち着きがある' },
-  { value: '静か', label: '静か', description: '静かで落ち着いている' },
-  { value: '天然', label: '天然', description: '天然で純粋な一面がある' },
-  { value: 'ボーイッシュ', label: 'ボーイッシュ', description: 'ボーイッシュで活発' },
-  { value: 'ポジティブ', label: 'ポジティブ', description: '常にポジティブで前向き' },
-  { value: 'やや毒舌', label: 'やや毒舌', description: 'ちょっと毒舌だが愛嬌がある' },
-  { value: '癒し系', label: '癒し系', description: '癒しの雰囲気を持っている' },
-  { value: '元気いっぱい', label: '元気いっぱい', description: 'エネルギッシュで元気いっぱい' },
-  { value: '知的', label: '知的', description: '知的で頭が良い' },
-  { value: '優しい', label: '優しい', description: '優しくて思いやりがある' },
-  { value: '人懐っこい', label: '人懐っこい', description: '人懐っこくて親しみやすい' }
-];
-
-// アクセスタイプ
-const ACCESS_TYPES = [
-  { value: 'free', label: 'ベースキャラ', description: 'トークン消費で利用可能' },
-  { value: 'purchaseOnly', label: 'プレミアムキャラ', description: '購入が必要なキャラクター' }
-];
+import { 
+  PERSONALITY_PRESETS, 
+  PERSONALITY_TAGS, 
+  ACCESS_TYPES,
+  GENDERS,
+  getLocalizedLabel,
+  getLocalizedDescription
+} from '@/constants/personality';
 
 // AIモデル（初期値、APIから動的取得）
 const DEFAULT_AI_MODELS = [
@@ -56,12 +27,6 @@ const DEFAULT_AI_MODELS = [
   { value: 'gpt-4o-mini', label: 'GPT-4o Mini', description: 'バランス型 - 中コスト' }
 ];
 
-// 性別
-const GENDERS = [
-  { value: 'female', label: '女性' },
-  { value: 'male', label: '男性' },
-  { value: 'other', label: 'その他' }
-];
 
 export default function CharacterEditPage() {
   const params = useParams();
