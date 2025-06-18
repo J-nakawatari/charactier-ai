@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Heart, Star, Lock, Unlock } from 'lucide-react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import AffinityDetailModal from './AffinityDetailModal';
 import AffinityImageModal from './AffinityImageModal';
 
@@ -32,6 +33,7 @@ interface AffinitySectionProps {
 }
 
 export default function AffinitySection({ affinities, locale }: AffinitySectionProps) {
+  const t = useTranslations('affinity');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState<AffinityItem | null>(null);
@@ -69,7 +71,7 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
         <div className="p-2 bg-pink-100 rounded-lg">
           <Heart className="w-5 h-5 text-pink-600" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900">親密度</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
       </div>
 
       {/* 親密度リスト */}
@@ -111,7 +113,7 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
                 <div className="mb-2">
                   <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
                     <span>EXP: {affinity.experience} / {affinity.maxExperience}</span>
-                    <span>あと{affinity.experienceToNext}EXP</span>
+                    <span>{t('expNeeded', { needed: affinity.experienceToNext })}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
@@ -130,7 +132,7 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
                     <div className="flex items-center space-x-1">
                       <Star className="w-4 h-4 text-yellow-500" />
                       <span className="text-gray-600">
-                        解放済み: {affinity.unlockedImages.length}枚
+                        {t('unlockedImages', { count: affinity.unlockedImages.length })}
                       </span>
                     </div>
                   </div>
@@ -141,14 +143,14 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
                       <>
                         <Unlock className="w-4 h-4 text-green-500" />
                         <span className="text-green-600 font-medium">
-                          新しい画像が利用可能！
+                          {t('newImagesAvailable')}
                         </span>
                       </>
                     ) : (
                       <>
                         <Lock className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-500">
-                          Lv.{affinity.nextUnlockLevel}で解放
+                          {t('unlocksAt', { level: affinity.nextUnlockLevel })}
                         </span>
                       </>
                     )}
@@ -163,14 +165,14 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
                 <div className="flex items-center space-x-2">
                   <Unlock className="w-4 h-4 text-green-600" />
                   <span className="text-sm font-medium text-green-800">
-                    新しい画像がアンロックされました！
+                    {t('newImageUnlocked')}
                   </span>
                 </div>
                 <button 
                   onClick={() => handleViewImages(affinity)}
                   className="mt-2 text-sm text-green-700 hover:text-green-800 underline transition-colors"
                 >
-                  画像を確認する
+{t('viewImages')}
                 </button>
               </div>
             )}
@@ -182,13 +184,13 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
       <div className="mt-6 pt-4 border-t border-gray-100">
         <div className="text-center">
           <p className="text-sm text-gray-600 mb-2">
-            キャラクターとの会話で親密度がアップします
+            {t('improvesByChat')}
           </p>
           <button 
             onClick={() => setIsModalOpen(true)}
             className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors"
           >
-            親密度について詳しく見る
+{t('learnMore')}
           </button>
         </div>
       </div>

@@ -4,6 +4,7 @@ import React from 'react';
 import { MessageSquare, Clock, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface LocalizedString {
   ja: string;

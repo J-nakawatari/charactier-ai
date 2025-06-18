@@ -357,5 +357,42 @@
     "loginInProgress": "Logging in...",
     "registrationFailed": "Registration failed",
     "networkError": "Network error occurred"
+  },
+  "affinity": {
+    "title": "Intimacy",
+    "expNeeded": "{needed} EXP to go",
+    "levelUp": "Lv.{level}",
+    "levelUpNotification": "UP!",
+    "unlockedImages": "Unlocked: {count} images",
+    "newImagesAvailable": "New images available!",
+    "unlocksAt": "Unlocks at Lv.{level}",
+    "newImageUnlocked": "New image unlocked!",
+    "viewImages": "View images",
+    "improvesByChat": "Intimacy increases through conversations with characters",
+    "learnMore": "Learn more about intimacy",
+    "specialRewardSoon": "Special reward coming soon!"
+  },
+  "tokens": {
+    "balance": "Token Balance",
+    "unit": " tokens",
+    "remainingMessages": "(About {count} more messages)",
+    "purchase": "Buy Talk Tickets",
+    "loading": "Loading...",
+    "consumed": "Used: {amount} tokens",
+    "lowBalanceWarning": "Low Balance Warning",
+    "totalPurchased": "Total Purchased",
+    "used": "Used",
+    "dailyAverage": "Daily Average Usage",
+    "estimatedDaysLeft": "Estimated Days Left",
+    "aboutDays": "About {days} days",
+    "lowBalanceTitle": "Token balance is running low",
+    "lowBalanceDesc": "Don't forget to refill your tokens to continue enjoying chats!",
+    "refill": "Refill tokens",
+    "buy": "Buy tokens",
+    "remaining": "Remaining"
+  },
+  "general": {
+    "logout": "Logout",
+    "logoutConfirm": "Are you sure you want to logout?"
   }
 }
