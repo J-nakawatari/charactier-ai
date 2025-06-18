@@ -335,7 +335,15 @@ router.get('/admin', authenticateToken, authenticateAdmin, async (req: AuthReque
 
     const query: any = {};
 
-    if (type) query.type = type;
+    // カンマ区切りで複数のタイプを指定可能にする
+    if (type) {
+      const types = type.split(',').map(t => t.trim());
+      if (types.length === 1) {
+        query.type = types[0];
+      } else {
+        query.type = { $in: types };
+      }
+    }
     if (isActive !== undefined) query.isActive = isActive === 'true';
     if (search) {
       query.$or = [
