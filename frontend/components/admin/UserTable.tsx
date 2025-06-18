@@ -54,8 +54,8 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
     return new Date(dateString).toLocaleDateString('ja-JP');
   };
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString('ja-JP');
+  const formatNumber = (num: number | undefined) => {
+    return (num || 0).toLocaleString('ja-JP');
   };
 
   const handleViewUser = (user: UserData) => {
@@ -180,11 +180,11 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
               <div>
                 <div className="text-xs text-gray-500">平均親密度</div>
                 <div className="flex items-center">
-                  <div className="text-sm font-medium text-gray-900 mr-2">{user.avgIntimacy.toFixed(1)}</div>
+                  <div className="text-sm font-medium text-gray-900 mr-2">{(user.avgIntimacy || 0).toFixed(1)}</div>
                   <div className="flex-1 bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-purple-600 h-2 rounded-full" 
-                      style={{ width: `${user.avgIntimacy}%` }}
+                      style={{ width: `${user.avgIntimacy || 0}%` }}
                     ></div>
                   </div>
                 </div>
@@ -264,11 +264,11 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className="text-sm text-gray-900 mr-2">{user.avgIntimacy.toFixed(1)}</div>
+                    <div className="text-sm text-gray-900 mr-2">{(user.avgIntimacy || 0).toFixed(1)}</div>
                     <div className="w-16 bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-purple-600 h-2 rounded-full" 
-                        style={{ width: `${user.avgIntimacy}%` }}
+                        style={{ width: `${user.avgIntimacy || 0}%` }}
                       ></div>
                     </div>
                   </div>
