@@ -23,8 +23,8 @@ const authenticateAdmin = (req: any, res: Response, next: any) => {
   next();
 };
 
-// Google Analytics設定の取得
-router.get('/google-analytics', authenticateToken, authenticateAdmin, async (req: any, res: Response): Promise<void> => {
+// Google Analytics設定の取得（公開API - 認証不要）
+router.get('/google-analytics', async (req: any, res: Response): Promise<void> => {
   try {
     const settings = await SystemSettingsModel.findOne({ key: 'google_analytics' });
     
