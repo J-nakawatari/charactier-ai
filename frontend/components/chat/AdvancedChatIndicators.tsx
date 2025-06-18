@@ -4,6 +4,7 @@ import {
   Brain, 
   Database
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useCharacterState } from '@/hooks/useCharacterState';
 import { getMoodIcon, getMoodIconColor, getMoodLabel } from '@/utils/moodUtils';
 
@@ -22,6 +23,7 @@ export default function AdvancedChatIndicators({
   className = '' 
 }: AdvancedChatIndicatorsProps) {
   const { characterState, loading } = useCharacterState(characterId, affinityLevel);
+  const t = useTranslations('moods');
 
   // ⚡ キャッシュ状態の色取得
   const getCacheStatusColor = (isHit: boolean, responseTime: number) => {
@@ -59,7 +61,7 @@ export default function AdvancedChatIndicators({
         {/* ムード表示 */}
         <div 
           className="flex items-center space-x-1 cursor-pointer hover:bg-gray-100/50 rounded px-1 py-0.5 transition-colors group relative"
-          title={`ムード: ${getMoodLabel(currentMood || characterState?.mood || 'neutral')} - 親密度 ${affinityLevel} に応じた感情状態`}
+          title={`ムード: ${getMoodLabel(currentMood || characterState?.mood || 'neutral', (key: string) => t(key))} - 親密度 ${affinityLevel} に応じた感情状態`}
         >
           {(() => {
             const moodToShow = currentMood || characterState?.mood || 'neutral';
@@ -68,12 +70,12 @@ export default function AdvancedChatIndicators({
             return <IconComponent className={`w-4 h-4 ${colorClass}`} />;
           })()}
           <span className="text-xs text-gray-600 hidden sm:inline">
-            {getMoodLabel(currentMood || characterState?.mood || 'neutral')}
+            {getMoodLabel(currentMood || characterState?.mood || 'neutral', (key: string) => t(key))}
           </span>
           
           {/* ツールチップ */}
           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-            ムード: {getMoodLabel(currentMood || characterState?.mood || 'neutral')}
+            ムード: {getMoodLabel(currentMood || characterState?.mood || 'neutral', (key: string) => t(key))}
             <br />
             親密度 {affinityLevel} に応じた感情状態
           </div>
