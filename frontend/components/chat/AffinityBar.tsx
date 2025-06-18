@@ -2,6 +2,7 @@
 
 import { Heart, Star } from 'lucide-react';
 import { useMemo, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { getMoodIcon, getMoodIconColor, getMoodLabel, getMoodAccentColor } from '@/utils/moodUtils';
 
 interface AffinityBarProps {
@@ -23,6 +24,8 @@ export function AffinityBar({
   characterId,
   onAffinityUpdate
 }: AffinityBarProps) {
+  const t = useTranslations('affinity');
+  const moodT = useTranslations('moods');
   const [animatingIncrease, setAnimatingIncrease] = useState(false);
   const [lastLevel, setLastLevel] = useState(level);
   const [lastExp, setLastExp] = useState(currentExp);
@@ -62,7 +65,7 @@ export function AffinityBar({
   const isExpGaining = animatingIncrease && currentExp > lastExp;
 
   const moodConfig = useMemo(() => {
-    const moodLabel = getMoodLabel(mood);
+    const moodLabel = getMoodLabel(mood, (key: string) => moodT(key));
     const accentColor = getMoodAccentColor(mood);
     
     switch (mood) {
@@ -115,7 +118,7 @@ export function AffinityBar({
           speed: 2000
         };
     }
-  }, [mood]);
+  }, [mood, moodT]);
 
   return (
     <div className="flex items-center space-x-4">
@@ -148,9 +151,9 @@ export function AffinityBar({
       {/* 経験値バー */}
       <div className="flex-1 max-w-md">
         <div className="hidden sm:flex items-center justify-between mb-1">
-          <span className="text-xs text-gray-600">親密度</span>
+          <span className="text-xs text-gray-600">{t('intimacy')}</span>
           <span className="text-xs text-gray-600">
-            あと{expNeeded}EXP
+            {t('expNeeded', { needed: expNeeded })}
           </span>
         </div>
         
@@ -249,7 +252,7 @@ export function AffinityBar({
       {level % 10 === 9 && (
         <div className="flex items-center space-x-1 text-xs text-yellow-600 bg-yellow-50 px-2 py-1 rounded-full">
           <Star className="w-3 h-3" />
-          <span>特典解放まであと少し！</span>
+          <span>{t('specialRewardSoon')}</span>
         </div>
       )}
     </div>

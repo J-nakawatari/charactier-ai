@@ -1,18 +1,20 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface MoodVisualizerProps {
   mood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
 }
 
 export function MoodVisualizer({ mood }: MoodVisualizerProps) {
+  const t = useTranslations('moods');
   const moodConfig = useMemo(() => {
     switch (mood) {
       case 'happy':
         return {
           emoji: '😊',
-          text: '楽しい',
+          text: t('happy'),
           color: '#10B981',
           bgColor: '#D1FAE5',
           heartRate: [20, 35, 25, 40, 30, 35, 20, 30],
@@ -21,7 +23,7 @@ export function MoodVisualizer({ mood }: MoodVisualizerProps) {
       case 'excited':
         return {
           emoji: '🤗',
-          text: 'ワクワク',
+          text: t('excited'),
           color: '#F59E0B',
           bgColor: '#FEF3C7',
           heartRate: [40, 60, 45, 65, 50, 70, 40, 55],
@@ -30,7 +32,7 @@ export function MoodVisualizer({ mood }: MoodVisualizerProps) {
       case 'shy':
         return {
           emoji: '😳',
-          text: '恥ずかしい',
+          text: t('shy'),
           color: '#EF4444',
           bgColor: '#FEE2E2',
           heartRate: [30, 45, 35, 50, 40, 45, 30, 40],
@@ -39,7 +41,7 @@ export function MoodVisualizer({ mood }: MoodVisualizerProps) {
       case 'sad':
         return {
           emoji: '😢',
-          text: '悲しい',
+          text: t('sad'),
           color: '#6B7280',
           bgColor: '#F3F4F6',
           heartRate: [15, 20, 18, 25, 20, 22, 15, 20],
@@ -48,7 +50,7 @@ export function MoodVisualizer({ mood }: MoodVisualizerProps) {
       case 'angry':
         return {
           emoji: '😤',
-          text: '怒ってる',
+          text: t('angry'),
           color: '#DC2626',
           bgColor: '#FEE2E2',
           heartRate: [50, 70, 55, 75, 60, 80, 45, 65],
@@ -57,14 +59,14 @@ export function MoodVisualizer({ mood }: MoodVisualizerProps) {
       default:
         return {
           emoji: '😊',
-          text: '普通',
+          text: t('neutral'),
           color: '#6B7280',
           bgColor: '#F3F4F6',
           heartRate: [20, 30, 25, 35, 30, 35, 20, 30],
           speed: 2000
         };
     }
-  }, [mood]);
+  }, [mood, t]);
 
   return (
     <div className="flex items-center space-x-3">

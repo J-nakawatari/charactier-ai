@@ -49,20 +49,20 @@ export const getMoodIconColor = (mood: string) => {
 export const getMoodLabel = (mood: string, t?: (key: string) => string) => {
   // i18n関数が提供されている場合は国際化対応
   if (t) {
-    return t(`moods.${mood}`) || t('moods.unknown');
+    return t(mood) || t('unknown');
   }
   
-  // フォールバック: 日本語ハードコード（既存互換性）
+  // フォールバック: デフォルトラベル（多言語対応以前の互換性のため）
   const moodLabels = {
-    happy: '嬉しい',
-    sad: '悲しい',
-    angry: '怒っている',
-    excited: 'わくわく',
-    melancholic: '憂鬱',
-    shy: '恥ずかしがり',
-    neutral: '普通'
+    happy: 'happy',
+    sad: 'sad', 
+    angry: 'angry',
+    excited: 'excited',
+    melancholic: 'melancholic',
+    shy: 'shy',
+    neutral: 'neutral'
   };
-  return moodLabels[mood as keyof typeof moodLabels] || '不明';
+  return moodLabels[mood as keyof typeof moodLabels] || 'unknown';
 };
 
 // 感情に基づく背景グラデーション取得

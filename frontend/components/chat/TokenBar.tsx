@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Coins, AlertTriangle, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { getAuthHeaders, getCurrentUser } from '@/utils/auth';
 
 interface TokenBarProps {
@@ -11,6 +12,7 @@ interface TokenBarProps {
 }
 
 export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: TokenBarProps) {
+  const t = useTranslations('tokens');
   const [currentTokens, setCurrentTokens] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const refreshTokenBalanceRef = useRef<() => Promise<void>>();
@@ -85,7 +87,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
           <Coins className="w-4 h-4 text-gray-400 animate-pulse" />
-          <div className="text-sm text-gray-500">読み込み中...</div>
+          <div className="text-sm text-gray-500">{t('loading')}</div>
         </div>
       </div>
     );
@@ -125,9 +127,9 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
                 : 'text-gray-700'
           }`}>
             <span className={isRefreshing ? 'opacity-50' : ''}>
-              {currentTokens.toLocaleString()}枚
+              {currentTokens.toLocaleString()}{t('tokenUnit')}
             </span>
-            <span className="hidden sm:inline">（あと約{remainingMessages}メッセージ）</span>
+            <span className="hidden sm:inline">{t('remainingMessages', { count: remainingMessages })}</span>
           </div>
         </div>
       </div>
@@ -155,8 +157,8 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
         }}
       >
         <Plus className="w-4 h-4" />
-        <span className="sm:hidden text-xs">トークチケット購入</span>
-        <span className="hidden sm:inline">トークチケット購入</span>
+        <span className="sm:hidden text-xs">{t('purchase')}</span>
+        <span className="hidden sm:inline">{t('purchase')}</span>
       </button>
 
     </div>

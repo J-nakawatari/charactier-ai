@@ -389,7 +389,8 @@
     "viewImages": "画像を確認する",
     "improvesByChat": "キャラクターとの会話で親密度がアップします",
     "learnMore": "親密度について詳しく見る",
-    "specialRewardSoon": "特典解放まであと少し！"
+    "specialRewardSoon": "特典解放まであと少し！",
+    "intimacy": "親密度"
   },
   "tokens": {
     "balance": "トークン残高",
@@ -404,11 +405,12 @@
     "dailyAverage": "日平均使用量",
     "estimatedDaysLeft": "予想残り日数",
     "aboutDays": "約{days}日",
-    "lowBalanceTitle": "トークン残量が少なくなっています",
+    "lowBalanceTitle": "トークン残量が少ってくださいいます",
     "lowBalanceDesc": "継続してチャットを楽しむために、トークンの補充をお忘れなく！",
     "refill": "トークンを補充する",
     "buy": "トークンを購入",
-    "remaining": "残量"
+    "remaining": "残量",
+    "tokenUnit": "枚"
   },
   "general": {
     "logout": "ログアウト",
