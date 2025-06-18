@@ -37,11 +37,6 @@ export default function GoogleAnalyticsScript() {
     fetchGASettings();
   }, []);
 
-  // GA設定が無効またはロードされていない場合は何もレンダリングしない
-  if (!gaSettings || !gaSettings.isActive || !gaSettings.measurementId) {
-    return null;
-  }
-
   // カスタムトラッキングコードがある場合はそれを使用
   useEffect(() => {
     if (gaSettings && gaSettings.trackingCode && typeof window !== 'undefined') {
@@ -96,6 +91,11 @@ export default function GoogleAnalyticsScript() {
       };
     }
   }, [gaSettings]);
+
+  // GA設定が無効またはロードされていない場合は何もレンダリングしない
+  if (!gaSettings || !gaSettings.isActive || !gaSettings.measurementId) {
+    return null;
+  }
 
   if (gaSettings && gaSettings.trackingCode) {
     // カスタムコードの場合は何も返さない（useEffectで処理）
