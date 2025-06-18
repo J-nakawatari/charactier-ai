@@ -41,7 +41,7 @@ export default function SettingsPage() {
   
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'language' | 'account'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'account'>('profile');
   
   // プロフィール更新用
   const [profileData, setProfileData] = useState({ name: '', email: '' });
@@ -281,7 +281,6 @@ export default function SettingsPage() {
   const tabs = [
     { id: 'profile' as const, label: t('profile.title'), icon: User },
     { id: 'security' as const, label: t('security.title'), icon: Lock },
-    { id: 'language' as const, label: t('language.title'), icon: Globe },
     { id: 'account' as const, label: t('account.title'), icon: UserX }
   ];
 
@@ -303,6 +302,50 @@ export default function SettingsPage() {
           {isLoading && (
             <div className="flex items-center justify-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            </div>
+          )}
+
+          {/* 言語設定セクション */}
+          {!isLoading && userData && (
+            <div className="bg-white rounded-lg shadow-sm border mb-6">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center space-x-3 mb-4">
+                  <Globe className="w-5 h-5 text-purple-600" />
+                  <h2 className="text-lg font-semibold text-gray-900">{t('language.title')}</h2>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('language.currentLanguage')}
+                    </label>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+                      <Globe className="w-4 h-4" />
+                      <span>{locale === 'ja' ? t('language.japanese') : t('language.english')}</span>
+                    </div>
+                    
+                    <select
+                      value={selectedLanguage}
+                      onChange={(e) => setSelectedLanguage(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
+                    >
+                      <option value="ja">{t('language.japanese')}</option>
+                      <option value="en">{t('language.english')}</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <button
+                      onClick={handleLanguageChange}
+                      disabled={languageLoading || selectedLanguage === locale}
+                      className="w-full md:w-auto flex items-center justify-center space-x-2 px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Globe className="w-4 h-4" />
+                      <span>{languageLoading ? t('buttons.saving') : t('language.saveLanguage')}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -509,52 +552,6 @@ export default function SettingsPage() {
                           <Save className="w-4 h-4" />
                           <span>{passwordLoading ? t('buttons.changing') : t('security.savePassword')}</span>
                         </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 言語設定タブ */}
-                {activeTab === 'language' && (
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">{t('language.title')}</h3>
-                      
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t('language.currentLanguage')}
-                          </label>
-                          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
-                            <Globe className="w-4 h-4" />
-                            <span>{locale === 'ja' ? t('language.japanese') : t('language.english')}</span>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t('language.selectLanguage')}
-                          </label>
-                          <select
-                            value={selectedLanguage}
-                            onChange={(e) => setSelectedLanguage(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
-                          >
-                            <option value="ja">{t('language.japanese')}</option>
-                            <option value="en">{t('language.english')}</option>
-                          </select>
-                        </div>
-
-                        <div className="mt-6">
-                          <button
-                            onClick={handleLanguageChange}
-                            disabled={languageLoading || selectedLanguage === locale}
-                            className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <Globe className="w-4 h-4" />
-                            <span>{languageLoading ? t('buttons.saving') : t('language.saveLanguage')}</span>
-                          </button>
-                        </div>
                       </div>
                     </div>
                   </div>
