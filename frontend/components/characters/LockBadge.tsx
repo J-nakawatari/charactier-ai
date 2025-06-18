@@ -22,13 +22,13 @@ export default function LockBadge({
     switch (size) {
       case 'sm':
         return {
-          badge: 'px-1.5 py-0.5 text-xs',
-          icon: 'w-3 h-3'
+          badge: 'px-1.5 py-0.5 text-base',
+          icon: 'w-4 h-4'
         };
       default: // md
         return {
-          badge: 'px-2 py-1 text-xs',
-          icon: 'w-3.5 h-3.5'
+          badge: 'px-2 py-1 text-base',
+          icon: 'w-4 h-4'
         };
     }
   };

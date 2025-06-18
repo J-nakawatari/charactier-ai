@@ -345,7 +345,7 @@ export default function CharacterCard({
                       <PriceDisplay 
                         priceJpy={price} 
                         locale={locale} 
-                        className="inline" 
+                        className="inline text-base" 
                       />
                     ) : (
                       t('actions.unlock')
