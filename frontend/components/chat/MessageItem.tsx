@@ -44,7 +44,7 @@ export function MessageItem({ message, character, showAdvanced = false, affinity
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
           </div>
           <div className="flex items-center space-x-2 mt-1">
-            {message.tokens && (
+            {message.tokens && message.tokens > 0 && (
               <div className="flex items-center space-x-1 text-xs text-gray-500">
                 <Coins className="w-3 h-3" />
                 <span>{message.tokens}</span>

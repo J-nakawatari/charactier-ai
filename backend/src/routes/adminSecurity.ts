@@ -113,7 +113,10 @@ router.get('/sanctioned-users', authenticateToken, authenticateAdmin, async (req
     const users = await UserModel.find({
       accountStatus: { 
         $in: ['warned', 'chat_suspended', 'account_suspended', 'banned']
-      }
+      },
+      // 削除済みユーザーを除外（メールアドレスが deleted_ で始まるものも除外）
+      email: { $not: /^deleted_/ },
+      isActive: { $ne: false }
     }).select('name email accountStatus suspensionEndDate violationCount lastViolationDate');
     
     res.json({
