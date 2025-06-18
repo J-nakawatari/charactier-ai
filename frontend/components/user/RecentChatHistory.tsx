@@ -30,17 +30,19 @@ interface RecentChatHistoryProps {
 
 export default function RecentChatHistory({ recentChats, locale }: RecentChatHistoryProps) {
   const router = useRouter();
+  const t = useTranslations('recentChats');
+  const tGeneral = useTranslations('general');
   
   const formatRelativeTime = (date: Date) => {
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - new Date(date).getTime()) / (1000 * 60));
     
     if (diffInMinutes < 60) {
-      return `${diffInMinutes}分前`;
+      return `${diffInMinutes}${tGeneral('minutes')}${tGeneral('ago')}`;
     } else if (diffInMinutes < 1440) { // 24時間
-      return `${Math.floor(diffInMinutes / 60)}時間前`;
+      return `${Math.floor(diffInMinutes / 60)}${tGeneral('hours')}${tGeneral('ago')}`;
     } else {
-      return `${Math.floor(diffInMinutes / 1440)}日前`;
+      return `${Math.floor(diffInMinutes / 1440)}${tGeneral('days')}${tGeneral('ago')}`;
     }
   };
 

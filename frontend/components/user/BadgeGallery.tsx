@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Award, Lock, CheckCircle, Star, Target, TrendingUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import BadgeSystemModal from './BadgeSystemModal';
 
 interface LocalizedString {
@@ -26,6 +27,8 @@ interface BadgeGalleryProps {
 }
 
 export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
+  const t = useTranslations('badges');
+  const tGeneral = useTranslations('general');
   const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
   const [isSystemModalOpen, setIsSystemModalOpen] = useState(false);
   
@@ -87,9 +90,9 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
             <Award className="w-5 h-5 text-yellow-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">バッジコレクション</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
             <p className="text-sm text-gray-600">
-              {unlockedCount} / {(badges || []).length} 獲得済み
+              {unlockedCount} / {(badges || []).length} {t('acquired')}
             </p>
           </div>
         </div>
@@ -99,7 +102,7 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
           <div className="text-2xl font-bold text-gray-900">
             {(badges || []).length === 0 ? '0' : Math.round((unlockedCount / (badges || []).length) * 100)}%
           </div>
-          <div className="text-sm text-gray-500">達成率</div>
+          <div className="text-sm text-gray-500">{t('achievementRate')}</div>
         </div>
       </div>
 
@@ -118,9 +121,9 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
       {/* フィルター */}
       <div className="flex space-x-2 mb-4">
         {[
-          { key: 'all', label: 'すべて' },
-          { key: 'unlocked', label: '獲得済み' },
-          { key: 'locked', label: '未獲得' }
+          { key: 'all', label: t('all') },
+          { key: 'unlocked', label: t('unlocked') },
+          { key: 'locked', label: t('locked') }
         ].map((item) => (
           <button
             key={item.key}

@@ -393,6 +393,73 @@
   },
   "general": {
     "logout": "Logout",
-    "logoutConfirm": "Are you sure you want to logout?"
+    "logoutConfirm": "Are you sure you want to logout?",
+    "viewAll": "View All",
+    "markAllRead": "Mark All Read",
+    "read": "Read",
+    "unread": "Unread",
+    "close": "Close",
+    "ago": "ago",
+    "minutes": "minutes",
+    "hours": "hours",
+    "days": "days",
+    "items": " items",
+    "times": " times"
+  },
+  "badges": {
+    "title": "Badge Collection",
+    "acquired": "Acquired",
+    "achievementRate": "Achievement Rate",
+    "progress": "Progress",
+    "all": "All",
+    "unlocked": "Unlocked",
+    "locked": "Locked",
+    "preparing": "Badge system is being prepared...",
+    "noAcquired": "No acquired badges",
+    "allCompleted": "All badges acquired!",
+    "noBadges": "No badges available",
+    "encouragement": "Acquire new badges through activities!",
+    "learnMore": "Learn more about badges",
+    "badgeDetail": "Badge Details",
+    "description": "Description",
+    "acquiredDate": "Acquired Date:",
+    "acquireCondition": "Acquisition Condition",
+    "completed": "% Completed",
+    "autoAcquire": "Automatically acquired when conditions are met",
+    "hint": "Achievement Hint",
+    "categories": {
+      "beginner": "Beginner",
+      "chat": "Chat",
+      "affinity": "Affinity",
+      "general": "General"
+    },
+    "hints": {
+      "startChat": "Start with your first chat with a character",
+      "continueChat": "Keep chatting consistently every day",
+      "buildAffinity": "Build affinity by spending time interacting with characters",
+      "general": "Try participating in various activities"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unreadCount": " unread",
+    "important": "Important",
+    "viewAll": "View all notifications ({count} items)"
+  },
+  "recentChats": {
+    "title": "Recent Chats",
+    "noHistory": "No chat history yet",
+    "startChatting": "Start chatting with characters",
+    "messagesCount": " messages",
+    "continueReading": "Continue reading"
+  },
+  "purchaseHistorySummary": {
+    "title": "Purchase History",
+    "totalSpent": "Total Spent",
+    "purchasedTokens": "Purchased Tokens",
+    "types": {
+      "token": "Tokens",
+      "character": "Character"
+    }
   }
 }

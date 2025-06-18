@@ -393,6 +393,73 @@
   },
   "general": {
     "logout": "ログアウト",
-    "logoutConfirm": "ログアウトしますか？"
+    "logoutConfirm": "ログアウトしますか？",
+    "viewAll": "すべて見る",
+    "markAllRead": "すべて既読",
+    "read": "既読",
+    "unread": "未読",
+    "close": "閉じる",
+    "ago": "前",
+    "minutes": "分",
+    "hours": "時間", 
+    "days": "日",
+    "items": "件",
+    "times": "回"
+  },
+  "badges": {
+    "title": "バッジコレクション",
+    "acquired": "獲得済み",
+    "achievementRate": "達成率",
+    "progress": "進捗",
+    "all": "すべて",
+    "unlocked": "獲得済み",
+    "locked": "未獲得",
+    "preparing": "バッジシステムを準備中です...",
+    "noAcquired": "獲得済みのバッジがありません",
+    "allCompleted": "すべてのバッジを獲得済みです！",
+    "noBadges": "バッジがありません",
+    "encouragement": "アクティビティを通じて新しいバッジを獲得しよう！",
+    "learnMore": "バッジについて詳しく見る",
+    "badgeDetail": "バッジ詳細",
+    "description": "説明",
+    "acquiredDate": "獲得日時:",
+    "acquireCondition": "獲得条件",
+    "completed": "% 完了",
+    "autoAcquire": "条件を満たすと自動的に獲得されます",
+    "hint": "達成のヒント",
+    "categories": {
+      "beginner": "初心者向け",
+      "chat": "チャット系",
+      "affinity": "親密度系",
+      "general": "一般"
+    },
+    "hints": {
+      "startChat": "キャラクターとの初回チャットから始めましょう",
+      "continueChat": "毎日コツコツとチャットを続けることが大切です",
+      "buildAffinity": "親密度を上げるには時間をかけてキャラクターと交流しましょう",
+      "general": "様々なアクティビティに参加してみてください"
+    }
+  },
+  "notifications": {
+    "title": "お知らせ",
+    "unreadCount": "件未読",
+    "important": "重要",
+    "viewAll": "すべてのお知らせを表示 ({count}件)"
+  },
+  "recentChats": {
+    "title": "最近のチャット",
+    "noHistory": "まだチャット履歴がありません",
+    "startChatting": "キャラクターと話してみる",
+    "messagesCount": "件のメッセージ",
+    "continueReading": "続きを読む"
+  },
+  "purchaseHistorySummary": {
+    "title": "購入履歴",
+    "totalSpent": "総購入額",
+    "purchasedTokens": "購入トークン",
+    "types": {
+      "token": "トークン",
+      "character": "キャラクター"
+    }
   }
 }
