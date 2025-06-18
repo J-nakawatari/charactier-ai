@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { authenticateToken } from '../middleware/auth';
 import { SystemSettingsModel } from '../models/SystemSettingsModel';
 
-const router = Router();
+const router: Router = Router();
 
 // リクエストの型定義
 interface AuthRequest extends Request {
