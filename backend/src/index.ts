@@ -584,7 +584,7 @@ import adminTokenPacksRoutes from './routes/adminTokenPacks';
 import adminTokenUsageRoutes from './routes/adminTokenUsage';
 import adminSecurityRoutes from './routes/adminSecurity';
 
-routeRegistry.mount('/admin/users', adminUsersRoutes);
+routeRegistry.mount('/api/admin/users', adminUsersRoutes);
 routeRegistry.mount('/api/admin/token-packs', adminTokenPacksRoutes);
 routeRegistry.mount('/api/admin/token-usage', adminTokenUsageRoutes);
 routeRegistry.mount('/api/admin/security', adminSecurityRoutes);
