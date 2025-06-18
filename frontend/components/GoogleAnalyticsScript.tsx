@@ -16,10 +16,12 @@ export default function GoogleAnalyticsScript() {
     // Google Analytics設定を取得
     const fetchGASettings = async () => {
       try {
+        console.log('Fetching GA settings...');
         const response = await fetch('/api/system-settings/google-analytics');
         
         if (response.ok) {
           const data = await response.json();
+          console.log('GA settings response:', data);
           
           if (data.isActive && data.settings) {
             setGaSettings({
@@ -27,7 +29,12 @@ export default function GoogleAnalyticsScript() {
               trackingCode: data.settings.trackingCode,
               isActive: data.isActive
             });
+            console.log('GA settings loaded:', data.settings.measurementId);
+          } else {
+            console.log('GA is not active or settings are missing');
           }
+        } else {
+          console.error('Failed to fetch GA settings:', response.status);
         }
       } catch (error) {
         console.error('Failed to load GA settings:', error);
