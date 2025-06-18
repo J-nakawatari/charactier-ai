@@ -5376,6 +5376,27 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
   }
 });
 
+// 為替レート取得API
+app.get('/api/exchange-rate', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const rate = await ExchangeRateModel.getLatestValidRate('USD', 'JPY');
+    res.json({ 
+      success: true,
+      usdToJpy: rate,
+      jpyToUsd: 1 / rate
+    });
+  } catch (error) {
+    console.error('Exchange rate fetch error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch exchange rate',
+      fallback: {
+        usdToJpy: 150,
+        jpyToUsd: 1 / 150
+      }
+    });
+  }
+});
+
 // ==================== USER SETTINGS ENDPOINTS ====================
 
 // ユーザーのパスワード変更API
