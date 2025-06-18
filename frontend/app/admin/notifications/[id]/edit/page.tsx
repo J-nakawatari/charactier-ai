@@ -98,27 +98,28 @@ export default function EditNotificationPage() {
       }
 
       const data = await response.json();
+      console.log('Notification data:', data); // デバッグログ
       setNotification(data);
       
       // フォームデータに反映
       setFormData({
-        titleJa: data.title.ja,
-        titleEn: data.title.en,
-        messageJa: data.message.ja,
-        messageEn: data.message.en,
-        type: data.type,
-        isActive: data.isActive,
-        isPinned: data.isPinned,
-        priority: data.priority,
-        targetType: data.targetCondition.type,
-        validFrom: new Date(data.validFrom).toISOString().slice(0, 16),
+        titleJa: data.title?.ja || '',
+        titleEn: data.title?.en || '',
+        messageJa: data.message?.ja || '',
+        messageEn: data.message?.en || '',
+        type: data.type || 'info',
+        isActive: data.isActive ?? true,
+        isPinned: data.isPinned ?? false,
+        priority: data.priority || 0,
+        targetType: data.targetCondition?.type || 'all',
+        validFrom: data.validFrom ? new Date(data.validFrom).toISOString().slice(0, 16) : '',
         validUntil: data.validUntil ? new Date(data.validUntil).toISOString().slice(0, 16) : '',
-        userIds: data.targetCondition.userIds?.join(',') || '',
-        minLevel: data.targetCondition.minLevel || 0,
-        maxLevel: data.targetCondition.maxLevel || 100,
-        hasPurchases: data.targetCondition.hasPurchases || false,
-        registeredAfter: data.targetCondition.registeredAfter ? new Date(data.targetCondition.registeredAfter).toISOString().slice(0, 10) : '',
-        registeredBefore: data.targetCondition.registeredBefore ? new Date(data.targetCondition.registeredBefore).toISOString().slice(0, 10) : ''
+        userIds: data.targetCondition?.userIds?.join(',') || '',
+        minLevel: data.targetCondition?.minLevel || 0,
+        maxLevel: data.targetCondition?.maxLevel || 100,
+        hasPurchases: data.targetCondition?.hasPurchases || false,
+        registeredAfter: data.targetCondition?.registeredAfter ? new Date(data.targetCondition.registeredAfter).toISOString().slice(0, 10) : '',
+        registeredBefore: data.targetCondition?.registeredBefore ? new Date(data.targetCondition.registeredBefore).toISOString().slice(0, 10) : ''
       });
       
       setError(null);

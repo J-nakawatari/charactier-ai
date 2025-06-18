@@ -430,7 +430,7 @@ export default function NotificationDetailPage() {
               <div className="space-y-3">
                 <div>
                   <span className="text-sm text-gray-600">作成者</span>
-                  <p className="font-medium">{notification.createdBy.name}</p>
+                  <p className="font-medium">{notification.createdBy?.name || '不明'}</p>
                   <p className="text-sm text-gray-500">{notification.createdBy.email}</p>
                 </div>
                 
