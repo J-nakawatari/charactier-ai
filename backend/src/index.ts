@@ -2681,7 +2681,9 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
       
       const query: any = {
         // 管理者による論理削除のみ除外、その他は全て表示
-        isActive: { $ne: false }
+        isActive: { $ne: false },
+        // 削除済みアカウントも除外
+        accountStatus: { $ne: 'deleted' }
       };
       
       // 検索フィルター
@@ -5370,6 +5372,169 @@ app.post('/api/admin/characters/update-stats', authenticateToken, async (req: Au
       error: 'Internal server error',
       message: 'キャラクター統計の更新に失敗しました',
       details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+// ==================== USER SETTINGS ENDPOINTS ====================
+
+// ユーザーのパスワード変更API
+app.put('/api/user/change-password', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { currentPassword, newPassword } = req.body;
+
+  // バリデーション
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({ 
+      error: 'Missing required fields',
+      message: '現在のパスワードと新しいパスワードが必要です'
+    });
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    res.status(400).json({ 
+      error: 'Password too short',
+      message: 'パスワードは8文字以上である必要があります'
+    });
+    return;
+  }
+
+  try {
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database not connected' });
+      return;
+    }
+
+    // ユーザーを取得（パスワードフィールドも含む）
+    const user = await UserModel.findById(req.user._id).select('+password');
+    if (!user) {
+      res.status(404).json({ 
+        error: 'User not found',
+        message: 'ユーザーが見つかりません'
+      });
+      return;
+    }
+
+    // 現在のパスワードを確認
+    const bcrypt = require('bcryptjs');
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      res.status(400).json({ 
+        error: 'Invalid current password',
+        message: '現在のパスワードが正しくありません'
+      });
+      return;
+    }
+
+    // 新しいパスワードをハッシュ化
+    const saltRounds = 12;
+    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // パスワードを更新
+    await UserModel.findByIdAndUpdate(req.user._id, {
+      password: hashedNewPassword
+    });
+
+    res.json({
+      success: true,
+      message: 'パスワードが正常に変更されました'
+    });
+
+  } catch (error) {
+    console.error('Password change error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'パスワードの変更に失敗しました'
+    });
+  }
+});
+
+// ユーザーのアカウント削除API
+app.delete('/api/user/delete-account', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { password } = req.body;
+
+  // パスワード確認が必要
+  if (!password) {
+    res.status(400).json({ 
+      error: 'Password required',
+      message: 'アカウント削除にはパスワードの確認が必要です'
+    });
+    return;
+  }
+
+  try {
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database not connected' });
+      return;
+    }
+
+    // ユーザーを取得（パスワードフィールドも含む）
+    const user = await UserModel.findById(req.user._id).select('+password');
+    if (!user) {
+      res.status(404).json({ 
+        error: 'User not found',
+        message: 'ユーザーが見つかりません'
+      });
+      return;
+    }
+
+    // パスワードを確認
+    const bcrypt = require('bcryptjs');
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      res.status(400).json({ 
+        error: 'Invalid password',
+        message: 'パスワードが正しくありません'
+      });
+      return;
+    }
+
+    // 論理削除を実行（物理削除ではなく、アクセス不可にする）
+    await UserModel.findByIdAndUpdate(req.user._id, {
+      isActive: false,
+      accountStatus: 'deleted',
+      email: `deleted_${Date.now()}_${user.email}`, // メールアドレスを無効化
+      deletedAt: new Date()
+    });
+
+    // 関連データの無効化
+    try {
+      // チャット履歴を無効化
+      await ChatModel.updateMany(
+        { userId: req.user._id },
+        { $set: { isActive: false } }
+      );
+      
+      // 通知を無効化
+      await UserNotificationReadStatusModel.updateMany(
+        { userId: req.user._id },
+        { $set: { isActive: false } }
+      );
+    } catch (cleanupError) {
+      console.error('Account deletion cleanup error:', cleanupError);
+      // クリーンアップエラーは無視して続行
+    }
+
+    res.json({
+      success: true,
+      message: 'アカウントが正常に削除されました'
+    });
+
+  } catch (error) {
+    console.error('Account deletion error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'アカウントの削除に失敗しました'
     });
   }
 });
