@@ -294,12 +294,9 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
 // 管理者用未読通知数取得
 router.get('/admin/unread-count', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    // システム通知など管理者向けの未読通知をカウント
-    const unreadCount = await NotificationModel.countDocuments({
-      isActive: true,
-      // ここで管理者向け通知の条件を追加可能
-      // 例: type: { $in: ['warning', 'urgent', 'maintenance'] }
-    });
+    // TODO: 管理者ごとの既読管理が実装されたら、実際の未読数をカウントする
+    // 現在は管理者向け通知の既読管理が未実装のため、0を返す
+    const unreadCount = 0;
 
     res.json({ unreadCount });
   } catch (error) {
