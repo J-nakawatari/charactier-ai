@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { Send, Heart, Zap, Settings, Eye, EyeOff } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useLocale } from '@/hooks/useLocale';
 import { MessageList } from './MessageList';
 import { AffinityBar } from './AffinityBar';
 import { MoodVisualizer } from './MoodVisualizer';
@@ -83,6 +85,8 @@ export function ChatLayout({
   isLoadingMore = false,
   onTokenPurchaseSuccess
 }: ChatLayoutProps) {
+  const t = useTranslations('chatLayout');
+  const locale = useLocale();
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [localMessages, setLocalMessages] = useState<Message[]>(messages);
@@ -299,7 +303,7 @@ export function ChatLayout({
                   ? 'bg-purple-100 text-purple-600 hover:bg-purple-200' 
                   : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
               }`}
-              title={showAdvanced ? '高度表示オフ' : '高度表示オン'}
+              title={showAdvanced ? t('advancedOff') : t('advancedOn')}
             >
               {showAdvanced ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </button>
@@ -376,13 +380,13 @@ export function ChatLayout({
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={`${character.name}にメッセージを送る...`}
+                placeholder={t('messagePlaceholder', { characterName: character.name })}
                 className="w-full resize-none rounded-lg border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 focus:outline-none focus:border-[#ec4899] bg-white text-gray-900 placeholder-gray-500 text-sm sm:text-base min-h-[40px] sm:min-h-[48px]"
                 rows={1}
                 style={{ maxHeight: '80px' }}
               />
               <div className="absolute bottom-2 right-2 text-xs text-gray-500">
-                ~{tokenStatus.lastMessageCost}枚
+                {t('cost', { cost: tokenStatus.lastMessageCost })}
               </div>
             </div>
             
@@ -401,7 +405,7 @@ export function ChatLayout({
           </div>
           
           {/* 改行説明テキスト */}
-          <span className="block text-center text-xs text-gray-400 m-0" style={{ lineHeight: 0, marginTop: '4px' }}>Shift+エンターで改行できます</span>
+          <span className="block text-center text-xs text-gray-400 m-0" style={{ lineHeight: 0, marginTop: '4px' }}>{t('shiftEnterHint')}</span>
         </div>
       </div>
 

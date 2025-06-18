@@ -249,7 +249,7 @@
     "title": "設定",
     "subtitle": "アカウント情報とセキュリティ設定を管理します",
     "profile": {
-      "title": "プロフィール",
+      "title": "プロフィール情報",
       "username": "ユーザー名",
       "email": "メールアドレス",
       "edit": "プロフィールを編集",
@@ -257,18 +257,96 @@
       "cancel": "キャンセル"
     },
     "security": {
-      "title": "セキュリティ",
+      "title": "パスワード変更",
       "changePassword": "パスワード変更",
       "currentPassword": "現在のパスワード",
       "newPassword": "新しいパスワード",
-      "confirmPassword": "新しいパスワード（確認）"
+      "confirmPassword": "新しいパスワード（確認）",
+      "savePassword": "パスワードを変更"
     },
     "account": {
-      "title": "アカウント",
+      "title": "危険エリア",
       "deleteAccount": "アカウント削除",
       "dangerZone": "危険エリア",
       "deleteWarning": "アカウントを削除すると、全てのデータが永久に失われます。この操作は取り消せません。",
-      "deleteConfirmation": "アカウント削除を確認するため、下のテキストボックスに「退会する」と入力してください。"
+      "deleteConfirmation": "アカウント削除を確認するため、下のテキストボックスに「退会する」と入力してください。",
+      "deleteButton": "アカウントを削除",
+      "deleteInput": "退会する"
+    },
+    "errors": {
+      "updateFailed": "更新に失敗しました",
+      "passwordMismatch": "パスワードが一致しません",
+      "passwordTooShort": "パスワードは8文字以上で入力してください",
+      "required": "必須項目です",
+      "usernamePlaceholder": "ユーザー名を入力",
+      "emailPlaceholder": "メールアドレスを入力",
+      "usernameRequired": "ユーザー名を入力してください",
+      "emailRequired": "有効なメールアドレスを入力してください",
+      "currentPasswordRequired": "現在のパスワードを入力してください",
+      "newPasswordTooShort": "新しいパスワードは8文字以上で入力してください",
+      "newPasswordMismatch": "新しいパスワードが一致しません",
+      "confirmTextIncorrect": "確認テキストが正しくありません",
+      "userDataFetchFailed": "ユーザー情報の取得に失敗しました",
+      "profileUpdateFailed": "プロフィールの更新に失敗しました",
+      "passwordChangeFailed": "パスワードの変更に失敗しました",
+      "accountDeleteFailed": "アカウントの削除に失敗しました"
+    },
+    "success": {
+      "profileUpdated": "プロフィールを更新しました",
+      "passwordChanged": "パスワードを変更しました",
+      "accountDeleted": "アカウントを削除しました"
+    },
+    "placeholders": {
+      "username": "ユーザー名を入力",
+      "email": "メールアドレスを入力",
+      "currentPassword": "現在のパスワード",
+      "newPassword": "新しいパスワード（8文字以上）",
+      "confirmPassword": "新しいパスワード（確認）",
+      "deleteInput": "退会する"
+    },
+    "labels": {
+      "changePassword": "パスワード変更",
+      "currentPassword": "現在のパスワード",
+      "newPassword": "新しいパスワード",
+      "confirmPassword": "新しいパスワード（確認）",
+      "deleteAccount": "アカウント削除"
+    },
+    "buttons": {
+      "saving": "保存中...",
+      "changing": "変更中...",
+      "deleting": "削除中..."
+    },
+    "noData": {
+      "username": "ユーザー名が設定されていません",
+      "email": "メールアドレスが設定されていません"
+    },
+    "confirmDialog": {
+      "deleteAccount": "本当にアカウントを削除しますか？この操作は取り消せません。"
     }
+  },
+  "setup": {
+    "greeting": "はじめまして！",
+    "namePrompt": "あなたのお名前を教えてください",
+    "nameLabel": "お名前",
+    "namePlaceholder": "お名前を入力してください",
+    "next": "次へ",
+    "startChat": "チャットを始める",
+    "characterSelection": "好きなキャラクターを選択してください"
+  },
+  "chatLayout": {
+    "advancedOn": "高度表示オン",
+    "advancedOff": "高度表示オフ",
+    "tokens": "枚",
+    "shiftEnterHint": "Shift+エンターで改行できます",
+    "messagePlaceholder": "{characterName}にメッセージを送る...",
+    "cost": "約{cost}枚"
+  },
+  "errors": {
+    "loadFailed": "データの読み込みに失敗しました",
+    "chatLoadFailed": "チャットデータの読み込みに失敗しました",
+    "notFound": "データが見つかりません",
+    "loginInProgress": "ログイン中...",
+    "registrationFailed": "登録に失敗しました",
+    "networkError": "ネットワークエラーが発生しました"
   }
 }

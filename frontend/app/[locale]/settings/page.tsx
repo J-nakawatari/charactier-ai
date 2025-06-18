@@ -35,6 +35,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const locale = (params?.locale as string) || 'ja';
   const t = useTranslations('settings');
+  const tError = useTranslations('errors');
   const { success, error } = useToast();
   
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -96,7 +97,7 @@ export default function SettingsPage() {
         setProfileData({ name: user.name || '', email: user.email || '' });
       } catch (err) {
         console.error('Error fetching user data:', err);
-        error('ユーザー情報の取得に失敗しました');
+        error(t('errors.userDataFetchFailed'));
       } finally {
         setIsLoading(false);
       }
@@ -108,12 +109,12 @@ export default function SettingsPage() {
   // プロフィール更新
   const handleProfileUpdate = async () => {
     if (!profileData.name.trim()) {
-      error('ユーザー名を入力してください');
+      error(t('errors.usernameRequired'));
       return;
     }
 
     if (!profileData.email.trim() || !profileData.email.includes('@')) {
-      error('有効なメールアドレスを入力してください');
+      error(t('errors.emailRequired'));
       return;
     }
 
@@ -138,10 +139,10 @@ export default function SettingsPage() {
       const updatedUser = await response.json();
       setUserData(updatedUser.user);
       setIsProfileEditing(false);
-      success('プロフィールを更新しました');
+      success(t('success.profileUpdated'));
     } catch (err) {
       console.error('Error updating profile:', err);
-      error('プロフィールの更新に失敗しました');
+      error(t('errors.profileUpdateFailed'));
     } finally {
       setProfileLoading(false);
     }
@@ -158,17 +159,17 @@ export default function SettingsPage() {
   // パスワード変更
   const handlePasswordChange = async () => {
     if (!passwordData.currentPassword) {
-      error('現在のパスワードを入力してください');
+      error(t('errors.currentPasswordRequired'));
       return;
     }
 
     if (passwordData.newPassword.length < 8) {
-      error('新しいパスワードは8文字以上で入力してください');
+      error(t('errors.newPasswordTooShort'));
       return;
     }
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      error('新しいパスワードが一致しません');
+      error(t('errors.newPasswordMismatch'));
       return;
     }
 
@@ -194,10 +195,10 @@ export default function SettingsPage() {
       }
 
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      success('パスワードを変更しました');
+      success(t('success.passwordChanged'));
     } catch (err) {
       console.error('Error changing password:', err);
-      error('パスワードの変更に失敗しました');
+      error(t('errors.passwordChangeFailed'));
     } finally {
       setPasswordLoading(false);
     }
@@ -205,12 +206,12 @@ export default function SettingsPage() {
 
   // アカウント削除
   const handleAccountDeletion = async () => {
-    if (deleteConfirmation !== '退会する') {
-      error('確認テキストが正しくありません');
+    if (deleteConfirmation !== t('placeholders.deleteInput')) {
+      error(t('errors.confirmTextIncorrect'));
       return;
     }
 
-    if (!confirm('本当にアカウントを削除しますか？この操作は取り消せません。')) {
+    if (!confirm(t('confirmDialog.deleteAccount'))) {
       return;
     }
 
@@ -235,20 +236,20 @@ export default function SettingsPage() {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
       
-      success('アカウントを削除しました');
+      success(t('success.accountDeleted'));
       router.push(`/${locale}/`);
     } catch (err) {
       console.error('Error deleting account:', err);
-      error('アカウントの削除に失敗しました');
+      error(t('errors.accountDeleteFailed'));
     } finally {
       setDeleteLoading(false);
     }
   };
 
   const tabs = [
-    { id: 'profile' as const, label: 'プロフィール', icon: User },
-    { id: 'security' as const, label: 'セキュリティ', icon: Lock },
-    { id: 'account' as const, label: 'アカウント', icon: UserX }
+    { id: 'profile' as const, label: t('profile.title'), icon: User },
+    { id: 'security' as const, label: t('security.title'), icon: Lock },
+    { id: 'account' as const, label: t('account.title'), icon: UserX }
   ];
 
   return (
@@ -261,8 +262,8 @@ export default function SettingsPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* ヘッダー */}
           <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">設定</h1>
-            <p className="text-gray-600">アカウント情報とセキュリティ設定を管理します</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{t('title')}</h1>
+            <p className="text-gray-600">{t('subtitle')}</p>
           </div>
 
           {/* ローディング状態 */}
@@ -302,14 +303,14 @@ export default function SettingsPage() {
                   <div className="space-y-6">
                     <div>
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-medium text-gray-900">プロフィール情報</h3>
+                        <h3 className="text-lg font-medium text-gray-900">{t('profile.title')}</h3>
                         {!isProfileEditing && (
                           <button
                             onClick={() => setIsProfileEditing(true)}
                             className="flex items-center space-x-2 px-3 py-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-md transition-colors"
                           >
                             <Edit3 className="w-4 h-4" />
-                            <span>プロフィールを編集</span>
+                            <span>{t('profile.edit')}</span>
                           </button>
                         )}
                       </div>
@@ -317,7 +318,7 @@ export default function SettingsPage() {
                       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
                           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                            ユーザー名
+                            {t('profile.username')}
                           </label>
                           <div className="relative">
                             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -328,11 +329,11 @@ export default function SettingsPage() {
                                 value={profileData.name}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
                                 className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
-                                placeholder="ユーザー名を入力"
+                                placeholder={t('placeholders.username')}
                               />
                             ) : (
                               <div className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800 font-medium">
-                                {userData?.name || 'ユーザー名が設定されていません'}
+                                {userData?.name || t('noData.username')}
                               </div>
                             )}
                           </div>
@@ -340,7 +341,7 @@ export default function SettingsPage() {
 
                         <div>
                           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                            メールアドレス
+                            {t('profile.email')}
                           </label>
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -351,11 +352,11 @@ export default function SettingsPage() {
                                 value={profileData.email}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
                                 className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
-                                placeholder="メールアドレスを入力"
+                                placeholder={t('placeholders.email')}
                               />
                             ) : (
                               <div className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800 font-medium">
-                                {userData?.email || 'メールアドレスが設定されていません'}
+                                {userData?.email || t('noData.email')}
                               </div>
                             )}
                           </div>
@@ -370,7 +371,7 @@ export default function SettingsPage() {
                             className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Save className="w-4 h-4" />
-                            <span>{profileLoading ? '保存中...' : 'プロフィールを保存'}</span>
+                            <span>{profileLoading ? t('buttons.saving') : t('profile.save')}</span>
                           </button>
                           <button
                             onClick={handleProfileEditCancel}
@@ -378,7 +379,7 @@ export default function SettingsPage() {
                             className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <X className="w-4 h-4" />
-                            <span>キャンセル</span>
+                            <span>{t('profile.cancel')}</span>
                           </button>
                         </div>
                       )}
@@ -390,12 +391,12 @@ export default function SettingsPage() {
                 {activeTab === 'security' && (
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">パスワード変更</h3>
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">{t('labels.changePassword')}</h3>
                       
                       <div className="space-y-4">
                         <div>
                           <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                            現在のパスワード
+{t('labels.currentPassword')}
                           </label>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -405,7 +406,7 @@ export default function SettingsPage() {
                               value={passwordData.currentPassword}
                               onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
                               className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
-                              placeholder="現在のパスワード"
+                              placeholder={t('placeholders.currentPassword')}
                             />
                             <button
                               type="button"
@@ -419,7 +420,7 @@ export default function SettingsPage() {
 
                         <div>
                           <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                            新しいパスワード
+                            {t('labels.newPassword')}
                           </label>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -429,7 +430,7 @@ export default function SettingsPage() {
                               value={passwordData.newPassword}
                               onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
                               className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
-                              placeholder="新しいパスワード（8文字以上）"
+                              placeholder={t('placeholders.newPassword')}
                             />
                             <button
                               type="button"
@@ -443,7 +444,7 @@ export default function SettingsPage() {
 
                         <div>
                           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                            新しいパスワード（確認）
+                            {t('labels.confirmPassword')}
                           </label>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -453,7 +454,7 @@ export default function SettingsPage() {
                               value={passwordData.confirmPassword}
                               onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                               className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
-                              placeholder="新しいパスワード（確認）"
+                              placeholder={t('placeholders.confirmPassword')}
                             />
                             <button
                               type="button"
@@ -473,7 +474,7 @@ export default function SettingsPage() {
                           className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Save className="w-4 h-4" />
-                          <span>{passwordLoading ? '変更中...' : 'パスワードを変更'}</span>
+                          <span>{passwordLoading ? t('buttons.changing') : t('security.savePassword')}</span>
                         </button>
                       </div>
                     </div>
@@ -487,38 +488,38 @@ export default function SettingsPage() {
                       <div className="flex">
                         <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5" />
                         <div className="ml-3">
-                          <h3 className="text-sm font-medium text-red-800">危険エリア</h3>
+                          <h3 className="text-sm font-medium text-red-800">{t('account.dangerZone')}</h3>
                           <div className="mt-2 text-sm text-red-700">
-                            <p>アカウントを削除すると、全てのデータが永久に失われます。この操作は取り消せません。</p>
+                            <p>{t('account.deleteWarning')}</p>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">アカウント削除</h3>
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">{t('labels.deleteAccount')}</h3>
                       
                       <div className="space-y-4">
                         <div>
                           <p className="text-sm text-gray-600 mb-3">
-                            アカウント削除を確認するため、下のテキストボックスに「<strong>退会する</strong>」と入力してください。
+                            {t('account.deleteConfirmation')}
                           </p>
                           <input
                             type="text"
                             value={deleteConfirmation}
                             onChange={(e) => setDeleteConfirmation(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 text-gray-900 bg-white"
-                            placeholder="退会する"
+                            placeholder={t('placeholders.deleteInput')}
                           />
                         </div>
 
                         <button
                           onClick={handleAccountDeletion}
-                          disabled={deleteLoading || deleteConfirmation !== '退会する'}
+                          disabled={deleteLoading || deleteConfirmation !== t('placeholders.deleteInput')}
                           className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <UserX className="w-4 h-4" />
-                          <span>{deleteLoading ? '削除中...' : 'アカウントを削除'}</span>
+                          <span>{deleteLoading ? t('buttons.deleting') : t('account.deleteButton')}</span>
                         </button>
                       </div>
                     </div>

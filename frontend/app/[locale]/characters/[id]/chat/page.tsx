@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-// import { useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { ChatLayout } from '@/components/chat/ChatLayout';
 import { getAuthHeaders, getCurrentUser, isDevelopment } from '@/utils/auth';
 import { handleApiError, formatViolationMessage, getSanctionSeverity } from '@/utils/errorHandler';
@@ -45,7 +45,8 @@ interface ChatLayoutData {
 
 export default function ChatPage() {
   const params = useParams();
-  // const t = useTranslations('chat');
+  const t = useTranslations('errors');
+  const tChat = useTranslations('chat');
   const { handleApiError: showApiError, success, error: showError, warning: showWarning } = useToast();
   const [chatData, setChatData] = useState<ChatLayoutData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -189,7 +190,7 @@ export default function ChatPage() {
       }
     } catch (err) {
       console.error('Chat data loading error:', err);
-      setError('チャットデータの読み込みに失敗しました');
+      setError(t('errors.chatLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -358,13 +359,13 @@ export default function ChatPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            {error || 'チャットデータが見つかりません'}
+            {error || t('notFound')}
           </h2>
           <button 
             onClick={loadChatData}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
-            再試行
+            {tChat('retry')}
           </button>
         </div>
       </div>

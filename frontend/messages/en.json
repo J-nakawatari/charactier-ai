@@ -249,7 +249,7 @@
     "title": "Settings",
     "subtitle": "Manage your account information and security settings",
     "profile": {
-      "title": "Profile",
+      "title": "Profile Information",
       "username": "Username",
       "email": "Email Address",
       "edit": "Edit Profile",
@@ -257,18 +257,96 @@
       "cancel": "Cancel"
     },
     "security": {
-      "title": "Security",
+      "title": "Change Password",
       "changePassword": "Change Password",
       "currentPassword": "Current Password",
       "newPassword": "New Password",
-      "confirmPassword": "Confirm New Password"
+      "confirmPassword": "Confirm New Password",
+      "savePassword": "Change Password"
     },
     "account": {
-      "title": "Account",
+      "title": "Danger Zone",
       "deleteAccount": "Delete Account",
       "dangerZone": "Danger Zone",
       "deleteWarning": "Deleting your account will permanently lose all data. This action cannot be undone.",
-      "deleteConfirmation": "To confirm account deletion, please type \"退会する\" in the text box below."
+      "deleteConfirmation": "To confirm account deletion, please type \"退会する\" in the text box below.",
+      "deleteButton": "Delete Account",
+      "deleteInput": "退会する"
+    },
+    "errors": {
+      "updateFailed": "Update failed",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "required": "This field is required",
+      "usernamePlaceholder": "Enter username",
+      "emailPlaceholder": "Enter email address",
+      "usernameRequired": "Please enter a username",
+      "emailRequired": "Please enter a valid email address",
+      "currentPasswordRequired": "Please enter your current password",
+      "newPasswordTooShort": "New password must be at least 8 characters",
+      "newPasswordMismatch": "New passwords do not match",
+      "confirmTextIncorrect": "Confirmation text is incorrect",
+      "userDataFetchFailed": "Failed to fetch user information",
+      "profileUpdateFailed": "Failed to update profile",
+      "passwordChangeFailed": "Failed to change password",
+      "accountDeleteFailed": "Failed to delete account"
+    },
+    "success": {
+      "profileUpdated": "Profile updated successfully",
+      "passwordChanged": "Password changed successfully",
+      "accountDeleted": "Account deleted successfully"
+    },
+    "placeholders": {
+      "username": "Enter username",
+      "email": "Enter email address",
+      "currentPassword": "Current password",
+      "newPassword": "New password (8+ characters)",
+      "confirmPassword": "Confirm new password",
+      "deleteInput": "退会する"
+    },
+    "labels": {
+      "changePassword": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "deleteAccount": "Delete Account"
+    },
+    "buttons": {
+      "saving": "Saving...",
+      "changing": "Changing...",
+      "deleting": "Deleting..."
+    },
+    "noData": {
+      "username": "Username not set",
+      "email": "Email address not set"
+    },
+    "confirmDialog": {
+      "deleteAccount": "Are you sure you want to delete your account? This action cannot be undone."
     }
+  },
+  "setup": {
+    "greeting": "Nice to meet you!",
+    "namePrompt": "Please tell us your name",
+    "nameLabel": "Name",
+    "namePlaceholder": "Enter your name",
+    "next": "Next",
+    "startChat": "Start Chatting",
+    "characterSelection": "Please select your favorite character"
+  },
+  "chatLayout": {
+    "advancedOn": "Advanced Display On",
+    "advancedOff": "Advanced Display Off",
+    "tokens": " tokens",
+    "shiftEnterHint": "Shift+Enter to add line break",
+    "messagePlaceholder": "Send a message to {characterName}...",
+    "cost": "~{cost} tokens"
+  },
+  "errors": {
+    "loadFailed": "Failed to load data",
+    "chatLoadFailed": "Failed to load chat data",
+    "notFound": "Data not found",
+    "loginInProgress": "Logging in...",
+    "registrationFailed": "Registration failed",
+    "networkError": "Network error occurred"
   }
 }
