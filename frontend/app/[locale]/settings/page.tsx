@@ -15,7 +15,8 @@ import {
   EyeOff,
   UserX,
   Edit3,
-  X
+  X,
+  Globe
 } from 'lucide-react';
 
 interface UserData {
@@ -40,7 +41,7 @@ export default function SettingsPage() {
   
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'account'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'language' | 'account'>('profile');
   
   // プロフィール更新用
   const [profileData, setProfileData] = useState({ name: '', email: '' });
@@ -63,6 +64,10 @@ export default function SettingsPage() {
   // 退会用
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // 言語設定用
+  const [selectedLanguage, setSelectedLanguage] = useState(locale);
+  const [languageLoading, setLanguageLoading] = useState(false);
 
   // ユーザーデータの取得
   useEffect(() => {
@@ -246,9 +251,37 @@ export default function SettingsPage() {
     }
   };
 
+  // 言語変更処理
+  const handleLanguageChange = async () => {
+    if (selectedLanguage === locale) {
+      return; // 変更がない場合は何もしない
+    }
+
+    try {
+      setLanguageLoading(true);
+      
+      // 現在のパスから言語部分を新しい言語に置き換え
+      const currentPath = window.location.pathname;
+      const pathWithoutLocale = currentPath.replace(`/${locale}`, '');
+      const newPath = `/${selectedLanguage}${pathWithoutLocale}`;
+      
+      success(t('language.languageChanged'));
+      
+      // 新しい言語のページにリダイレクト
+      router.push(newPath);
+    } catch (err) {
+      console.error('Error changing language:', err);
+      error(t('errors.updateFailed'));
+      setSelectedLanguage(locale); // エラー時は元の言語に戻す
+    } finally {
+      setLanguageLoading(false);
+    }
+  };
+
   const tabs = [
     { id: 'profile' as const, label: t('profile.title'), icon: User },
     { id: 'security' as const, label: t('security.title'), icon: Lock },
+    { id: 'language' as const, label: t('language.title'), icon: Globe },
     { id: 'account' as const, label: t('account.title'), icon: UserX }
   ];
 
@@ -476,6 +509,52 @@ export default function SettingsPage() {
                           <Save className="w-4 h-4" />
                           <span>{passwordLoading ? t('buttons.changing') : t('security.savePassword')}</span>
                         </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 言語設定タブ */}
+                {activeTab === 'language' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">{t('language.title')}</h3>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            {t('language.currentLanguage')}
+                          </label>
+                          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
+                            <Globe className="w-4 h-4" />
+                            <span>{locale === 'ja' ? t('language.japanese') : t('language.english')}</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            {t('language.selectLanguage')}
+                          </label>
+                          <select
+                            value={selectedLanguage}
+                            onChange={(e) => setSelectedLanguage(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
+                          >
+                            <option value="ja">{t('language.japanese')}</option>
+                            <option value="en">{t('language.english')}</option>
+                          </select>
+                        </div>
+
+                        <div className="mt-6">
+                          <button
+                            onClick={handleLanguageChange}
+                            disabled={languageLoading || selectedLanguage === locale}
+                            className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Globe className="w-4 h-4" />
+                            <span>{languageLoading ? t('buttons.saving') : t('language.saveLanguage')}</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

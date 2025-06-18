@@ -265,13 +265,22 @@
       "savePassword": "パスワードを変更"
     },
     "account": {
-      "title": "危険エリア",
+      "title": "アカウント設定",
       "deleteAccount": "アカウント削除",
       "dangerZone": "危険エリア",
       "deleteWarning": "アカウントを削除すると、全てのデータが永久に失われます。この操作は取り消せません。",
       "deleteConfirmation": "アカウント削除を確認するため、下のテキストボックスに「退会する」と入力してください。",
       "deleteButton": "アカウントを削除",
       "deleteInput": "退会する"
+    },
+    "language": {
+      "title": "言語設定",
+      "currentLanguage": "現在の言語",
+      "selectLanguage": "言語を選択",
+      "japanese": "日本語",
+      "english": "English",
+      "saveLanguage": "言語設定を保存",
+      "languageChanged": "言語設定を変更しました"
     },
     "errors": {
       "updateFailed": "更新に失敗しました",
