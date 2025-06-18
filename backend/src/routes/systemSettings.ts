@@ -15,10 +15,18 @@ interface AuthRequest extends Request {
 
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: any, res: Response, next: any) => {
-  if (!req.user || req.user.role !== 'admin') {
+  console.log('Auth check - req.admin:', req.admin ? 'exists' : 'none');
+  console.log('Auth check - req.user:', req.user);
+  console.log('Auth check - req.user.isAdmin:', req.user?.isAdmin);
+  console.log('Auth check - req.user.role:', req.user?.role);
+  
+  // 管理者として認証されているかチェック
+  if (!req.admin && !req.user?.isAdmin) {
+    console.log('Access denied - not an admin');
     res.status(403).json({ error: '管理者権限が必要です' });
     return;
   }
+  console.log('Access granted - admin verified');
   next();
 };
 
