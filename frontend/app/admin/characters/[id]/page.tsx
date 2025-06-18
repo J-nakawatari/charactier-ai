@@ -590,7 +590,7 @@ export default function CharacterDetail() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <div className="space-y-2">
                 <p className="text-xs text-gray-500 font-medium">キャラクター選択画像</p>
-                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden relative">
                   {character.imageCharacterSelect ? (
                     <Image 
                       src={character.imageCharacterSelect && character.imageCharacterSelect.startsWith('http') ? character.imageCharacterSelect : `${API_BASE_URL}${character.imageCharacterSelect || ''}`} 
@@ -609,7 +609,7 @@ export default function CharacterDetail() {
 
               <div className="space-y-2">
                 <p className="text-xs text-gray-500 font-medium">ダッシュボード画像</p>
-                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden relative">
                   {character.imageDashboard ? (
                     <Image 
                       src={character.imageDashboard && character.imageDashboard.startsWith('http') ? character.imageDashboard : `${API_BASE_URL}${character.imageDashboard || ''}`} 
@@ -628,7 +628,7 @@ export default function CharacterDetail() {
 
               <div className="space-y-2">
                 <p className="text-xs text-gray-500 font-medium">チャット背景画像</p>
-                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden relative">
                   {character.imageChatBackground ? (
                     <Image 
                       src={character.imageChatBackground && character.imageChatBackground.startsWith('http') ? character.imageChatBackground : `${API_BASE_URL}${character.imageChatBackground || ''}`} 
@@ -647,7 +647,7 @@ export default function CharacterDetail() {
 
               <div className="space-y-2">
                 <p className="text-xs text-gray-500 font-medium">チャットアバター画像</p>
-                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden relative">
                   {character.imageChatAvatar ? (
                     <Image 
                       src={character.imageChatAvatar && character.imageChatAvatar.startsWith('http') ? character.imageChatAvatar : `${API_BASE_URL}${character.imageChatAvatar || ''}`} 
@@ -672,7 +672,7 @@ export default function CharacterDetail() {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {character.galleryImages.map((image, index) => (
                     <div key={index} className="space-y-2">
-                      <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                      <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
                         {image && image.url ? (
                           <Image 
                             src={image.url.startsWith('http') ? image.url : `${API_BASE_URL}${image.url}`} 
