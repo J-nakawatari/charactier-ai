@@ -5,7 +5,6 @@ import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { 
   Edit, 
-  BarChart3, 
   Users, 
   Calendar,
   Target,
@@ -214,13 +213,6 @@ export default function NotificationDetailPage() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <button
-                onClick={() => router.push(`/admin/notifications/${notification._id}/stats`)}
-                className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span>統計を見る</span>
-              </button>
               <button
                 onClick={() => router.push(`/admin/notifications/${notification._id}/edit`)}
                 className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
