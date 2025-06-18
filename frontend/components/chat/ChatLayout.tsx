@@ -158,7 +158,7 @@ export function ChatLayout({
     return () => {
       window.removeEventListener('levelUp', handleLevelUp as EventListener);
     };
-  }, []);
+  }, [character._id]);
 
 
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { 
@@ -31,12 +31,7 @@ export default function AnalyticsSettingsPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [showExample, setShowExample] = useState(false);
 
-  // 設定を取得
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       const token = localStorage.getItem('adminAccessToken');
       if (!token) {
@@ -68,7 +63,12 @@ export default function AnalyticsSettingsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
+
+  // 設定を取得
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   // 設定を保存
   const handleSave = async () => {

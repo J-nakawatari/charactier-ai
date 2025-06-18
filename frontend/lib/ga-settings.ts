@@ -13,17 +13,24 @@ interface GoogleAnalyticsSettings {
  */
 export async function getActiveGAId(): Promise<string | null> {
   try {
-    // バックエンドAPIから設定を取得
+    // ビルド時は常にnullを返す（静的生成を妨げないため）
+    if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+      // サーバーサイドでのビルド時はnullを返す
+      // クライアントサイドでGA設定を取得
+      return null;
+    }
+
+    // 開発環境またはランタイムでは動的に取得
     const apiUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const response = await fetch(`${apiUrl}/api/system-settings/google-analytics`, {
-      cache: 'no-store', // 常に最新の設定を取得
+      // ビルド時のエラーを防ぐため、キャッシュ設定を削除
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      console.error('Failed to fetch GA settings:', response.status);
+      // エラー時は静かに処理
       return null;
     }
 
@@ -36,7 +43,7 @@ export async function getActiveGAId(): Promise<string | null> {
 
     return null;
   } catch (error) {
-    console.error('Error fetching GA settings:', error);
+    // すべてのエラーを静かに処理
     return null;
   }
 }

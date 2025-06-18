@@ -194,7 +194,7 @@ export default function ChatPage() {
     } finally {
       setLoading(false);
     }
-  }, [characterId, locale]);
+  }, [characterId, locale, t]);
 
   const handleSendMessage = useCallback(async (message: string) => {
     if (!chatData) return;

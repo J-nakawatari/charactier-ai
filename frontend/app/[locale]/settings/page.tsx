@@ -109,7 +109,7 @@ export default function SettingsPage() {
     };
 
     fetchUserData();
-  }, [locale, router, error]);
+  }, [locale, router, error, t]);
 
   // プロフィール更新
   const handleProfileUpdate = async () => {

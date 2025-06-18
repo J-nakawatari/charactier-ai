@@ -117,7 +117,7 @@ function CharactersPageContent({
     } finally {
       // setIsLoading削除（チラツキ防止）
     }
-  }, [locale, filters]);
+  }, [locale, filters, t]);
 
   // 新規会員ウェルカムモーダルチェック
   useEffect(() => {
