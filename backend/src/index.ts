@@ -23,6 +23,7 @@ import authRoutes from './routes/auth';
 import characterRoutes from './routes/characters';
 import modelRoutes from './routes/modelSettings';
 import notificationRoutes from './routes/notifications';
+import systemSettingsRoutes from './routes/systemSettings';
 // const userRoutes = require('./routes/user');
 // const dashboardRoutes = require('./routes/dashboard');
 import { validateMessage } from './utils/contentFilter';
@@ -573,6 +574,9 @@ app.use('/api/auth', authRoutes);
 
 // 管理者ルート - モデル設定
 app.use('/api/admin', modelRoutes);
+
+// システム設定ルート
+app.use('/api/system-settings', systemSettingsRoutes);
 
 // 管理者ルート - その他
 import adminUsersRoutes from './routes/adminUsers';

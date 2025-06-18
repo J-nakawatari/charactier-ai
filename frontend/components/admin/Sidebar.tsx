@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   UserCog,
-  Cpu
+  Cpu,
+  BarChart3
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -26,6 +27,7 @@ const sidebarItems = [
   { href: '/admin/admins', icon: UserCog, label: '管理者管理' },
   { href: '/admin/notifications', icon: Bell, label: '通知管理' },
   { href: '/admin/security', icon: Shield, label: 'セキュリティ' },
+  { href: '/admin/settings/analytics', icon: BarChart3, label: 'Google Analytics' },
 ];
 
 interface AdminUser {
