@@ -9,7 +9,6 @@ interface UserData {
   tokenBalance: number;
   totalSpent: number;
   chatCount: number;
-  avgIntimacy: number;
   lastLogin: string;
   status: string;
   isTrialUser: boolean;
@@ -177,18 +176,6 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
                 <div className="text-xs text-gray-500">チャット数</div>
                 <div className="text-sm font-medium text-gray-900">{formatNumber(user.chatCount)}</div>
               </div>
-              <div>
-                <div className="text-xs text-gray-500">平均親密度</div>
-                <div className="flex items-center">
-                  <div className="text-sm font-medium text-gray-900 mr-2">{(user.avgIntimacy || 0).toFixed(1)}</div>
-                  <div className="flex-1 bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-purple-600 h-2 rounded-full" 
-                      style={{ width: `${user.avgIntimacy || 0}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
             </div>
             
             <div className="text-xs text-gray-500">
@@ -217,9 +204,6 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 チャット数
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                平均親密度
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 最終ログイン
@@ -261,17 +245,6 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {formatNumber(user.chatCount)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="text-sm text-gray-900 mr-2">{(user.avgIntimacy || 0).toFixed(1)}</div>
-                    <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-purple-600 h-2 rounded-full" 
-                        style={{ width: `${user.avgIntimacy || 0}%` }}
-                      ></div>
-                    </div>
-                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatDate(user.lastLogin)}

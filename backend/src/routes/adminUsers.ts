@@ -84,7 +84,6 @@ router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, r
       tokenBalance: user.tokenBalance || 0,
       totalSpent: user.totalSpent || 0,
       chatCount: user.totalChatMessages || 0,
-      avgIntimacy: 0, // TODO: 親密度の平均値を計算
       lastLogin: user.lastLogin ? user.lastLogin.toISOString() : user.createdAt.toISOString()
     }));
 

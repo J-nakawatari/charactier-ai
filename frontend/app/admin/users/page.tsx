@@ -15,7 +15,6 @@ interface UserData {
   tokenBalance: number;
   totalSpent: number;
   chatCount: number;
-  avgIntimacy: number;
   lastLogin: string;
   status: string;
   isTrialUser: boolean;
