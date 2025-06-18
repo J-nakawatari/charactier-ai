@@ -206,3 +206,25 @@ body {
   font-family: 'Maven Pro';
   font-display: swap;
 }
+
+/* Global Input Styles */
+@layer base {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  textarea,
+  select {
+    @apply text-gray-900;
+  }
+  
+  /* Remove focus outline */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    @apply outline-none ring-0;
+  }
+}

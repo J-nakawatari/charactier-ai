@@ -38,8 +38,8 @@ export default function CharacterNewPage() {
   // フィールドエラーのスタイルを取得する関数
   const getFieldErrorClass = (fieldName: string) => {
     return fieldErrors[fieldName] 
-      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-      : 'border-gray-300 focus:border-gray-400';
+      ? 'border-red-300  focus:ring-red-500' 
+      : 'border-gray-300 ';
   };
 
   // エラーメッセージを表示する関数
@@ -672,7 +672,7 @@ export default function CharacterNewPage() {
                     type="text"
                     value={formData.name.en}
                     onChange={(e) => setFormData({ ...formData, name: { ...formData.name, en: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                     placeholder="例: Luna, Miko, Rei"
                   />
                 </div>
@@ -684,7 +684,7 @@ export default function CharacterNewPage() {
                   <textarea
                     value={formData.description.ja}
                     onChange={(e) => setFormData({ ...formData, description: { ...formData.description, ja: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                     rows={3}
                     placeholder="キャラクターの説明を入力してください..."
                   />
@@ -697,7 +697,7 @@ export default function CharacterNewPage() {
                   <textarea
                     value={formData.description.en}
                     onChange={(e) => setFormData({ ...formData, description: { ...formData.description, en: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                     rows={3}
                     placeholder="Character description in English..."
                   />
@@ -710,7 +710,7 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.gender}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none  text-gray-900"
                   >
                     {GENDERS.map(gender => (
                       <option key={gender.value} value={gender.value} className="text-gray-900">
@@ -728,7 +728,7 @@ export default function CharacterNewPage() {
                     type="text"
                     value={formData.age}
                     onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                     placeholder="例: 18歳、20代前半"
                   />
                 </div>
@@ -741,7 +741,7 @@ export default function CharacterNewPage() {
                     type="text"
                     value={formData.occupation}
                     onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                     placeholder="例: 学生、OL、お嬢様"
                   />
                 </div>
@@ -810,7 +810,7 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.model}
                     onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none  text-gray-900"
                   >
                     {availableModels.map(model => (
                       <option key={model.value} value={model.value} className="text-gray-900">
@@ -828,7 +828,7 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.characterAccessType}
                     onChange={(e) => setFormData({ ...formData, characterAccessType: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none  text-gray-900"
                   >
                     {ACCESS_TYPES.map(type => (
                       <option key={type.value} value={type.value} className="text-gray-900">
@@ -885,7 +885,7 @@ export default function CharacterNewPage() {
                   <textarea
                     value={formData.adminPrompt.ja}
                     onChange={(e) => setFormData({ ...formData, adminPrompt: { ...formData.adminPrompt, ja: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                     rows={4}
                     placeholder="例: あなたは明るく元気な女の子のルナです。いつも前向きで、相手を励ましたり元気づけたりするのが得意です。語尾に「だよ」「だね」を使い、親しみやすい口調で話してください。"
                   />
@@ -898,7 +898,7 @@ export default function CharacterNewPage() {
                   <textarea
                     value={formData.adminPrompt.en}
                     onChange={(e) => setFormData({ ...formData, adminPrompt: { ...formData.adminPrompt, en: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                     rows={4}
                     placeholder="Example: You are Luna, a bright and energetic girl. You are always positive and good at encouraging and cheering up others. Use a friendly tone."
                   />
@@ -912,7 +912,7 @@ export default function CharacterNewPage() {
                     <textarea
                       value={formData.defaultMessage.ja}
                       onChange={(e) => setFormData({ ...formData, defaultMessage: { ...formData.defaultMessage, ja: e.target.value } })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                       rows={3}
                       placeholder="例: こんにちは！私はルナだよ✨ 今日はどんなことをお話ししようかな？"
                     />
@@ -925,7 +925,7 @@ export default function CharacterNewPage() {
                     <textarea
                       value={formData.limitMessage.ja}
                       onChange={(e) => setFormData({ ...formData, limitMessage: { ...formData.limitMessage, ja: e.target.value } })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                       rows={3}
                       placeholder="例: 今日はたくさんお話しできて楽しかったよ！また明日お話ししようね♪"
                     />
@@ -1003,7 +1003,7 @@ export default function CharacterNewPage() {
                               type="text"
                               value={galleryItem?.title || ''}
                               onChange={(e) => updateGalleryInfo(index, 'title', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none "
                               placeholder="画像タイトル"
                             />
                           </div>
@@ -1012,7 +1012,7 @@ export default function CharacterNewPage() {
                             <textarea
                               value={galleryItem?.description || ''}
                               onChange={(e) => updateGalleryInfo(index, 'description', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none "
                               rows={2}
                               placeholder="画像説明"
                             />

@@ -299,7 +299,7 @@ export default function EditNotificationPage() {
                       type="text"
                       value={formData.titleJa}
                       onChange={(e) => setFormData({ ...formData, titleJa: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                       required
                     />
                   </div>
@@ -311,7 +311,7 @@ export default function EditNotificationPage() {
                       type="text"
                       value={formData.titleEn}
                       onChange={(e) => setFormData({ ...formData, titleEn: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                       required
                     />
                   </div>
@@ -327,7 +327,7 @@ export default function EditNotificationPage() {
                       value={formData.messageJa}
                       onChange={(e) => setFormData({ ...formData, messageJa: e.target.value })}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                       required
                     />
                   </div>
@@ -339,7 +339,7 @@ export default function EditNotificationPage() {
                       value={formData.messageEn}
                       onChange={(e) => setFormData({ ...formData, messageEn: e.target.value })}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                       required
                     />
                   </div>
@@ -354,7 +354,7 @@ export default function EditNotificationPage() {
                     <select
                       value={formData.type}
                       onChange={(e) => setFormData({ ...formData, type: e.target.value as Notification['type'] })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                     >
                       <option value="info">お知らせ</option>
                       <option value="warning">警告</option>
@@ -373,7 +373,7 @@ export default function EditNotificationPage() {
                       type="number"
                       value={formData.priority}
                       onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                     />
                   </div>
                 </div>
@@ -415,7 +415,7 @@ export default function EditNotificationPage() {
                     type="datetime-local"
                     value={formData.validFrom}
                     onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                     required
                   />
                 </div>
@@ -427,7 +427,7 @@ export default function EditNotificationPage() {
                     type="datetime-local"
                     value={formData.validUntil}
                     onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                   />
                 </div>
               </div>
@@ -445,7 +445,7 @@ export default function EditNotificationPage() {
                   <select
                     value={formData.targetType}
                     onChange={(e) => setFormData({ ...formData, targetType: e.target.value as TargetCondition['type'] })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                   >
                     <option value="all">全ユーザー</option>
                     <option value="specific_users">特定ユーザー</option>
@@ -466,7 +466,7 @@ export default function EditNotificationPage() {
                       value={formData.userIds}
                       onChange={(e) => setFormData({ ...formData, userIds: e.target.value })}
                       placeholder="user1,user2,user3"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                     />
                   </div>
                 )}
@@ -483,7 +483,7 @@ export default function EditNotificationPage() {
                         onChange={(e) => setFormData({ ...formData, minLevel: parseInt(e.target.value) || 0 })}
                         min="0"
                         max="100"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                       />
                     </div>
                     <div>
@@ -496,7 +496,7 @@ export default function EditNotificationPage() {
                         onChange={(e) => setFormData({ ...formData, maxLevel: parseInt(e.target.value) || 100 })}
                         min="0"
                         max="100"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                       />
                     </div>
                   </div>
@@ -524,7 +524,7 @@ export default function EditNotificationPage() {
                         type="date"
                         value={formData.registeredAfter}
                         onChange={(e) => setFormData({ ...formData, registeredAfter: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                       />
                     </div>
                     <div>
@@ -535,7 +535,7 @@ export default function EditNotificationPage() {
                         type="date"
                         value={formData.registeredBefore}
                         onChange={(e) => setFormData({ ...formData, registeredBefore: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900"
                       />
                     </div>
                   </div>

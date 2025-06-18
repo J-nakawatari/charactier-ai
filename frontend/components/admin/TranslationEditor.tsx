@@ -86,7 +86,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
             type="text"
             value={data.name?.[activeLanguage] || ''}
             onChange={(e) => updateField('name', activeLanguage, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
             placeholder={activeLanguage === 'ja' ? '例: ルナ' : '例: Luna'}
           />
         </div>
@@ -100,7 +100,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
             value={data.description?.[activeLanguage] || ''}
             onChange={(e) => updateField('description', activeLanguage, e.target.value)}
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors resize-none text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors resize-none text-gray-900"
             placeholder={
               activeLanguage === 'ja'
                 ? 'キャラクターの説明を入力してください'
@@ -118,7 +118,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
             value={data.personalityPreset?.[activeLanguage] || ''}
             onChange={(e) => updateField('personalityPreset', activeLanguage, e.target.value)}
             rows={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors resize-none text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors resize-none text-gray-900"
             placeholder={
               activeLanguage === 'ja'
                 ? 'キャラクターの性格設定を入力してください（システムプロンプト用）'
@@ -159,7 +159,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && addTag()}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
               placeholder={
                 activeLanguage === 'ja'
                   ? '例: 優しい、活発、知的'
@@ -186,7 +186,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
             value={data.adminPrompt?.[activeLanguage] || ''}
             onChange={(e) => updateField('adminPrompt', activeLanguage, e.target.value)}
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors resize-none text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors resize-none text-gray-900"
             placeholder={
               activeLanguage === 'ja'
                 ? '例: あなたは明るく元気な女の子のルナです。いつも前向きで、相手を励ましたり元気づけたりするのが得意です。'
@@ -204,7 +204,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
             value={data.defaultMessage?.[activeLanguage] || ''}
             onChange={(e) => updateField('defaultMessage', activeLanguage, e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors resize-none text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors resize-none text-gray-900"
             placeholder={
               activeLanguage === 'ja'
                 ? '例: こんにちは！私はルナだよ✨ 今日はどんなことをお話ししようかな？'
@@ -222,7 +222,7 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
             value={data.limitMessage?.[activeLanguage] || ''}
             onChange={(e) => updateField('limitMessage', activeLanguage, e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors resize-none text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors resize-none text-gray-900"
             placeholder={
               activeLanguage === 'ja'
                 ? '例: 今日はたくさんお話しできて楽しかったよ！また明日お話ししようね♪'

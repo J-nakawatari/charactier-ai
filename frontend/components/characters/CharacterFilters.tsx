@@ -72,7 +72,7 @@ export default function CharacterFilters({
           value={filters.keyword}
           onChange={(e) => updateFilter('keyword', e.target.value)}
           placeholder={t('search.placeholder')}
-          className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400 text-gray-900 placeholder-gray-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+          className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none  text-gray-900 placeholder-gray-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
         />
         {filters.keyword && (
           <button
@@ -95,7 +95,7 @@ export default function CharacterFilters({
               <select
                 value={filters.characterType}
                 onChange={(e) => updateFilter('characterType', e.target.value)}
-                      className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed min-w-0 text-gray-900 bg-white"
+                      className="text-sm border border-gray-300 rounded-lg px-3 py-1.5  disabled:bg-gray-50 disabled:cursor-not-allowed min-w-0 text-gray-900 bg-white"
               >
                 {characterTypeOptions.map((option) => (
                   <option key={option.value} value={option.value} className="text-gray-900">
@@ -117,7 +117,7 @@ export default function CharacterFilters({
                       value={option.value}
                       checked={filters.characterType === option.value}
                       onChange={(e) => updateFilter('characterType', e.target.value)}
-                                  className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 disabled:cursor-not-allowed"
+                                  className="w-4 h-4 text-purple-600 border-gray-300 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm font-medium text-gray-700">{option.label}</span>
                   </label>
@@ -132,7 +132,7 @@ export default function CharacterFilters({
             <select
               value={filters.sort}
               onChange={(e) => updateFilter('sort', e.target.value)}
-                  className="text-sm border-0 bg-transparent text-gray-700 focus:ring-0 focus:outline-none cursor-pointer disabled:cursor-not-allowed"
+                  className="text-sm border-0 bg-transparent text-gray-700 focus:outline-none cursor-pointer disabled:cursor-not-allowed"
             >
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value}>

@@ -327,7 +327,7 @@ export default function SettingsPage() {
                     <select
                       value={selectedLanguage}
                       onChange={(e) => setSelectedLanguage(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none  text-gray-900 bg-white"
                     >
                       <option value="ja">{t('language.japanese')}</option>
                       <option value="en">{t('language.english')}</option>
@@ -338,7 +338,7 @@ export default function SettingsPage() {
                     <button
                       onClick={handleLanguageChange}
                       disabled={languageLoading || selectedLanguage === locale}
-                      className="w-full md:w-auto flex items-center justify-center space-x-2 px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="w-full md:w-auto flex items-center justify-center space-x-2 px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       <Globe className="w-4 h-4" />
                       <span>{languageLoading ? t('buttons.saving') : t('language.saveLanguage')}</span>
@@ -404,7 +404,7 @@ export default function SettingsPage() {
                                 id="name"
                                 value={profileData.name}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                                className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
+                                className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none  text-gray-900 bg-white"
                                 placeholder={t('placeholders.username')}
                               />
                             ) : (
@@ -427,7 +427,7 @@ export default function SettingsPage() {
                                 id="email"
                                 value={profileData.email}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                                className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
+                                className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none  text-gray-900 bg-white"
                                 placeholder={t('placeholders.email')}
                               />
                             ) : (
@@ -444,7 +444,7 @@ export default function SettingsPage() {
                           <button
                             onClick={handleProfileUpdate}
                             disabled={profileLoading}
-                            className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Save className="w-4 h-4" />
                             <span>{profileLoading ? t('buttons.saving') : t('profile.save')}</span>
@@ -452,7 +452,7 @@ export default function SettingsPage() {
                           <button
                             onClick={handleProfileEditCancel}
                             disabled={profileLoading}
-                            className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <X className="w-4 h-4" />
                             <span>{t('profile.cancel')}</span>
@@ -481,7 +481,7 @@ export default function SettingsPage() {
                               id="currentPassword"
                               value={passwordData.currentPassword}
                               onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                              className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
+                              className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none  text-gray-900 bg-white"
                               placeholder={t('placeholders.currentPassword')}
                             />
                             <button
@@ -505,7 +505,7 @@ export default function SettingsPage() {
                               id="newPassword"
                               value={passwordData.newPassword}
                               onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                              className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
+                              className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none  text-gray-900 bg-white"
                               placeholder={t('placeholders.newPassword')}
                             />
                             <button
@@ -529,7 +529,7 @@ export default function SettingsPage() {
                               id="confirmPassword"
                               value={passwordData.confirmPassword}
                               onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                              className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 bg-white"
+                              className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none  text-gray-900 bg-white"
                               placeholder={t('placeholders.confirmPassword')}
                             />
                             <button
@@ -547,7 +547,7 @@ export default function SettingsPage() {
                         <button
                           onClick={handlePasswordChange}
                           disabled={passwordLoading}
-                          className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Save className="w-4 h-4" />
                           <span>{passwordLoading ? t('buttons.changing') : t('security.savePassword')}</span>
@@ -584,7 +584,7 @@ export default function SettingsPage() {
                             type="text"
                             value={deleteConfirmation}
                             onChange={(e) => setDeleteConfirmation(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 text-gray-900 bg-white"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none  text-gray-900 bg-white"
                             placeholder={t('placeholders.deleteInput')}
                           />
                         </div>
@@ -592,7 +592,7 @@ export default function SettingsPage() {
                         <button
                           onClick={handleAccountDeletion}
                           disabled={deleteLoading || deleteConfirmation !== t('placeholders.deleteInput')}
-                          className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <UserX className="w-4 h-4" />
                           <span>{deleteLoading ? t('buttons.deleting') : t('account.deleteButton')}</span>

@@ -217,7 +217,7 @@ export default function AnalyticsSettingsPage() {
                 value={settings.measurementId}
                 onChange={(e) => setSettings({ ...settings, measurementId: e.target.value })}
                 placeholder="G-XXXXXXXXXX"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
               />
               <p className="mt-1 text-sm text-gray-500">
                 Google Analyticsの測定IDを入力してください
@@ -261,7 +261,7 @@ export default function AnalyticsSettingsPage() {
                 onChange={(e) => extractMeasurementId(e.target.value)}
                 placeholder="Google Analyticsのトラッキングコードを貼り付け（任意）"
                 rows={8}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg font-mono text-sm"
               />
               <p className="mt-1 text-sm text-gray-500">
                 Google Analyticsから提供されたトラッキングコード全体を貼り付けることもできます
@@ -275,7 +275,7 @@ export default function AnalyticsSettingsPage() {
                 id="isActive"
                 checked={settings.isActive}
                 onChange={(e) => setSettings({ ...settings, isActive: e.target.checked })}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-blue-600 rounded"
               />
               <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
                 トラッキングを有効にする

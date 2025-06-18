@@ -693,7 +693,7 @@ export default function CharacterEditPage() {
                     <select
                       value={formData.gender}
                       onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                     >
                       {GENDERS.map(gender => (
                         <option key={gender.value} value={gender.value} className="text-gray-900">
@@ -711,7 +711,7 @@ export default function CharacterEditPage() {
                       type="text"
                       value={formData.age}
                       onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                       placeholder="例: 18歳、20代前半"
                     />
                   </div>
@@ -737,7 +737,7 @@ export default function CharacterEditPage() {
                     type="text"
                     value={formData.occupation}
                     onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                     placeholder="例: 学生、OL、お嬢様"
                   />
                 </div>
@@ -755,7 +755,7 @@ export default function CharacterEditPage() {
                       <select
                         value={formData.characterAccessType}
                         onChange={(e) => setFormData({ ...formData, characterAccessType: e.target.value as 'free' | 'purchaseOnly' })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                       >
                         {ACCESS_TYPES.map(type => (
                           <option key={type.value} value={type.value} className="text-gray-900">
@@ -789,7 +789,7 @@ export default function CharacterEditPage() {
                           type="text"
                           value={formData.stripeProductId}
                           onChange={(e) => setFormData({ ...formData, stripeProductId: e.target.value })}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                           placeholder="price_xxxxxxxxx または prod_xxxxxxxxx"
                         />
                         <button
@@ -824,7 +824,7 @@ export default function CharacterEditPage() {
                   <select
                     value={formData.personalityPreset}
                     onChange={(e) => setFormData({ ...formData, personalityPreset: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                   >
                     <option value="" className="text-gray-500">プリセットを選択してください</option>
                     {PERSONALITY_PRESETS.map(preset => (
@@ -872,7 +872,7 @@ export default function CharacterEditPage() {
                   <select
                     value={formData.model}
                     onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                   >
                     {availableModels.map(model => (
                       <option key={model.value} value={model.value} className="text-gray-900">
@@ -1148,7 +1148,7 @@ export default function CharacterEditPage() {
                               type="text"
                               value={galleryItem?.title || ''}
                               onChange={(e) => updateGalleryInfo(unlockLevel, 'title', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none  transition-colors text-gray-900"
                               placeholder="画像タイトル"
                             />
                           </div>
@@ -1157,7 +1157,7 @@ export default function CharacterEditPage() {
                             <textarea
                               value={galleryItem?.description || ''}
                               onChange={(e) => updateGalleryInfo(unlockLevel, 'description', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none  transition-colors text-gray-900"
                               rows={2}
                               placeholder="画像説明"
                             />

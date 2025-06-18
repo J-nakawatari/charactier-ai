@@ -229,7 +229,7 @@ export default function PurchaseHistoryPage() {
                 <select
                   value={filter}
                   onChange={(e) => setFilter(e.target.value as any)}
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="px-3 py-1 border border-gray-300 rounded-md text-sm "
                 >
                   <option value="all">{t('filters.all')}</option>
                   <option value="token">{t('filters.token')}</option>
@@ -249,7 +249,7 @@ export default function PurchaseHistoryPage() {
                     setSortBy(by as any);
                     setSortOrder(order as any);
                   }}
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="px-3 py-1 border border-gray-300 rounded-md text-sm "
                 >
                   <option value="date-desc">{t('sort.dateDesc')}</option>
                   <option value="date-asc">{t('sort.dateAsc')}</option>

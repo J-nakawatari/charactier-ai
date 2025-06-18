@@ -574,7 +574,7 @@ export default function TokenAnalyticsDashboard({ defaultDays = 30 }: TokenAnaly
               <select 
                 value={selectedDays} 
                 onChange={(e) => handleDaysChange(Number(e.target.value))}
-                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="border border-gray-300 rounded-md px-3 py-1 text-sm "
               >
                 <option value={7}>過去7日間</option>
                 <option value={14}>過去14日間</option>

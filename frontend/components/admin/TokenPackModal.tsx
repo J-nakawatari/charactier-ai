@@ -299,7 +299,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
               type="text"
               value={formData.name || ''}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:outline-none text-gray-900 bg-white ${
+              className={`w-full px-3 py-2 border rounded-lg  focus:outline-none text-gray-900 bg-white ${
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="例: スタンダードパック"
@@ -318,7 +318,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
               value={formData.description || ''}
               onChange={(e) => handleInputChange('description', e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:outline-none text-gray-900 bg-white"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg  focus:outline-none text-gray-900 bg-white"
               placeholder="このパックの特徴や推奨利用シーンを記載"
             />
           </div>
@@ -334,7 +334,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
                 value={priceIdInput}
                 onChange={(e) => setPriceIdInput(e.target.value)}
                 disabled={false}
-                className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:outline-none text-gray-900 bg-white ${
+                className={`flex-1 px-3 py-2 border rounded-lg  focus:outline-none text-gray-900 bg-white ${
                   errors.priceId ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="price_1RVCyQ1qmMqgQ3qQkRzWRIQU"
@@ -408,7 +408,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
               type="checkbox"
               checked={formData.isActive || false}
               onChange={(e) => handleInputChange('isActive', e.target.checked)}
-              className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+              className="h-4 w-4 text-purple-600 border-gray-300 rounded"
             />
             <label htmlFor="isActive" className="ml-2 text-sm text-gray-700">
               アクティブ状態（購入可能）

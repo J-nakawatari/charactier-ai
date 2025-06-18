@@ -378,7 +378,7 @@ export default function NotificationsManagementPage() {
                   placeholder="タイトル・メッセージで検索"
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none"
                 />
               </div>
             </div>
@@ -387,7 +387,7 @@ export default function NotificationsManagementPage() {
               <select
                 value={filters.type}
                 onChange={(e) => setFilters({ ...filters, type: e.target.value, page: 1 })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none"
               >
                 <option value="">すべて</option>
                 <option value="info">お知らせ</option>
@@ -404,7 +404,7 @@ export default function NotificationsManagementPage() {
               <select
                 value={filters.isActive}
                 onChange={(e) => setFilters({ ...filters, isActive: e.target.value, page: 1 })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none"
               >
                 <option value="">すべて</option>
                 <option value="true">公開中</option>
@@ -416,7 +416,7 @@ export default function NotificationsManagementPage() {
               <select
                 value={filters.limit}
                 onChange={(e) => setFilters({ ...filters, limit: parseInt(e.target.value), page: 1 })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none"
               >
                 <option value={10}>10件</option>
                 <option value={20}>20件</option>
