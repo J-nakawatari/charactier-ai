@@ -98,7 +98,6 @@ export default function EditNotificationPage() {
       }
 
       const data = await response.json();
-      console.log('Notification data:', data); // デバッグログ
       setNotification(data);
       
       // フォームデータに反映
@@ -136,6 +135,7 @@ export default function EditNotificationPage() {
       fetchNotification();
     }
   }, [notificationId, fetchNotification]);
+
 
   // フォーム送信
   const handleSubmit = async (e: React.FormEvent) => {
