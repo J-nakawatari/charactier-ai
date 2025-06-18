@@ -111,12 +111,9 @@ router.get('/recent-violations', authenticateToken, authenticateAdmin, async (re
 router.get('/sanctioned-users', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const users = await UserModel.find({
-      $or: [
-        { accountStatus: 'warned' },
-        { accountStatus: 'chat_suspended' },
-        { accountStatus: 'account_suspended' },
-        { accountStatus: 'banned' }
-      ]
+      accountStatus: { 
+        $in: ['warned', 'chat_suspended', 'account_suspended', 'banned']
+      }
     }).select('name email accountStatus suspensionEndDate violationCount lastViolationDate');
     
     res.json({
