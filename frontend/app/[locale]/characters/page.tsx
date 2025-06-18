@@ -232,18 +232,11 @@ function CharactersPageContent({
           <p className="text-gray-600">
             {t('subtitle')}
           </p>
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-4">
             <div className="flex items-center text-sm text-gray-500">
               <Users className="w-4 h-4 mr-1" />
               <span>{t('totalCount', { count: totalCount })}</span>
             </div>
-            {/* テスト用ボタン */}
-            <button
-              onClick={() => setShowWelcomeModal(true)}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700"
-            >
-              ウェルカムモーダルテスト
-            </button>
           </div>
         </div>
 
