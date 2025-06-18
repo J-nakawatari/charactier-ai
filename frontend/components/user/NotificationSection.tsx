@@ -285,7 +285,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
                         {notification.title[locale as keyof LocalizedString]}
                       </h4>
                       {notification.isPinned && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
   {t('important')}
                         </span>
                       )}
