@@ -93,35 +93,9 @@ export default function NotificationSection({ locale }: NotificationSectionProps
 
   const getNotificationBgColor = (type: string, isRead: boolean, isPinned: boolean) => {
     const baseClasses = isRead ? 'bg-gray-50' : 'bg-white';
-    const borderClasses = isPinned ? 'border-yellow-300' : 'border-gray-200';
-    let typeClasses = '';
+    const borderClasses = 'border-gray-200';
     
-    if (!isRead) {
-      switch (type) {
-        case 'warning':
-          typeClasses = 'border-l-orange-400';
-          break;
-        case 'success':
-          typeClasses = 'border-l-green-400';
-          break;
-        case 'urgent':
-          typeClasses = 'border-l-red-400';
-          break;
-        case 'maintenance':
-          typeClasses = 'border-l-gray-400';
-          break;
-        case 'feature':
-          typeClasses = 'border-l-purple-400';
-          break;
-        case 'event':
-          typeClasses = 'border-l-pink-400';
-          break;
-        default:
-          typeClasses = 'border-l-blue-400';
-      }
-    }
-    
-    return `${baseClasses} ${borderClasses} ${typeClasses}`;
+    return `${baseClasses} ${borderClasses}`;
   };
 
   const markAsRead = async (notificationId: string) => {
@@ -298,7 +272,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
               key={notification._id}
               className={`p-4 rounded-lg border transition-all duration-200 ${
                 getNotificationBgColor(notification.type, notification.isRead, notification.isPinned)
-              } ${!notification.isRead ? 'border-l-4' : ''}`}
+              }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-3 flex-1">
