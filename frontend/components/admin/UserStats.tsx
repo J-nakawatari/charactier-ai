@@ -28,8 +28,8 @@ export default function UserStats({ users }: UserStatsProps) {
     inactive: users.filter(u => u.status === 'inactive').length,
     suspended: users.filter(u => u.status === 'suspended').length,
     trial: users.filter(u => u.isTrialUser).length,
-    totalRevenue: users.reduce((sum, u) => sum + u.totalSpent, 0),
-    avgSpent: users.reduce((sum, u) => sum + u.totalSpent, 0) / users.length
+    totalRevenue: users.reduce((sum, u) => sum + (u.totalSpent || 0), 0),
+    avgSpent: users.length > 0 ? users.reduce((sum, u) => sum + (u.totalSpent || 0), 0) / users.length : 0
   };
 
   const cards = [
