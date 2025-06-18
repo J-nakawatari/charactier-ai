@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IExchangeRate extends Document {
   baseCurrency: string;  // 'USD'
@@ -10,6 +10,16 @@ export interface IExchangeRate extends Document {
   previousRate?: number;  // 前回レート (異常値判定用)
   createdAt: Date;
   updatedAt: Date;
+}
+
+// 静的メソッドの型定義
+export interface IExchangeRateModel extends Model<IExchangeRate> {
+  getLatestValidRate(baseCurrency?: string, targetCurrency?: string): Promise<number>;
+  validateRate(newRate: number, baseCurrency?: string, targetCurrency?: string): Promise<{
+    isValid: boolean;
+    reason?: string;
+    previousRate?: number;
+  }>;
 }
 
 const ExchangeRateSchema: Schema = new Schema({
@@ -111,4 +121,4 @@ ExchangeRateSchema.statics.validateRate = async function(
   return { isValid: true, previousRate };
 };
 
-export const ExchangeRateModel = mongoose.model<IExchangeRate>('ExchangeRate', ExchangeRateSchema);
+export const ExchangeRateModel = mongoose.model<IExchangeRate, IExchangeRateModel>('ExchangeRate', ExchangeRateSchema);
