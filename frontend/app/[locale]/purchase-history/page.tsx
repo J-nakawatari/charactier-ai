@@ -124,16 +124,9 @@ export default function PurchaseHistoryPage() {
       refunded: 'bg-gray-100 text-gray-800'
     };
     
-    const statusText = {
-      completed: '完了',
-      pending: '処理中',
-      failed: '失敗',
-      refunded: '返金済み'
-    };
-    
     return (
       <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusClasses[status as keyof typeof statusClasses]}`}>
-        {statusText[status as keyof typeof statusText]}
+        {t(`status.${status}`)}
       </span>
     );
   };
@@ -283,22 +276,22 @@ export default function PurchaseHistoryPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        商品
+                        {t('table.product')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        日付
+                        {t('table.date')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        金額
+                        {t('table.amount')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        支払方法
+                        {t('table.paymentMethod')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ステータス
+                        {t('table.status')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        操作
+                        {t('table.actions')}
                       </th>
                     </tr>
                   </thead>
@@ -317,9 +310,9 @@ export default function PurchaseHistoryPage() {
                                 {purchase.details}
                               </div>
                               <div className="text-sm text-gray-500">
-                                {purchase.type === 'token' ? `${(purchase.amount || 0).toLocaleString()}トークン` : 
-                                 purchase.type === 'character' ? '1キャラクター' : 
-                                 'サブスクリプション'}
+                                {purchase.type === 'token' ? t('types.token', { amount: (purchase.amount || 0).toLocaleString() }) : 
+                                 purchase.type === 'character' ? t('types.character') : 
+                                 t('types.subscription')}
                               </div>
                             </div>
                           </div>
@@ -374,9 +367,9 @@ export default function PurchaseHistoryPage() {
                               {purchase.details}
                             </h3>
                             <p className="text-xs text-gray-500 mt-1">
-                              {purchase.type === 'token' ? `${(purchase.amount || 0).toLocaleString()}トークン` : 
-                               purchase.type === 'character' ? '1キャラクター' : 
-                               'サブスクリプション'}
+                              {purchase.type === 'token' ? t('types.token', { amount: (purchase.amount || 0).toLocaleString() }) : 
+                               purchase.type === 'character' ? t('types.character') : 
+                               t('types.subscription')}
                             </p>
                           </div>
                           <div className="flex-shrink-0 ml-2">
@@ -425,10 +418,10 @@ export default function PurchaseHistoryPage() {
                 <div className="text-center py-8 sm:py-12 px-4">
                   <ShoppingCart className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
-                    購入履歴がありません
+                    {t('empty.title')}
                   </h3>
                   <p className="text-sm sm:text-base text-gray-500">
-                    まだ購入がありません。トークンやキャラクターを購入すると、ここに履歴が表示されます。
+                    {t('empty.description')}
                   </p>
                 </div>
               )}

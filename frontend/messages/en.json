@@ -538,9 +538,13 @@
     "title": "Purchase History",
     "totalSpent": "Total Spent",
     "purchasedTokens": "Purchased Tokens",
+    "noHistory": "No purchase history yet",
+    "buyTokens": "Buy tokens",
     "types": {
-      "token": "Tokens",
-      "character": "Character"
+      "token": "{amount} tokens",
+      "tokenUnit": "Tokens",
+      "character": "Character",
+      "characterUnit": "Character"
     }
   },
   "rarity": {

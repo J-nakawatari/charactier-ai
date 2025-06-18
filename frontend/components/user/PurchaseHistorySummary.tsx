@@ -34,7 +34,7 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
 
   const formatAmount = (amount: number, type: string) => {
     if (type === 'token') {
-      return `${amount.toLocaleString()}トークン`;
+      return t('types.token', { amount: amount.toLocaleString() });
     } else {
       return `¥${amount.toLocaleString()}`;
     }
@@ -72,9 +72,9 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
         </div>
         <div className="text-center py-8">
           <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-3">{locale === 'en' ? 'No purchase history yet' : 'まだ購入履歴がありません'}</p>
+          <p className="text-gray-500 mb-3">{t('noHistory')}</p>
           <button className="text-sm text-green-600 hover:text-green-700 font-medium transition-colors">
-{locale === 'en' ? 'Buy tokens' : 'トークンを購入する'}
+            {t('buyTokens')}
           </button>
         </div>
       </div>
@@ -97,7 +97,7 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
             onClick={() => setIsExpanded(!isExpanded)}
             className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-700 transition-colors"
           >
-            <span>{isExpanded ? (locale === 'en' ? 'Close' : '閉じる') : tGeneral('viewAll')}</span>
+            <span>{isExpanded ? tGeneral('close') : tGeneral('viewAll')}</span>
             {isExpanded ? (
               <ChevronUp className="w-4 h-4" />
             ) : (

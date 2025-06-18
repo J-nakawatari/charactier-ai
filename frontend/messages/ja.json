@@ -538,9 +538,13 @@
     "title": "購入履歴",
     "totalSpent": "総購入額",
     "purchasedTokens": "購入トークン",
+    "noHistory": "まだ購入履歴がありません",
+    "buyTokens": "トークンを購入する",
     "types": {
-      "token": "トークン",
-      "character": "キャラクター"
+      "token": "{amount}トークン",
+      "tokenUnit": "トークン",
+      "character": "キャラクター",
+      "characterUnit": "キャラクター"
     }
   },
   "rarity": {
