@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useToast } from '@/contexts/ToastContext';
-import { CreditCard, Trash2 } from 'lucide-react';
+import { CreditCard, Edit2 } from 'lucide-react';
 import { ensureUserNameString } from '@/utils/userUtils';
 import { API_BASE_URL } from '@/lib/api-config';
+import TokenUpdateModal from './TokenUpdateModal';
 
 interface UserData {
   id: string;
@@ -24,6 +26,8 @@ interface TokenManagementTableProps {
 
 export default function TokenManagementTable({ users, onUserUpdate }: TokenManagementTableProps) {
   const { success, error } = useToast();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   
   // 統一されたユーティリティ関数を使用
   const getStatusBadge = (status: string, isTrialUser: boolean) => {
@@ -64,11 +68,9 @@ export default function TokenManagementTable({ users, onUserUpdate }: TokenManag
     return 'text-green-600';
   };
 
-  // トークンリセット機能
-  const handleResetTokens = async (user: UserData) => {
-    if (!confirm(`⚠️ ${ensureUserNameString(user.name)}のトークン残高(${formatNumber(user.tokenBalance)}枚)を0にリセットしますか？\n\n※これは開発用の一時的機能です`)) {
-      return;
-    }
+  // トークン更新機能
+  const handleUpdateTokens = async (newBalance: number) => {
+    if (!selectedUser) return;
 
     try {
       const adminToken = localStorage.getItem('adminAccessToken');
@@ -78,28 +80,36 @@ export default function TokenManagementTable({ users, onUserUpdate }: TokenManag
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/admin/users/${user.id}/reset-tokens`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/${selectedUser.id}/reset-tokens`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${adminToken}`
-        }
+        },
+        body: JSON.stringify({
+          newBalance: newBalance
+        })
       });
 
       if (!response.ok) {
-        throw new Error('Token reset failed');
+        throw new Error('Token update failed');
       }
 
       const result = await response.json();
-      success('トークンリセット完了', `${ensureUserNameString(user.name)}のトークン残高を${formatNumber(result.previousBalance)}から0にリセットしました`);
+      success('トークン更新完了', `${ensureUserNameString(selectedUser.name)}のトークン残高を${formatNumber(result.previousBalance)}から${formatNumber(result.newBalance)}に更新しました`);
       
       // ユーザー一覧を更新
       onUserUpdate?.();
       
     } catch (err) {
-      error('リセットエラー', 'トークンのリセットに失敗しました');
-      console.error('Token reset error:', err);
+      error('更新エラー', 'トークンの更新に失敗しました');
+      console.error('Token update error:', err);
     }
+  };
+
+  const handleOpenModal = (user: UserData) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
   };
 
   return (
@@ -132,7 +142,7 @@ export default function TokenManagementTable({ users, onUserUpdate }: TokenManag
                 最終ログイン
               </th>
               <th className="px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                トークンリセット
+                トークン編集
               </th>
             </tr>
           </thead>
@@ -176,11 +186,11 @@ export default function TokenManagementTable({ users, onUserUpdate }: TokenManag
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button 
-                    onClick={() => handleResetTokens(user)}
-                    className="text-gray-400 hover:text-orange-600 transition-colors" 
-                    title="⚠️ 開発用：トークンを0にリセット"
+                    onClick={() => handleOpenModal(user)}
+                    className="text-gray-400 hover:text-purple-600 transition-colors" 
+                    title="トークン残高を編集"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Edit2 className="w-4 h-4" />
                   </button>
                 </td>
               </tr>
@@ -188,6 +198,17 @@ export default function TokenManagementTable({ users, onUserUpdate }: TokenManag
           </tbody>
         </table>
       </div>
+      
+      {/* トークン更新モーダル */}
+      <TokenUpdateModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedUser(null);
+        }}
+        onUpdate={handleUpdateTokens}
+        user={selectedUser}
+      />
     </div>
   );
 }
