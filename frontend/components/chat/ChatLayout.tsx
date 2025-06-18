@@ -128,7 +128,7 @@ export function ChatLayout({
 
   // Google Analytics: チャット開始イベント（初回のみ）
   useEffect(() => {
-    gtag.trackChatStart(character._id, character.name);
+    gtag.chatStart(character._id, character.name);
   }, [character._id, character.name]);
 
   // 🎭 初期データでAffinityStoreを更新
@@ -150,7 +150,7 @@ export function ChatLayout({
       setShowUnlockPopup(true);
       
       // Google Analytics: 親密度レベルアップイベント
-      gtag.trackAffinityLevelUp(character._id, event.detail.level);
+      gtag.affinityLevelUp(character._id, event.detail.level);
     };
 
     window.addEventListener('levelUp', handleLevelUp as EventListener);
@@ -232,7 +232,7 @@ export function ChatLayout({
       realtimeChat.setCharacterTyping(true);
       
       // Google Analytics: メッセージ送信イベント
-      gtag.trackMessageSent(character._id, messageToSend.length);
+      gtag.messageSent(character._id, messageToSend.length);
       
       await onSendMessage(messageToSend);
       
