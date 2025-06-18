@@ -100,11 +100,51 @@
   },
   "library": {
     "title": "Character Library",
-    "subtitle": "Enjoy special images unlocked based on your intimacy level",
-    "noImages": "No unlocked images yet",
-    "unlockedAt": "Unlocked at intimacy level {level}",
-    "loading": "Loading...",
-    "error": "Failed to load data"
+    "subtitle": "Collection of memory images unlocked through intimacy",
+    "loading": "Loading library...",
+    "character": {
+      "selectLabel": "Character Selection",
+      "selectPlaceholder": "Select a character",
+      "level": "Level {level}",
+      "unlockedCount": "Unlocked: {count} images"
+    },
+    "search": {
+      "placeholder": "Search images...",
+      "noResults": "No search results"
+    },
+    "view": {
+      "grid": "Grid",
+      "list": "List"
+    },
+    "unlocked": {
+      "title": "Unlocked Memories",
+      "subtitle": "{count} images are unlocked",
+      "empty": {
+        "title": "No unlocked images yet",
+        "description": "Increase intimacy to unlock new memories"
+      }
+    },
+    "locked": {
+      "title": "Locked Memories",
+      "subtitle": "{count} images that will be unlocked by increasing intimacy",
+      "hoverMessage": "Increase intimacy to unlock!",
+      "unlockLevel": "Unlocks at Level {level}",
+      "imageTitle": "Locked memory"
+    },
+    "rarity": {
+      "common": "Common",
+      "rare": "Rare",
+      "epic": "Epic",
+      "legendary": "Legendary"
+    },
+    "modal": {
+      "imageTitle": "Memory image",
+      "altText": "Selected image"
+    },
+    "noCharacter": {
+      "title": "Please select a character",
+      "description": "Please select the character whose memories you'd like to view from the dropdown above"
+    }
   },
   "sidebar": {
     "home": "Home",
