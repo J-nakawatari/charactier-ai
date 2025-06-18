@@ -192,7 +192,7 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
             {!badge.isUnlocked && badge.progress !== undefined && badge.maxProgress !== undefined && (
               <div className="mt-3">
                 <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                  <span>進捗</span>
+                  <span>{t('progress')}</span>
                   <span>{badge.progress} / {badge.maxProgress}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -221,10 +221,10 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
         <div className="text-center py-8">
           <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500">
-            {(badges || []).length === 0 ? 'バッジシステムを準備中です...' : 
-             filter === 'unlocked' ? '獲得済みのバッジがありません' : 
-             filter === 'locked' ? 'すべてのバッジを獲得済みです！' : 
-             'バッジがありません'}
+            {(badges || []).length === 0 ? t('preparing') : 
+             filter === 'unlocked' ? t('noAcquired') : 
+             filter === 'locked' ? t('allCompleted') : 
+             t('noBadges')}
           </p>
         </div>
       )}
@@ -233,13 +233,13 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
       <div className="mt-6 pt-4 border-t border-gray-100">
         <div className="text-center">
           <p className="text-sm text-gray-600 mb-2">
-            アクティビティを通じて新しいバッジを獲得しよう！
+            {t('encouragement')}
           </p>
           <button 
             onClick={handleSystemModalOpen}
             className="text-sm text-yellow-600 hover:text-yellow-700 font-medium transition-colors"
           >
-            バッジについて詳しく見る
+{t('learnMore')}
           </button>
         </div>
       </div>

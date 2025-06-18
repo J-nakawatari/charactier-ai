@@ -30,6 +30,8 @@ interface NotificationSectionProps {
 }
 
 export default function NotificationSection({ locale }: NotificationSectionProps) {
+  const t = useTranslations('notifications');
+  const tGeneral = useTranslations('general');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -196,11 +198,11 @@ export default function NotificationSection({ locale }: NotificationSectionProps
           <div className="p-2 bg-gray-100 rounded-lg">
             <Bell className="w-5 h-5 text-gray-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">お知らせ</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
         </div>
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-          <p className="text-gray-500">お知らせを読み込み中...</p>
+          <p className="text-gray-500">{t('loading', {ns: 'general'}) || '読み込み中...'}</p>
         </div>
       </div>
     );
@@ -214,7 +216,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
           <div className="p-2 bg-gray-100 rounded-lg">
             <Bell className="w-5 h-5 text-gray-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">お知らせ</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
         </div>
         <div className="text-center py-8">
           <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-3" />
@@ -238,7 +240,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
           <div className="p-2 bg-gray-100 rounded-lg">
             <Bell className="w-5 h-5 text-gray-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">お知らせ</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
         </div>
         <div className="text-center py-8">
           <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -262,10 +264,10 @@ export default function NotificationSection({ locale }: NotificationSectionProps
             )}
           </div>
           <h3 className="text-lg font-semibold text-gray-900">
-            お知らせ
+            {t('title')}
             {unreadCount > 0 && (
               <span className="ml-2 text-sm text-gray-500">
-                ({unreadCount}件未読)
+                ({unreadCount}{t('unreadCount')})
               </span>
             )}
           </h3>
@@ -277,7 +279,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
             className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
           >
             <Eye className="w-4 h-4" />
-            <span>すべて既読</span>
+            <span>{tGeneral('markAllRead')}</span>
           </button>
         )}
       </div>
@@ -310,7 +312,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
                       </h4>
                       {notification.isPinned && (
                         <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          重要
+  {t('important')}
                         </span>
                       )}
                       {!notification.isRead && (
@@ -332,7 +334,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
                           className="text-xs text-blue-600 hover:text-blue-700 flex items-center space-x-1 transition-colors"
                         >
                           <EyeOff className="w-3 h-3" />
-                          <span>既読</span>
+                          <span>{tGeneral('read')}</span>
                         </button>
                       )}
                     </div>
@@ -350,7 +352,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
             onClick={() => {/* TODO: 全お知らせページへの遷移 */}}
             className="w-full text-center text-sm text-gray-600 hover:text-gray-700 transition-colors"
           >
-            すべてのお知らせを表示 ({notifications.length}件)
+{t('viewAll', { count: notifications.length })}
           </button>
         </div>
       )}

@@ -63,16 +63,16 @@ export default function RecentChatHistory({ recentChats, locale }: RecentChatHis
           <div className="p-2 bg-blue-100 rounded-lg">
             <MessageSquare className="w-5 h-5 text-blue-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">最近のチャット</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
         </div>
         <div className="text-center py-8">
           <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-3">まだチャット履歴がありません</p>
+          <p className="text-gray-500 mb-3">{t('noHistory')}</p>
           <button 
             onClick={handleNewChatClick}
             className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors"
           >
-            キャラクターと話してみる
+{t('startChatting')}
           </button>
         </div>
       </div>
@@ -87,13 +87,13 @@ export default function RecentChatHistory({ recentChats, locale }: RecentChatHis
           <div className="p-2 bg-blue-100 rounded-lg">
             <MessageSquare className="w-5 h-5 text-blue-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">最近のチャット</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
         </div>
         <button 
           onClick={handleNewChatClick}
           className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
         >
-          すべて見る
+{tGeneral('viewAll')}
         </button>
       </div>
 
@@ -138,10 +138,10 @@ export default function RecentChatHistory({ recentChats, locale }: RecentChatHis
                 {/* メッセージ数と続きボタン */}
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500">
-                    {chat.messageCount}件のメッセージ
+{chat.messageCount}{t('messagesCount')}
                   </span>
                   <div className="flex items-center space-x-1 text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-xs font-medium">続きを読む</span>
+                    <span className="text-xs font-medium">{t('continueReading')}</span>
                     <ArrowRight className="w-3 h-3" />
                   </div>
                 </div>
