@@ -172,7 +172,6 @@ export default function DashboardPage() {
                     balance={dashboardData.tokens.balance}
                     totalPurchased={dashboardData.tokens.totalPurchased}
                     recentUsage={dashboardData.tokens.recentUsage}
-                    isLowWarning={isLowTokenWarning()}
                     onTokensUpdated={handleTokensUpdated}
                   />
                 </div>

@@ -9,7 +9,6 @@ interface TokenStatusCardProps {
   balance: number;
   totalPurchased: number;
   recentUsage: Array<{ date: string; amount: number }>;
-  isLowWarning?: boolean;
   onTokensUpdated?: (newBalance: number) => void;
 }
 
@@ -17,7 +16,6 @@ export default function TokenStatusCard({
   balance, 
   totalPurchased, 
   recentUsage, 
-  isLowWarning = false,
   onTokensUpdated
 }: TokenStatusCardProps) {
   const t = useTranslations('tokens');
@@ -25,6 +23,9 @@ export default function TokenStatusCard({
   
   const usagePercentage = totalPurchased > 0 ? ((totalPurchased - balance) / totalPurchased) * 100 : 0;
   const remainingPercentage = 100 - usagePercentage;
+  
+  // 低残高警告の判定
+  const isLowWarning = totalPurchased > 0 && balance <= (totalPurchased * 0.2);
   
   // 直近7日間の平均使用量
   const averageDailyUsage = (recentUsage || []).length > 0 
