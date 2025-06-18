@@ -43,30 +43,81 @@ export default function GoogleAnalyticsScript() {
   }
 
   // カスタムトラッキングコードがある場合はそれを使用
-  if (gaSettings.trackingCode) {
-    // スクリプトタグを含むHTMLを直接挿入
-    return (
-      <>
-        <div
-          dangerouslySetInnerHTML={{
-            __html: gaSettings.trackingCode
-          }}
-        />
-      </>
-    );
+  useEffect(() => {
+    if (gaSettings && gaSettings.trackingCode && typeof window !== 'undefined') {
+      console.log('Injecting custom GA tracking code...');
+      
+      // 既存のGAスクリプトをチェック
+      const existingGAScript = document.getElementById('ga-custom-script');
+      if (existingGAScript) {
+        console.log('GA script already exists, skipping...');
+        return;
+      }
+
+      // 一時的なdiv要素を作成してHTMLをパース
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = gaSettings.trackingCode;
+      
+      // script要素を抽出して実行
+      const scripts = tempDiv.getElementsByTagName('script');
+      const addedScripts: HTMLScriptElement[] = [];
+      
+      Array.from(scripts).forEach((script, index) => {
+        const newScript = document.createElement('script');
+        newScript.id = index === 0 ? 'ga-custom-script' : `ga-custom-script-${index}`;
+        
+        // 属性をコピー
+        Array.from(script.attributes).forEach((attr) => {
+          if (attr.name !== 'id') {
+            newScript.setAttribute(attr.name, attr.value);
+          }
+        });
+        
+        // スクリプト内容をコピー
+        if (script.innerHTML) {
+          newScript.innerHTML = script.innerHTML;
+        }
+        
+        // headに追加
+        document.head.appendChild(newScript);
+        addedScripts.push(newScript);
+        console.log(`Added GA script ${index}:`, newScript.id);
+      });
+      
+      console.log(`Successfully injected ${addedScripts.length} GA scripts`);
+
+      // クリーンアップ関数
+      return () => {
+        addedScripts.forEach(script => {
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+        });
+      };
+    }
+  }, [gaSettings]);
+
+  if (gaSettings && gaSettings.trackingCode) {
+    // カスタムコードの場合は何も返さない（useEffectで処理）
+    return null;
   }
 
   // デフォルトのGoogle Analyticsスクリプト
+  console.log('Rendering default GA script with ID:', gaSettings.measurementId);
+  
   return (
     <>
       <Script
         id="google-analytics-gtag"
         src={`https://www.googletagmanager.com/gtag/js?id=${gaSettings.measurementId}`}
         strategy="afterInteractive"
+        onLoad={() => console.log('GA gtag.js loaded')}
+        onError={(e) => console.error('GA gtag.js failed to load:', e)}
       />
       <Script
         id="google-analytics-config"
         strategy="afterInteractive"
+        onReady={() => console.log('GA config script ready')}
         dangerouslySetInnerHTML={{
           __html: `
             window.dataLayer = window.dataLayer || [];
