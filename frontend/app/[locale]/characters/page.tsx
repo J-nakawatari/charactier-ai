@@ -76,7 +76,7 @@ function CharactersPageContent({
         await handleFetchError(response);
       }
     } catch (err) {
-      console.error('ユーザー情報取得エラー:', err);
+      console.error('User info fetch error:', err);
     }
   }, []);
 
@@ -110,8 +110,8 @@ function CharactersPageContent({
       setTotalCount(data.total || 0);
 
     } catch (err) {
-      console.error('キャラクター一覧取得エラー:', err);
-      setError(err instanceof Error ? err.message : 'キャラクター一覧の取得に失敗しました');
+      console.error('Character list fetch error:', err);
+      setError(err instanceof Error ? err.message : t('errors.loadFailed'));
       setCharacters([]);
       setTotalCount(0);
     } finally {
@@ -341,15 +341,12 @@ function CharactersPageContent({
 
               {/* メインメッセージ */}
               <h2 className="text-3xl font-bold mb-4 animate-pulse">
-                🎉 ご登録ありがとうございます！
+                {t('welcome.title')}
               </h2>
               
               {/* サブメッセージ */}
               <p className="text-xl mb-6 leading-relaxed">
-                新規会員登録された方には<br />
-                今だけ<span className="text-yellow-300 font-bold text-2xl mx-1 animate-pulse">10,000</span>
-                <span className="text-yellow-300 font-bold">トークチケット</span><br />
-                プレゼント！
+                {t('welcome.description')}
               </p>
 
               {/* トークンアイコン */}
@@ -388,12 +385,12 @@ function CharactersPageContent({
                 }}
                 className="bg-white text-purple-600 font-bold py-4 px-8 rounded-full text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg animate-pulse"
               >
-                さっそくチャットしてみる！
+{t('welcome.startButton')}
               </button>
 
               {/* 小さなテキスト */}
               <p className="text-xs mt-4 opacity-80">
-                トークチケットは自動で付与されました
+                {t('welcome.tokensGranted')}
               </p>
             </div>
 

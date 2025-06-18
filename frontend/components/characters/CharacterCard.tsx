@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { MessageSquare, User, Sparkles, Unlock } from 'lucide-react';
 import AffinityBar from './AffinityBar';
 import LockBadge from './LockBadge';
+import { PriceDisplay } from '../common/PriceDisplay';
 import { BaseCharacter } from '../../types/common';
 import { API_BASE_URL } from '@/lib/api-config';
 import { getSafeImageUrl } from '@/utils/imageUtils';
@@ -62,7 +63,7 @@ export default function CharacterCard({
       
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        alert('ログインが必要です');
+        alert(t('errors.loginRequired'));
         return;
       }
 
@@ -89,16 +90,16 @@ export default function CharacterCard({
           // Stripeチェックアウトページにリダイレクト
           window.location.href = data.url;
         } else {
-          alert('チェックアウトURLが取得できませんでした');
+          alert(t('errors.checkoutFailed'));
         }
       } else {
         const errorData = await response.json();
         console.error('❌ チェックアウトセッション作成失敗:', errorData);
-        alert(errorData.message || 'チェックアウトセッションの作成に失敗しました');
+        alert(errorData.message || t('errors.checkoutFailed'));
       }
     } catch (error) {
       console.error('キャラクター購入エラー:', error);
-      alert('キャラクター購入中にエラーが発生しました');
+      alert(t('errors.purchaseError'));
     } finally {
       setIsUpdating(false);
     }
@@ -338,7 +339,18 @@ export default function CharacterCard({
               {character.characterAccessType === 'purchaseOnly' ? (
                 <>
                   <Unlock className="w-4 h-4" />
-                  <span>{price ? `¥${price.toLocaleString()}でアンロック` : t('actions.unlock')}</span>
+                  <span>
+                    {price ? (
+                      <PriceDisplay 
+                        priceJpy={price} 
+                        locale={locale} 
+                        className="inline" 
+                      />
+                    ) : (
+                      t('actions.unlock')
+                    )}
+                    {price && t('actions.unlockWith')}
+                  </span>
                 </>
               ) : (
                 <span>{t('actions.needTokens')}</span>

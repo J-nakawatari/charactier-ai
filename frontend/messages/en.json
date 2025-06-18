@@ -7,11 +7,12 @@
       "placeholder": "Search by character name or personality...",
       "notFound": "No characters found",
       "notFoundDesc": "Please try changing your search criteria",
-      "resetFilters": "Reset Filters"
+      "resetFilters": "Reset Filters",
+      "activeFilter": "Search: {keyword}"
     },
     "filters": {
       "all": "Show All",
-      "initial": "Base Characters Only",
+      "free": "Base Characters Only",
       "purchased": "Purchased Characters Only", 
       "unpurchased": "Unpurchased Characters Only"
     },
@@ -24,18 +25,34 @@
     },
     "actions": {
       "unlock": "Unlock",
+      "unlockWith": " to unlock",
       "startChat": "Start Chat",
       "needTokens": "Talk Tickets Required",
-      "viewAll": "View All"
+      "viewAll": "View All",
+      "purchase": "Purchase"
     },
     "characterTypes": {
-      "initial": "Base Character",
+      "free": "Base Character",
       "premium": "Premium",
       "locked": "Locked"
     },
     "loading": "Loading character list...",
     "loadError": "Loading Error",
-    "retry": "Retry"
+    "retry": "Retry",
+    "errors": {
+      "loadFailed": "Failed to load character list",
+      "userInfoFailed": "User information retrieval error",
+      "loginRequired": "Login required",
+      "checkoutFailed": "Could not retrieve checkout URL",
+      "purchaseError": "An error occurred during character purchase"
+    },
+    "welcome": {
+      "title": "🎉 Thank you for registering!",
+      "subtitle": "10,000 tokens as a gift!",
+      "description": "Welcome to the new AI world! Start conversations with your special characters. As a first-time registration bonus, we'll give you 10,000 tokens.",
+      "startButton": "Start chatting now!",
+      "tokensGranted": "Talk tickets have been automatically granted"
+    }
   },
   "common": {
     "reset": "Reset",

@@ -167,7 +167,7 @@ export default function CharacterFilters({
           <div className="flex flex-wrap gap-2">
             {filters.keyword && (
               <span className="inline-flex items-center space-x-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
-                <span>検索: {filters.keyword}</span>
+                <span>{t('search.activeFilter', { keyword: filters.keyword })}</span>
                 <button
                   onClick={clearKeyword}
                   className="text-purple-500 hover:text-purple-700"
