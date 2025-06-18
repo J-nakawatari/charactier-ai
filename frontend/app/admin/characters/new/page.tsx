@@ -23,12 +23,6 @@ const DEFAULT_AI_MODELS = [
   { value: 'o4-mini', label: 'OpenAI o4-mini', description: '本番推奨モデル - 高品質・低コスト' }
 ];
 
-// 性別
-const GENDERS = [
-  { value: 'female', label: '女性' },
-  { value: 'male', label: '男性' },
-  { value: 'neutral', label: '中性' }
-];
 
 
 export default function CharacterNewPage() {
