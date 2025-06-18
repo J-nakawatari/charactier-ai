@@ -200,7 +200,8 @@
     "welcome": "今日も素敵な一日をお過ごしください！",
     "loading": "読み込み中...",
     "error": "データの取得に失敗しました",
-    "retry": "再試行"
+    "retry": "再試行",
+    "defaultUser": "ユーザー"
   },
   "purchaseHistory": {
     "title": "購入履歴",
@@ -266,21 +267,26 @@
       "subtitle": "トークンの使用パターンと効率性を分析",
       "usage": "使用量",
       "efficiency": "効率性",
-      "pattern": "パターン"
+      "pattern": "パターン",
+      "dailyUsage": "日別トークン使用量",
+      "perDay": "トークン/日"
     },
     "chats": {
       "title": "チャット分析",
       "subtitle": "会話パターンと活動の分析",
       "conversations": "会話",
       "activity": "活動",
-      "insights": "インサイト"
+      "insights": "インサイト",
+      "perDay": "回/日"
     },
     "affinity": {
       "title": "親密度分析",
       "subtitle": "関係性と感情の深化の分析",
       "relationships": "関係性",
       "emotional": "感情",
-      "progress": "進捗"
+      "progress": "進捗",
+      "characterLevels": "キャラクター別親密度",
+      "highestLevel": "最高レベル"
     },
     "common": {
       "loading": "データを読み込み中...",

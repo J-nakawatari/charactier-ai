@@ -200,7 +200,8 @@
     "welcome": "Have a wonderful day!",
     "loading": "Loading...",
     "error": "Failed to fetch data",
-    "retry": "Retry"
+    "retry": "Retry",
+    "defaultUser": "User"
   },
   "purchaseHistory": {
     "title": "Purchase History",
@@ -266,21 +267,26 @@
       "subtitle": "Analyze token usage patterns and efficiency",
       "usage": "Usage",
       "efficiency": "Efficiency",
-      "pattern": "Pattern"
+      "pattern": "Pattern",
+      "dailyUsage": "Daily Token Usage",
+      "perDay": "tokens/day"
     },
     "chats": {
       "title": "Chat Analytics", 
       "subtitle": "Analyze conversation patterns and activity",
       "conversations": "Conversations",
       "activity": "Activity",
-      "insights": "Insights"
+      "insights": "Insights",
+      "perDay": "chats/day"
     },
     "affinity": {
       "title": "Affinity Analytics",
       "subtitle": "Analyze relationship and emotional development",
       "relationships": "Relationships",
       "emotional": "Emotional",
-      "progress": "Progress"
+      "progress": "Progress",
+      "characterLevels": "Character Affinity Levels",
+      "highestLevel": "Highest Level"
     },
     "common": {
       "loading": "Loading data...",
