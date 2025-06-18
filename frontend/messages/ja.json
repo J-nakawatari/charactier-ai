@@ -466,5 +466,33 @@
       "token": "トークン",
       "character": "キャラクター"
     }
+  },
+  "analytics": {
+    "title": "アクティビティ分析",
+    "period": {
+      "past7Days": "過去7日間",
+      "past30Days": "過去30日間",
+      "pastYear": "過去1年間"
+    },
+    "charts": {
+      "dailyChats": "日別チャット数",
+      "chatCount": "チャット数",
+      "tokenUsage": "トークン使用量",
+      "characterInteraction": "キャラクター交流"
+    },
+    "summary": {
+      "totalChats": "総チャット数",
+      "totalTokens": "総使用トークン",
+      "interactedCharacters": "交流キャラ数",
+      "averageDaily": "1日平均",
+      "weeklyTotal": "週間合計",
+      "monthlyTotal": "月間合計"
+    },
+    "insights": {
+      "mostActiveDay": "最も活発な曜日",
+      "favoriteCharacter": "お気に入りキャラクター",
+      "chatStreak": "連続チャット日数",
+      "tokenEfficiency": "トークン効率"
+    }
   }
 }

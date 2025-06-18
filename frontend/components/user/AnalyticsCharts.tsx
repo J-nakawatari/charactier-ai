@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { BarChart3, TrendingUp, MessageSquare, Coins, Calendar } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface AnalyticsData {
   chatCountPerDay: Array<{ date: string; count: number }>;
@@ -19,6 +20,7 @@ interface AnalyticsChartsProps {
 }
 
 export default function AnalyticsCharts({ analytics, locale }: AnalyticsChartsProps) {
+  const t = useTranslations('analytics');
   const [activeChart, setActiveChart] = useState<'chats' | 'tokens' | 'affinity'>('chats');
 
   // チャート用の統計計算（undefinedチェック付き）
@@ -83,22 +85,22 @@ export default function AnalyticsCharts({ analytics, locale }: AnalyticsChartsPr
           <div className="p-2 bg-indigo-100 rounded-lg">
             <BarChart3 className="w-5 h-5 text-indigo-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">アクティビティ分析</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
         </div>
         
         {/* 期間表示 */}
         <div className="flex items-center space-x-1 text-sm text-gray-600">
           <Calendar className="w-4 h-4" />
-          <span>過去7日間</span>
+          <span>{t('period.past7Days')}</span>
         </div>
       </div>
 
       {/* チャート切り替えタブ */}
       <div className="flex space-x-1 mb-6 bg-gray-100 rounded-lg p-1">
         {[
-          { key: 'chats', label: 'チャット数', icon: MessageSquare },
-          { key: 'tokens', label: 'トークン使用', icon: Coins },
-          { key: 'affinity', label: '親密度', icon: TrendingUp }
+          { key: 'chats', label: t('charts.chatCount'), icon: MessageSquare },
+          { key: 'tokens', label: t('charts.tokenUsage'), icon: Coins },
+          { key: 'affinity', label: t('charts.characterInteraction'), icon: TrendingUp }
         ].map((tab) => (
           <button
             key={tab.key}
@@ -120,9 +122,9 @@ export default function AnalyticsCharts({ analytics, locale }: AnalyticsChartsPr
         {activeChart === 'chats' && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h4 className="font-medium text-gray-900">日別チャット数</h4>
+              <h4 className="font-medium text-gray-900">{t('charts.dailyChats')}</h4>
               <div className="text-sm text-gray-600">
-                平均: {averageChatsPerDay}回/日
+{t('summary.averageDaily')}: {averageChatsPerDay}{locale === 'en' ? ' chats/day' : '回/日'}
               </div>
             </div>
             <SimpleBarChart
@@ -137,9 +139,9 @@ export default function AnalyticsCharts({ analytics, locale }: AnalyticsChartsPr
         {activeChart === 'tokens' && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h4 className="font-medium text-gray-900">日別トークン使用量</h4>
+              <h4 className="font-medium text-gray-900">{locale === 'en' ? 'Daily Token Usage' : '日別トークン使用量'}</h4>
               <div className="text-sm text-gray-600">
-                平均: {averageTokensPerDay}トークン/日
+{t('summary.averageDaily')}: {averageTokensPerDay}{locale === 'en' ? ' tokens/day' : 'トークン/日'}
               </div>
             </div>
             <SimpleBarChart
@@ -154,7 +156,7 @@ export default function AnalyticsCharts({ analytics, locale }: AnalyticsChartsPr
         {activeChart === 'affinity' && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h4 className="font-medium text-gray-900">キャラクター別親密度</h4>
+              <h4 className="font-medium text-gray-900">{locale === 'en' ? 'Character Affinity Levels' : 'キャラクター別親密度'}</h4>
               <div className="text-sm text-gray-600">
                 最高レベル: Lv.{analytics?.affinityProgress?.length > 0 ? Math.max(...(analytics?.affinityProgress || []).map(a => a.level)) : 0}
               </div>
@@ -194,17 +196,17 @@ export default function AnalyticsCharts({ analytics, locale }: AnalyticsChartsPr
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-gray-900">{totalChats}</div>
-            <div className="text-sm text-gray-600">総チャット数</div>
+            <div className="text-sm text-gray-600">{t('summary.totalChats')}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-gray-900">{totalTokens.toLocaleString()}</div>
-            <div className="text-sm text-gray-600">総使用トークン</div>
+            <div className="text-sm text-gray-600">{t('summary.totalTokens')}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-gray-900">
               {(analytics?.affinityProgress || []).length}
             </div>
-            <div className="text-sm text-gray-600">交流キャラ数</div>
+            <div className="text-sm text-gray-600">{t('summary.interactedCharacters')}</div>
           </div>
         </div>
       </div>

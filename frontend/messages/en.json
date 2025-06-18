@@ -466,5 +466,33 @@
       "token": "Tokens",
       "character": "Character"
     }
+  },
+  "analytics": {
+    "title": "Activity Analytics",
+    "period": {
+      "past7Days": "Past 7 Days",
+      "past30Days": "Past 30 Days",
+      "pastYear": "Past Year"
+    },
+    "charts": {
+      "dailyChats": "Daily Chat Count",
+      "chatCount": "Chat Count",
+      "tokenUsage": "Token Usage",
+      "characterInteraction": "Character Interaction"
+    },
+    "summary": {
+      "totalChats": "Total Chats",
+      "totalTokens": "Total Tokens Used",
+      "interactedCharacters": "Characters Interacted",
+      "averageDaily": "Daily Average",
+      "weeklyTotal": "Weekly Total",
+      "monthlyTotal": "Monthly Total"
+    },
+    "insights": {
+      "mostActiveDay": "Most Active Day",
+      "favoriteCharacter": "Favorite Character",
+      "chatStreak": "Chat Streak Days",
+      "tokenEfficiency": "Token Efficiency"
+    }
   }
 }
