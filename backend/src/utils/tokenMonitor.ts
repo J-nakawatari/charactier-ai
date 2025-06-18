@@ -3,7 +3,7 @@
  * 大量トークン消費を検出して管理者に通知
  */
 
-import { TokenUsage } from '../models/TokenUsage';
+import TokenUsage from '../../models/TokenUsage';
 import { UserModel } from '../models/UserModel';
 import { createHighTokenUsageAlert } from './adminNotificationCreator';
 
