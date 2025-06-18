@@ -34,13 +34,14 @@ async function getSystemAdminId(): Promise<string> {
 }
 
 interface CreateAdminNotificationOptions {
-  type: 'warning' | 'urgent' | 'info';
+  type: 'warning' | 'urgent' | 'info' | 'maintenance';
   titleJa: string;
   titleEn: string;
   messageJa: string;
   messageEn: string;
   isPinned?: boolean;
   priority?: number;
+  isAdminOnly?: boolean; // 管理者専用フラグ
 }
 
 /**
