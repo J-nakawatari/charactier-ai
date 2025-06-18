@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { API_BASE_URL } from '@/lib/api-config';
-import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare, CreditCard, Settings, Brain, Image as ImageIcon, Tag, Heart, Award, Users, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare, CreditCard, Settings, Brain, Image as ImageIcon, Tag, Heart, Award, Users } from 'lucide-react';
 import Image from 'next/image';
 
 // Inline type definitions
@@ -62,7 +62,6 @@ export default function CharacterDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [character, setCharacter] = useState<Character | null>(null);
-  const [updatingStats, setUpdatingStats] = useState(false);
 
   useEffect(() => {
     const fetchCharacter = async () => {
@@ -168,49 +167,6 @@ export default function CharacterDetail() {
     }
   };
 
-  const handleUpdateStats = async () => {
-    try {
-      setUpdatingStats(true);
-      
-      const adminToken = localStorage.getItem('adminAccessToken');
-      if (!adminToken) {
-        throw new Error('管理者認証が必要です');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/characters/update-stats`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('統計更新に失敗しました');
-      }
-
-      const result = await response.json();
-      success('統計更新完了', `${result.updated}個のキャラクターの統計を更新しました`);
-      
-      // 現在のキャラクターを再読み込み
-      const updatedResponse = await fetch(`${API_BASE_URL}/api/characters/${params.id}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        }
-      });
-      
-      if (updatedResponse.ok) {
-        const updatedData = await updatedResponse.json();
-        setCharacter(updatedData.character || updatedData);
-      }
-    } catch (error) {
-      console.error('Statistics update error:', error);
-      warning('統計更新エラー', error instanceof Error ? error.message : '統計の更新に失敗しました');
-    } finally {
-      setUpdatingStats(false);
-    }
-  };
   
   // 段階的にコンテンツを追加してエラー箇所を特定 - ヘッダー部分を追加
   return (
