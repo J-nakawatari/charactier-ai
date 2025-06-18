@@ -12,6 +12,7 @@ import { PriceDisplay } from '../common/PriceDisplay';
 import { BaseCharacter } from '../../types/common';
 import { API_BASE_URL } from '@/lib/api-config';
 import { getSafeImageUrl } from '@/utils/imageUtils';
+import { translatePersonalityTag } from '@/utils/personalityTranslator';
 
 interface Character extends BaseCharacter {
   affinityStats?: {
@@ -290,7 +291,7 @@ export default function CharacterCard({
                 key={index}
                 className="inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded"
               >
-                {tag}
+                {translatePersonalityTag(tag, locale)}
               </span>
             ))}
             {character.personalityTags.length > 3 && (
@@ -303,7 +304,7 @@ export default function CharacterCard({
                   <div className="flex flex-wrap gap-1 justify-center">
                     {character.personalityTags.map((tag, index) => (
                       <span key={index} className="bg-gray-700 px-1.5 py-0.5 rounded text-xs whitespace-nowrap">
-                        {tag}
+                        {translatePersonalityTag(tag, locale)}
                       </span>
                     ))}
                   </div>
