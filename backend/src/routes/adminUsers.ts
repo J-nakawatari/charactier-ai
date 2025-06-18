@@ -42,12 +42,19 @@ router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, r
     console.log('🔍 Admin users query:', { page, limit, search, status });
 
     // クエリ構築
-    const query: any = {};
+    const query: any = {
+      // 削除済みユーザーを除外
+      email: { $not: /^deleted_.*@deleted\.local$/ }
+    };
 
     if (search) {
-      query.$or = [
-        { name: new RegExp(search, 'i') },
-        { email: new RegExp(search, 'i') }
+      query.$and = [
+        {
+          $or: [
+            { name: new RegExp(search, 'i') },
+            { email: new RegExp(search, 'i') }
+          ]
+        }
       ];
     }
 
