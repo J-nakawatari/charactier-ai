@@ -44,8 +44,15 @@ export default function GoogleAnalyticsScript() {
 
   // カスタムトラッキングコードがある場合はそれを使用
   if (gaSettings.trackingCode) {
+    // スクリプトタグを含むHTMLを直接挿入
     return (
-      <div dangerouslySetInnerHTML={{ __html: gaSettings.trackingCode }} />
+      <>
+        <div
+          dangerouslySetInnerHTML={{
+            __html: gaSettings.trackingCode
+          }}
+        />
+      </>
     );
   }
 
@@ -53,17 +60,22 @@ export default function GoogleAnalyticsScript() {
   return (
     <>
       <Script
+        id="google-analytics-gtag"
         src={`https://www.googletagmanager.com/gtag/js?id=${gaSettings.measurementId}`}
         strategy="afterInteractive"
       />
-      <Script id="google-analytics" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', '${gaSettings.measurementId}');
-        `}
-      </Script>
+      <Script
+        id="google-analytics-config"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${gaSettings.measurementId}');
+          `
+        }}
+      />
     </>
   );
 }

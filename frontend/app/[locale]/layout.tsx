@@ -28,10 +28,10 @@ export default async function LocaleLayout({
       <head>
       </head>
       <body className={inter.className}>
-        <GoogleAnalyticsScript />
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>
+        <GoogleAnalyticsScript />
       </body>
     </html>
   );
