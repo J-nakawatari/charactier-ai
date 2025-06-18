@@ -573,7 +573,7 @@ app.use('/api/auth', authRoutes);
 // app.use('/api/user', userRoutes);
 
 // 管理者ルート - モデル設定
-app.use('/api/admin', modelRoutes);
+app.use('/api/admin/models', modelRoutes);
 
 // システム設定ルート
 app.use('/api/system-settings', systemSettingsRoutes);

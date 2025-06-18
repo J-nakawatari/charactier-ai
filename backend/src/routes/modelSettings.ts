@@ -33,7 +33,7 @@ const AVAILABLE_MODELS = [
 /**
  * 利用可能なモデル一覧取得
  */
-router.get('/models', async (req: AuthRequest, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const modelsWithCalc = AVAILABLE_MODELS.map(model => ({
       ...model,
