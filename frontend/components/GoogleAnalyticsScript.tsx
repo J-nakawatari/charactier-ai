@@ -13,11 +13,18 @@ export default function GoogleAnalyticsScript() {
   const [gaSettings, setGaSettings] = useState<GoogleAnalyticsSettings | null>(null);
 
   useEffect(() => {
+    console.log('GoogleAnalyticsScript component mounted');
+    console.log('Window location:', typeof window !== 'undefined' ? window.location.href : 'SSR');
+    
     // Google Analytics設定を取得
     const fetchGASettings = async () => {
       try {
-        console.log('Fetching GA settings...');
-        const response = await fetch('/api/system-settings/google-analytics');
+        console.log('Starting fetchGASettings...');
+        // フルURLを使用
+        const apiUrl = '/api/system-settings/google-analytics';
+        console.log('API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl);
         console.log('GA settings response status:', response.status);
         
         if (response.ok) {
@@ -38,7 +45,12 @@ export default function GoogleAnalyticsScript() {
       }
     };
 
-    fetchGASettings();
+    // 少し遅延を入れて実行
+    const timer = setTimeout(() => {
+      fetchGASettings();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   // GA設定が無効またはロードされていない場合は何もレンダリングしない
