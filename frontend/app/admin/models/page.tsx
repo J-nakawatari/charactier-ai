@@ -67,7 +67,7 @@ export default function ModelsPage() {
     setIsChanging(true);
     try {
       const token = localStorage.getItem('adminAccessToken');
-      const response = await fetch('/api/admin/models', {
+      const response = await fetch('/api/admin/models/set-model', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
