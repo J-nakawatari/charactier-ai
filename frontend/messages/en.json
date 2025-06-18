@@ -194,7 +194,9 @@
     "types": {
       "token": "{amount} tokens",
       "character": "1 character",
-      "subscription": "Subscription"
+      "subscription": "Subscription",
+      "tokenUnit": "tokens",
+      "characterUnit": "character"
     },
     "empty": {
       "title": "No Purchase History",
@@ -399,12 +401,15 @@
     "read": "Read",
     "unread": "Unread",
     "close": "Close",
-    "ago": "ago",
-    "minutes": "minutes",
-    "hours": "hours",
-    "days": "days",
+    "ago": " ago",
+    "minutes": " minutes",
+    "hours": " hours",
+    "days": " days",
     "items": " items",
-    "times": " times"
+    "times": " times",
+    "unit": {
+      "times": " times"
+    }
   },
   "badges": {
     "title": "Badge Collection",

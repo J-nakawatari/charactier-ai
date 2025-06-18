@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ShoppingCart, Coins, Users, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface PurchaseHistoryItem {
   type: 'token' | 'character';
@@ -16,6 +17,8 @@ interface PurchaseHistorySummaryProps {
 }
 
 export default function PurchaseHistorySummary({ purchaseHistory, locale }: PurchaseHistorySummaryProps) {
+  const t = useTranslations('purchaseHistorySummary');
+  const tGeneral = useTranslations('general');
   const [isExpanded, setIsExpanded] = useState(false);
   
   // 最新3件を表示（展開時は全件）

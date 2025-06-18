@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Bell, Info, AlertTriangle, CheckCircle, X, Eye, EyeOff, AlertCircle, Wrench, Star, Gift } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface LocalizedString {
   ja: string;
