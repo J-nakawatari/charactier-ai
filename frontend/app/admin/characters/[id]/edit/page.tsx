@@ -697,7 +697,7 @@ export default function CharacterEditPage() {
                     >
                       {GENDERS.map(gender => (
                         <option key={gender.value} value={gender.value} className="text-gray-900">
-                          {gender.label}
+                          {getLocalizedLabel(gender, 'ja')}
                         </option>
                       ))}
                     </select>
@@ -759,7 +759,7 @@ export default function CharacterEditPage() {
                       >
                         {ACCESS_TYPES.map(type => (
                           <option key={type.value} value={type.value} className="text-gray-900">
-                            {type.label} - {type.description}
+                            {getLocalizedLabel(type, 'ja')} - {getLocalizedDescription(type, 'ja')}
                           </option>
                         ))}
                       </select>
@@ -829,7 +829,7 @@ export default function CharacterEditPage() {
                     <option value="" className="text-gray-500">プリセットを選択してください</option>
                     {PERSONALITY_PRESETS.map(preset => (
                       <option key={preset.value} value={preset.value} className="text-gray-900">
-                        {preset.label} - {preset.description}
+                        {getLocalizedLabel(preset, 'ja')} - {getLocalizedDescription(preset, 'ja')}
                       </option>
                     ))}
                   </select>
@@ -848,8 +848,8 @@ export default function CharacterEditPage() {
                           onChange={() => togglePersonalityTag(tag.value)}
                           className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                         />
-                        <span className="text-sm text-gray-700" title={tag.description}>
-                          {tag.label}
+                        <span className="text-sm text-gray-700" title={getLocalizedDescription(tag, 'ja')}>
+                          {getLocalizedLabel(tag, 'ja')}
                         </span>
                       </label>
                     ))}
