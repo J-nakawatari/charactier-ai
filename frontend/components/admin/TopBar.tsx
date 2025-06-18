@@ -16,6 +16,7 @@ export default function TopBar() {
   const router = useRouter();
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     // ローカルストレージから管理者情報を取得
@@ -27,6 +28,35 @@ export default function TopBar() {
         console.error('Failed to parse admin user data:', error);
       }
     }
+  }, []);
+
+  // 未読通知数を取得
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const token = localStorage.getItem('adminAccessToken');
+        if (!token) return;
+
+        const response = await fetch('/api/notifications/admin/unread-count', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUnreadCount(data.unreadCount || 0);
+        }
+      } catch (error) {
+        console.error('未読通知数の取得エラー:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    // 30秒ごとに更新
+    const interval = setInterval(fetchUnreadCount, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -78,10 +108,17 @@ export default function TopBar() {
         {/* 右側：通知 + ユーザー情報 */}
         <div className="flex items-center space-x-4">
           {/* 通知ベル */}
-          <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
+          <button 
+            onClick={() => router.push('/admin/notifications')}
+            className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors"
+          >
             <Bell className="w-5 h-5" />
-            {/* 通知バッジ（例） */}
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            {/* 未読通知バッジ */}
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </button>
 
           {/* 管理者プロフィール */}
