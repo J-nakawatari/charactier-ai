@@ -141,9 +141,9 @@ export function AffinityBar({
           }`} />
           <span className={`text-sm font-medium text-gray-700 transition-all duration-300 ${
             isLevelingUp ? 'text-yellow-600 font-bold' : ''
-          }`}>Lv.{level}</span>
+          }`}>{t('levelUp', { level })}</span>
           {isLevelingUp && (
-            <span className="text-xs text-yellow-600 animate-bounce">UP!</span>
+            <span className="text-xs text-yellow-600 animate-bounce">{t('levelUpNotification')}</span>
           )}
         </div>
       </div>

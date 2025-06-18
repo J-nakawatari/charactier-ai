@@ -98,7 +98,7 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
                   className="absolute -bottom-1 -right-1 text-xs font-bold px-2 py-1 rounded-full text-white"
                   style={{ backgroundColor: affinity.character.themeColor }}
                 >
-                  Lv.{affinity.level}
+                  {t('levelUp', { level: affinity.level })}
                 </div>
               </div>
 
@@ -112,7 +112,7 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
                 {/* 経験値バー */}
                 <div className="mb-2">
                   <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                    <span>EXP: {affinity.experience} / {affinity.maxExperience}</span>
+                    <span>{t('experienceProgress', { current: affinity.experience, max: affinity.maxExperience })}</span>
                     <span>{t('expNeeded', { needed: affinity.experienceToNext })}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">

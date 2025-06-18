@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { X, Star, Heart, Gift, Sparkles } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface UnlockPopupProps {
   level: number;
@@ -11,6 +12,7 @@ interface UnlockPopupProps {
 }
 
 export function UnlockPopup({ level, illustration, characterName, onClose }: UnlockPopupProps) {
+  const t = useTranslations('affinity');
   const [isVisible, setIsVisible] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -85,13 +87,13 @@ export function UnlockPopup({ level, illustration, characterName, onClose }: Unl
           <div className="relative z-10">
             <div className="flex items-center justify-center space-x-2 mb-2">
               <Star className="w-6 h-6 text-yellow-300 animate-spin" />
-              <h2 className="text-xl font-bold">レベルアップ！</h2>
+              <h2 className="text-xl font-bold">{t('levelUpTitle')}</h2>
               <Star className="w-6 h-6 text-yellow-300 animate-spin" style={{ animationDirection: 'reverse' }} />
             </div>
             
             <div className="flex items-center justify-center space-x-3 mb-3">
               <Heart className="w-8 h-8 text-pink-300 animate-pulse" />
-              <span className="text-3xl font-bold">Lv.{level}</span>
+              <span className="text-3xl font-bold">{t('levelUp', { level })}</span>
               <Heart className="w-8 h-8 text-pink-300 animate-pulse" />
             </div>
             
@@ -112,7 +114,7 @@ export function UnlockPopup({ level, illustration, characterName, onClose }: Unl
             </div>
             
             <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              新しいイラストが解放されました！
+              {t('newImageUnlockedTitle')}
             </h3>
             
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
@@ -122,7 +124,7 @@ export function UnlockPopup({ level, illustration, characterName, onClose }: Unl
                 <Sparkles className="w-5 h-5 text-purple-500" />
               </div>
               <p className="text-sm text-gray-600">
-                ギャラリーで確認できます
+                {t('viewImages')}
               </p>
             </div>
           </div>
@@ -137,14 +139,14 @@ export function UnlockPopup({ level, illustration, characterName, onClose }: Unl
                 handleClose();
               }}
             >
-              ギャラリーで確認する
+              {t('galleryView')}
             </button>
             
             <button 
               className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
               onClick={handleClose}
             >
-              会話を続ける
+              {t('continueChat')}
             </button>
           </div>
         </div>

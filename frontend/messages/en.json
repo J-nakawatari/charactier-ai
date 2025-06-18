@@ -422,15 +422,32 @@
     "expNeeded": "{needed} EXP to go",
     "levelUp": "Lv.{level}",
     "levelUpNotification": "UP!",
+    "levelUpTitle": "Level Up!",
     "unlockedImages": "Unlocked: {count} images",
     "newImagesAvailable": "New images available!",
     "unlocksAt": "Unlocks at Lv.{level}",
     "newImageUnlocked": "New image unlocked!",
+    "newImageUnlockedTitle": "New illustrations unlocked!",
     "viewImages": "View images",
+    "continueChat": "Continue chatting",
+    "galleryView": "View in gallery",
     "improvesByChat": "Intimacy increases through conversations with characters",
     "learnMore": "Learn more about intimacy",
     "specialRewardSoon": "Special reward coming soon!",
-    "intimacy": "Intimacy"
+    "intimacy": "Intimacy",
+    "currentLevel": "Current Level: {level}",
+    "unlockedCount": "Unlocked: {count} images",
+    "lockedCount": "Locked: {count} images",
+    "loading": "Loading images...",
+    "unlockedSection": "Unlocked Images",
+    "lockedSection": "Locked Images",
+    "experienceProgress": "EXP: {current} / {max}",
+    "experienceToNext": "To next level: {exp} EXP",
+    "systemTitle": "About the Intimacy System",
+    "levelRewards": "Level Rewards",
+    "encourageChat": "Chat with characters to increase intimacy!",
+    "unlockByLevel": "Increase intimacy to unlock new images!",
+    "characterAffinityImage": "{characterName}'s intimacy image"
   },
   "tokens": {
     "balance": "Token Balance",
@@ -525,6 +542,12 @@
       "token": "Tokens",
       "character": "Character"
     }
+  },
+  "rarity": {
+    "common": "Common",
+    "rare": "Rare",
+    "epic": "Epic",
+    "legendary": "Legendary"
   },
   "analytics": {
     "title": "Activity Analytics",
