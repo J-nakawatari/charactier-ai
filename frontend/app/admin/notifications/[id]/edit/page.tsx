@@ -86,7 +86,7 @@ export default function EditNotificationPage() {
       setIsLoading(true);
       const token = localStorage.getItem('adminAccessToken');
       
-      const response = await fetch(`/api/admin/notifications/${notificationId}`, {
+      const response = await fetch(`/api/notifications/admin/${notificationId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -189,7 +189,7 @@ export default function EditNotificationPage() {
         validUntil: formData.validUntil ? new Date(formData.validUntil).toISOString() : undefined
       };
       
-      const response = await fetch(`/api/admin/notifications/${notificationId}`, {
+      const response = await fetch(`/api/notifications/admin/${notificationId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

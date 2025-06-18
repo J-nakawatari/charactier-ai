@@ -53,7 +53,7 @@ export default function NotificationStatsPage() {
       setIsLoading(true);
       const token = localStorage.getItem('adminAccessToken');
       
-      const response = await fetch(`/api/admin/notifications/${notificationId}/stats`, {
+      const response = await fetch(`/api/notifications/admin/${notificationId}/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
