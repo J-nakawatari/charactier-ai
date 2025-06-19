@@ -214,8 +214,8 @@ export function ChatLayout({
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
-    // 定期的な更新（30秒間隔）
-    const interval = setInterval(intervalHandler, 30000);
+    // 定期的な更新（120秒間隔に変更 - TokenBarとの重複を避ける）
+    const interval = setInterval(intervalHandler, 120000);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);

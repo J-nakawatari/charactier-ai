@@ -1,7 +1,7 @@
 const { UserModel: User } = require('../src/models/UserModel');
 const UserTokenPack = require('../models/UserTokenPack');
 const TokenUsage = require('../models/TokenUsage');
-const { calcTokensToGive, validateModel, logTokenConfig } = require('../src/config/tokenConfig');
+const { calcTokensToGive, validateModel, logTokenConfig } = require('../dist/src/config/tokenConfig');
 
 /**
  * トークンサービス（利益率90%）

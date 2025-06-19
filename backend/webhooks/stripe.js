@@ -13,7 +13,7 @@ const getPurchaseHistoryModel = () => {
   if (!PurchaseHistoryModel) {
     try {
       // TypeScriptコンパイル後のモジュールパスで試行
-      const modelModule = require('../src/models/PurchaseHistoryModel');
+      const modelModule = require('../dist/src/models/PurchaseHistoryModel');
       PurchaseHistoryModel = modelModule.PurchaseHistoryModel;
       console.log('✅ PurchaseHistoryModel インポート成功');
       return PurchaseHistoryModel;
@@ -202,7 +202,7 @@ async function handleCheckoutSessionCompleted(event) {
     });
     
     // 価格IDからキャラクター購入かトークン購入かを判別
-    const CharacterModel = require('../src/models/CharacterModel');
+    const CharacterModel = require('../dist/src/models/CharacterModel').CharacterModel;
     const character = await CharacterModel.findOne({ stripeProductId: priceId });
     
     let purchaseType, characterId;
@@ -253,7 +253,7 @@ async function handleCheckoutSessionCompleted(event) {
       
       // まず価格IDからTokenPackModelを検索
       try {
-        const { TokenPackModel } = require('../src/models/TokenPackModel');
+        const { TokenPackModel } = require('../dist/src/models/TokenPackModel');
         const tokenPack = await TokenPackModel.findOne({ priceId, isActive: true }).lean();
         
         if (tokenPack) {
@@ -290,7 +290,7 @@ async function handleCheckoutSessionCompleted(event) {
             await newTokenPack.save();
             
             // User.tokenBalance を更新
-            const { UserModel } = require('../src/models/UserModel');
+            const { UserModel } = require('../dist/src/models/UserModel');
             await UserModel.findByIdAndUpdate(userId, {
               $inc: { tokenBalance: tokensToGrant }
             });

@@ -483,13 +483,153 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
           }
           
         } else {
-          // トークン購入処理（従来の処理）
+          // トークン購入処理
+          console.log('🎁 Processing token purchase...');
+          console.log(`💰 Amount: ¥${purchaseAmountYen}`);
+          console.log(`🔑 Price ID: ${priceId}`);
           
-          // 現在の使用モデルを取得（環境変数 or デフォルト）
-          const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+          let grantResult: any;
           
-          // トークン付与処理
-          const grantResult = await TokenService.grantTokens(userId, sessionId, purchaseAmountYen, currentModel);
+          // まず価格IDからTokenPackModelを検索
+          try {
+            const tokenPack = await TokenPackModel.findOne({ priceId, isActive: true }).lean();
+            
+            if (tokenPack) {
+              // 管理画面で設定されたトークン数を使用
+              const tokensToGrant = tokenPack.tokens;
+              console.log(`📦 Using TokenPack configuration:`);
+              console.log(`  - Pack name: ${tokenPack.name}`);
+              console.log(`  - Tokens to grant: ${tokensToGrant}`);
+              console.log(`  - Price: ¥${tokenPack.price}`);
+              
+              // 重複チェック
+              const UserTokenPack = require('../models/UserTokenPack');
+              const existingPack = await UserTokenPack.findOne({ stripeSessionId: sessionId });
+              if (existingPack) {
+                console.log(`⚠️ Duplicate prevention: session ${sessionId} already processed`);
+                grantResult = {
+                  success: false,
+                  reason: 'Already processed',
+                  tokensGranted: 0,
+                  newBalance: (await UserModel.findById(userId))?.tokenBalance || 0
+                };
+              } else {
+                // UserTokenPack レコード作成
+                const newTokenPack = new UserTokenPack({
+                  userId,
+                  stripeSessionId: sessionId,
+                  purchaseAmountYen,
+                  tokensPurchased: tokensToGrant,
+                  tokensRemaining: tokensToGrant,
+                  isActive: true,
+                  purchaseDate: new Date()
+                });
+                await newTokenPack.save();
+                
+                // User.tokenBalance を更新
+                await UserModel.findByIdAndUpdate(userId, {
+                  $inc: { tokenBalance: tokensToGrant }
+                });
+                
+                grantResult = {
+                  success: true,
+                  tokensGranted: tokensToGrant,
+                  newBalance: (await UserModel.findById(userId))?.tokenBalance || 0,
+                  purchaseAmountYen,
+                  profitMargin: tokenPack.profitMargin / 100 || 0.90,
+                  model: 'admin-configured'
+                };
+                
+                console.log(`✅ Tokens granted using TokenPack configuration`);
+              }
+            } else {
+              // TokenPackが見つからない場合は従来の計算方式にフォールバック
+              console.log(`⚠️ TokenPack not found for price ID ${priceId}`);
+              console.log(`📊 Falling back to calculation method`);
+              
+              const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+              console.log(`🤖 Using model: ${currentModel}`);
+              
+              // calcTokensToGiveを直接使用してトークン数を計算
+              const { calcTokensToGive } = await import('./config/tokenConfig');
+              const tokensToGrant = await calcTokensToGive(purchaseAmountYen, currentModel);
+              console.log(`📊 Calculated tokens: ${tokensToGrant}`);
+              
+              // 重複チェック
+              const UserTokenPack = require('../models/UserTokenPack');
+              const existingPack = await UserTokenPack.findOne({ stripeSessionId: sessionId });
+              if (existingPack) {
+                console.log(`⚠️ Duplicate prevention: session ${sessionId} already processed`);
+                grantResult = {
+                  success: false,
+                  reason: 'Already processed',
+                  tokensGranted: 0,
+                  newBalance: (await UserModel.findById(userId))?.tokenBalance || 0
+                };
+              } else {
+                // UserTokenPack レコード作成
+                const newTokenPack = new UserTokenPack({
+                  userId,
+                  stripeSessionId: sessionId,
+                  purchaseAmountYen,
+                  tokensPurchased: tokensToGrant,
+                  tokensRemaining: tokensToGrant,
+                  isActive: true,
+                  purchaseDate: new Date()
+                });
+                await newTokenPack.save();
+                
+                // User.tokenBalance を更新
+                await UserModel.findByIdAndUpdate(userId, {
+                  $inc: { tokenBalance: tokensToGrant }
+                });
+                
+                grantResult = {
+                  success: true,
+                  tokensGranted: tokensToGrant,
+                  newBalance: (await UserModel.findById(userId))?.tokenBalance || 0,
+                  purchaseAmountYen,
+                  profitMargin: 0.90,
+                  model: currentModel
+                };
+                
+                console.log(`✅ Tokens granted using calculation method`);
+              }
+            }
+          } catch (tokenPackError) {
+            // エラーの場合も計算方式にフォールバック
+            console.error('❌ TokenPack lookup error:', tokenPackError.message);
+            console.log(`📊 Falling back to calculation method due to error`);
+            
+            const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+            const { calcTokensToGive } = await import('./config/tokenConfig');
+            const tokensToGrant = await calcTokensToGive(purchaseAmountYen, currentModel);
+            
+            const UserTokenPack = require('../models/UserTokenPack');
+            const newTokenPack = new UserTokenPack({
+              userId,
+              stripeSessionId: sessionId,
+              purchaseAmountYen,
+              tokensPurchased: tokensToGrant,
+              tokensRemaining: tokensToGrant,
+              isActive: true,
+              purchaseDate: new Date()
+            });
+            await newTokenPack.save();
+            
+            await UserModel.findByIdAndUpdate(userId, {
+              $inc: { tokenBalance: tokensToGrant }
+            });
+            
+            grantResult = {
+              success: true,
+              tokensGranted: tokensToGrant,
+              newBalance: await TokenService.getUserTokenBalance(userId),
+              purchaseAmountYen,
+              profitMargin: 0.90,
+              model: currentModel
+            };
+          }
         
           if (grantResult.success) {
             

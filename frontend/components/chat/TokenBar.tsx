@@ -63,7 +63,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
   // 初期ロード時に実際の残高を取得
   useEffect(() => {
     refreshTokenBalance();
-  }, [refreshTokenBalance]);
+  }, []); // 空の依存配列で初回のみ実行
   
   // ページのフォーカス時に自動更新
   useEffect(() => {
