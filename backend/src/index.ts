@@ -2252,6 +2252,10 @@ app.post('/api/purchase/create-checkout-session', authenticateToken, async (req:
         return;
       }
       
+      // リクエストのOriginまたはRefererから動的にURLを取得
+      const origin = req.headers.origin || req.headers.referer?.replace(/\/[^/]*$/, '') || 'https://charactier-ai.com';
+      const baseUrl = origin.includes('localhost') ? 'http://localhost:3000' : origin;
+      
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [
@@ -2261,8 +2265,8 @@ app.post('/api/purchase/create-checkout-session', authenticateToken, async (req:
           },
         ],
         mode: 'payment',
-        success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/ja/purchase/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/ja/purchase/cancel`,
+        success_url: `${baseUrl}/ja/purchase/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/ja/purchase/cancel`,
         metadata: {
           userId: userId || req.user._id,
           priceId: priceId
@@ -2382,6 +2386,10 @@ app.post('/api/purchase/create-character-checkout-session', authenticateToken, a
       return;
     }
     
+    // リクエストのOriginまたはRefererから動的にURLを取得
+    const origin = req.headers.origin || req.headers.referer?.replace(/\/[^/]*$/, '') || 'https://charactier-ai.com';
+    const baseUrl = origin.includes('localhost') ? 'http://localhost:3000' : origin;
+    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -2391,8 +2399,8 @@ app.post('/api/purchase/create-character-checkout-session', authenticateToken, a
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/ja/purchase/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/ja/characters`,
+      success_url: `${baseUrl}/ja/purchase/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/ja/characters`,
       metadata: {
         userId: req.user._id.toString(),
         characterId: characterId,
