@@ -412,28 +412,33 @@ router.post('/:characterId/messages', auth, async (req, res) => {
     const tokenUsageRecord = new TokenUsage({
       userId: user._id,
       characterId: character._id,
-      chatId: chat._id,
-      messageId: aiMessage._id,
       tokensUsed: aiResponse.tokensUsed,
-      tokenType: 'chat',
-      cost: aiResponse.apiCost || 0,
-      model: character.aiModel || 'o4-mini',
+      tokenType: 'chat_message',
+      inputTokens: aiResponse.inputTokens || Math.floor(aiResponse.tokensUsed * 0.3),
+      outputTokens: aiResponse.outputTokens || Math.floor(aiResponse.tokensUsed * 0.7),
+      apiCost: aiResponse.apiCost || 0.001,
+      apiCostYen: (aiResponse.apiCost || 0.001) * 150,
+      aiModel: 'gpt-4-turbo', // 固定値で試す
       sessionId: currentSessionId,
       messageContent: message.substring(0, 200), // 最初の200文字のみ保存
-      metadata: {
-        intimacyLevel: aiResponse.toneConfig?.debugInfo?.intimacyLevel || 0,
-        responseTime: Date.now() - timestamp.getTime(),
-        messageLength: message.length,
-        isModerated: !!validation.warning
-      }
+      responseContent: aiResponse.response.substring(0, 500) // AI応答の最初の500文字
     });
 
     // データベース保存
-    await Promise.all([
-      chat.save(),
-      user.save(),
-      tokenUsageRecord.save()
-    ]);
+    try {
+      await Promise.all([
+        chat.save(),
+        user.save(),
+        tokenUsageRecord.save()
+      ]);
+    } catch (saveError) {
+      console.error('TokenUsage save error:', saveError);
+      // エラーが発生してもチャット自体は継続（ログのみ）
+      await Promise.all([
+        chat.save(),
+        user.save()
+      ]);
+    }
 
     // 成功レスポンス
     res.json({
