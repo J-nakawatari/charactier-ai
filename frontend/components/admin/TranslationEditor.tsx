@@ -7,7 +7,6 @@ interface TranslationData {
   name: { ja: string; en: string };
   description: { ja: string; en: string };
   defaultMessage: { ja: string; en: string };
-  limitMessage: { ja: string; en: string };
 }
 
 interface TranslationEditorProps {
@@ -110,23 +109,6 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
           />
         </div>
 
-        {/* 制限メッセージ */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            制限メッセージ ({activeLanguage === 'ja' ? '日本語' : '英語'})
-          </label>
-          <textarea
-            value={data.limitMessage?.[activeLanguage] || ''}
-            onChange={(e) => updateField('limitMessage', activeLanguage, e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors resize-none text-gray-900"
-            placeholder={
-              activeLanguage === 'ja'
-                ? '例: 今日はたくさんお話しできて楽しかったよ！また明日お話ししようね♪'
-                : 'Example: I enjoyed talking with you today! Let\'s chat again tomorrow ♪'
-            }
-          />
-        </div>
 
         {/* 翻訳完了度表示 */}
         <div className="bg-gray-50 rounded-lg p-4">
@@ -136,11 +118,10 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
               const completedFields = [
                 data.name?.[lang.code]?.trim() !== '',
                 data.description?.[lang.code]?.trim() !== '',
-                data.defaultMessage?.[lang.code]?.trim() !== '',
-                data.limitMessage?.[lang.code]?.trim() !== ''
+                data.defaultMessage?.[lang.code]?.trim() !== ''
               ].filter(Boolean).length;
               
-              const totalFields = 4;
+              const totalFields = 3;
               const percentage = Math.round((completedFields / totalFields) * 100);
               
               return (

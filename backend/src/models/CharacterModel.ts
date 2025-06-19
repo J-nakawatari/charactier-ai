@@ -105,7 +105,7 @@ export interface ICharacter extends Document {
   
   // メッセージ設定
   defaultMessage: LocalizedString;
-  limitMessage: LocalizedString;
+  limitMessage?: LocalizedString; // オプショナルに変更
   
   // 親密度・報酬システム
   affinitySettings: IAffinitySettings;
@@ -395,7 +395,7 @@ const CharacterSchema = new Schema<ICharacter>({
   },
   limitMessage: {
     type: LocalizedStringSchema,
-    required: true
+    required: false // オプショナルに変更
   },
   
   // 親密度・報酬システム

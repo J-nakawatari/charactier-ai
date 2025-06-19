@@ -103,7 +103,6 @@ router.get('/:characterId', auth, async (req, res) => {
       model: character.model,
       characterAccessType: character.characterAccessType,
       defaultMessage: character.defaultMessage?.[locale] || character.defaultMessage?.ja || '',
-      limitMessage: character.limitMessage?.[locale] || character.limitMessage?.ja || '',
       imageCharacterSelect: character.imageCharacterSelect,
       imageDashboard: character.imageDashboard,
       imageChatBackground: character.imageChatBackground,

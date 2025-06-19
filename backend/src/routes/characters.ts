@@ -71,7 +71,6 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
       imageDashboard,
       imageChatAvatar,
       defaultMessage,
-      limitMessage,
       affinitySettings,
       stripeProductId,
       purchasePrice
@@ -109,7 +108,6 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
       imageDashboard,
       imageChatAvatar,
       defaultMessage,
-      limitMessage,
       affinitySettings,
       stripeProductId,
       purchasePrice,
@@ -384,8 +382,7 @@ router.get('/:id/translations', authenticateToken, async (req: AuthRequest, res:
         ja: character.personalityTags,
         en: character.personalityTags // 現在は多言語対応していないため、同じ値を返す
       },
-      defaultMessage: character.defaultMessage,
-      limitMessage: character.limitMessage
+      defaultMessage: character.defaultMessage
     };
     
     res.json(translationData);
@@ -402,7 +399,7 @@ router.get('/:id/translations', authenticateToken, async (req: AuthRequest, res:
 // 翻訳データ保存（/:idより前に定義する必要あり）
 router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, description, personalityPreset, personalityTags, defaultMessage, limitMessage } = req.body;
+    const { name, description, personalityPreset, personalityTags, defaultMessage } = req.body;
     
     // バリデーション（オブジェクト構造のみチェック、空文字列は許可）
     if (!name || typeof name.ja !== 'string' || typeof name.en !== 'string') {
@@ -436,7 +433,6 @@ router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res:
       name: string;
       description: string;
       defaultMessage: string;
-      limitMessage: string;
       personalityPreset: string;
       personalityTags: string[];
       voiceSettings: Record<string, unknown>;
@@ -444,8 +440,7 @@ router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res:
     }> = {
       name,
       description,
-      defaultMessage,
-      limitMessage
+      defaultMessage
     };
     
     // personalityPresetは現在多言語対応していないため、jaの値を使用
@@ -478,8 +473,7 @@ router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res:
           ja: updatedCharacter?.personalityTags,
           en: updatedCharacter?.personalityTags
         },
-        defaultMessage: updatedCharacter?.defaultMessage,
-        limitMessage: updatedCharacter?.limitMessage
+        defaultMessage: updatedCharacter?.defaultMessage
       }
     });
 

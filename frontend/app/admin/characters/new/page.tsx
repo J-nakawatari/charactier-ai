@@ -110,7 +110,6 @@ export default function CharacterNewPage() {
     
     // プロンプト・メッセージ
     defaultMessage: { ja: '', en: '' },
-    limitMessage: { ja: '', en: '' },
     
     
     // 画像設定
@@ -184,10 +183,6 @@ export default function CharacterNewPage() {
         defaultMessage: {
           ja: formData.defaultMessage.ja || 'こんにちは！よろしくお願いします。',
           en: formData.defaultMessage.en || 'Hello! Nice to meet you!'
-        },
-        limitMessage: {
-          ja: formData.limitMessage.ja || '今日はたくさんお話ししましたね。また明日お話ししましょう！',
-          en: formData.limitMessage.en || 'We had a great conversation today! Let\'s talk again tomorrow!'
         },
         affinitySettings: {
           maxLevel: 100,
@@ -891,18 +886,6 @@ export default function CharacterNewPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      制限メッセージ（日本語）
-                    </label>
-                    <textarea
-                      value={formData.limitMessage.ja}
-                      onChange={(e) => setFormData({ ...formData, limitMessage: { ...formData.limitMessage, ja: e.target.value } })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
-                      rows={3}
-                      placeholder="例: 今日はたくさんお話しできて楽しかったよ！また明日お話ししようね♪"
-                    />
-                  </div>
                 </div>
               </div>
             </div>

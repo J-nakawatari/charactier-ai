@@ -44,8 +44,7 @@ export default function CharacterEditPage() {
   const [translationData, setTranslationData] = useState({
     name: { ja: '', en: '' },
     description: { ja: '', en: '' },
-    defaultMessage: { ja: '', en: '' },
-    limitMessage: { ja: '', en: '' }
+    defaultMessage: { ja: '', en: '' }
   });
 
   // 基本フォームデータ（新規登録画面から統合）
@@ -65,7 +64,6 @@ export default function CharacterEditPage() {
     
     // プロンプト・メッセージ
     defaultMessage: { ja: '', en: '' },
-    limitMessage: { ja: '', en: '' },
     
     // 画像設定
     imageCharacterSelect: null as File | null,
