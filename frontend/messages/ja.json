@@ -426,7 +426,25 @@
     "levelRewards": "レベル特典",
     "encourageChat": "キャラクターとたくさん話して親密度を上げましょう！",
     "unlockByLevel": "親密度を上げて新しい画像を解放しましょう！",
-    "characterAffinityImage": "{characterName} の親密度画像"
+    "characterAffinityImage": "{characterName} の親密度画像",
+    "ranks": {
+      "acquaintance": "知り合い",
+      "friend": "友達",
+      "closeFriend": "親友",
+      "expert": "エキスパート",
+      "master": "マスター"
+    },
+    "intimacyWithRank": "親密度（{rank}）",
+    "modalTitle": "親密度詳細",
+    "modalSubtitle": "キャラクターとの関係性を詳しく確認",
+    "expGainMethods": "経験値の獲得方法",
+    "expGainMessage": "メッセージ送信: +10 EXP",
+    "expGainLongChat": "長い会話: +20 EXP",
+    "expGainDaily": "連続ログイン: +5 EXP",
+    "expGainEvent": "特別イベント: +50 EXP",
+    "rewardLv20": "Lv.20毎: 新しい話題追加",
+    "rewardLv50": "Lv.50毎: 限定コンテンツ",
+    "rewardLv100": "Lv.100: 専用エンディング"
   },
   "tokens": {
     "balance": "トークン残高",
@@ -499,7 +517,30 @@
       "continueChat": "毎日コツコツとチャットを続けることが大切です",
       "buildAffinity": "親密度を上げるには時間をかけてキャラクターと交流しましょう",
       "general": "様々なアクティビティに参加してみてください"
-    }
+    },
+    "modalTitle": "バッジシステムについて",
+    "modalSubtitle": "活動や達成を記録する称号システム",
+    "whatIsBadge": "バッジシステムとは？",
+    "badgeDescription": "バッジは、Charactierでのあなたの活動や達成を記録する特別な称号です。キャラクターとの会話、親密度の向上、サービスの利用を通じて様々なバッジを獲得できます。",
+    "badgeTypes": "バッジの種類",
+    "beginnerBadgeTitle": "初心者向けバッジ",
+    "beginnerBadgeDesc": "サービスを始めたばかりの方向けのバッジです。基本的な機能の利用や初回のアクションで獲得できます。",
+    "chatBadgeTitle": "チャット系バッジ",
+    "chatBadgeDesc": "キャラクターとの会話に関連するバッジです。メッセージ数や会話の継続日数などで獲得できます。",
+    "affinityBadgeTitle": "親密度系バッジ",
+    "affinityBadgeDesc": "キャラクターとの親密度向上に関するバッジです。特定のレベル到達や複数キャラクターとの関係構築で獲得できます。",
+    "specialBadgeTitle": "特別バッジ",
+    "specialBadgeDesc": "特定の条件や期間限定イベントで獲得できる特別なバッジです。希少価値の高いバッジも含まれます。",
+    "howToAcquire": "バッジの獲得方法",
+    "autoAcquireTitle": "自動獲得",
+    "autoAcquireDesc": "条件を満たすと自動的にバッジが獲得されます。獲得時には通知でお知らせします。",
+    "progressTrackTitle": "進捗追跡",
+    "progressTrackDesc": "未獲得のバッジでは進捗状況を確認できます。どのくらい達成に近づいているかが分かります。",
+    "rewardTitle": "特典",
+    "rewardDesc": "一部のバッジには特別な特典が付いている場合があります。（今後実装予定）",
+    "tipsTitle": "バッジ獲得のコツ",
+    "tip1": "毎日キャラクターと会話を続けることで、継続関連のバッジを獲得できます",
+    "tip2": "複数のキャラクターと交流することで、幅広いバッジを獲得できます"
   },
   "notifications": {
     "title": "お知らせ",

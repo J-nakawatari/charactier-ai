@@ -60,6 +60,15 @@ export function AffinityBar({
   const expPercentage = Math.min((currentExp / nextLevelExp) * 100, 100);
   const expNeeded = Math.max(nextLevelExp - currentExp, 0);
   
+  // 親密度ランクの取得
+  const getAffinityRank = () => {
+    if (level >= 80) return 'master';
+    if (level >= 60) return 'expert';
+    if (level >= 40) return 'closeFriend';
+    if (level >= 20) return 'friend';
+    return 'acquaintance';
+  };
+  
   // レベルアップ特效の判定
   const isLevelingUp = animatingIncrease && level > lastLevel;
   const isExpGaining = animatingIncrease && currentExp > lastExp;
@@ -151,7 +160,7 @@ export function AffinityBar({
       {/* 経験値バー */}
       <div className="flex-1 max-w-md">
         <div className="hidden sm:flex items-center justify-between mb-1">
-          <span className="text-xs text-gray-600">{t('intimacy')}</span>
+          <span className="text-xs text-gray-600">{t('intimacyWithRank', { rank: t(`ranks.${getAffinityRank()}`) })}</span>
           <span className="text-xs text-gray-600">
             {t('expNeeded', { needed: expNeeded })}
           </span>

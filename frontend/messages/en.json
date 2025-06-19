@@ -426,7 +426,25 @@
     "levelRewards": "Level Rewards",
     "encourageChat": "Chat with characters to increase intimacy!",
     "unlockByLevel": "Increase intimacy to unlock new images!",
-    "characterAffinityImage": "{characterName}'s intimacy image"
+    "characterAffinityImage": "{characterName}'s intimacy image",
+    "ranks": {
+      "acquaintance": "Acquaintance",
+      "friend": "Friend",
+      "closeFriend": "Close Friend",
+      "expert": "Expert",
+      "master": "Master"
+    },
+    "intimacyWithRank": "Intimacy ({rank})",
+    "modalTitle": "Intimacy Details",
+    "modalSubtitle": "Check detailed relationship with characters",
+    "expGainMethods": "How to Gain Experience",
+    "expGainMessage": "Send message: +10 EXP",
+    "expGainLongChat": "Long conversation: +20 EXP",
+    "expGainDaily": "Daily login: +5 EXP",
+    "expGainEvent": "Special event: +50 EXP",
+    "rewardLv20": "Every Lv.20: New topics added",
+    "rewardLv50": "Every Lv.50: Exclusive content",
+    "rewardLv100": "Lv.100: Special ending"
   },
   "tokens": {
     "balance": "Token Balance",
@@ -498,7 +516,30 @@
       "continueChat": "Keep chatting consistently every day",
       "buildAffinity": "Build affinity by spending time interacting with characters",
       "general": "Try participating in various activities"
-    }
+    },
+    "modalTitle": "About Badge System",
+    "modalSubtitle": "Honor system that records your activities and achievements",
+    "whatIsBadge": "What is the Badge System?",
+    "badgeDescription": "Badges are special titles that record your activities and achievements on Charactier. You can earn various badges through conversations with characters, improving intimacy, and using the service.",
+    "badgeTypes": "Types of Badges",
+    "beginnerBadgeTitle": "Beginner Badges",
+    "beginnerBadgeDesc": "Badges for those who just started using the service. You can earn them by using basic features and taking your first actions.",
+    "chatBadgeTitle": "Chat Badges",
+    "chatBadgeDesc": "Badges related to conversations with characters. You can earn them based on message count, consecutive chat days, etc.",
+    "affinityBadgeTitle": "Intimacy Badges",
+    "affinityBadgeDesc": "Badges related to improving intimacy with characters. You can earn them by reaching specific levels or building relationships with multiple characters.",
+    "specialBadgeTitle": "Special Badges",
+    "specialBadgeDesc": "Special badges you can earn through specific conditions or limited-time events. Includes rare and valuable badges.",
+    "howToAcquire": "How to Earn Badges",
+    "autoAcquireTitle": "Automatic Acquisition",
+    "autoAcquireDesc": "Badges are automatically earned when you meet the conditions. You'll be notified when you earn one.",
+    "progressTrackTitle": "Progress Tracking",
+    "progressTrackDesc": "You can check the progress of badges you haven't earned yet. See how close you are to achieving them.",
+    "rewardTitle": "Rewards",
+    "rewardDesc": "Some badges come with special rewards. (To be implemented)",
+    "tipsTitle": "Tips for Earning Badges",
+    "tip1": "Continue chatting with characters daily to earn continuation-related badges",
+    "tip2": "Interact with multiple characters to earn a wider variety of badges"
   },
   "notifications": {
     "title": "Notifications",

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { X, Award, Star, Target, TrendingUp, CheckCircle, Clock, Gift } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface BadgeSystemModalProps {
   isOpen: boolean;
@@ -14,6 +15,8 @@ export default function BadgeSystemModal({
   onClose, 
   locale 
 }: BadgeSystemModalProps) {
+  const t = useTranslations('badges');
+  const tCommon = useTranslations('common');
   
   if (!isOpen) return null;
 
@@ -37,8 +40,8 @@ export default function BadgeSystemModal({
                 <Award className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">バッジシステムについて</h2>
-                <p className="text-yellow-100">活動や達成を記録する称号システム</p>
+                <h2 className="text-2xl font-bold">{t('modalTitle')}</h2>
+                <p className="text-yellow-100">{t('modalSubtitle')}</p>
               </div>
             </div>
             <button
@@ -54,10 +57,9 @@ export default function BadgeSystemModal({
         <div className="p-6 overflow-y-auto max-h-[70vh] space-y-6">
           {/* 概要 */}
           <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg p-4 border border-yellow-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">バッジシステムとは？</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('whatIsBadge')}</h3>
             <p className="text-gray-700 leading-relaxed">
-              バッジは、Charactierでのあなたの活動や達成を記録する特別な称号です。
-              キャラクターとの会話、親密度の向上、サービスの利用を通じて様々なバッジを獲得できます。
+              {t('badgeDescription')}
             </p>
           </div>
 
