@@ -135,7 +135,12 @@ export class ServerMonitor {
   }
   
   recordRequest(req: Request, responseTime: number, statusCode: number): void {
-    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    // Nginxからの実際のクライアントIPを取得
+    const ip = req.headers['x-real-ip'] as string || 
+                req.headers['x-forwarded-for'] as string || 
+                req.ip || 
+                req.connection.remoteAddress || 
+                'unknown';
     
     // リクエストカウント更新
     const current = this.requestCounts.get(ip) || {

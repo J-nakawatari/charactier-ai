@@ -62,6 +62,9 @@ routeRegistry.setApp(app);
 // ★ 新: 環境変数優先、無ければ 5000
 const PORT = process.env.PORT || 5000;
 
+// Nginxなどのプロキシ経由の場合、実際のクライアントIPを取得
+app.set('trust proxy', true);
+
 // MongoDB接続
 let isMongoConnected = false;
 const connectMongoDB = async () => {
