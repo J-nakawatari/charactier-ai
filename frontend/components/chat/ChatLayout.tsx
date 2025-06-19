@@ -198,30 +198,12 @@ export function ChatLayout({
   // ref に最新の関数を保持
   refreshTokenBalanceRef.current = refreshTokenBalance;
 
-  // ページがフォーカスされた時（購入完了から戻ってきた時など）にトークン残高を更新
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && refreshTokenBalanceRef.current) {
-        refreshTokenBalanceRef.current();
-      }
-    };
-
-    const intervalHandler = () => {
-      if (refreshTokenBalanceRef.current) {
-        refreshTokenBalanceRef.current();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // 定期的な更新（120秒間隔に変更 - TokenBarとの重複を避ける）
-    const interval = setInterval(intervalHandler, 120000);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      clearInterval(interval);
-    };
-  }, []); // 依存関係を削除してrefパターンを使用
+  // トークン残高の更新はTokenBarコンポーネントに完全に委譲
+  // ChatLayoutでの重複した更新処理をすべて無効化
+  // TokenBarが以下を担当:
+  // - 60秒ごとの定期更新
+  // - visibilitychangeイベントでの更新
+  // - 購入完了イベントでの更新
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
