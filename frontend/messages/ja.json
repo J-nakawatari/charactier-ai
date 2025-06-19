@@ -293,7 +293,7 @@
       "conversations": "会話",
       "activity": "活動",
       "insights": "インサイト",
-      "perDay": "回/日"
+      "perDay": "1日あたり {count} 回のチャット"
     },
     "affinity": {
       "title": "親密度分析",
