@@ -122,7 +122,9 @@
       "empty": {
         "title": "No unlocked images yet",
         "description": "Increase intimacy to unlock new memories"
-      }
+      },
+      "imageTitle": "Level {level} Unlock Image",
+      "imageDescription": "This is an intimacy unlock image"
     },
     "locked": {
       "title": "Locked Memories",

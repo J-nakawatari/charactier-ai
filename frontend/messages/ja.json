@@ -122,7 +122,9 @@
       "empty": {
         "title": "まだ解放された画像がありません",
         "description": "親密度を上げて新しい思い出を解放しましょう"
-      }
+      },
+      "imageTitle": "レベル{level}解放画像",
+      "imageDescription": "親密度解放画像です"
     },
     "locked": {
       "title": "未解放の思い出",
