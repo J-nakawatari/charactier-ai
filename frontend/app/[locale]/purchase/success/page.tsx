@@ -62,7 +62,7 @@ function PurchaseSuccessContent() {
               
               setPurchaseData({
                 type: latestPurchase.type || 'token',
-                addedTokens: latestPurchase.amount || latestPurchase.tokensPurchased || 295709,
+                addedTokens: latestPurchase.amount || latestPurchase.tokensPurchased || 104891,
                 newBalance: userData.tokenBalance
               });
               setProcessing(false);
@@ -78,7 +78,7 @@ function PurchaseSuccessContent() {
       console.log('✅ 購入完了 - デフォルト値を表示');
       setPurchaseData({
         type: 'token',
-        addedTokens: 295709, // 500円 = 295,709トークン
+        addedTokens: 104891, // 500円 = 104,891トークン
         newBalance: userData.tokenBalance
       });
       setProcessing(false);
