@@ -473,7 +473,7 @@ router.get('/test', async (req, res) => {
     
     // テスト用の設定検証
     const configValidation = validatePricingConfig();
-    const tokenPlans = TokenService.getTokenPlans();
+    const tokenPlans = await TokenService.getTokenPlans();
     
     res.json({
       message: 'Stripe Webhook Test Endpoint',
