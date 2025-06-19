@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { authenticateToken } from '../middleware/auth';
 import { ServerMonitor } from '../monitoring/ServerMonitor';
+import type { Router as ExpressRouter } from 'express';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 // ヘルスチェックAPI（管理者のみ）
 router.get('/health', authenticateToken, async (req: Request, res: Response) => {
