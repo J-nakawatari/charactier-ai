@@ -35,15 +35,15 @@ const AVAILABLE_MODELS = [
  */
 router.get('/', async (req: AuthRequest, res: Response) => {
   try {
-    const modelsWithCalc = AVAILABLE_MODELS.map(model => ({
+    const modelsWithCalc = await Promise.all(AVAILABLE_MODELS.map(async model => ({
       ...model,
-      tokensPerYen: calcTokensToGive(1, model.id),
+      tokensPerYen: await calcTokensToGive(1, model.id),
       sampleTokens: {
-        500: calcTokensToGive(500, model.id),
-        1000: calcTokensToGive(1000, model.id),
-        2000: calcTokensToGive(2000, model.id)
+        500: await calcTokensToGive(500, model.id),
+        1000: await calcTokensToGive(1000, model.id),
+        2000: await calcTokensToGive(2000, model.id)
       }
-    }));
+    })));
 
     res.json({
       success: true,
@@ -68,11 +68,11 @@ router.get('/current', authenticateToken, async (req: AuthRequest, res: Response
       success: true,
       currentModel,
       modelInfo,
-      tokensPerYen: calcTokensToGive(1, currentModel),
+      tokensPerYen: await calcTokensToGive(1, currentModel),
       sampleCalculation: {
-        500: calcTokensToGive(500, currentModel),
-        1000: calcTokensToGive(1000, currentModel),
-        2000: calcTokensToGive(2000, currentModel)
+        500: await calcTokensToGive(500, currentModel),
+        1000: await calcTokensToGive(1000, currentModel),
+        2000: await calcTokensToGive(2000, currentModel)
       }
     });
   } catch (error) {
@@ -107,7 +107,7 @@ router.post('/set-model', authenticateToken, async (req: AuthRequest, res: Respo
       success: true,
       message: `Model changed to ${model}`,
       newModel: model,
-      tokensPerYen: calcTokensToGive(1, model),
+      tokensPerYen: await calcTokensToGive(1, model),
       note: 'アプリケーションの再起動が推奨されます'
     });
   } catch (error) {
@@ -133,7 +133,7 @@ router.post('/simulate', authenticateToken, async (req: AuthRequest, res: Respon
       return;
     }
     
-    const tokensToGive = calcTokensToGive(purchaseAmount, model);
+    const tokensToGive = await calcTokensToGive(purchaseAmount, model);
     const modelInfo = AVAILABLE_MODELS.find(m => m.id === model);
     
     res.json({
