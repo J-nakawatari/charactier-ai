@@ -5386,8 +5386,8 @@ app.get('/api/admin/dashboard/stats', authenticateToken, async (req: AuthRequest
       CharacterModel.countDocuments({ isActive: true }),
       ChatModel.aggregate([
         { $unwind: '$messages' },
-        { $match: { 'messages.type': 'character' } },
-        { $group: { _id: null, total: { $sum: '$messages.metadata.tokensUsed' } } }
+        { $match: { 'messages.role': 'assistant' } },
+        { $group: { _id: null, total: { $sum: '$messages.tokensUsed' } } }
       ]),
       APIErrorModel.countDocuments({ createdAt: { $gte: twentyFourHoursAgo } })
     ]);
@@ -5406,8 +5406,8 @@ app.get('/api/admin/dashboard/stats', authenticateToken, async (req: AuthRequest
       ChatModel.aggregate([
         { $match: { createdAt: { $lt: thirtyDaysAgo } } },
         { $unwind: '$messages' },
-        { $match: { 'messages.type': 'character' } },
-        { $group: { _id: null, total: { $sum: '$messages.metadata.tokensUsed' } } }
+        { $match: { 'messages.role': 'assistant' } },
+        { $group: { _id: null, total: { $sum: '$messages.tokensUsed' } } }
       ]),
       APIErrorModel.countDocuments({ 
         createdAt: { 
