@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { adminAuthenticatedFetch } from '@/utils/auth';
 import { 
   Bell, 
   Plus, 
@@ -95,30 +96,6 @@ export default function NotificationsManagementPage() {
   const fetchNotifications = useCallback(async () => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('adminAccessToken');
-      
-      // デバッグ：トークンの存在確認
-      console.log('🔍 認証トークン確認:', token ? 'あり' : 'なし');
-      if (token) {
-        console.log('🔍 トークンの長さ:', token.length);
-        
-        // 現在のユーザー情報を確認
-        try {
-          const userResponse = await fetch('/api/debug/current-user', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          if (userResponse.ok) {
-            const userData = await userResponse.json();
-            console.log('🔍 現在のユーザー情報:', userData);
-          }
-        } catch (userError) {
-          console.log('⚠️ ユーザー情報取得エラー:', userError);
-        }
-      }
       
       const queryParams = new URLSearchParams();
       queryParams.append('page', filters.page.toString());
@@ -127,12 +104,7 @@ export default function NotificationsManagementPage() {
       if (filters.isActive !== '') queryParams.append('isActive', filters.isActive);
       if (filters.search) queryParams.append('search', filters.search);
 
-      const response = await fetch(`/api/notifications/admin?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await adminAuthenticatedFetch(`/api/notifications/admin?${queryParams}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -156,13 +128,8 @@ export default function NotificationsManagementPage() {
     if (!confirm('このお知らせを削除しますか？')) return;
 
     try {
-      const token = localStorage.getItem('adminAccessToken');
-      const response = await fetch(`/api/notifications/admin/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await adminAuthenticatedFetch(`/api/notifications/admin/${id}`, {
+        method: 'DELETE'
       });
 
       if (!response.ok) {
@@ -184,18 +151,8 @@ export default function NotificationsManagementPage() {
   // 通知を既読にする
   const markAsRead = async (notificationId: string) => {
     try {
-      const token = localStorage.getItem('adminAccessToken');
-      if (!token) {
-        setError('認証トークンが見つかりません');
-        return;
-      }
-
-      const response = await fetch(`/api/notifications/admin/${notificationId}/read`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await adminAuthenticatedFetch(`/api/notifications/admin/${notificationId}/read`, {
+        method: 'POST'
       });
 
       if (response.ok) {
@@ -220,18 +177,8 @@ export default function NotificationsManagementPage() {
   // 一括既読
   const markAllAsRead = async () => {
     try {
-      const token = localStorage.getItem('adminAccessToken');
-      if (!token) {
-        setError('認証トークンが見つかりません');
-        return;
-      }
-
-      const response = await fetch('/api/notifications/admin/read-all', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await adminAuthenticatedFetch('/api/notifications/admin/read-all', {
+        method: 'POST'
       });
 
       if (response.ok) {

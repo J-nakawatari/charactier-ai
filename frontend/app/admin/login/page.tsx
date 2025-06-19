@@ -44,7 +44,11 @@ export default function AdminLoginPage() {
       localStorage.setItem('adminRefreshToken', data.tokens.refreshToken);
       localStorage.setItem('adminUser', JSON.stringify(data.user));
 
+      // デバッグ: トークンが正しく保存されたか確認
       console.log('✅ 管理者ログイン成功');
+      console.log('🔑 Access Token 保存確認:', localStorage.getItem('adminAccessToken') ? '成功' : '失敗');
+      console.log('🔑 Refresh Token 保存確認:', localStorage.getItem('adminRefreshToken') ? '成功' : '失敗');
+      
       router.push('/admin/dashboard');
 
     } catch (err: any) {

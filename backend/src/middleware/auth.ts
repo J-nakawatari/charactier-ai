@@ -99,16 +99,24 @@ export const authenticateToken = async (
     console.error('❌ JWT verification failed:', error);
     
     if (error instanceof jwt.JsonWebTokenError) {
+      console.error('🔴 Invalid token error:', error.message);
       res.status(401).json({ 
         error: 'Invalid token',
-        message: '無効なトークンです'
+        message: '無効なトークンです',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     } else if (error instanceof jwt.TokenExpiredError) {
+      console.error('⏰ Token expired error:', {
+        expiredAt: error.expiredAt,
+        message: error.message
+      });
       res.status(401).json({ 
         error: 'Token expired',
-        message: 'トークンの有効期限が切れています'
+        message: 'トークンの有効期限が切れています',
+        expiredAt: error.expiredAt
       });
     } else {
+      console.error('🚨 Unknown authentication error:', error);
       res.status(500).json({ 
         error: 'Authentication error',
         message: '認証エラーが発生しました'

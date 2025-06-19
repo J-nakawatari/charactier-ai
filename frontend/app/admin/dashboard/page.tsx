@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { adminAuthenticatedFetch } from '@/utils/auth';
 import StatsCards from '@/components/admin/StatsCards';
 import UserChart from '@/components/admin/UserChart';
 import TokenChart from '@/components/admin/TokenChart';
@@ -28,27 +29,13 @@ export default function AdminDashboard() {
         setLoading(true);
         console.log('🚀 Admin Dashboard - データ取得開始');
         
-        const token = localStorage.getItem('adminAccessToken');
-        console.log('🔑 Admin token exists:', !!token);
-        
-        if (!token) {
-          throw new Error('管理者認証トークンが見つかりません');
-        }
-
-        const headers = {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        };
-
-        console.log('📡 Fetching data from APIs...');
-        
         // 既存の管理者用APIエンドポイントを呼び出し
         const [overviewRes, usersRes, charactersRes, errorStatsRes, dashboardStatsRes] = await Promise.all([
-          fetch('/api/admin/token-analytics/overview', { headers }),
-          fetch('/api/admin/users', { headers }),
-          fetch('/api/characters', { headers }), // 公開キャラクター一覧API
-          fetch('/api/admin/error-stats?range=24h', { headers }), // APIエラー統計
-          fetch('/api/admin/dashboard/stats', { headers }) // 新しい統合ダッシュボード統計API
+          adminAuthenticatedFetch('/api/admin/token-analytics/overview'),
+          adminAuthenticatedFetch('/api/admin/users'),
+          adminAuthenticatedFetch('/api/characters'), // 公開キャラクター一覧API
+          adminAuthenticatedFetch('/api/admin/error-stats?range=24h'), // APIエラー統計
+          adminAuthenticatedFetch('/api/admin/dashboard/stats') // 新しい統合ダッシュボード統計API
         ]);
         
         console.log('📡 API responses received:', {
