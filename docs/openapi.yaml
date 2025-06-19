@@ -1548,6 +1548,44 @@ paths:
                     type: boolean
                   message:
                     type: string
+
+  /api/admin/system/health:
+    get:
+      summary: サーバーヘルスチェック（管理者のみ）
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: システム状態情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemHealth'
+        '401':
+          description: 認証エラー
+        '403':
+          description: 権限エラー
+
+  /api/admin/system/monitoring:
+    get:
+      summary: サーバー監視データ取得（管理者のみ）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: period
+          schema:
+            type: string
+            enum: [1h, 6h, 24h, 7d]
+            default: 1h
+          description: 監視期間
+      responses:
+        '200':
+          description: 監視データ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoringData'
                   newModel:
                     type: string
                   tokensPerYen:
@@ -2827,3 +2865,111 @@ components:
         - characterId
         - purchaseDate
         - amount
+
+    SystemHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, warning, critical]
+          description: システム状態
+        uptime:
+          type: number
+          description: サーバー稼働時間（ミリ秒）
+        restartCount:
+          type: number
+          description: 再起動回数
+        memoryUsage:
+          type: object
+          properties:
+            percentage:
+              type: number
+              description: メモリ使用率（%）
+            used:
+              type: number
+              description: 使用メモリ（MB）
+            total:
+              type: number
+              description: 総メモリ（MB）
+        errorRate:
+          type: number
+          description: エラー率（%）
+        alerts:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [high_restart_count, suspicious_requests, high_error_rate, memory_warning]
+              severity:
+                type: string
+                enum: [info, warning, critical]
+              message:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+      required:
+        - status
+        - uptime
+        - restartCount
+
+    MonitoringData:
+      type: object
+      properties:
+        timeRange:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+        requestStats:
+          type: object
+          properties:
+            total:
+              type: number
+            byIp:
+              type: array
+              items:
+                type: object
+                properties:
+                  ip:
+                    type: string
+                  count:
+                    type: number
+                  suspicious:
+                    type: boolean
+        errorStats:
+          type: object
+          properties:
+            total:
+              type: number
+            by5xx:
+              type: number
+            by4xx:
+              type: number
+            errorRate:
+              type: number
+        performanceStats:
+          type: object
+          properties:
+            avgResponseTime:
+              type: number
+              description: 平均レスポンスタイム（ms）
+            slowRequests:
+              type: number
+              description: 遅いリクエスト数（1秒以上）
+        restartHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              reason:
+                type: string

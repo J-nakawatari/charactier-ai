@@ -24,6 +24,8 @@ import characterRoutes from './routes/characters';
 import modelRoutes from './routes/modelSettings';
 import notificationRoutes from './routes/notifications';
 import systemSettingsRoutes from './routes/systemSettings';
+import systemRoutes from './routes/system';
+import { monitoringMiddleware } from './middleware/monitoring';
 // const userRoutes = require('./routes/user');
 // const dashboardRoutes = require('./routes/dashboard');
 import { validateMessage } from './utils/contentFilter';
@@ -354,6 +356,9 @@ app.use(cors({
 // エラーロギング用ミドルウェア（CORS後、認証前に設定）
 app.use(responseTimeMiddleware);
 app.use(statusCodeLoggerMiddleware);
+
+// 監視ミドルウェア（リクエスト統計収集）
+app.use(monitoringMiddleware);
 
 // ⚠️ IMPORTANT: Stripe webhook MUST come BEFORE express.json()
 // Stripe webhook endpoint (needs raw body)
@@ -729,6 +734,9 @@ app.use('/api/admin/models', modelRoutes);
 
 // システム設定ルート
 app.use('/api/system-settings', systemSettingsRoutes);
+
+// システム監視ルート（管理者のみ）
+app.use('/api/admin/system', systemRoutes);
 
 // 管理者ルート - その他
 import adminUsersRoutes from './routes/adminUsers';

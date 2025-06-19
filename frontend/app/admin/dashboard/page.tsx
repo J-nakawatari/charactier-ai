@@ -11,6 +11,7 @@ import QuickStats from '@/components/admin/QuickStats';
 import CharacterTable from '@/components/admin/CharacterTable';
 import CronJobMonitor from '@/components/admin/CronJobMonitor';
 import ExchangeRateWidget from '@/components/admin/ExchangeRateWidget';
+import ServerHealthWidget from '@/components/admin/ServerHealthWidget';
 import type { DashboardStats, UserStats, TokenUsage, Character, SecurityEvent, Notification } from '@/types/common';
 
 export default function AdminDashboard() {
@@ -232,6 +233,9 @@ export default function AdminDashboard() {
               
               {/* 右エリア - サイドウィジェット */}
               <div className="xl:col-span-1 space-y-4 md:space-y-6">
+                {/* サーバー状態監視 */}
+                <ServerHealthWidget />
+                
                 {/* セキュリティアラート */}
                 <SecurityAlerts events={securityEvents} />
                 
