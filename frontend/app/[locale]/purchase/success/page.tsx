@@ -2,10 +2,15 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { CheckCircle, Coins, ArrowLeft } from 'lucide-react';
-import { getAuthHeaders } from '@/utils/auth';
-import { API_BASE_URL } from '@/lib/api-config';
-import * as gtag from '@/lib/gtag';
+import { CheckCircle, ArrowLeft, Coins } from 'lucide-react';
+import { API_BASE_URL, getAuthHeaders } from '@/utils/api';
+import { IntlMessage } from '@/types/messages';
+import { LocaleText } from '@/types/locale';
+import { gtag } from '@/utils/gtag';
+
+const LocalizedText = ({ ja, en }: LocaleText) => {
+  return <>{ja}</>;
+};
 
 function PurchaseSuccessContent() {
   const searchParams = useSearchParams();
@@ -23,30 +28,27 @@ function PurchaseSuccessContent() {
 
   useEffect(() => {
     if (sessionId) {
-      processPurchaseWithSSE();
+      fetchPurchaseData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
-  const processPurchaseWithSSE = async () => {
+  const fetchPurchaseData = async () => {
     try {
-      console.log('🎉 決済成功ページ (SSE版): Session ID', sessionId);
+      console.log('🎉 決済成功ページ: Session ID', sessionId);
       
-      // まず最新のユーザー情報を取得（購入前の状態を記録）
-      const initialUserResponse = await fetch('/api/auth/user', {
+      // 最新のユーザー情報を取得
+      const userResponse = await fetch('/api/auth/user', {
         headers: getAuthHeaders()
       });
-      if (!initialUserResponse.ok) {
+      
+      if (!userResponse.ok) {
         throw new Error('ユーザー情報の取得に失敗しました');
       }
-      const initialUserData = await initialUserResponse.json();
-      console.log('👤 購入完了後のユーザーデータ:', initialUserData.tokenBalance);
       
-      // Stripeセッション情報が取得できない場合でも、既に購入は完了している
-      // 購入タイプを判定（現時点では主にトークン購入）
-      console.log('✅ 購入完了 - webhookで既にトークンが付与されています');
+      const userData = await userResponse.json();
+      console.log('👤 購入完了後のユーザーデータ:', userData.tokenBalance);
       
-      // 購入履歴から最新の購入情報を取得する試み
+      // 購入履歴から最新の購入情報を取得
       try {
         const historyResponse = await fetch('/api/user/token-history?limit=1', {
           headers: getAuthHeaders()
@@ -67,7 +69,7 @@ function PurchaseSuccessContent() {
               setPurchaseData({
                 type: 'token',
                 addedTokens: latestPurchase.tokensPurchased,
-                newBalance: initialUserData.tokenBalance
+                newBalance: userData.tokenBalance
               });
               setProcessing(false);
               return;
@@ -78,240 +80,36 @@ function PurchaseSuccessContent() {
         console.log('購入履歴の取得に失敗:', error);
       }
       
-      // デフォルトとして現在の残高を表示（購入は成功しているが詳細が不明）
+      // デフォルトとして現在の残高を表示
       setPurchaseData({
         type: 'token',
-        addedTokens: 0, // 詳細不明の場合は0を表示
-        newBalance: initialUserData.tokenBalance
+        addedTokens: 0,
+        newBalance: userData.tokenBalance
       });
-      setProcessing(false);
-      return;
-      
-      // セッション情報が取得できない場合のフォールバック
-      let eventSource: EventSource | null = null;
-      let fallbackTimeout: NodeJS.Timeout;
-      
-      // SSEでリアルタイム通知を受信（利用可能な場合）
-      try {
-        eventSource = new EventSource(`/api/purchase/events/${sessionId}`);
-      
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log('🌊 SSE受信:', data);
-          
-          if (data.error === 'timeout') {
-            console.log('⏰ SSE タイムアウト、フォールバック処理に移行');
-            eventSource?.close();
-            startFallbackProcess();
-            return;
-          }
-          
-          if (data.addedTokens || data.characterId) {
-            console.log('✅ SSE: 購入完了通知受信');
-            const purchaseInfo = {
-              type: data.type || (data.addedTokens ? 'token' : 'character'),
-              addedTokens: data.addedTokens,
-              newBalance: data.newBalance,
-              characterName: data.characterName,
-              characterId: data.characterId
-            };
-            setPurchaseData(purchaseInfo);
-            setProcessing(false);
-            eventSource?.close();
-            clearTimeout(fallbackTimeout);
-            
-            // Google Analytics: 購入イベント
-            if (purchaseInfo.type === 'token' && data.addedTokens) {
-              gtag.purchase({
-                transaction_id: sessionId || '',
-                value: data.price || data.addedTokens, // 実際の価格を使用
-                currency: 'JPY',
-                items: [{
-                  item_id: 'tokens',
-                  item_name: `${data.addedTokens} トークン`,
-                  item_category: 'tokens',
-                  price: data.price || data.addedTokens,
-                  quantity: 1
-                }]
-              });
-            } else if (purchaseInfo.type === 'character' && data.characterId) {
-              gtag.purchase({
-                transaction_id: sessionId || '',
-                value: data.price || 980, // 実際の価格を使用（デフォルト980円）
-                currency: 'JPY',
-                items: [{
-                  item_id: data.characterId,
-                  item_name: data.characterName || 'キャラクター',
-                  item_category: 'character',
-                  price: data.price || 980,
-                  quantity: 1
-                }]
-              });
-            }
-          }
-        } catch (parseError) {
-          console.error('❌ SSE データ解析エラー:', parseError);
-        }
-      };
-      
-      eventSource.onerror = (error) => {
-        console.error('❌ SSE接続エラー:', error);
-        eventSource?.close();
-        startFallbackProcess();
-      };
-      
-      // 35秒後にフォールバック処理を開始（SSEタイムアウト後）
-      fallbackTimeout = setTimeout(() => {
-        console.log('⏰ SSE全体タイムアウト、フォールバック処理開始');
-        eventSource?.close();
-        startFallbackProcess();
-      }, 35000);
-      
-      // クリーンアップ関数
-      const cleanup = () => {
-        eventSource?.close();
-        clearTimeout(fallbackTimeout);
-      };
-      
-      // コンポーネントアンマウント時のクリーンアップ
-      window.addEventListener('beforeunload', cleanup);
-      
-      return () => {
-        cleanup();
-        window.removeEventListener('beforeunload', cleanup);
-      };
-      
-    } catch (error) {
-      console.error('SSE処理エラー:', error);
-      startFallbackProcess();
-    }
-  };
-  
-  const startFallbackProcess = async () => {
-    try {
-      console.log('🔄 フォールバック処理開始（従来のポーリング方式）');
-      
-      // Stripe Session情報から購入情報を取得
-      const sessionResponse = await fetch(`/api/purchase/session/${sessionId}`, {
-        headers: getAuthHeaders()
-      });
-      let sessionData = null;
-      
-      if (sessionResponse.ok) {
-        sessionData = await sessionResponse.json();
-        console.log('💰 購入情報取得:', sessionData);
-      }
-      
-      // 初期ユーザー情報取得
-      const userResponse = await fetch('/api/auth/user', {
-        headers: getAuthHeaders()
-      });
-      if (!userResponse.ok) {
-        throw new Error('ユーザー情報の取得に失敗しました');
-      }
-      
-      const userData = await userResponse.json();
-      console.log('👤 初期ユーザーデータ:', userData.tokenBalance);
-      
-      // 簡略化されたリトライ（SSE失敗時なので短縮）
-      let retryCount = 0;
-      const maxRetries = 3;
-      let finalUserData = userData;
-      
-      while (retryCount < maxRetries) {
-        const waitTime = 2000 + (retryCount * 1000);
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-        
-        const updatedUserResponse = await fetch('/api/auth/user', {
-          headers: getAuthHeaders()
-        });
-        if (!updatedUserResponse.ok) {
-          throw new Error('更新されたユーザー情報の取得に失敗しました');
-        }
-        
-        finalUserData = await updatedUserResponse.json();
-        console.log(`🔄 フォールバック リトライ ${retryCount + 1}: 残高 ${finalUserData.tokenBalance}`);
-        
-        // 購入タイプに応じて処理を分岐
-        if (sessionData?.type === 'character') {
-          // キャラクター購入の場合はトークン残高変化をチェックしない
-          console.log('✅ フォールバック: キャラクター購入完了');
-          setPurchaseData({
-            type: 'character',
-            characterName: sessionData.characterName || 'キャラクター',
-            characterId: sessionData.characterId
-          });
-          setProcessing(false);
-          return;
-        } else {
-          // トークン購入の場合は残高変化をチェック
-          const tokensAdded = finalUserData.tokenBalance - userData.tokenBalance;
-          if (tokensAdded > 0) {
-            console.log('✅ フォールバック: トークン増加確認:', tokensAdded);
-            setPurchaseData({
-              type: 'token',
-              addedTokens: tokensAdded,
-              newBalance: finalUserData.tokenBalance
-            });
-            setProcessing(false);
-            return;
-          }
-        }
-        
-        retryCount++;
-      }
-      
-      // フォールバック処理でも確認できない場合
-      if (sessionData) {
-        console.log('📋 フォールバック: セッション情報から表示:', sessionData);
-        if (sessionData.type === 'character') {
-          setPurchaseData({
-            type: 'character',
-            characterName: sessionData.characterName || 'キャラクター',
-            characterId: sessionData.characterId
-          });
-        } else if (sessionData.tokens) {
-          setPurchaseData({
-            type: 'token',
-            addedTokens: sessionData.tokens,
-            newBalance: finalUserData.tokenBalance
-          });
-        }
-      } else {
-        setPurchaseData({
-          type: 'token',
-          addedTokens: 0,
-          newBalance: finalUserData.tokenBalance
-        });
-      }
-      
       setProcessing(false);
       
     } catch (error) {
-      console.error('フォールバック処理エラー:', error);
+      console.error('購入処理エラー:', error);
       setProcessing(false);
     }
   };
 
   const handleBackToChat = () => {
+    // ローカルストレージから保存された情報を取得
+    const returnToCharacterId = localStorage.getItem('returnToCharacterId');
+    const returnLocale = localStorage.getItem('returnToLocale') || 'ja';
+    
     if (purchaseData?.type === 'character' && purchaseData.characterId) {
-      // キャラクター購入の場合は購入したキャラクターのチャット画面に遷移
-      router.push(`/ja/characters/${purchaseData.characterId}/chat`);
+      // キャラクター購入の場合は、購入したキャラクターのチャット画面へ
+      router.push(`/${returnLocale}/characters/${purchaseData.characterId}/chat`);
+    } else if (returnToCharacterId) {
+      // 保存されたキャラクターIDに戻る
+      localStorage.removeItem('returnToCharacterId');
+      localStorage.removeItem('returnToLocale');
+      router.push(`/${returnLocale}/characters/${returnToCharacterId}/chat`);
     } else {
-      // トークン購入の場合は元のチャット画面情報を取得
-      const returnCharacterId = localStorage.getItem('returnToCharacterId');
-      const returnLocale = localStorage.getItem('returnToLocale') || 'ja';
-      
-      if (returnCharacterId) {
-        // 保存されたキャラクターIDに戻る
-        localStorage.removeItem('returnToCharacterId');
-        localStorage.removeItem('returnToLocale');
-        router.push(`/${returnLocale}/characters/${returnCharacterId}/chat`);
-      } else {
-        // フォールバック: キャラクター一覧画面
-        router.push('/ja/characters');
-      }
+      // フォールバック: キャラクター一覧画面
+      router.push('/ja/characters');
     }
   };
 
@@ -408,31 +206,22 @@ function PurchaseSuccessContent() {
         ) : (
           <>
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-8 h-8 text-red-600" />
+              <span className="text-2xl">❌</span>
             </div>
-            
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               エラーが発生しました
             </h2>
-            
             <p className="text-gray-600 mb-6">
-              決済の処理中にエラーが発生しました。サポートにお問い合わせください。
+              購入処理中にエラーが発生しました。<br />
+              お手数ですが、もう一度お試しください。
             </p>
-            
             <button
-              onClick={handleBackToChat}
-              className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              onClick={() => router.push('/ja/characters')}
+              className="w-full px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>チャットに戻る</span>
+              キャラクター一覧に戻る
             </button>
           </>
-        )}
-        
-        {sessionId && (
-          <div className="mt-4 text-xs text-gray-400">
-            Session ID: {sessionId.substring(0, 20)}...
-          </div>
         )}
       </div>
     </div>
@@ -443,10 +232,7 @@ export default function PurchaseSuccessPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">決済情報を確認中...</p>
-        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
       </div>
     }>
       <PurchaseSuccessContent />
