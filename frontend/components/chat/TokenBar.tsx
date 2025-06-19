@@ -163,7 +163,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
                 ? 'text-yellow-700'
                 : 'text-gray-700'
           }`}>
-            <span className={isRefreshing ? 'opacity-50' : ''}>
+            <span className={isRefreshing && !isZeroBalance ? 'opacity-50' : ''}>
               {currentTokens.toLocaleString()}{t('tokenUnit')}
             </span>
             <span className="hidden sm:inline">
