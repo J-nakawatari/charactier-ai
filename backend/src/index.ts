@@ -5446,6 +5446,16 @@ app.get('/api/admin/dashboard/stats', authenticateToken, async (req: AuthRequest
 
     const evaluationScore = calculateEvaluationScore();
 
+    // デバッグログを追加
+    console.log('🔍 Admin Dashboard Stats Debug:', {
+      totalUsers,
+      activeUsers,
+      totalTokenUsage,
+      totalTokenUsageValue: totalTokenUsage[0]?.total || 0,
+      totalCharacters,
+      apiErrors: recentErrors
+    });
+
     res.json({
       stats: {
         totalUsers,
