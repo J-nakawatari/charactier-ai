@@ -62,7 +62,7 @@ function PurchaseSuccessContent() {
               
               setPurchaseData({
                 type: latestPurchase.type || 'token',
-                addedTokens: latestPurchase.amount || latestPurchase.tokensPurchased || 104891,
+                addedTokens: latestPurchase.amount || latestPurchase.tokensPurchased,
                 newBalance: userData.tokenBalance
               });
               setProcessing(false);
@@ -74,11 +74,11 @@ function PurchaseSuccessContent() {
         console.log('購入履歴の取得に失敗:', error);
       }
       
-      // フォールバック: 固定値を表示
-      console.log('✅ 購入完了 - デフォルト値を表示');
+      // フォールバック: 購入履歴が取得できない場合
+      console.log('⚠️ 購入履歴が取得できないため、残高のみ表示');
       setPurchaseData({
         type: 'token',
-        addedTokens: 104891, // 500円 = 104,891トークン
+        addedTokens: 0, // 購入履歴から取得できない場合は0
         newBalance: userData.tokenBalance
       });
       setProcessing(false);
