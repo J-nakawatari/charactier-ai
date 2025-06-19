@@ -547,7 +547,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
               console.log(`⚠️ TokenPack not found for price ID ${priceId}`);
               console.log(`📊 Falling back to calculation method`);
               
-              const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+              const currentModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
               console.log(`🤖 Using model: ${currentModel}`);
               
               // calcTokensToGiveを直接使用してトークン数を計算
@@ -601,7 +601,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
             console.error('❌ TokenPack lookup error:', tokenPackError.message);
             console.log(`📊 Falling back to calculation method due to error`);
             
-            const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+            const currentModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
             const { calcTokensToGive } = await import('./config/tokenConfig');
             const tokensToGrant = await calcTokensToGive(purchaseAmountYen, currentModel);
             
@@ -2231,7 +2231,7 @@ app.get('/api/token-packs', authenticateToken, async (req: Request, res: Respons
 
 // 新トークン計算モデルバリデーション関数（利益率90%）
 const validateTokenPriceRatio = async (tokens: number, price: number): Promise<boolean> => {
-  const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+  const currentModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
   const expectedTokens = await calcTokensToGive(price, currentModel);
   const tolerance = 0.05; // 5%の許容範囲
   const minTokens = expectedTokens * (1 - tolerance);
@@ -2298,7 +2298,7 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
       });
       
       // 新トークン計算システムに基づくトークン数計算（利益率90%）
-      const currentModel = 'o4-mini'; // 明示的にo4-miniを指定
+      const currentModel = 'gpt-4o-mini'; // 明示的にgpt-4o-miniを指定
       const calculatedTokens = await calcTokensToGive(priceInMainUnit, currentModel);
       
       // 実際の利益率は90%固定
@@ -2774,7 +2774,7 @@ app.post('/api/user/process-session', authenticateToken, async (req: Request, re
         // Fallback: 金額ベースで計算
         if (tokensToAdd === 0) {
           const amountInYen = session.amount_total || 0;
-          const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+          const currentModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
           tokensToAdd = await calcTokensToGive(amountInYen, currentModel);
         }
         

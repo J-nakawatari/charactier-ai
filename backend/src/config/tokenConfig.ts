@@ -16,7 +16,8 @@ interface ModelUnitCostUSD {
 export const MODEL_UNIT_COST_USD: Record<string, ModelUnitCostUSD> = {
   'gpt-3.5-turbo': { input: 0.0000005, output: 0.0000015 },  // $0.5/$1.5 per 1M
   'gpt-4o-mini': { input: 0.00000015, output: 0.0000006 },   // $0.15/$0.6 per 1M
-  'o4-mini': { input: 0.0000011, output: 0.0000044 },        // $1.1/$4.4 per 1M (本番用)
+  'gpt-4o-mini': { input: 0.0000011, output: 0.0000044 },     // $1.1/$4.4 per 1M (本番用)
+  'o4-mini': { input: 0.0000011, output: 0.0000044 },        // 互換性のため一時的に保持
   'gpt-4.1-mini': { input: 0.000002, output: 0.000008 }      // $2/$8 per 1M (参考値)
 };
 
@@ -70,7 +71,7 @@ export const tokensPerYen = async (model: string): Promise<number> => {
  */
 export const calcTokensToGive = async (
   purchaseAmountYen: number,
-  model: string = 'o4-mini'  // 本番用デフォルト
+  model: string = 'gpt-4o-mini'  // 本番用デフォルト
 ): Promise<number> => {
   const tokensPerYenValue = await tokensPerYen(model);
   return Math.floor(purchaseAmountYen * tokensPerYenValue);
@@ -90,7 +91,7 @@ export const validateModel = (model: string): boolean => {
 /**
  * デバッグ用：モデル別設定を表示
  */
-export const logTokenConfig = async (model: string = 'o4-mini'): Promise<void> => {
+export const logTokenConfig = async (model: string = 'gpt-4o-mini'): Promise<void> => {
   if (!validateModel(model)) return;
   
   const costYen = await avgTokenCostYen(model);
