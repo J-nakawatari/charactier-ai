@@ -307,7 +307,9 @@ export default function PurchaseHistoryPage() {
                             </div>
                             <div>
                               <div className="text-sm font-medium text-gray-900">
-                                {purchase.details}
+                                {purchase.type === 'token' ? t('purchaseTypes.tokenPurchase') : 
+                                 purchase.type === 'character' ? t('purchaseTypes.characterPurchase') : 
+                                 t('purchaseTypes.subscriptionPurchase')}
                               </div>
                               <div className="text-sm text-gray-500">
                                 {purchase.type === 'token' ? t('types.token', { amount: (purchase.amount || 0).toLocaleString() }) : 
@@ -364,7 +366,9 @@ export default function PurchaseHistoryPage() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <h3 className="text-sm font-medium text-gray-900 truncate">
-                              {purchase.details}
+                              {purchase.type === 'token' ? t('purchaseTypes.tokenPurchase') : 
+                               purchase.type === 'character' ? t('purchaseTypes.characterPurchase') : 
+                               t('purchaseTypes.subscriptionPurchase')}
                             </h3>
                             <p className="text-xs text-gray-500 mt-1">
                               {purchase.type === 'token' ? t('types.token', { amount: (purchase.amount || 0).toLocaleString() }) : 

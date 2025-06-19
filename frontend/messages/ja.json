@@ -261,6 +261,11 @@
       "tokenUnit": "トークン",
       "characterUnit": "キャラクター"
     },
+    "purchaseTypes": {
+      "tokenPurchase": "トークン購入",
+      "characterPurchase": "キャラクター購入",
+      "subscriptionPurchase": "サブスクリプション購入"
+    },
     "empty": {
       "title": "購入履歴がありません",
       "description": "まだ購入が行われていません。"

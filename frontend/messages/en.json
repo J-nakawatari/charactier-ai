@@ -261,6 +261,11 @@
       "tokenUnit": "tokens",
       "characterUnit": "character"
     },
+    "purchaseTypes": {
+      "tokenPurchase": "Token Purchase",
+      "characterPurchase": "Character Purchase",
+      "subscriptionPurchase": "Subscription Purchase"
+    },
     "empty": {
       "title": "No Purchase History",
       "description": "No purchases have been made yet."
