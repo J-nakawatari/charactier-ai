@@ -4,6 +4,7 @@ import { backendClient } from '@/utils/backend-client';
 export async function GET(request: NextRequest) {
   try {
     console.log('🔗 User Profile API Route: プロキシ先バックエンド');
+    console.log('📍 Backend URL:', process.env.BACKEND_URL || 'http://localhost:5000');
     
     // 統一されたクライアントを使用してバックエンドを呼び出し
     const response = await backendClient.proxyRequest(request, '/api/user/profile');

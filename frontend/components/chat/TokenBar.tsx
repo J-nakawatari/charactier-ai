@@ -16,6 +16,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
   const [currentTokens, setCurrentTokens] = useState<number | null>(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorCount, setErrorCount] = useState(0);
+  const [lastErrorTime, setLastErrorTime] = useState<number>(0);
   const refreshTokenBalanceRef = useRef<() => Promise<void>>();
 
   // トークン残高の手動更新
@@ -24,6 +25,10 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
     
     // エラーが5回以上の場合はリトライを停止
     if (errorCount >= 5) return;
+    
+    // 最後のエラーから5分経過していない場合はスキップ
+    const now = Date.now();
+    if (lastErrorTime && now - lastErrorTime < 300000) return;
     
     try {
       setIsRefreshing(true);
@@ -37,16 +42,20 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
         setCurrentTokens(newTokens);
         onTokenUpdate?.(newTokens);
         setErrorCount(0); // 成功したらエラーカウントをリセット
+        setLastErrorTime(0); // エラー時刻もリセット
       } else {
         setErrorCount(prev => prev + 1);
+        setLastErrorTime(now);
+        console.warn(`Token balance API returned ${response.status}`);
       }
     } catch (error) {
       console.error('Token balance refresh failed:', error);
       setErrorCount(prev => prev + 1);
+      setLastErrorTime(now);
     } finally {
       setIsRefreshing(false);
     }
-  }, [onTokenUpdate, isRefreshing, errorCount]);
+  }, [onTokenUpdate, isRefreshing, errorCount, lastErrorTime]);
 
   // ref＆最新の関数を保持
   refreshTokenBalanceRef.current = refreshTokenBalance;
@@ -79,7 +88,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
     
-    // 定期的な更新（60秒間隔）
+    // 定期的な更新（60秒間隔、エラー時は自動的にスキップされる）
     const interval = setInterval(intervalHandler, 60000);
     
     return () => {
