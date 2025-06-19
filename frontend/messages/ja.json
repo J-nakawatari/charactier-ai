@@ -546,6 +546,7 @@
   },
   "notifications": {
     "title": "お知らせ",
+    "loading": "お知らせを読み込み中...",
     "unreadCount": "件未読",
     "important": "重要",
     "viewAll": "すべてのお知らせを表示 ({count}件)"

@@ -545,6 +545,7 @@
   },
   "notifications": {
     "title": "Notifications",
+    "loading": "Loading notifications...",
     "unreadCount": " unread",
     "important": "Important",
     "viewAll": "View all notifications ({count} items)"
