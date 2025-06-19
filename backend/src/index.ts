@@ -1549,8 +1549,7 @@ app.get('/api/chats/:characterId', authenticateToken, async (req: Request, res: 
       imageChatBackground: character.imageChatBackground,
       themeColor: character.themeColor,
       // プロンプト情報を追加（デバッグ用）
-      personalityPrompt: character.personalityPrompt,
-      adminPrompt: character.adminPrompt
+      personalityPrompt: character.personalityPrompt
     };
 
     // キャラクターに対する親密度情報を取得

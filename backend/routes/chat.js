@@ -54,7 +54,7 @@ router.get('/:characterId', auth, async (req, res) => {
     // ユーザーとキャラクターの存在確認
     const [user, character] = await Promise.all([
       User.findById(req.user.id),
-      Character.findById(characterId).select('-adminPrompt')
+      Character.findById(characterId)
     ]);
 
     if (!user) {

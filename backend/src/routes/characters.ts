@@ -66,7 +66,6 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
       personalityPreset,
       personalityTags = [],
       personalityPrompt,
-      adminPrompt,
       themeColor = '#8B5CF6',
       imageCharacterSelect,
       imageDashboard,
@@ -105,7 +104,6 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
       personalityPreset,
       personalityTags,
       personalityPrompt,
-      adminPrompt,
       themeColor,
       imageCharacterSelect,
       imageDashboard,
@@ -386,7 +384,6 @@ router.get('/:id/translations', authenticateToken, async (req: AuthRequest, res:
         ja: character.personalityTags,
         en: character.personalityTags // 現在は多言語対応していないため、同じ値を返す
       },
-      adminPrompt: character.adminPrompt,
       defaultMessage: character.defaultMessage,
       limitMessage: character.limitMessage
     };
@@ -405,7 +402,7 @@ router.get('/:id/translations', authenticateToken, async (req: AuthRequest, res:
 // 翻訳データ保存（/:idより前に定義する必要あり）
 router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, description, personalityPreset, personalityTags, adminPrompt, defaultMessage, limitMessage } = req.body;
+    const { name, description, personalityPreset, personalityTags, defaultMessage, limitMessage } = req.body;
     
     // バリデーション（オブジェクト構造のみチェック、空文字列は許可）
     if (!name || typeof name.ja !== 'string' || typeof name.en !== 'string') {
@@ -438,7 +435,6 @@ router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res:
     const updateData: Partial<{
       name: string;
       description: string;
-      adminPrompt: string;
       defaultMessage: string;
       limitMessage: string;
       personalityPreset: string;
@@ -448,7 +444,6 @@ router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res:
     }> = {
       name,
       description,
-      adminPrompt,
       defaultMessage,
       limitMessage
     };
@@ -483,7 +478,6 @@ router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res:
           ja: updatedCharacter?.personalityTags,
           en: updatedCharacter?.personalityTags
         },
-        adminPrompt: updatedCharacter?.adminPrompt,
         defaultMessage: updatedCharacter?.defaultMessage,
         limitMessage: updatedCharacter?.limitMessage
       }

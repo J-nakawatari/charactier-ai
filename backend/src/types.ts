@@ -55,7 +55,7 @@ export interface CharacterDocument {
   affinityStats?: AffinityStats;
   defaultMessage?: LocalizedString;
   limitMessage?: LocalizedString;
-  adminPrompt?: LocalizedString;
+  adminPrompt?: LocalizedString; // オプショナル - 削除予定
   translations?: CharacterTranslation; // Optional translation data for mock storage
 }
 

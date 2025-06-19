@@ -6,7 +6,6 @@ import { Languages, Plus, X } from 'lucide-react';
 interface TranslationData {
   name: { ja: string; en: string };
   description: { ja: string; en: string };
-  adminPrompt: { ja: string; en: string };
   defaultMessage: { ja: string; en: string };
   limitMessage: { ja: string; en: string };
 }
@@ -32,7 +31,6 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
         [lang]: value
       }
     });
-  };
   };
 
   return (
@@ -94,24 +92,6 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
           />
         </div>
 
-        {/* 管理者プロンプト */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            管理者プロンプト ({activeLanguage === 'ja' ? '日本語' : '英語'})
-          </label>
-          <textarea
-            value={data.adminPrompt?.[activeLanguage] || ''}
-            onChange={(e) => updateField('adminPrompt', activeLanguage, e.target.value)}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors resize-none text-gray-900"
-            placeholder={
-              activeLanguage === 'ja'
-                ? '例: あなたは明るく元気な女の子のルナです。いつも前向きで、相手を励ましたり元気づけたりするのが得意です。'
-                : 'Example: You are Luna, a bright and energetic girl. You are always positive and good at encouraging others.'
-            }
-          />
-        </div>
-
         {/* デフォルトメッセージ */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -156,14 +136,11 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
               const completedFields = [
                 data.name?.[lang.code]?.trim() !== '',
                 data.description?.[lang.code]?.trim() !== '',
-                data.personalityPreset?.[lang.code]?.trim() !== '',
-                (data.personalityTags?.[lang.code] || []).length > 0,
-                data.adminPrompt?.[lang.code]?.trim() !== '',
                 data.defaultMessage?.[lang.code]?.trim() !== '',
                 data.limitMessage?.[lang.code]?.trim() !== ''
               ].filter(Boolean).length;
               
-              const totalFields = 7;
+              const totalFields = 4;
               const percentage = Math.round((completedFields / totalFields) * 100);
               
               return (

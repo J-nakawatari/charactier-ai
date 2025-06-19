@@ -109,7 +109,6 @@ export default function CharacterNewPage() {
     displayPrice: 0,
     
     // プロンプト・メッセージ
-    adminPrompt: { ja: '', en: '' },
     defaultMessage: { ja: '', en: '' },
     limitMessage: { ja: '', en: '' },
     
@@ -181,8 +180,7 @@ export default function CharacterNewPage() {
         gender: formData.gender,
         characterAccessType: formData.characterAccessType,
         aiModel: formData.model,
-        personalityPrompt: formData.adminPrompt, // personalityPromptが必須なので使用
-        adminPrompt: formData.adminPrompt,
+        personalityPrompt: { ja: '', en: '' }, // 空のプロンプトを送信
         defaultMessage: {
           ja: formData.defaultMessage.ja || 'こんにちは！よろしくお願いします。',
           en: formData.defaultMessage.en || 'Hello! Nice to meet you!'
@@ -878,31 +876,6 @@ export default function CharacterNewPage() {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">プロンプト・メッセージ設定</h3>
               <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    管理者プロンプト（日本語）
-                  </label>
-                  <textarea
-                    value={formData.adminPrompt.ja}
-                    onChange={(e) => setFormData({ ...formData, adminPrompt: { ...formData.adminPrompt, ja: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
-                    rows={4}
-                    placeholder="例: あなたは明るく元気な女の子のルナです。いつも前向きで、相手を励ましたり元気づけたりするのが得意です。語尾に「だよ」「だね」を使い、親しみやすい口調で話してください。"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    管理者プロンプト（英語）
-                  </label>
-                  <textarea
-                    value={formData.adminPrompt.en}
-                    onChange={(e) => setFormData({ ...formData, adminPrompt: { ...formData.adminPrompt, en: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
-                    rows={4}
-                    placeholder="Example: You are Luna, a bright and energetic girl. You are always positive and good at encouraging and cheering up others. Use a friendly tone."
-                  />
-                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>

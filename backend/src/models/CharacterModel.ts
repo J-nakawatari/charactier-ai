@@ -84,7 +84,7 @@ export interface ICharacter extends Document {
   
   // プロンプト設定
   personalityPrompt: LocalizedString;
-  adminPrompt: LocalizedString;
+  adminPrompt?: LocalizedString; // オプショナルに変更
   systemPromptCache: LocalizedString; // 生成済みプロンプト
   
   // 視覚・音声
@@ -359,7 +359,7 @@ const CharacterSchema = new Schema<ICharacter>({
   },
   adminPrompt: {
     type: LocalizedStringSchema,
-    required: true
+    required: false // オプショナルに変更
   },
   systemPromptCache: {
     type: LocalizedStringSchema

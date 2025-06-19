@@ -44,9 +44,6 @@ export default function CharacterEditPage() {
   const [translationData, setTranslationData] = useState({
     name: { ja: '', en: '' },
     description: { ja: '', en: '' },
-    personalityPreset: { ja: '', en: '' },
-    personalityTags: { ja: [] as string[], en: [] as string[] },
-    adminPrompt: { ja: '', en: '' },
     defaultMessage: { ja: '', en: '' },
     limitMessage: { ja: '', en: '' }
   });
@@ -67,7 +64,6 @@ export default function CharacterEditPage() {
     purchasePrice: 0,
     
     // プロンプト・メッセージ
-    adminPrompt: { ja: '', en: '' },
     defaultMessage: { ja: '', en: '' },
     limitMessage: { ja: '', en: '' },
     
