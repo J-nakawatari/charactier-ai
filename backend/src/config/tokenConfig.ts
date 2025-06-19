@@ -15,10 +15,10 @@ interface ModelUnitCostUSD {
 
 export const MODEL_UNIT_COST_USD: Record<string, ModelUnitCostUSD> = {
   'gpt-3.5-turbo': { input: 0.0000005, output: 0.0000015 },  // $0.5/$1.5 per 1M
-  'gpt-4o-mini': { input: 0.00000015, output: 0.0000006 },   // $0.15/$0.6 per 1M
-  'gpt-4o-mini': { input: 0.0000011, output: 0.0000044 },     // $1.1/$4.4 per 1M (本番用)
-  'o4-mini': { input: 0.0000011, output: 0.0000044 },        // 互換性のため一時的に保持
-  'gpt-4.1-mini': { input: 0.000002, output: 0.000008 }      // $2/$8 per 1M (参考値)
+  'gpt-4o-mini': { input: 0.00000015, output: 0.0000006 },   // $0.15/$0.6 per 1M (正しい価格)
+  'o4-mini': { input: 0.00000015, output: 0.0000006 },       // 互換性のため一時的に保持
+  'gpt-4': { input: 0.00003, output: 0.00006 },              // $30/$60 per 1M
+  'gpt-4-turbo': { input: 0.00001, output: 0.00003 }         // $10/$30 per 1M
 };
 
 export const USD_JPY_RATE = 150;                             // フォールバック固定レート（動的取得失敗時）
