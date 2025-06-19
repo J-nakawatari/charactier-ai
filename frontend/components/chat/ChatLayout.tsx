@@ -160,6 +160,20 @@ export function ChatLayout({
     };
   }, [character._id]);
 
+  // 💰 トークン購入モーダル表示イベントリスナー
+  useEffect(() => {
+    const handleShowTokenPurchase = (event: CustomEvent) => {
+      console.log('🛒 Token purchase modal triggered:', event.detail);
+      setShowPurchaseModal(true);
+    };
+
+    window.addEventListener('showTokenPurchaseModal', handleShowTokenPurchase as EventListener);
+    
+    return () => {
+      window.removeEventListener('showTokenPurchaseModal', handleShowTokenPurchase as EventListener);
+    };
+  }, []);
+
 
 
   // 定期的にトークン残高を更新する関数

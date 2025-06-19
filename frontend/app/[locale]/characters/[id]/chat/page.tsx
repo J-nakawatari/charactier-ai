@@ -236,8 +236,17 @@ export default function ChatPage() {
       });
 
       if (!response.ok) {
-        
         const apiError = await handleApiError(response);
+        
+        // トークン不足エラーの場合は購入モーダルを表示
+        if (apiError.code === 'INSUFFICIENT_TOKENS' || response.status === 402) {
+          // トークン購入モーダルを表示するイベントを発火
+          const tokenPurchaseEvent = new CustomEvent('showTokenPurchaseModal', {
+            detail: { reason: 'insufficient_tokens' }
+          });
+          window.dispatchEvent(tokenPurchaseEvent);
+        }
+        
         throw apiError;
       }
 

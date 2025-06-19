@@ -112,27 +112,47 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
   
   const isLowBalance = currentTokens < 500;
   const isCriticalBalance = currentTokens < 200;
+  const isZeroBalance = currentTokens === 0;
   
   // 最後のメッセージコストが0の場合は平均的なコスト(100トークン)を使用
   const estimatedMessageCost = lastMessageCost > 0 ? lastMessageCost : 100;
   const remainingMessages = Math.floor(currentTokens / estimatedMessageCost);
 
+  // トークンが0の場合、自動的に購入を促す
+  useEffect(() => {
+    if (isZeroBalance && !isRefreshing) {
+      // 3秒後に購入モーダルを表示
+      const timer = setTimeout(() => {
+        const event = new CustomEvent('showTokenPurchaseModal', {
+          detail: { reason: 'zero_balance' }
+        });
+        window.dispatchEvent(event);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isZeroBalance, isRefreshing]);
+
   return (
     <div className="flex items-center space-x-4">
       {/* トークン残量表示 */}
       <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${
-        isCriticalBalance 
-          ? 'bg-red-50 border border-red-200' 
-          : isLowBalance 
-            ? 'bg-yellow-50 border border-yellow-200'
-            : 'bg-white border border-gray-200'
+        isZeroBalance
+          ? 'bg-red-100 border border-red-300 animate-pulse'
+          : isCriticalBalance 
+            ? 'bg-red-50 border border-red-200' 
+            : isLowBalance 
+              ? 'bg-yellow-50 border border-yellow-200'
+              : 'bg-white border border-gray-200'
       }`}>
         <Coins className={`w-4 h-4 ${
-          isCriticalBalance 
-            ? 'text-red-500' 
-            : isLowBalance 
-              ? 'text-yellow-500'
-              : 'text-purple-500'
+          isZeroBalance
+            ? 'text-red-600 animate-pulse'
+            : isCriticalBalance 
+              ? 'text-red-500' 
+              : isLowBalance 
+                ? 'text-yellow-500'
+                : 'text-purple-500'
         }`} />
         
         <div className="text-right">
@@ -146,7 +166,11 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
             <span className={isRefreshing ? 'opacity-50' : ''}>
               {currentTokens.toLocaleString()}{t('tokenUnit')}
             </span>
-            <span className="hidden sm:inline">{t('remainingMessages', { count: remainingMessages })}</span>
+            <span className="hidden sm:inline">
+              {isZeroBalance 
+                ? t('noTokensLeft') 
+                : t('remainingMessages', { count: remainingMessages })}
+            </span>
           </div>
         </div>
       </div>

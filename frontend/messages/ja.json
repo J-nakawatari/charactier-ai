@@ -459,6 +459,7 @@
     "balance": "トークン残高",
     "unit": "枚",
     "remainingMessages": "（あと約{count}メッセージ）",
+    "noTokensLeft": "（トークンがありません）",
     "purchase": "トークチケット購入",
     "loading": "読み込み中...",
     "consumed": "消費: {amount}枚",
