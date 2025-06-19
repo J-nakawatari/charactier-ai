@@ -1986,7 +1986,7 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
             responseContent: aiResponse.content.substring(0, 2000),
             
             // AI API詳細
-            model: model,
+            aiModel: model,
             inputTokens: inputTokens,
             outputTokens: outputTokens,
             apiCost: apiCost,
@@ -2027,6 +2027,7 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           
         } catch (tokenUsageError) {
           // TokenUsage記録の失敗はチャット機能に影響させない
+          console.error('❌ TokenUsage save error:', tokenUsageError);
         }
 
         res.json({
