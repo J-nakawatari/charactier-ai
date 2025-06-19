@@ -407,10 +407,32 @@ router.post('/:characterId/messages', auth, async (req, res) => {
     // ユーザーのトークン残高を減らす
     user.tokenBalance = Math.max(0, user.tokenBalance - aiResponse.tokensUsed);
 
+    // TokenUsageに記録を保存（管理画面の統計用）
+    const TokenUsage = require('../models/TokenUsage');
+    const tokenUsageRecord = new TokenUsage({
+      userId: user._id,
+      characterId: character._id,
+      chatId: chat._id,
+      messageId: aiMessage._id,
+      tokensUsed: aiResponse.tokensUsed,
+      tokenType: 'chat',
+      cost: aiResponse.apiCost || 0,
+      model: character.aiModel || 'o4-mini',
+      sessionId: currentSessionId,
+      messageContent: message.substring(0, 200), // 最初の200文字のみ保存
+      metadata: {
+        intimacyLevel: aiResponse.toneConfig?.debugInfo?.intimacyLevel || 0,
+        responseTime: Date.now() - timestamp.getTime(),
+        messageLength: message.length,
+        isModerated: !!validation.warning
+      }
+    });
+
     // データベース保存
     await Promise.all([
       chat.save(),
-      user.save()
+      user.save(),
+      tokenUsageRecord.save()
     ]);
 
     // 成功レスポンス
