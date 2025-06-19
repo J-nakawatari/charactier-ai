@@ -356,28 +356,28 @@ export function ChatLayout({
       <div className="flex-1 relative z-10 overflow-hidden" style={{ backgroundColor: 'transparent' }}>
         {/* キャラクター画像（真ん中に配置） */}
         {character.imageChatBackground && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ backgroundColor: 'transparent' }}>
-            <div className="relative h-full w-auto" style={{ backgroundColor: 'transparent' }}>
-              <Image 
-                src={getSafeImageUrl(character.imageChatBackground, character.name)}
-                alt={`${character.name}のキャラクター画像`}
-                fill
-                className="object-contain bg-transparent opacity-50"
-                style={{ 
-                  backgroundColor: 'transparent',
-                  imageRendering: 'auto',
-                  mixBlendMode: 'normal'
-                }}
-                priority
-                onError={(e) => {
-                  console.error('ChatLayout background image loading error:', {
-                    characterId: character._id,
-                    imageChatBackground: character.imageChatBackground,
-                    finalSrc: getSafeImageUrl(character.imageChatBackground, character.name)
-                  });
-                }}
-              />
-            </div>
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+            <Image 
+              src={getSafeImageUrl(character.imageChatBackground, character.name)}
+              alt={`${character.name}のキャラクター画像`}
+              width={600}
+              height={800}
+              className="object-contain opacity-100"
+              style={{ 
+                maxWidth: '90%',
+                maxHeight: '90%',
+                width: 'auto',
+                height: 'auto'
+              }}
+              priority
+              onError={(e) => {
+                console.error('ChatLayout background image loading error:', {
+                  characterId: character._id,
+                  imageChatBackground: character.imageChatBackground,
+                  finalSrc: getSafeImageUrl(character.imageChatBackground, character.name)
+                });
+              }}
+            />
           </div>
         )}
         
