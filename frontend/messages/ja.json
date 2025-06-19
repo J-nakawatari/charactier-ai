@@ -261,61 +261,6 @@
       "description": "まだ購入が行われていません。"
     }
   },
-  "analytics": {
-    "title": "分析",
-    "period": {
-      "past7Days": "過去7日間"
-    },
-    "charts": {
-      "chatCount": "チャット数",
-      "tokenUsage": "トークン使用",
-      "characterInteraction": "親密度",
-      "dailyChats": "日別チャット数"
-    },
-    "summary": {
-      "averageDaily": "日平均",
-      "totalChats": "総チャット数",
-      "totalTokens": "総トークン使用量",
-      "totalCharacters": "育成キャラ数"
-    },
-    "tokens": {
-      "title": "トークン分析",
-      "subtitle": "トークンの使用パターンと効率性を分析",
-      "usage": "使用量",
-      "efficiency": "効率性",
-      "pattern": "パターン",
-      "dailyUsage": "日別トークン使用量",
-      "perDay": "トークン/日"
-    },
-    "chats": {
-      "title": "チャット分析",
-      "subtitle": "会話パターンと活動の分析",
-      "conversations": "会話",
-      "activity": "活動",
-      "insights": "インサイト",
-      "perDay": "1日あたり {count} 回のチャット"
-    },
-    "affinity": {
-      "title": "親密度分析",
-      "subtitle": "関係性と感情の深化の分析",
-      "relationships": "関係性",
-      "emotional": "感情",
-      "progress": "進捗",
-      "characterLevels": "キャラクター別親密度",
-      "highestLevel": "最高レベル"
-    },
-    "common": {
-      "loading": "データを読み込み中...",
-      "error": "データの読み込みに失敗しました",
-      "retry": "再試行",
-      "noData": "データがありません",
-      "timeRange": {
-        "week": "1週間",
-        "month": "1ヶ月",
-        "quarter": "3ヶ月"
-      }
-    }
-  },
   "moods": {
     "happy": "嬉しい",
     "sad": "悲しい",
@@ -596,7 +541,45 @@
       "interactedCharacters": "交流キャラ数",
       "averageDaily": "1日平均",
       "weeklyTotal": "週間合計",
-      "monthlyTotal": "月間合計"
+      "monthlyTotal": "月間合計",
+      "totalCharacters": "育成キャラ数"
+    },
+    "tokens": {
+      "title": "トークン分析",
+      "subtitle": "トークンの使用パターンと効率性を分析",
+      "usage": "使用量",
+      "efficiency": "効率性",
+      "pattern": "パターン",
+      "dailyUsage": "日別トークン使用量",
+      "perDay": "トークン/日"
+    },
+    "chats": {
+      "title": "チャット分析",
+      "subtitle": "会話パターンと活動の分析",
+      "conversations": "会話",
+      "activity": "活動",
+      "insights": "インサイト",
+      "perDay": "1日あたり {count} 回のチャット"
+    },
+    "affinity": {
+      "title": "親密度分析",
+      "subtitle": "関係性と感情の深化の分析",
+      "relationships": "関係性",
+      "emotional": "感情",
+      "progress": "進捗",
+      "characterLevels": "キャラクター別親密度",
+      "highestLevel": "最高レベル"
+    },
+    "common": {
+      "loading": "データを読み込み中...",
+      "error": "データの読み込みに失敗しました",
+      "retry": "再試行",
+      "noData": "データがありません",
+      "timeRange": {
+        "week": "1週間",
+        "month": "1ヶ月",
+        "quarter": "3ヶ月"
+      }
     },
     "insights": {
       "mostActiveDay": "最も活発な曜日",

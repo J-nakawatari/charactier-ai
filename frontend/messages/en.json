@@ -261,61 +261,6 @@
       "description": "No purchases have been made yet."
     }
   },
-  "analytics": {
-    "title": "Analytics",
-    "period": {
-      "past7Days": "Past 7 Days"
-    },
-    "charts": {
-      "chatCount": "Chat Count",
-      "tokenUsage": "Token Usage",
-      "characterInteraction": "Affinity",
-      "dailyChats": "Daily Chats"
-    },
-    "summary": {
-      "averageDaily": "Daily Average",
-      "totalChats": "Total Chats",
-      "totalTokens": "Total Tokens Used",
-      "totalCharacters": "Characters Raised"
-    },
-    "tokens": {
-      "title": "Token Analytics",
-      "subtitle": "Analyze token usage patterns and efficiency",
-      "usage": "Usage",
-      "efficiency": "Efficiency",
-      "pattern": "Pattern",
-      "dailyUsage": "Daily Token Usage",
-      "perDay": "tokens/day"
-    },
-    "chats": {
-      "title": "Chat Analytics", 
-      "subtitle": "Analyze conversation patterns and activity",
-      "conversations": "Conversations",
-      "activity": "Activity",
-      "insights": "Insights",
-      "perDay": "chats/day"
-    },
-    "affinity": {
-      "title": "Affinity Analytics",
-      "subtitle": "Analyze relationship and emotional development",
-      "relationships": "Relationships",
-      "emotional": "Emotional",
-      "progress": "Progress",
-      "characterLevels": "Character Affinity Levels",
-      "highestLevel": "Highest Level"
-    },
-    "common": {
-      "loading": "Loading data...",
-      "error": "Failed to load data",
-      "retry": "Retry",
-      "noData": "No data available",
-      "timeRange": {
-        "week": "1 Week",
-        "month": "1 Month",
-        "quarter": "3 Months"
-      }
-    }
-  },
   "moods": {
     "happy": "Happy",
     "sad": "Sad",
@@ -577,7 +522,7 @@
     "legendary": "Legendary"
   },
   "analytics": {
-    "title": "Activity Analytics",
+    "title": "Analytics",
     "period": {
       "past7Days": "Past 7 Days",
       "past30Days": "Past 30 Days",
@@ -587,7 +532,7 @@
       "dailyChats": "Daily Chat Count",
       "chatCount": "Chat Count",
       "tokenUsage": "Token Usage",
-      "characterInteraction": "Character Interaction"
+      "characterInteraction": "Affinity"
     },
     "summary": {
       "totalChats": "Total Chats",
@@ -595,13 +540,51 @@
       "interactedCharacters": "Characters Interacted",
       "averageDaily": "Daily Average",
       "weeklyTotal": "Weekly Total",
-      "monthlyTotal": "Monthly Total"
+      "monthlyTotal": "Monthly Total",
+      "totalCharacters": "Characters Raised"
     },
     "insights": {
       "mostActiveDay": "Most Active Day",
       "favoriteCharacter": "Favorite Character",
       "chatStreak": "Chat Streak Days",
       "tokenEfficiency": "Token Efficiency"
+    },
+    "tokens": {
+      "title": "Token Analytics",
+      "subtitle": "Analyze token usage patterns and efficiency",
+      "usage": "Usage",
+      "efficiency": "Efficiency",
+      "pattern": "Pattern",
+      "dailyUsage": "Daily Token Usage",
+      "perDay": "tokens/day"
+    },
+    "chats": {
+      "title": "Chat Analytics", 
+      "subtitle": "Analyze conversation patterns and activity",
+      "conversations": "Conversations",
+      "activity": "Activity",
+      "insights": "Insights",
+      "perDay": "{count} chats per day"
+    },
+    "affinity": {
+      "title": "Affinity Analytics",
+      "subtitle": "Analyze relationship and emotional development",
+      "relationships": "Relationships",
+      "emotional": "Emotional",
+      "progress": "Progress",
+      "characterLevels": "Character Affinity Levels",
+      "highestLevel": "Highest Level"
+    },
+    "common": {
+      "loading": "Loading data...",
+      "error": "Failed to load data",
+      "retry": "Retry",
+      "noData": "No data available",
+      "timeRange": {
+        "week": "1 Week",
+        "month": "1 Month",
+        "quarter": "3 Months"
+      }
     }
   }
 }
