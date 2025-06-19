@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { adminAuthenticatedFetch } from '@/utils/auth';
-import { AlertCircle, Server, Activity, Users, Clock, Zap, RefreshCw } from 'lucide-react';
+import { AlertCircle, Server, Activity, Users, Clock, Zap, RefreshCw, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 interface MonitoringData {
   timeRange: {
@@ -111,6 +112,15 @@ export default function SystemMonitoringPage() {
         {/* ヘッダー */}
         <div className="flex justify-between items-center mb-6">
           <div>
+            <div className="flex items-center gap-4 mb-2">
+              <Link
+                href="/admin/dashboard"
+                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                ダッシュボードに戻る
+              </Link>
+            </div>
             <h1 className="text-2xl font-bold text-gray-900">サーバー監視</h1>
             <p className="text-sm text-gray-500 mt-1">
               リアルタイムのシステムパフォーマンスと異常検知
@@ -140,40 +150,40 @@ export default function SystemMonitoringPage() {
           <>
             {/* 統計カード */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-500 text-sm">総リクエスト数</span>
                   <Activity className="w-5 h-5 text-gray-400" />
                 </div>
-                <p className="text-3xl font-bold">{data.requestStats.total.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-gray-900">{data.requestStats.total.toLocaleString()}</p>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-500 text-sm">エラー率</span>
                   <AlertCircle className="w-5 h-5 text-gray-400" />
                 </div>
-                <p className={`text-3xl font-bold ${data.errorStats.errorRate > 5 ? 'text-red-600' : ''}`}>
+                <p className={`text-3xl font-bold ${data.errorStats.errorRate > 5 ? 'text-red-600' : 'text-gray-900'}`}>
                   {data.errorStats.errorRate.toFixed(1)}%
                 </p>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-500 text-sm">平均応答時間</span>
                   <Zap className="w-5 h-5 text-gray-400" />
                 </div>
-                <p className={`text-3xl font-bold ${data.performanceStats.avgResponseTime > 1000 ? 'text-yellow-600' : ''}`}>
+                <p className={`text-3xl font-bold ${data.performanceStats.avgResponseTime > 1000 ? 'text-yellow-600' : 'text-gray-900'}`}>
                   {data.performanceStats.avgResponseTime.toFixed(0)}ms
                 </p>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-500 text-sm">再起動回数</span>
                   <Server className="w-5 h-5 text-gray-400" />
                 </div>
-                <p className={`text-3xl font-bold ${data.restartHistory.length > 5 ? 'text-red-600' : ''}`}>
+                <p className={`text-3xl font-bold ${data.restartHistory.length > 5 ? 'text-red-600' : 'text-gray-900'}`}>
                   {data.restartHistory.length}
                 </p>
               </div>
@@ -181,10 +191,10 @@ export default function SystemMonitoringPage() {
 
             {/* リクエスト統計 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <div className="bg-white rounded-lg shadow">
-                <div className="p-6 border-b">
-                  <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <Users className="w-5 h-5" />
+              <div className="bg-white rounded-lg shadow border border-gray-200">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Users className="w-5 h-5 text-gray-700" />
                     IPアドレス別リクエスト数
                   </h2>
                 </div>
@@ -192,11 +202,11 @@ export default function SystemMonitoringPage() {
                   <div className="space-y-3">
                     {data.requestStats.byIp.map((item, index) => (
                       <div key={index} className="flex justify-between items-center">
-                        <span className={`text-sm ${item.suspicious ? 'text-red-600 font-medium' : ''}`}>
+                        <span className={`text-sm ${item.suspicious ? 'text-red-600 font-medium' : 'text-gray-900'}`}>
                           {item.ip}
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm">{item.count}回</span>
+                          <span className="text-sm text-gray-700">{item.count}回</span>
                           {item.suspicious && (
                             <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
                               異常
@@ -209,10 +219,10 @@ export default function SystemMonitoringPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow">
-                <div className="p-6 border-b">
-                  <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <Clock className="w-5 h-5" />
+              <div className="bg-white rounded-lg shadow border border-gray-200">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-gray-700" />
                     再起動履歴
                   </h2>
                 </div>
@@ -223,7 +233,7 @@ export default function SystemMonitoringPage() {
                     ) : (
                       data.restartHistory.map((restart, index) => (
                         <div key={index} className="flex justify-between items-center">
-                          <span className="text-sm">{formatDate(restart.timestamp)}</span>
+                          <span className="text-sm text-gray-900">{formatDate(restart.timestamp)}</span>
                           <span className="text-xs text-gray-500">{restart.reason}</span>
                         </div>
                       ))
@@ -234,9 +244,9 @@ export default function SystemMonitoringPage() {
             </div>
 
             {/* エラー詳細 */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6 border-b">
-                <h2 className="text-lg font-semibold">エラー統計</h2>
+            <div className="bg-white rounded-lg shadow border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">エラー統計</h2>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
