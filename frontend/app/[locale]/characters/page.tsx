@@ -12,8 +12,8 @@ import { handleFetchError } from '@/utils/errorHandler';
 
 interface Character {
   _id: string;
-  name: string;
-  description: string;
+  name: string | { ja: string; en: string };
+  description: string | { ja: string; en: string };
   personalityPreset: string;
   personalityTags: string[];
   gender: string;
@@ -244,11 +244,21 @@ function CharactersPageContent({
           <CharacterGrid
             characters={characters.map(char => ({
               ...char,
+              // LocalizedString型に正規化
+              name: typeof char.name === 'string' 
+                ? { ja: char.name, en: char.name } 
+                : char.name,
+              description: typeof char.description === 'string'
+                ? { ja: char.description, en: char.description }
+                : char.description,
               characterAccessType: char.characterAccessType === 'free' ? 'free' : 'purchaseOnly',
               imageChatAvatar: (char as any).imageChatAvatar || '/images/default-avatar.png',
               imageChatBackground: (char as any).imageChatBackground || '/images/default-bg.png',
               currentMood: (char as any).currentMood || 'happy',
-              themeColor: (char as any).themeColor || '#8B5CF6'
+              themeColor: (char as any).themeColor || '#8B5CF6',
+              aiModel: (char as any).aiModel || 'gpt-4o-mini',
+              isActive: true,
+              createdAt: (char as any).createdAt || new Date().toISOString()
             }))}
             onCharacterClick={(gridChar) => {
               // GridCharacterをCharacterに変換してhandleCharacterClickに渡す
