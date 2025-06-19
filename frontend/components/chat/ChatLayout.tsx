@@ -110,6 +110,16 @@ export function ChatLayout({
   const currentMood = (affinity as any).currentMood || 'neutral';
   const moodGradient = getMoodBackgroundGradient(currentMood);
   
+  // デバッグ: 画像URLを確認
+  useEffect(() => {
+    console.log('ChatLayout - Character images:', {
+      characterId: character._id,
+      imageChatBackground: character.imageChatBackground,
+      imageChatAvatar: character.imageChatAvatar,
+      imageCharacterSelect: character.imageCharacterSelect
+    });
+  }, [character]);
+  
   // リアルタイムチャット機能
   const realtimeChat = useRealtimeChat(character._id);
   const connectionStatus = useChatConnectionStatus();
@@ -345,28 +355,31 @@ export function ChatLayout({
       {/* メッセージエリア */}
       <div className="flex-1 relative z-10 overflow-hidden" style={{ backgroundColor: 'transparent' }}>
         {/* キャラクター画像（真ん中に配置） */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ backgroundColor: 'transparent' }}>
-          <div className="relative h-full w-auto" style={{ backgroundColor: 'transparent' }}>
-            <Image 
-              src={getSafeImageUrl(character.imageChatBackground || character.imageChatAvatar || character.imageCharacterSelect, character.name)}
-              alt={`${character.name}のキャラクター画像`}
-              fill
-              className="object-contain bg-transparent opacity-30"
-              style={{ 
-                backgroundColor: 'transparent',
-                imageRendering: 'auto',
-                mixBlendMode: 'normal'
-              }}
-              priority
-              onError={(e) => {
-                console.error('ChatLayout background image loading error:', {
-                  characterId: character._id,
-                  finalSrc: getSafeImageUrl(character.imageChatBackground || character.imageChatAvatar || character.imageCharacterSelect, character.name)
-                });
-              }}
-            />
+        {character.imageChatBackground && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ backgroundColor: 'transparent' }}>
+            <div className="relative h-full w-auto" style={{ backgroundColor: 'transparent' }}>
+              <Image 
+                src={getSafeImageUrl(character.imageChatBackground, character.name)}
+                alt={`${character.name}のキャラクター画像`}
+                fill
+                className="object-contain bg-transparent opacity-50"
+                style={{ 
+                  backgroundColor: 'transparent',
+                  imageRendering: 'auto',
+                  mixBlendMode: 'normal'
+                }}
+                priority
+                onError={(e) => {
+                  console.error('ChatLayout background image loading error:', {
+                    characterId: character._id,
+                    imageChatBackground: character.imageChatBackground,
+                    finalSrc: getSafeImageUrl(character.imageChatBackground, character.name)
+                  });
+                }}
+              />
+            </div>
           </div>
-        </div>
+        )}
         
         <MessageList 
           messages={localMessages}
