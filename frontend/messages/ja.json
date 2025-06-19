@@ -129,7 +129,8 @@
       "subtitle": "親密度を上げると解放される{count}枚の画像",
       "hoverMessage": "親密度を上げて解放！",
       "unlockLevel": "レベル{level}で解放",
-      "imageTitle": "未解放の思い出"
+      "imageTitle": "未解放の思い出",
+      "lockedImageTitle": "レベル{level}解放画像"
     },
     "rarity": {
       "common": "コモン",
@@ -139,6 +140,7 @@
     },
     "modal": {
       "imageTitle": "思い出の画像",
+      "imageDescription": "親密度解放画像です",
       "altText": "Selected image"
     },
     "noCharacter": {

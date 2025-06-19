@@ -129,7 +129,8 @@
       "subtitle": "{count} images that will be unlocked by increasing intimacy",
       "hoverMessage": "Increase intimacy to unlock!",
       "unlockLevel": "Unlocks at Level {level}",
-      "imageTitle": "Locked memory"
+      "imageTitle": "Locked memory",
+      "lockedImageTitle": "Level {level} Unlock Image"
     },
     "rarity": {
       "common": "Common",
@@ -139,6 +140,7 @@
     },
     "modal": {
       "imageTitle": "Memory image",
+      "imageDescription": "This is an intimacy unlock image",
       "altText": "Selected image"
     },
     "noCharacter": {

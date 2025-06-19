@@ -456,10 +456,10 @@ export default function CharacterLibraryPage() {
                         
                         <div className="p-4">
                           <h4 className="font-medium text-gray-900 mb-2">
-                            {image.title[locale as keyof typeof image.title] || image.title.ja || t('modal.imageTitle')}
+                            {image.title[locale as keyof typeof image.title] || t('modal.imageTitle')}
                           </h4>
                           <p className="text-sm text-gray-600 mb-3">
-                            {image.description[locale as keyof typeof image.description] || image.description.ja || ''}
+                            {image.description[locale as keyof typeof image.description] || t('modal.imageDescription')}
                           </p>
                           
                           {/* タグ */}
@@ -575,7 +575,7 @@ export default function CharacterLibraryPage() {
                         
                         <div className="p-4">
                           <h4 className="font-medium text-gray-900 mb-2">
-                            {image.title[locale as keyof typeof image.title] || image.title.ja || t('modal.imageTitle')}
+                            {t('locked.lockedImageTitle', { level: image.unlockLevel })}
                           </h4>
                           <p className="text-sm text-gray-600 mb-3">
                             {t('locked.unlockLevel', { level: image.unlockLevel })}
@@ -660,10 +660,10 @@ export default function CharacterLibraryPage() {
             {/* モーダル情報部分 */}
             <div className="bg-white border-t border-gray-200 p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {selectedImage.title[locale] || selectedImage.title.ja || t('modal.imageTitle')}
+                {selectedImage.title[locale] || t('modal.imageTitle')}
               </h3>
               <p className="text-sm text-gray-600 mb-3">
-                {selectedImage.description[locale] || selectedImage.description.ja || ''}
+                {selectedImage.description[locale] || t('modal.imageDescription')}
               </p>
               
               {/* タグ */}
