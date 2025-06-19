@@ -258,6 +258,7 @@ export interface Message {
   content: string;
   timestamp: Date;
   tokens?: number;
+  tokensUsed?: number;
 }
 
 export interface ChatData {
