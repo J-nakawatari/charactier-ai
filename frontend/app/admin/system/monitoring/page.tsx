@@ -16,6 +16,12 @@ interface MonitoringData {
       ip: string;
       count: number;
       suspicious: boolean;
+      userAgent: string;
+      isBot: boolean;
+      topPaths: Array<{ path: string; count: number }>;
+      referer: string;
+      firstSeen: string;
+      lastSeen: string;
     }>;
   };
   errorStats: {
@@ -195,23 +201,54 @@ export default function SystemMonitoringPage() {
                 <div className="p-6 border-b border-gray-200">
                   <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <Users className="w-5 h-5 text-gray-700" />
-                    IPアドレス別リクエスト数
+                    IPアドレス別アクセス詳細
                   </h2>
                 </div>
                 <div className="p-6">
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {data.requestStats.byIp.map((item, index) => (
-                      <div key={index} className="flex justify-between items-center">
-                        <span className={`text-sm ${item.suspicious ? 'text-red-600 font-medium' : 'text-gray-900'}`}>
-                          {item.ip}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-700">{item.count}回</span>
-                          {item.suspicious && (
-                            <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
-                              異常
+                      <div key={index} className="border-b border-gray-100 pb-4 last:border-0">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <span className={`font-medium ${item.suspicious ? 'text-red-600' : 'text-gray-900'}`}>
+                              {item.ip}
                             </span>
-                          )}
+                            <span className="text-sm text-gray-500 ml-2">
+                              ({item.count}回)
+                            </span>
+                            {item.isBot && (
+                              <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded ml-2">
+                                BOT
+                              </span>
+                            )}
+                            {item.suspicious && (
+                              <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded ml-2">
+                                異常
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-gray-600 space-y-1 ml-4">
+                          <div className="truncate">
+                            <span className="font-medium">UA:</span> {item.userAgent}
+                          </div>
+                          <div>
+                            <span className="font-medium">参照元:</span> {item.referer}
+                          </div>
+                          <div>
+                            <span className="font-medium">アクセスパス:</span>
+                            {item.topPaths.map((path, i) => (
+                              <span key={i} className="ml-2">
+                                {path.path} ({path.count}回)
+                                {i < item.topPaths.length - 1 && ', '}
+                              </span>
+                            ))}
+                          </div>
+                          <div>
+                            <span className="font-medium">初回:</span> {formatDate(item.firstSeen)} / 
+                            <span className="font-medium ml-2">最終:</span> {formatDate(item.lastSeen)}
+                          </div>
                         </div>
                       </div>
                     ))}

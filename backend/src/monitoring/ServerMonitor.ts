@@ -5,6 +5,9 @@ interface RequestCount {
   count: number;
   firstRequest: Date;
   lastRequest: Date;
+  userAgent?: string;
+  paths: Map<string, number>;
+  referer?: string;
 }
 
 interface Alert {
@@ -146,11 +149,28 @@ export class ServerMonitor {
     const current = this.requestCounts.get(ip) || {
       count: 0,
       firstRequest: new Date(),
-      lastRequest: new Date()
+      lastRequest: new Date(),
+      paths: new Map<string, number>()
     };
     
     current.count++;
     current.lastRequest = new Date();
+    
+    // User-Agentを記録（最新のものを保持）
+    if (req.headers['user-agent']) {
+      current.userAgent = req.headers['user-agent'] as string;
+    }
+    
+    // Refererを記録
+    if (req.headers['referer']) {
+      current.referer = req.headers['referer'] as string;
+    }
+    
+    // アクセスパスを記録
+    const path = req.path;
+    const pathCount = current.paths.get(path) || 0;
+    current.paths.set(path, pathCount + 1);
+    
     this.requestCounts.set(ip, current);
     
     // エラー統計更新
@@ -317,11 +337,29 @@ export class ServerMonitor {
     
     // IPごとのリクエスト統計
     const requestStats = Array.from(this.requestCounts.entries())
-      .map(([ip, data]) => ({
-        ip,
-        count: data.count,
-        suspicious: data.count > 100 // 1分間に100回以上は怪しい
-      }))
+      .map(([ip, data]) => {
+        // アクセスパスの上位3件を取得
+        const topPaths = Array.from(data.paths.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([path, count]) => ({ path, count }));
+        
+        // ボット判定（簡易的）
+        const isBot = data.userAgent ? 
+          /bot|crawler|spider|scraper|facebookexternalhit|whatsapp/i.test(data.userAgent) : false;
+        
+        return {
+          ip,
+          count: data.count,
+          suspicious: data.count > 100, // 1分間に100回以上は怪しい
+          userAgent: data.userAgent || 'Unknown',
+          isBot,
+          topPaths,
+          referer: data.referer || 'Direct',
+          firstSeen: data.firstRequest,
+          lastSeen: data.lastRequest
+        };
+      })
       .sort((a, b) => b.count - a.count)
       .slice(0, 10); // 上位10件
     
