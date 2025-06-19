@@ -260,7 +260,9 @@ export function ChatLayout({
       <div 
         className="flex-1 flex flex-col relative lg:ml-64 transition-all duration-1000 ease-in-out"
         style={{
-          backgroundImage: moodGradient.background,
+          backgroundImage: character.imageChatBackground 
+            ? `url(${getSafeImageUrl(character.imageChatBackground, character.name)})` 
+            : moodGradient.background,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
