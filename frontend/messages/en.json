@@ -539,7 +539,13 @@
     "rewardDesc": "Some badges come with special rewards. (To be implemented)",
     "tipsTitle": "Tips for Earning Badges",
     "tip1": "Continue chatting with characters daily to earn continuation-related badges",
-    "tip2": "Interact with multiple characters to earn a wider variety of badges"
+    "tip2": "Interact with multiple characters to earn a wider variety of badges",
+    "tip3": "Plan your intimacy growth to efficiently earn intimacy-related badges",
+    "tip4": "Use profile settings and service features to earn beginner badges",
+    "noticeTitle": "Notice",
+    "notice1": "Once earned, badges cannot be deleted",
+    "notice2": "Some badges may be available for a limited time",
+    "notice3": "Badge conditions and types may be added in future updates"
   },
   "notifications": {
     "title": "Notifications",
