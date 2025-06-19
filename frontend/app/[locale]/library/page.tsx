@@ -456,10 +456,36 @@ export default function CharacterLibraryPage() {
                         
                         <div className="p-4">
                           <h4 className="font-medium text-gray-900 mb-2">
-                            {image.title[locale as keyof typeof image.title] || t('modal.imageTitle')}
+                            {(() => {
+                              // デバッグ: タイトルデータを確認
+                              const titleData = image.title;
+                              console.log('Image title data:', { titleData, locale, localeTitle: titleData?.[locale as keyof typeof titleData] });
+                              
+                              // ロケール対応のタイトルを取得
+                              if (typeof titleData === 'object' && titleData !== null) {
+                                return titleData[locale as keyof typeof titleData] || titleData.ja || t('modal.imageTitle');
+                              }
+                              // titleDataが文字列の場合（旧データ）
+                              if (typeof titleData === 'string') {
+                                return titleData;
+                              }
+                              return t('modal.imageTitle');
+                            })()}
                           </h4>
                           <p className="text-sm text-gray-600 mb-3">
-                            {image.description[locale as keyof typeof image.description] || t('modal.imageDescription')}
+                            {(() => {
+                              const descData = image.description;
+                              
+                              // ロケール対応の説明を取得
+                              if (typeof descData === 'object' && descData !== null) {
+                                return descData[locale as keyof typeof descData] || descData.ja || t('modal.imageDescription');
+                              }
+                              // descDataが文字列の場合（旧データ）
+                              if (typeof descData === 'string') {
+                                return descData;
+                              }
+                              return t('modal.imageDescription');
+                            })()}
                           </p>
                           
                           {/* タグ */}
