@@ -50,7 +50,7 @@ import {
 import { APIErrorModel } from './models/APIError';
 import { ExchangeRateModel } from './models/ExchangeRate';
 import { calcTokensToGive, logTokenConfig } from './config/tokenConfig';
-const TokenService = require('../services/tokenService');
+const TokenService = require('./services/tokenService');
 import routeRegistry from './core/RouteRegistry';
 
 dotenv.config({ path: './.env' });
@@ -2144,7 +2144,9 @@ app.get('/api/user/purchase-history', authenticateToken, async (req: Request, re
         details: purchase.details,
         description: purchase.description,
         transactionId: purchase.transactionId,
-        stripeSessionId: purchase.stripeSessionId
+        stripeSessionId: purchase.stripeSessionId,
+        metadata: purchase.metadata,
+        createdAt: purchase.createdAt
       })),
       summary,
       totalSpent: summary.totalSpent,

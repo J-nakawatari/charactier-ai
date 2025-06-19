@@ -60,10 +60,62 @@ function PurchaseSuccessContent() {
             if (latestPurchase.stripeSessionId === sessionId || 
                 (new Date().getTime() - new Date(latestPurchase.createdAt).getTime() < 60000)) {
               
+              // キャラクター購入の場合は、キャラクター情報を取得
+              if (latestPurchase.type === 'character') {
+                // まずlocalStorageから情報を取得
+                const savedCharacterName = localStorage.getItem('purchasingCharacterName');
+                const savedCharacterId = localStorage.getItem('purchasingCharacterId');
+                
+                // metadata.characterIdまたはlocalStorageからcharacterIdを取得
+                const characterId = latestPurchase.metadata?.characterId || savedCharacterId;
+                
+                if (characterId) {
+                  try {
+                    const characterResponse = await fetch(`/api/characters/${characterId}`, {
+                      headers: getAuthHeaders()
+                    });
+                    
+                    if (characterResponse.ok) {
+                      const characterData = await characterResponse.json();
+                      setPurchaseData({
+                        type: 'character',
+                        characterId: characterId,
+                        characterName: characterData.name?.ja || characterData.name?.en || characterData.name || savedCharacterName || 'キャラクター',
+                        newBalance: userData.tokenBalance
+                      });
+                      setProcessing(false);
+                      // localStorageをクリーンアップ
+                      localStorage.removeItem('purchasingCharacterName');
+                      localStorage.removeItem('purchasingCharacterId');
+                      return;
+                    }
+                  } catch (error) {
+                    console.error('キャラクター情報の取得に失敗:', error);
+                  }
+                }
+                
+                // APIが失敗した場合のフォールバック
+                if (savedCharacterName) {
+                  setPurchaseData({
+                    type: 'character',
+                    characterId: characterId || '',
+                    characterName: savedCharacterName,
+                    newBalance: userData.tokenBalance
+                  });
+                  localStorage.removeItem('purchasingCharacterName');
+                  localStorage.removeItem('purchasingCharacterId');
+                  setProcessing(false);
+                  return;
+                }
+              }
+              
+              // トークン購入またはキャラクター情報取得失敗の場合
               setPurchaseData({
                 type: latestPurchase.type || 'token',
                 addedTokens: latestPurchase.amount || latestPurchase.tokensPurchased,
-                newBalance: userData.tokenBalance
+                newBalance: userData.tokenBalance,
+                characterId: latestPurchase.metadata?.characterId,
+                characterName: latestPurchase.details || undefined
               });
               setProcessing(false);
               return;
@@ -138,14 +190,14 @@ function PurchaseSuccessContent() {
             {purchaseData.type === 'character' ? (
               <>
                 <p className="text-gray-600 mb-6">
-                  キャラクター「{purchaseData.characterName}」の購入が完了しました。
+                  キャラクターの購入が完了しました。
                 </p>
                 
                 <div className="bg-purple-50 rounded-lg p-4 mb-6">
                   <div className="flex items-center justify-center space-x-2 mb-2">
                     <span className="text-2xl">🎭</span>
                     <span className="font-semibold text-purple-800">
-                      {purchaseData.characterName}
+                      新しいキャラクター
                     </span>
                   </div>
                   <div className="text-sm text-purple-700">
@@ -159,7 +211,7 @@ function PurchaseSuccessContent() {
                     className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    <span>{purchaseData.characterName}とチャットする</span>
+                    <span>キャラクターとチャットする</span>
                   </button>
                   
                   <button

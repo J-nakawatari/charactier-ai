@@ -88,6 +88,8 @@ export default function CharacterCard({
         const data = await response.json();
         console.log('✅ チェックアウトセッション作成成功:', data);
         if (data.url) {
+          // 購入中のキャラクター名をlocalStorageに保存
+          localStorage.setItem('purchasingCharacterName', getLocalizedText(character.name));
           // Stripeチェックアウトページにリダイレクト
           window.location.href = data.url;
         } else {
