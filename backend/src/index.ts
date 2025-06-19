@@ -924,28 +924,32 @@ routeRegistry.define('GET', '/api/debug/analytics', authenticateToken, async (re
 // ユーザープロフィール取得
 routeRegistry.define('GET', '/api/user/profile', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    console.log('🔍 /api/user/profile called');
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
+      console.log('❌ No userId found in request');
       res.status(401).json({ error: 'Unauthorized' });
       return;
     }
+    console.log('👤 Fetching profile for userId:', userId);
 
-    // ユーザー基本情報を取得
+    // ユーザー基本情報を取得（populateを削除して高速化）
     const user = await UserModel.findById(userId)
       .select('_id email name createdAt lastLogin affinities tokenBalance totalSpent selectedCharacter purchasedCharacters')
-      .populate('purchasedCharacters', '_id');
+      .lean();
 
     if (!user) {
       res.status(404).json({ error: 'User not found' });
       return;
     }
 
-    // purchasedCharactersからIDの配列を作成
-    const purchasedCharacterIds = user.purchasedCharacters?.map((char: any) => {
-      if (typeof char === 'string') return char;
-      return char._id?.toString() || char.id?.toString() || char;
-    }) || [];
+    // purchasedCharactersからIDの配列を作成（既にIDの配列のはず）
+    const purchasedCharacterIds = user.purchasedCharacters || [];
 
+    // トークン情報を計算
+    const totalPurchased = user.totalSpent || 0; // 仮の値
+    const totalUsed = totalPurchased - (user.tokenBalance || 0);
+    
     res.json({
       user: {
         _id: user._id,
@@ -958,11 +962,15 @@ routeRegistry.define('GET', '/api/user/profile', authenticateToken, async (req: 
         totalSpent: user.totalSpent || 0
       },
       tokenBalance: user.tokenBalance || 0,
+      totalPurchased: totalPurchased,
+      totalUsed: totalUsed,
       affinities: user.affinities || [],
+      recentChats: [], // TODO: 実装が必要な場合は後で追加
       purchasedCharacters: purchasedCharacterIds
     });
 
   } catch (error) {
+    console.error('❌ /api/user/profile error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error'
