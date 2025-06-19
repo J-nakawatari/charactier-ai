@@ -362,10 +362,19 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
   const sig = req.headers['stripe-signature'] as string;
   let event: Stripe.Event;
 
+  console.log('[Stripe Webhook] Received request');
+  console.log('[Stripe Webhook] Signature:', sig ? 'Present' : 'Missing');
+  console.log('[Stripe Webhook] Body type:', typeof req.body);
+  console.log('[Stripe Webhook] Body length:', req.body?.length || 0);
+
   try {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     
+    console.log('[Stripe Webhook] Webhook secret:', webhookSecret ? 'Set' : 'Not set');
+    console.log('[Stripe Webhook] Stripe instance:', stripe ? 'Initialized' : 'Not initialized');
+    
     if (!stripe || !webhookSecret) {
+      console.error('[Stripe Webhook] Configuration error');
       res.status(500).json({ error: 'Stripe not configured' });
       return;
     }
@@ -558,6 +567,9 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
     res.status(200).json({ received: true });
     
   } catch (error) {
+    console.error('[Stripe Webhook] Error:', error);
+    console.error('[Stripe Webhook] Error message:', (error as any).message);
+    console.error('[Stripe Webhook] Error type:', (error as any).type);
     res.status(400).json({ error: 'Webhook processing failed' });
   }
 });
