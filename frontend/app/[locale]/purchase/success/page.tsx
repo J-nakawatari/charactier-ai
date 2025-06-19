@@ -4,13 +4,6 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, ArrowLeft, Coins } from 'lucide-react';
 import { getAuthHeaders } from '@/utils/auth';
-import { IntlMessage } from '@/types/messages';
-import { LocaleText } from '@/types/locale';
-import { gtag } from '@/utils/gtag';
-
-const LocalizedText = ({ ja, en }: LocaleText) => {
-  return <>{ja}</>;
-};
 
 function PurchaseSuccessContent() {
   const searchParams = useSearchParams();
@@ -30,6 +23,7 @@ function PurchaseSuccessContent() {
     if (sessionId) {
       fetchPurchaseData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   const fetchPurchaseData = async () => {
