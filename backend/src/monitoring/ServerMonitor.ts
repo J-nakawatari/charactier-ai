@@ -175,7 +175,7 @@ export class ServerMonitor {
       this.addAlert({
         type: 'memory_warning',
         severity: memoryUsage.percentage > 90 ? 'critical' : 'warning',
-        message: `メモリ使用率が高い状態です: ${memoryUsage.percentage.toFixed(1)}%`,
+        message: `メモリ使用率が高い状態です: ${memoryUsage.percentage.toFixed(1)}% (${(memoryUsage.used / 1024).toFixed(2)}GB / ${(memoryUsage.total / 1024).toFixed(0)}GB)`,
         timestamp: now
       });
     }
@@ -202,14 +202,21 @@ export class ServerMonitor {
   
   private getMemoryUsage() {
     const used = process.memoryUsage();
-    const totalMB = Math.round(used.heapTotal / 1024 / 1024);
-    const usedMB = Math.round(used.heapUsed / 1024 / 1024);
-    const percentage = (usedMB / totalMB) * 100;
+    // RSS (Resident Set Size) = 実際に使用している物理メモリ
+    const rssGB = used.rss / 1024 / 1024 / 1024;
+    const heapUsedMB = Math.round(used.heapUsed / 1024 / 1024);
+    const heapTotalMB = Math.round(used.heapTotal / 1024 / 1024);
+    
+    // VPSの実際のメモリを取得（環境変数で設定可能）
+    const systemTotalGB = parseFloat(process.env.SYSTEM_MEMORY_GB || '4'); // デフォルト4GB
+    const percentage = (rssGB / systemTotalGB) * 100;
     
     return {
       percentage,
-      used: usedMB,
-      total: totalMB
+      used: Math.round(rssGB * 1024), // MB単位で返す
+      total: Math.round(systemTotalGB * 1024), // MB単位で返す
+      heapUsed: heapUsedMB,
+      heapTotal: heapTotalMB
     };
   }
   
