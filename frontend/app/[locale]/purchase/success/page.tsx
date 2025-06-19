@@ -32,11 +32,68 @@ function PurchaseSuccessContent() {
     try {
       console.log('🎉 決済成功ページ (SSE版): Session ID', sessionId);
       
+      // まず最新のユーザー情報を取得（購入前の状態を記録）
+      const initialUserResponse = await fetch('/api/auth/user', {
+        headers: getAuthHeaders()
+      });
+      if (!initialUserResponse.ok) {
+        throw new Error('ユーザー情報の取得に失敗しました');
+      }
+      const initialUserData = await initialUserResponse.json();
+      console.log('👤 購入完了後のユーザーデータ:', initialUserData.tokenBalance);
+      
+      // Stripeセッション情報が取得できない場合でも、既に購入は完了している
+      // 購入タイプを判定（現時点では主にトークン購入）
+      console.log('✅ 購入完了 - webhookで既にトークンが付与されています');
+      
+      // 購入履歴から最新の購入情報を取得する試み
+      try {
+        const historyResponse = await fetch('/api/user/token-history?limit=1', {
+          headers: getAuthHeaders()
+        });
+        
+        if (historyResponse.ok) {
+          const historyData = await historyResponse.json();
+          if (historyData.tokenPacks && historyData.tokenPacks.length > 0) {
+            const latestPurchase = historyData.tokenPacks[0];
+            console.log('📦 最新の購入履歴:', latestPurchase);
+            
+            // セッションIDが一致する場合、または最新の購入が1分以内の場合
+            const purchaseTime = new Date(latestPurchase.purchaseDate).getTime();
+            const currentTime = Date.now();
+            const timeDiff = currentTime - purchaseTime;
+            
+            if (latestPurchase.stripeSessionId === sessionId || timeDiff < 60000) {
+              setPurchaseData({
+                type: 'token',
+                addedTokens: latestPurchase.tokensPurchased,
+                newBalance: initialUserData.tokenBalance
+              });
+              setProcessing(false);
+              return;
+            }
+          }
+        }
+      } catch (error) {
+        console.log('購入履歴の取得に失敗:', error);
+      }
+      
+      // デフォルトとして現在の残高を表示（購入は成功しているが詳細が不明）
+      setPurchaseData({
+        type: 'token',
+        addedTokens: 0, // 詳細不明の場合は0を表示
+        newBalance: initialUserData.tokenBalance
+      });
+      setProcessing(false);
+      return;
+      
+      // セッション情報が取得できない場合のフォールバック
       let eventSource: EventSource | null = null;
       let fallbackTimeout: NodeJS.Timeout;
       
-      // SSEでリアルタイム通知を受信（本番環境対応）
-      eventSource = new EventSource(`${API_BASE_URL}/api/purchase/events/${sessionId}`);
+      // SSEでリアルタイム通知を受信（利用可能な場合）
+      try {
+        eventSource = new EventSource(`/api/purchase/events/${sessionId}`);
       
       eventSource.onmessage = (event) => {
         try {
