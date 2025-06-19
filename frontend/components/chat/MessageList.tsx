@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { MessageItem } from './MessageItem';
 import { Loader2, ChevronUp } from 'lucide-react';
 import { Message } from '@/types/common';
+import { useTranslations } from 'next-intl';
 
 // ChatLayout向けの文字列ベースCharacter型
 interface Character {
@@ -42,6 +43,7 @@ export function MessageList({
   showAdvanced = false,
   affinityLevel = 0
 }: MessageListProps) {
+  const t = useTranslations('chat');
   const [isNearTop, setIsNearTop] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -113,7 +115,7 @@ export function MessageList({
           <div className="flex justify-center py-4">
             <div className="flex items-center space-x-2 text-gray-500 text-sm bg-white/70 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>過去のメッセージを読み込み中...</span>
+              <span>{t('loadingPastMessages')}</span>
             </div>
           </div>
         )}
@@ -131,7 +133,7 @@ export function MessageList({
               />
             </div>
             <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              {character.name}との会話を始めよう
+              {t('startConversation', { characterName: character.name })}
             </h3>
             <p className="text-gray-600 text-sm">
               {character.description}
@@ -182,7 +184,7 @@ export function MessageList({
         <button
           onClick={scrollToTop}
           className="absolute top-4 right-4 z-30 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full p-2 shadow-lg hover:bg-white hover:shadow-xl transition-all duration-200"
-          aria-label="トップにスクロール"
+          aria-label={t('scrollToTop')}
         >
           <ChevronUp className="w-5 h-5 text-gray-600" />
         </button>

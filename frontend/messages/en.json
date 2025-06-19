@@ -169,7 +169,10 @@
     "retry": "Retry",
     "notFound": "Chat not found",
     "sendMessage": "Send message",
-    "placeholder": "Enter message..."
+    "placeholder": "Enter message...",
+    "startConversation": "Start a conversation with {characterName}",
+    "loadingPastMessages": "Loading past messages...",
+    "scrollToTop": "Scroll to top"
   },
   "homepage": {
     "title": "Charactier",

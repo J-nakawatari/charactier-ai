@@ -169,7 +169,10 @@
     "retry": "再試行",
     "notFound": "チャットが見つかりません",
     "sendMessage": "メッセージを送信",
-    "placeholder": "メッセージを入力..."
+    "placeholder": "メッセージを入力...",
+    "startConversation": "{characterName}との会話を始めよう",
+    "loadingPastMessages": "過去のメッセージを読み込み中...",
+    "scrollToTop": "トップにスクロール"
   },
   "homepage": {
     "title": "キャラクティア",
