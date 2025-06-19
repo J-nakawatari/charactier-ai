@@ -13,13 +13,17 @@ interface TokenBarProps {
 
 export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: TokenBarProps) {
   const t = useTranslations('tokens');
-  const [currentTokens, setCurrentTokens] = useState<number | null>(null);
+  const [currentTokens, setCurrentTokens] = useState<number | null>(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [errorCount, setErrorCount] = useState(0);
   const refreshTokenBalanceRef = useRef<() => Promise<void>>();
 
   // トークン残高の手動更新
   const refreshTokenBalance = useCallback(async () => {
     if (isRefreshing) return;
+    
+    // エラーが5回以上の場合はリトライを停止
+    if (errorCount >= 5) return;
     
     try {
       setIsRefreshing(true);
@@ -32,13 +36,17 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
         const newTokens = userData.tokenBalance || userData.user?.tokenBalance || 0;
         setCurrentTokens(newTokens);
         onTokenUpdate?.(newTokens);
+        setErrorCount(0); // 成功したらエラーカウントをリセット
+      } else {
+        setErrorCount(prev => prev + 1);
       }
     } catch (error) {
       console.error('Token balance refresh failed:', error);
+      setErrorCount(prev => prev + 1);
     } finally {
       setIsRefreshing(false);
     }
-  }, [onTokenUpdate, isRefreshing]);
+  }, [onTokenUpdate, isRefreshing, errorCount]);
 
   // ref＆最新の関数を保持
   refreshTokenBalanceRef.current = refreshTokenBalance;

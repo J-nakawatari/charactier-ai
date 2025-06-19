@@ -132,7 +132,7 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
                     <div className="flex items-center space-x-1">
                       <Star className="w-4 h-4 text-yellow-500" />
                       <span className="text-gray-600">
-                        {t('unlockedImages', { count: affinity.unlockedImages.length })}
+                        {t('unlockedImages', { count: affinity.unlockedImages?.length || 0 })}
                       </span>
                     </div>
                   </div>
