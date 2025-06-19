@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { getRedisClient } from '../../lib/redis';
 
 interface RequestCount {
   count: number;
@@ -38,15 +39,15 @@ export class ServerMonitor {
   
   private constructor() {
     this.startTime = Date.now();
-    this.restartCount = this.loadRestartCount();
+    this.restartCount = 0;
     this.requestCounts = new Map();
     this.errorStats = { total: 0, errors5xx: 0, errors4xx: 0 };
     this.performanceStats = { totalRequests: 0, totalResponseTime: 0, slowRequests: 0 };
     this.alerts = [];
-    this.restartHistory = this.loadRestartHistory();
+    this.restartHistory = [];
     
-    // 再起動をカウント
-    this.incrementRestartCount();
+    // 非同期で初期化
+    this.initialize();
     
     // 1分ごとに異常をチェック
     setInterval(() => {
@@ -60,6 +61,15 @@ export class ServerMonitor {
     }, 300000);
   }
   
+  private async initialize() {
+    // Redisから再起動履歴を読み込み
+    await this.loadRestartHistory();
+    this.restartCount = this.restartHistory.length;
+    
+    // 再起動を記録
+    await this.incrementRestartCount();
+  }
+  
   static getInstance(): ServerMonitor {
     if (!ServerMonitor.instance) {
       ServerMonitor.instance = new ServerMonitor();
@@ -67,32 +77,61 @@ export class ServerMonitor {
     return ServerMonitor.instance;
   }
   
-  private loadRestartCount(): number {
-    // 実際の実装では、ファイルやRedisから読み込む
-    return 0;
+  private async loadRestartHistory(): Promise<void> {
+    try {
+      const redis = await getRedisClient();
+      const historyJson = await redis.get('server:restart:history');
+      
+      if (historyJson) {
+        const history = JSON.parse(historyJson);
+        this.restartHistory = history.map((item: any) => ({
+          timestamp: new Date(item.timestamp),
+          reason: item.reason
+        }));
+        
+        // 24時間以内のデータのみ保持
+        const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        this.restartHistory = this.restartHistory.filter(r => r.timestamp > dayAgo);
+      }
+    } catch (error) {
+      console.error('Failed to load restart history from Redis:', error);
+    }
   }
   
-  private saveRestartCount(): void {
-    // 実際の実装では、ファイルやRedisに保存
+  private async saveRestartHistory(): Promise<void> {
+    try {
+      const redis = await getRedisClient();
+      await redis.set(
+        'server:restart:history',
+        JSON.stringify(this.restartHistory),
+        'EX',
+        86400 * 7 // 7日間保持
+      );
+    } catch (error) {
+      console.error('Failed to save restart history to Redis:', error);
+    }
   }
   
-  private loadRestartHistory(): { timestamp: Date; reason: string }[] {
-    // 実際の実装では、永続化されたデータから読み込む
-    return [];
-  }
-  
-  private incrementRestartCount(): void {
-    this.restartCount++;
-    this.saveRestartCount();
-    
-    this.restartHistory.push({
+  private async incrementRestartCount(): Promise<void> {
+    // 新しい再起動を記録
+    const restart = {
       timestamp: new Date(),
       reason: 'Server restart detected'
-    });
+    };
+    
+    this.restartHistory.push(restart);
     
     // 最近24時間のデータのみ保持
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     this.restartHistory = this.restartHistory.filter(r => r.timestamp > dayAgo);
+    
+    // カウントを更新
+    this.restartCount = this.restartHistory.length;
+    
+    // Redisに保存
+    await this.saveRestartHistory();
+    
+    console.log(`🔄 Server restart recorded. Total restarts in last 24h: ${this.restartCount}`);
   }
   
   recordRequest(req: Request, responseTime: number, statusCode: number): void {
