@@ -44,10 +44,10 @@ export function MessageItem({ message, character, showAdvanced = false, affinity
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
           </div>
           <div className="flex items-center space-x-2 mt-1">
-            {message.tokensUsed && message.tokensUsed > 0 && (
+            {message.tokens && message.tokens > 0 && (
               <div className="flex items-center space-x-1 text-xs text-gray-500">
                 <Coins className="w-3 h-3" />
-                <span>{message.tokensUsed}</span>
+                <span>{message.tokens}</span>
               </div>
             )}
             <span className="text-xs text-gray-500">{timeAgo}</span>
@@ -88,10 +88,10 @@ export function MessageItem({ message, character, showAdvanced = false, affinity
         {/* トークン消費情報と高度情報 - モバイルでも表示 */}
         <div className="flex items-center justify-between mt-1 text-xs text-gray-500">
           <div className="flex items-center space-x-3">
-            {message.tokensUsed && message.tokensUsed > 0 && (
+            {message.tokens && (
               <div className="flex items-center space-x-1">
                 <Coins className="w-3 h-3" />
-                <span>消費: {message.tokensUsed}枚</span>
+                <span>消費: {message.tokens}枚</span>
               </div>
             )}
             
