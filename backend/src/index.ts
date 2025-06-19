@@ -50,7 +50,7 @@ import {
 import { APIErrorModel } from './models/APIError';
 import { ExchangeRateModel } from './models/ExchangeRate';
 import { calcTokensToGive, logTokenConfig } from './config/tokenConfig';
-const TokenService = require('./services/tokenService');
+const TokenService = require('../services/tokenService');
 import routeRegistry from './core/RouteRegistry';
 
 dotenv.config({ path: './.env' });
