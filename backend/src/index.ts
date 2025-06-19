@@ -5384,8 +5384,10 @@ app.get('/api/admin/dashboard/stats', authenticateToken, async (req: AuthRequest
       UserModel.countDocuments({ lastLoginAt: { $gte: sevenDaysAgo } }),
       CharacterModel.countDocuments(),
       CharacterModel.countDocuments({ isActive: true }),
-      TokenUsage.aggregate([
-        { $group: { _id: null, total: { $sum: '$tokensUsed' } } }
+      ChatModel.aggregate([
+        { $unwind: '$messages' },
+        { $match: { 'messages.type': 'character' } },
+        { $group: { _id: null, total: { $sum: '$messages.metadata.tokensUsed' } } }
       ]),
       APIErrorModel.countDocuments({ createdAt: { $gte: twentyFourHoursAgo } })
     ]);
@@ -5401,9 +5403,11 @@ app.get('/api/admin/dashboard/stats', authenticateToken, async (req: AuthRequest
       UserModel.countDocuments({ 
         lastLoginAt: { $gte: new Date(thirtyDaysAgo.getTime() - 7 * 24 * 60 * 60 * 1000), $lt: thirtyDaysAgo }
       }),
-      TokenUsage.aggregate([
+      ChatModel.aggregate([
         { $match: { createdAt: { $lt: thirtyDaysAgo } } },
-        { $group: { _id: null, total: { $sum: '$tokensUsed' } } }
+        { $unwind: '$messages' },
+        { $match: { 'messages.type': 'character' } },
+        { $group: { _id: null, total: { $sum: '$messages.metadata.tokensUsed' } } }
       ]),
       APIErrorModel.countDocuments({ 
         createdAt: { 
