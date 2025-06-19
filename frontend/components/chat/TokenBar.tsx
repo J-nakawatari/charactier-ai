@@ -98,26 +98,10 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
     };
   }, []); // 依存関係を空にして無限ループを防止, 関数はrefで参照
   
-  // ローディング中の処理
-  if (currentTokens === null) {
-    return (
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
-          <Coins className="w-4 h-4 text-gray-400 animate-pulse" />
-          <div className="text-sm text-gray-500">{t('loading')}</div>
-        </div>
-      </div>
-    );
-  }
+  const isLowBalance = currentTokens !== null && currentTokens < 500;
+  const isCriticalBalance = currentTokens !== null && currentTokens < 200;
+  const isZeroBalance = currentTokens !== null && currentTokens === 0;
   
-  const isLowBalance = currentTokens < 500;
-  const isCriticalBalance = currentTokens < 200;
-  const isZeroBalance = currentTokens === 0;
-  
-  // 最後のメッセージコストが0の場合は平均的なコスト(100トークン)を使用
-  const estimatedMessageCost = lastMessageCost > 0 ? lastMessageCost : 100;
-  const remainingMessages = Math.floor(currentTokens / estimatedMessageCost);
-
   // トークンが0の場合、自動的に購入を促す
   useEffect(() => {
     if (isZeroBalance && !isRefreshing) {
@@ -132,6 +116,22 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
       return () => clearTimeout(timer);
     }
   }, [isZeroBalance, isRefreshing]);
+  
+  // ローディング中の処理
+  if (currentTokens === null) {
+    return (
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+          <Coins className="w-4 h-4 text-gray-400 animate-pulse" />
+          <div className="text-sm text-gray-500">{t('loading')}</div>
+        </div>
+      </div>
+    );
+  }
+  
+  // 最後のメッセージコストが0の場合は平均的なコスト(100トークン)を使用
+  const estimatedMessageCost = lastMessageCost > 0 ? lastMessageCost : 100;
+  const remainingMessages = Math.floor(currentTokens / estimatedMessageCost);
 
   return (
     <div className="flex items-center space-x-4">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import CharacterStats from '@/components/admin/CharacterStats';
 import CharacterManagementTable from '@/components/admin/CharacterManagementTable';
 import { useToast } from '@/contexts/ToastContext';
@@ -48,6 +48,7 @@ export default function CharactersPage() {
         clearInterval(intervalRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchCharacters = async () => {
@@ -78,7 +79,7 @@ export default function CharactersPage() {
   };
 
   // 全キャラクターの統計を更新
-  const updateAllCharacterStats = async () => {
+  const updateAllCharacterStats = useCallback(async () => {
     try {
       setUpdatingStats(true);
       const token = localStorage.getItem('adminAccessToken');
@@ -108,7 +109,7 @@ export default function CharactersPage() {
     } finally {
       setUpdatingStats(false);
     }
-  };
+  }, [success, warning]);
 
   return (
     <div className="flex-1 flex flex-col">
