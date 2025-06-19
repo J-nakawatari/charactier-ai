@@ -124,7 +124,7 @@ export default function AnalyticsCharts({ analytics, locale }: AnalyticsChartsPr
             <div className="flex items-center justify-between mb-4">
               <h4 className="font-medium text-gray-900">{t('charts.dailyChats')}</h4>
               <div className="text-sm text-gray-600">
-{t('summary.averageDaily')}: {averageChatsPerDay} {t('chats.perDay')}
+{t('summary.averageDaily')}: {averageChatsPerDay} {t('analytics.chats.perDay')}
               </div>
             </div>
             <SimpleBarChart
