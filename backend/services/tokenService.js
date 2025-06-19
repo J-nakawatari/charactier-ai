@@ -4,8 +4,8 @@ const TokenUsage = require('../models/TokenUsage');
 const { calcTokensToGive, validateModel, logTokenConfig } = require('../dist/src/config/tokenConfig');
 
 /**
- * トークンサービス（利益率90%）
- * 90%利益保証を確実に実現するシンプルなトークン管理システム
+ * トークンサービス（利益率94%）
+ * 94%利益保証を確実に実現するシンプルなトークン管理システム
  */
 class TokenService {
   
@@ -26,7 +26,7 @@ class TokenService {
     console.log(`💰 購入金額: ${purchaseAmountYen}円`);
     console.log(`🤖 使用モデル: ${model}`);
     console.log(`🎁 付与トークン数: ${tokensToGive}トークン`);
-    console.log(`📊 利益率: 90%保証`);
+    console.log(`📊 利益率: 94%保証`);
     
     return tokensToGive;
   }

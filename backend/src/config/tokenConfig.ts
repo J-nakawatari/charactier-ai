@@ -1,5 +1,5 @@
 /**
- * トークン計算設定の一元管理（利益率90%）
+ * トークン計算設定の一元管理（利益率94%）
  * 
  * ⚠️ 重要: この設定値の変更は収益に直接影響します
  * 変更前に必ず以下を確認してください:
@@ -15,15 +15,15 @@ interface ModelUnitCostUSD {
 
 export const MODEL_UNIT_COST_USD: Record<string, ModelUnitCostUSD> = {
   'gpt-3.5-turbo': { input: 0.0000005, output: 0.0000015 },  // $0.5/$1.5 per 1M
-  'gpt-4o-mini': { input: 0.00000015, output: 0.0000006 },   // $0.15/$0.6 per 1M (正しい価格)
-  'o4-mini': { input: 0.00000015, output: 0.0000006 },       // 互換性のため一時的に保持
+  'gpt-4o-mini': { input: 0.00000015, output: 0.0000006 },   // $0.15/$0.6 per 1M
+  'o4-mini': { input: 0.0000011, output: 0.0000044 },        // $1.1/$4.4 per 1M (新価格)
   'gpt-4': { input: 0.00003, output: 0.00006 },              // $30/$60 per 1M
   'gpt-4-turbo': { input: 0.00001, output: 0.00003 }         // $10/$30 per 1M
 };
 
 export const USD_JPY_RATE = 150;                             // フォールバック固定レート（動的取得失敗時）
-export const PROFIT_MARGIN = 0.90;                           // 利益率90%
-export const COST_RATIO = 1 - PROFIT_MARGIN;                 // 原価率10%
+export const PROFIT_MARGIN = 0.94;                           // 利益率94%
+export const COST_RATIO = 1 - PROFIT_MARGIN;                 // 原価率6%
 
 /**
  * 平均原価計算（入力:出力 = 1:2の比率）

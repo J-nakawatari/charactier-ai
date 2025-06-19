@@ -38,7 +38,7 @@ YOU MUST:
 
 * YOU MUST cache character system prompts after first use (performance optimization)
 * YOU MUST support intimacy level unlocking images at every 10 levels
-* YOU MUST maintain a 50% profit margin in token reward design
+* YOU MUST maintain a 94% profit margin in token reward design
 * YOU MUST include comments in complex prompt-related logic
 * YOU MUST check for existing server processes before starting new ones
 * YOU MUST ask permission before modifying any configuration files
