@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, ArrowLeft, Coins } from 'lucide-react';
-import { API_BASE_URL, getAuthHeaders } from '@/utils/api';
+import { getAuthHeaders } from '@/utils/auth';
 import { IntlMessage } from '@/types/messages';
 import { LocaleText } from '@/types/locale';
 import { gtag } from '@/utils/gtag';
