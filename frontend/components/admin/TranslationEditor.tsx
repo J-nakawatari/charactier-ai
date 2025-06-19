@@ -6,8 +6,6 @@ import { Languages, Plus, X } from 'lucide-react';
 interface TranslationData {
   name: { ja: string; en: string };
   description: { ja: string; en: string };
-  personalityPreset: { ja: string; en: string };
-  personalityTags: { ja: string[]; en: string[] };
   adminPrompt: { ja: string; en: string };
   defaultMessage: { ja: string; en: string };
   limitMessage: { ja: string; en: string };
@@ -20,7 +18,6 @@ interface TranslationEditorProps {
 
 export default function TranslationEditor({ data, onChange }: TranslationEditorProps) {
   const [activeLanguage, setActiveLanguage] = useState<'ja' | 'en'>('ja');
-  const [newTag, setNewTag] = useState('');
 
   const languages = [
     { code: 'ja', label: '日本語', flag: '🇯🇵' },
@@ -36,18 +33,6 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
       }
     });
   };
-
-  const addTag = () => {
-    if (newTag.trim()) {
-      const currentTags = data.personalityTags?.[activeLanguage] || [];
-      updateField('personalityTags', activeLanguage, [...currentTags, newTag.trim()]);
-      setNewTag('');
-    }
-  };
-
-  const removeTag = (index: number) => {
-    const currentTags = data.personalityTags?.[activeLanguage] || [];
-    updateField('personalityTags', activeLanguage, currentTags.filter((_, i) => i !== index));
   };
 
   return (
@@ -107,74 +92,6 @@ export default function TranslationEditor({ data, onChange }: TranslationEditorP
                 : 'Enter character description'
             }
           />
-        </div>
-
-        {/* 性格プリセット */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            性格プリセット ({activeLanguage === 'ja' ? '日本語' : '英語'})
-          </label>
-          <textarea
-            value={data.personalityPreset?.[activeLanguage] || ''}
-            onChange={(e) => updateField('personalityPreset', activeLanguage, e.target.value)}
-            rows={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors resize-none text-gray-900"
-            placeholder={
-              activeLanguage === 'ja'
-                ? 'キャラクターの性格設定を入力してください（システムプロンプト用）'
-                : 'Enter character personality settings (for system prompt)'
-            }
-          />
-        </div>
-
-        {/* 性格タグ */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            性格タグ ({activeLanguage === 'ja' ? '日本語' : '英語'})
-          </label>
-          
-          {/* 既存タグ表示 */}
-          <div className="flex flex-wrap gap-2 mb-3">
-            {(data.personalityTags?.[activeLanguage] || []).map((tag, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full"
-              >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => removeTag(index)}
-                  className="ml-2 text-purple-600 hover:text-purple-800"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-
-          {/* タグ追加フォーム */}
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && addTag()}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
-              placeholder={
-                activeLanguage === 'ja'
-                  ? '例: 優しい、活発、知的'
-                  : '例: Kind, Active, Intelligent'
-              }
-            />
-            <button
-              type="button"
-              onClick={addTag}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span>追加</span>
-            </button>
-          </div>
         </div>
 
         {/* 管理者プロンプト */}

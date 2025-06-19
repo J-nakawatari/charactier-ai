@@ -12,7 +12,7 @@ import { PriceDisplay } from '../common/PriceDisplay';
 import { BaseCharacter } from '../../types/common';
 import { API_BASE_URL } from '@/lib/api-config';
 import { getSafeImageUrl } from '@/utils/imageUtils';
-import { translatePersonalityTag, translatePersonalityPreset } from '@/utils/personalityTranslator';
+import { getPersonalityPresetLabel, getPersonalityTagLabel } from '@/lib/characterConstants';
 
 interface Character extends BaseCharacter {
   affinityStats?: {
@@ -275,7 +275,7 @@ export default function CharacterCard({
           {character.personalityPreset && (
             <div className="mt-1">
               <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${getPersonalityColor(character.personalityPreset)}`}>
-                {translatePersonalityPreset(character.personalityPreset, locale)}
+                {getPersonalityPresetLabel(character.personalityPreset as any, locale as 'ja' | 'en')}
               </span>
             </div>
           )}
@@ -294,7 +294,7 @@ export default function CharacterCard({
                 key={index}
                 className="inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded"
               >
-                {translatePersonalityTag(tag, locale)}
+                {getPersonalityTagLabel(tag, locale as 'ja' | 'en')}
               </span>
             ))}
             {character.personalityTags.length > 3 && (
@@ -307,7 +307,7 @@ export default function CharacterCard({
                   <div className="flex flex-wrap gap-1 justify-center">
                     {character.personalityTags.map((tag, index) => (
                       <span key={index} className="bg-gray-700 px-1.5 py-0.5 rounded text-xs whitespace-nowrap">
-                        {translatePersonalityTag(tag, locale)}
+                        {getPersonalityTagLabel(tag, locale as 'ja' | 'en')}
                       </span>
                     ))}
                   </div>
