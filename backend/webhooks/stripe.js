@@ -249,11 +249,16 @@ async function handleCheckoutSessionCompleted(event) {
       // トークン購入処理（従来の処理）
       console.log('🎁 トークン付与処理...');
       
-      // 🎯 自動計算でトークン付与（50%利益保証）
+      // 現在の使用モデルを取得（環境変数 or デフォルト）
+      const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+      console.log(`🤖 Webhook使用モデル: ${currentModel}`);
+      
+      // 🎯 自動計算でトークン付与（90%利益保証）
       const grantResult = await TokenService.grantTokens(
         userId,
         sessionId,
-        purchaseAmountYen
+        purchaseAmountYen,
+        currentModel
       );
     
       if (grantResult.success) {
