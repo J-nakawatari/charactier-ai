@@ -367,7 +367,9 @@ export function ChatLayout({
                 maxWidth: '90%',
                 maxHeight: '90%',
                 width: 'auto',
-                height: 'auto'
+                height: 'auto',
+                bottom: 0,
+                position: 'absolute'
               }}
               priority
               onError={(e) => {
