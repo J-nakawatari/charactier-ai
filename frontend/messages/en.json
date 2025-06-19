@@ -262,6 +262,22 @@
     }
   },
   "analytics": {
+    "title": "Analytics",
+    "period": {
+      "past7Days": "Past 7 Days"
+    },
+    "charts": {
+      "chatCount": "Chat Count",
+      "tokenUsage": "Token Usage",
+      "characterInteraction": "Affinity",
+      "dailyChats": "Daily Chats"
+    },
+    "summary": {
+      "averageDaily": "Daily Average",
+      "totalChats": "Total Chats",
+      "totalTokens": "Total Tokens Used",
+      "totalCharacters": "Characters Raised"
+    },
     "tokens": {
       "title": "Token Analytics",
       "subtitle": "Analyze token usage patterns and efficiency",

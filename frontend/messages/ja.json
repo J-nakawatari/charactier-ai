@@ -262,6 +262,22 @@
     }
   },
   "analytics": {
+    "title": "分析",
+    "period": {
+      "past7Days": "過去7日間"
+    },
+    "charts": {
+      "chatCount": "チャット数",
+      "tokenUsage": "トークン使用",
+      "characterInteraction": "親密度",
+      "dailyChats": "日別チャット数"
+    },
+    "summary": {
+      "averageDaily": "日平均",
+      "totalChats": "総チャット数",
+      "totalTokens": "総トークン使用量",
+      "totalCharacters": "育成キャラ数"
+    },
     "tokens": {
       "title": "トークン分析",
       "subtitle": "トークンの使用パターンと効率性を分析",
