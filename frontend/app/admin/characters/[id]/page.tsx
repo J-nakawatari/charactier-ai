@@ -167,8 +167,6 @@ export default function CharacterDetail() {
     }
   };
 
-  
-  // 段階的にコンテンツを追加してエラー箇所を特定 - ヘッダー部分を追加
   return (
     <div className="flex-1 flex flex-col">
       {/* ヘッダー */}
@@ -351,7 +349,6 @@ export default function CharacterDetail() {
                   <p className="text-2xl font-bold text-orange-700">{character.totalUsers?.toLocaleString() || '0'}</p>
                 </div>
               </div>
-            </div>
             </div>
           </div>
 
