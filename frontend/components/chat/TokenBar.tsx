@@ -134,9 +134,9 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
   }
 
   return (
-    <div className="flex items-center space-x-4">
+    <div className="flex items-center space-x-2 sm:space-x-4">
       {/* トークン残量表示 */}
-      <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${
+      <div className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 sm:py-2 rounded-lg ${
         isZeroBalance
           ? 'bg-red-100 border border-red-300 animate-pulse'
           : isCriticalBalance 
@@ -145,7 +145,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
               ? 'bg-yellow-50 border border-yellow-200'
               : 'bg-white border border-gray-200'
       }`}>
-        <Coins className={`w-4 h-4 ${
+        <Coins className={`w-3 sm:w-4 h-3 sm:h-4 ${
           isZeroBalance
             ? 'text-red-600 animate-pulse'
             : isCriticalBalance 
@@ -156,7 +156,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
         }`} />
         
         <div className="text-right relative">
-          <div className={`text-sm font-semibold ${
+          <div className={`text-xs sm:text-sm font-semibold ${
             isCriticalBalance 
               ? 'text-red-700' 
               : isLowBalance 
@@ -174,8 +174,8 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
           </div>
         </div>
         
-        {/* 情報アイコンとツールチップ */}
-        <div className="relative">
+        {/* 情報アイコンとツールチップ - デスクトップのみ表示 */}
+        <div className="relative hidden sm:block">
           <button
             className="p-1 hover:bg-gray-100 rounded-full transition-colors"
             onMouseEnter={() => setShowTooltip(true)}
@@ -208,9 +208,9 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
         </div>
       </div>
 
-      {/* 警告アイコン（残量少ない時） */}
+      {/* 警告アイコン（残量少ない時） - デスクトップのみ表示 */}
       {isLowBalance && (
-        <div className="flex items-center">
+        <div className="hidden sm:flex items-center">
           <AlertTriangle className={`w-5 h-5 ${
             isCriticalBalance ? 'text-red-500 animate-pulse' : 'text-yellow-500'
           }`} />
@@ -219,7 +219,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
 
       {/* チャージボタン */}
       <button 
-        className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+        className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
           isCriticalBalance
             ? 'bg-red-600 text-white hover:bg-red-700'
             : isLowBalance
@@ -230,9 +230,8 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
           onPurchaseClick?.();
         }}
       >
-        <Plus className="w-4 h-4" />
-        <span className="sm:hidden text-xs">{t('purchase')}</span>
-        <span className="hidden sm:inline">{t('purchase')}</span>
+        <Plus className="w-3 sm:w-4 h-3 sm:h-4" />
+        <span className="text-xs sm:text-sm">{t('purchase')}</span>
       </button>
 
     </div>

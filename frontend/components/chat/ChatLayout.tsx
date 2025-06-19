@@ -313,10 +313,10 @@ export function ChatLayout({
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* 🎯 高度機能表示切り替え */}
+            {/* 🎯 高度機能表示切り替え - デスクトップのみ表示 */}
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`hidden sm:block p-2 rounded-lg transition-colors ${
                 showAdvanced 
                   ? 'bg-purple-100 text-purple-600 hover:bg-purple-200' 
                   : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
