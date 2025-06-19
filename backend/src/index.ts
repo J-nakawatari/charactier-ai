@@ -2297,12 +2297,12 @@ app.get('/api/admin/stripe/price/:priceId', authenticateToken, async (req: Reque
         converted_amount: priceInMainUnit
       });
       
-      // 新トークン計算システムに基づくトークン数計算（利益率90%）
+      // 新トークン計算システムに基づくトークン数計算（利益率94%）
       const currentModel = 'o4-mini'; // 明示的にo4-miniを指定（正しいモデル）
       const calculatedTokens = await calcTokensToGive(priceInMainUnit, currentModel);
       
-      // 実際の利益率は90%固定
-      const profitMargin = 90;
+      // 実際の利益率は94%固定
+      const profitMargin = 94;
       const tokenPerYen = await calcTokensToGive(1, currentModel); // 1円あたりのトークン数
       
       // デバッグログ追加

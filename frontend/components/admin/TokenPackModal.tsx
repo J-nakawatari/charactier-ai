@@ -383,7 +383,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
                 <AlertCircle className="w-5 h-5 mt-0.5 text-green-600" />
                 <div className="flex-1">
                   <h4 className="font-medium text-green-800">
-                    90%利益ルール適合済み
+                    94%利益ルール適合済み
                   </h4>
                   <div className="mt-2 text-sm space-y-1">
                     <p className="text-green-700">
