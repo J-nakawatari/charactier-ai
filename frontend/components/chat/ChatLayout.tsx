@@ -281,7 +281,16 @@ export function ChatLayout({
       
       {/* ヘッダー */}
       <header className="relative z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200/50 p-3 sm:p-4">
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between max-w-4xl mx-auto">
+          {/* モバイル: TokenBarを上に配置、デスクトップ: 左側にキャラクター情報 */}
+          <div className="sm:hidden mb-2">
+            <TokenBar 
+              lastMessageCost={tokenStatus.lastMessageCost}
+              onPurchaseClick={() => setShowPurchaseModal(true)}
+              onTokenUpdate={(newTokens) => setCurrentTokens(newTokens)}
+            />
+          </div>
+          
           <div className="flex items-center space-x-2 sm:space-x-3">
             <div className="hidden sm:block w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
               <Image 
@@ -312,11 +321,12 @@ export function ChatLayout({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            {/* 🎯 高度機能表示切り替え - デスクトップのみ表示 */}
+          {/* デスクトップ: 右側にTokenBarと高度機能ボタン */}
+          <div className="hidden sm:flex items-center space-x-2">
+            {/* 🎯 高度機能表示切り替え */}
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className={`hidden sm:block p-2 rounded-lg transition-colors ${
+              className={`p-2 rounded-lg transition-colors ${
                 showAdvanced 
                   ? 'bg-purple-100 text-purple-600 hover:bg-purple-200' 
                   : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
