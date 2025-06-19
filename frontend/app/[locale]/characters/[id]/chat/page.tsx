@@ -245,6 +245,8 @@ export default function ChatPage() {
             detail: { reason: 'insufficient_tokens' }
           });
           window.dispatchEvent(tokenPurchaseEvent);
+          // トークン不足の場合はトーストを表示しない
+          return;
         }
         
         throw apiError;
@@ -316,6 +318,10 @@ export default function ChatPage() {
       if (typeof error === 'object' && error !== null && 'code' in error) {
         const apiError = error as any;
         
+        // トークン不足エラーは既にモーダル表示されるのでスキップ
+        if (apiError.code === 'INSUFFICIENT_TOKENS') {
+          return;
+        }
         
         // 禁止用語エラーの場合は制裁情報を含む専用メッセージを表示
         if (apiError.code === 'CONTENT_VIOLATION') {
