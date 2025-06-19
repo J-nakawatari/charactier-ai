@@ -105,7 +105,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
     };
 
     fetchUserData();
-  }, [pathname]); // pathnameの変更を監視
+  }, []); // 初回のみ実行、パス変更での再取得は不要
 
   // ログアウト処理
   const handleLogout = () => {
