@@ -67,17 +67,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
   
   // ページのフォーカス時に自動更新
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && refreshTokenBalanceRef.current) {
-        refreshTokenBalanceRef.current();
-      }
-    };
-    
-    const handleFocus = () => {
-      if (refreshTokenBalanceRef.current) {
-        refreshTokenBalanceRef.current();
-      }
-    };
+    // 購入完了イベントがあるため、フォーカスイベントは不要
     
     const intervalHandler = () => {
       if (refreshTokenBalanceRef.current) {
@@ -85,15 +75,13 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
       }
     };
     
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
+    // フォーカス/表示イベントを削除（過剰なAPI呼び出しを防ぐ）
     
-    // 定期的な更新（60秒間隔、エラー時は自動的にスキップされる）
-    const interval = setInterval(intervalHandler, 60000);
+    // 定期的な更新（180秒間隔に延長してサーバー負荷を軽減）
+    const interval = setInterval(intervalHandler, 180000);
     
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
+      // イベントリスナーを削除
       clearInterval(interval);
     };
   }, []); // 依存関係を空にして無限ループを防止, 関数はrefで参照

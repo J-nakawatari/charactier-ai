@@ -161,18 +161,8 @@ function CharactersPageContent({
     };
   }, [fetchCharacters, fetchUserData]);
 
-  // ページフォーカス時の再取得（購入完了後に戻ってきた場合）
-  useEffect(() => {
-    const handleFocus = () => {
-      fetchUserData();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [fetchUserData]);
+  // フォーカスイベントでの更新を削除
+  // 購入完了は characterPurchaseCompleted イベントで既に処理されている
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
