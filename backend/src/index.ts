@@ -2434,6 +2434,70 @@ app.post('/api/purchase/create-character-checkout-session', authenticateToken, a
   }
 });
 
+// SSE - 購入完了リアルタイム通知
+app.get('/api/purchase/events/:sessionId', async (req: Request, res: Response): Promise<void> => {
+  const { sessionId } = req.params;
+  
+  console.log('🌊 SSE購入イベント接続:', sessionId);
+  
+  // SSEヘッダーを設定
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  
+  // 初期接続確認
+  res.write(`data: ${JSON.stringify({ connected: true })}\n\n`);
+  
+  // Redisまたはメモリストアから購入データを取得
+  const checkPurchaseData = async () => {
+    try {
+      const redis = await getRedisClient();
+      const purchaseData = await redis.get(`purchase:${sessionId}`);
+      
+      if (purchaseData) {
+        console.log('✅ SSE: 購入データ送信:', sessionId);
+        res.write(`data: ${purchaseData}\n\n`);
+        res.end();
+        return true;
+      }
+    } catch (error) {
+      console.log('SSE: Redisエラー、メモリストアを確認');
+    }
+    return false;
+  };
+  
+  // 即座にチェック
+  if (await checkPurchaseData()) {
+    return;
+  }
+  
+  // ポーリング（最大30秒）
+  let attempts = 0;
+  const maxAttempts = 30;
+  const interval = setInterval(async () => {
+    attempts++;
+    
+    if (await checkPurchaseData()) {
+      clearInterval(interval);
+      return;
+    }
+    
+    if (attempts >= maxAttempts) {
+      console.log('⏰ SSE: タイムアウト:', sessionId);
+      res.write(`data: ${JSON.stringify({ error: 'timeout' })}\n\n`);
+      res.end();
+      clearInterval(interval);
+    }
+  }, 1000);
+  
+  // クライアント切断時のクリーンアップ
+  req.on('close', () => {
+    console.log('🔌 SSE: クライアント切断:', sessionId);
+    clearInterval(interval);
+  });
+});
+
 // Stripe価格情報取得API（商品IDまたは価格IDに対応・管理者専用）
 app.get('/api/admin/stripe/product-price/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   
