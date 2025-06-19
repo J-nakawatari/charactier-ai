@@ -83,7 +83,7 @@ export default function ServerHealthWidget() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
           <div className="space-y-3">
@@ -97,7 +97,7 @@ export default function ServerHealthWidget() {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
         <div className="text-red-600">
           <AlertCircle className="w-6 h-6 mb-2" />
           <p>サーバー状態の取得に失敗しました</p>
@@ -109,8 +109,8 @@ export default function ServerHealthWidget() {
   return (
     <div className={`rounded-lg shadow p-6 border ${getStatusColor()}`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Server className="w-5 h-5" />
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Server className="w-5 h-5 text-gray-700" />
           サーバー状態
         </h3>
         {getStatusIcon()}
@@ -119,35 +119,35 @@ export default function ServerHealthWidget() {
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">稼働時間</span>
-          <span className="text-sm font-medium">{health ? formatUptime(health.uptime) : '-'}</span>
+          <span className="text-sm font-medium text-gray-900">{health ? formatUptime(health.uptime) : '-'}</span>
         </div>
 
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">再起動回数</span>
-          <span className={`text-sm font-medium ${health && health.restartCount > 5 ? 'text-red-600' : ''}`}>
+          <span className={`text-sm font-medium ${health && health.restartCount > 5 ? 'text-red-600' : 'text-gray-900'}`}>
             {health?.restartCount || 0}回
           </span>
         </div>
 
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">メモリ使用率</span>
-          <span className={`text-sm font-medium ${health && health.memoryUsage.percentage > 80 ? 'text-yellow-600' : ''}`}>
+          <span className={`text-sm font-medium ${health && health.memoryUsage.percentage > 80 ? 'text-yellow-600' : 'text-gray-900'}`}>
             {health ? `${health.memoryUsage.percentage.toFixed(1)}%` : '-'}
           </span>
         </div>
 
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">エラー率</span>
-          <span className={`text-sm font-medium ${health && health.errorRate > 5 ? 'text-red-600' : ''}`}>
+          <span className={`text-sm font-medium ${health && health.errorRate > 5 ? 'text-red-600' : 'text-gray-900'}`}>
             {health ? `${health.errorRate.toFixed(1)}%` : '-'}
           </span>
         </div>
       </div>
 
       {health && health.alerts.length > 0 && (
-        <div className="mt-4 pt-4 border-t">
-          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-            <Activity className="w-4 h-4" />
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+            <Activity className="w-4 h-4 text-gray-700" />
             アラート
           </h4>
           <div className="space-y-2 max-h-32 overflow-y-auto">
@@ -167,7 +167,7 @@ export default function ServerHealthWidget() {
         </div>
       )}
 
-      <div className="mt-4 pt-4 border-t">
+      <div className="mt-4 pt-4 border-t border-gray-200">
         <a
           href="/admin/system/monitoring"
           className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
