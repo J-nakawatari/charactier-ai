@@ -106,18 +106,6 @@ function CharactersPageContent({
       }
 
       const data = await response.json();
-      
-      // デバッグ: 英語ロケール時のデータを確認
-      if (locale === 'en' && data.characters && data.characters.length > 0) {
-        console.log('🔍 [Frontend] First character data:', {
-          id: data.characters[0]._id,
-          name: data.characters[0].name,
-          description: data.characters[0].description,
-          isStringName: typeof data.characters[0].name === 'string',
-          isObjectName: typeof data.characters[0].name === 'object'
-        });
-      }
-      
       setCharacters(data.characters || []);
       setTotalCount(data.total || 0);
 
@@ -256,8 +244,6 @@ function CharactersPageContent({
           <CharacterGrid
             characters={characters.map(char => ({
               ...char,
-              name: typeof char.name === 'string' ? char.name : (char.name as any)[locale] || (char.name as any).ja || (char.name as any).en,
-              description: typeof char.description === 'string' ? char.description : (char.description as any)[locale] || (char.description as any).ja || (char.description as any).en,
               characterAccessType: char.characterAccessType === 'free' ? 'free' : 'purchaseOnly',
               imageChatAvatar: (char as any).imageChatAvatar || '/images/default-avatar.png',
               imageChatBackground: (char as any).imageChatBackground || '/images/default-bg.png',

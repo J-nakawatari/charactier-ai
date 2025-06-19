@@ -259,17 +259,6 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
     
     console.log(`✅ ${characters.length}件のキャラクターを取得`);
     
-    // デバッグ: 英語ロケール時の最初のキャラクターデータを確認
-    if (characters.length > 0 && locale === 'en') {
-      console.log('🔍 [TS] First character EN data:', {
-        id: characters[0]._id,
-        nameJA: characters[0].name?.ja,
-        nameEN: characters[0].name?.en,
-        descJA: characters[0].description?.ja?.substring(0, 50),
-        descEN: characters[0].description?.en?.substring(0, 50)
-      });
-    }
-    
     res.json({
       characters,
       total: characters.length,
@@ -283,34 +272,6 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
       error: 'Database error',
       message: 'キャラクター一覧の取得に失敗しました'
     });
-  }
-});
-
-// デバッグ用: キャラクターの生データを確認
-router.get('/debug/raw-data', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const characters = await CharacterModel.find({ isActive: true })
-      .limit(3)
-      .lean();
-    
-    const debugData = characters.map(char => ({
-      id: char._id,
-      name: char.name,
-      description: {
-        ja: char.description?.ja?.substring(0, 100),
-        en: char.description?.en?.substring(0, 100)
-      },
-      hasEnName: !!char.name?.en,
-      hasEnDesc: !!char.description?.en,
-      enNameLength: char.name?.en?.length || 0,
-      enDescLength: char.description?.en?.length || 0
-    }));
-    
-    console.log('🔍 Raw MongoDB data:', debugData);
-    res.json(debugData);
-  } catch (error) {
-    console.error('❌ Debug error:', error);
-    res.status(500).json({ error: 'Debug failed' });
   }
 });
 
@@ -578,20 +539,6 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
       id: req.params.id,
       body: req.body
     });
-    
-    // 英語データのデバッグログ
-    if (req.body.name) {
-      console.log('🔍 Name data:', {
-        ja: req.body.name.ja,
-        en: req.body.name.en
-      });
-    }
-    if (req.body.description) {
-      console.log('🔍 Description data:', {
-        ja: req.body.description.ja?.substring(0, 50) + '...',
-        en: req.body.description.en?.substring(0, 50) + '...'
-      });
-    }
 
     const updatedCharacter = await CharacterModel.findByIdAndUpdate(
       req.params.id,

@@ -111,18 +111,6 @@ router.get('/', charactersRateLimit, auth, async (req, res) => {
     console.log(`🔍 フィルター条件:`, { characterType, freeOnly, userPurchasedCount: userPurchasedCharacters.length });
     console.log(`🔍 適用フィルター:`, filter);
     console.log(`✅ ${characters.length}件のキャラクターを取得`);
-    
-    // デバッグ: 最初のキャラクターの英語データを確認
-    if (characters.length > 0 && locale === 'en') {
-      console.log('🔍 First character EN data:', {
-        id: characters[0]._id,
-        nameJA: characters[0].name?.ja,
-        nameEN: characters[0].name?.en,
-        descJA: characters[0].description?.ja,
-        descEN: characters[0].description?.en
-      });
-    }
-    
     res.json({
       characters,
       total: characters.length,

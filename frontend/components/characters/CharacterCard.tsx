@@ -46,7 +46,8 @@ export default function CharacterCard({
   // 多言語対応のテキスト取得関数
   const getLocalizedText = (text: { ja: string; en: string } | string): string => {
     if (typeof text === 'string') return text;
-    return text[locale as 'ja' | 'en'] || text.ja || '';
+    // ロケールに応じて適切な言語を返す
+    return locale === 'en' ? (text.en || text.ja) : text.ja;
   };
 
   const handleClick = async () => {
