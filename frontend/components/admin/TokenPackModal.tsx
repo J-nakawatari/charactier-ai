@@ -77,9 +77,9 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
     if (tokens <= 0 || price <= 0) return { profitMargin: 0, tokenPerYen: 0, isValid: true };
     
     const tokenPerYen = tokens / price;
-    // 実際の利益率は90%固定（バックエンドで計算済み）
-    const profitMargin = 90;
-    const isValid = true; // 90%利益ルールは常に適合
+    // 実際の利益率は94%固定（バックエンドで計算済み）
+    const profitMargin = 94;
+    const isValid = true; // 94%利益ルールは常に適合
     
     return { profitMargin, tokenPerYen, isValid };
   };

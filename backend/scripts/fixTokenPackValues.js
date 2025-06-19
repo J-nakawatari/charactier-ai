@@ -60,7 +60,7 @@ async function fixTokenPackValues() {
           // Update if difference is significant
           pack.tokens = correctTokens;
           pack.tokenPerYen = correctTokens / pack.price;
-          pack.profitMargin = 90;
+          pack.profitMargin = 94;
           await pack.save();
           console.log(`   ✅ Updated to correct value\n`);
         } else {
