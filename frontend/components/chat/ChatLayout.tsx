@@ -260,9 +260,7 @@ export function ChatLayout({
       <div 
         className="flex-1 flex flex-col relative lg:ml-64 transition-all duration-1000 ease-in-out"
         style={{
-          backgroundImage: character.imageChatBackground 
-            ? `url(${getSafeImageUrl(character.imageChatBackground, character.name)})` 
-            : moodGradient.background,
+          backgroundImage: moodGradient.background,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
@@ -347,18 +345,19 @@ export function ChatLayout({
       {/* メッセージエリア */}
       <div className="flex-1 relative z-10 overflow-hidden" style={{ backgroundColor: 'transparent' }}>
         {/* キャラクター画像（真ん中に配置） */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ backgroundColor: 'transparent' }}>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ backgroundColor: 'transparent' }}>
           <div className="relative h-full w-auto" style={{ backgroundColor: 'transparent' }}>
             <Image 
               src={getSafeImageUrl(character.imageChatBackground || character.imageChatAvatar || character.imageCharacterSelect, character.name)}
               alt={`${character.name}のキャラクター画像`}
               fill
-              className="object-contain bg-transparent"
+              className="object-contain bg-transparent opacity-30"
               style={{ 
                 backgroundColor: 'transparent',
                 imageRendering: 'auto',
                 mixBlendMode: 'normal'
               }}
+              priority
               onError={(e) => {
                 console.error('ChatLayout background image loading error:', {
                   characterId: character._id,
