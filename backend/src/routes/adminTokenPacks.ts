@@ -158,9 +158,21 @@ router.put('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest
     const { id } = req.params;
     const updateData = req.body;
 
-    // tokenPerYenを再計算
+    // tokenPerYenを再計算（利益率94%を考慮）
     if (updateData.tokens && updateData.price) {
-      updateData.tokenPerYen = updateData.tokens / updateData.price;
+      // o4-mini原価: 0.000495円/token
+      const TOKEN_COST_PER_UNIT = 0.000495;
+      const PROFIT_MARGIN = 0.94;
+      const COST_RATIO = 1 - PROFIT_MARGIN; // 0.06
+      
+      // 正しい計算: 原価率 ÷ トークン原価
+      updateData.tokenPerYen = COST_RATIO / TOKEN_COST_PER_UNIT; // 0.06 / 0.000495 = 121.2
+      // 実際の付与トークン数を逆算
+      updateData.tokens = Math.floor(updateData.price * updateData.tokenPerYen);
+      
+      // 利益率も更新
+      const totalCost = updateData.tokens * TOKEN_COST_PER_UNIT;
+      updateData.profitMargin = ((updateData.price - totalCost) / updateData.price) * 100;
     }
 
     if (updateData.validUntil) {

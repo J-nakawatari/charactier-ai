@@ -69,10 +69,19 @@ TokenPackSchema.pre('save', function(next) {
   // 円換算（150円/USD）: $0.0000033 × 150 = 0.000495円/token
   const TOKEN_COST_PER_UNIT = 0.000495;
   
-  // 自動計算フィールドを更新
+  // 利益率94%を考慮した計算
+  const PROFIT_MARGIN = 0.94;
+  const COST_RATIO = 1 - PROFIT_MARGIN; // 0.06
+  
+  // 正しいtokenPerYen計算: 原価率 ÷ トークン原価
+  this.tokenPerYen = COST_RATIO / TOKEN_COST_PER_UNIT; // 0.06 / 0.000495 = 121.2
+  
+  // 実際の付与トークン数を価格から計算
+  this.tokens = Math.floor((this.price as number) * (this.tokenPerYen as number));
+  
+  // 利益率を計算
   const totalCost = (this.tokens as number) * TOKEN_COST_PER_UNIT;
   this.profitMargin = (((this.price as number) - totalCost) / (this.price as number)) * 100;
-  this.tokenPerYen = (this.tokens as number) / (this.price as number);
   
   next();
 });
