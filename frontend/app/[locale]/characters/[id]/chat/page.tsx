@@ -101,7 +101,12 @@ export default function ChatPage() {
           },
           tokenStatus: {
             tokensRemaining: apiData.userState?.tokenBalance || 0,
-            lastMessageCost: 0 // 最後のメッセージコストは別途管理
+            lastMessageCost: (() => {
+              // 最新のAIメッセージからトークン消費数を取得
+              const messages = apiData.chat?.messages || [];
+              const lastAiMessage = [...messages].reverse().find((msg: any) => msg.role === 'assistant');
+              return lastAiMessage?.tokensUsed || 0;
+            })()
           },
           messages: (apiData.chat?.messages || []).map((msg: any) => ({
             id: msg._id,

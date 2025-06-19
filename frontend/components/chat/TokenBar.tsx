@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Coins, AlertTriangle, Plus } from 'lucide-react';
+import { Coins, AlertTriangle, Plus, Info } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { getAuthHeaders, getCurrentUser } from '@/utils/auth';
 
@@ -17,6 +17,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorCount, setErrorCount] = useState(0);
   const [lastErrorTime, setLastErrorTime] = useState<number>(0);
+  const [showTooltip, setShowTooltip] = useState(false);
   const refreshTokenBalanceRef = useRef<() => Promise<void>>();
 
   // トークン残高の手動更新
@@ -120,6 +121,17 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
   // 最後のメッセージコストが0の場合は平均的なコスト(100トークン)を使用
   const estimatedMessageCost = lastMessageCost > 0 ? lastMessageCost : 100;
   const remainingMessages = Math.floor(currentTokens / estimatedMessageCost);
+  
+  // デバッグ用ログ (開発環境のみ)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('TokenBar Debug:', {
+      currentTokens,
+      lastMessageCost,
+      estimatedMessageCost,
+      remainingMessages,
+      calculation: `${currentTokens} / ${estimatedMessageCost} = ${remainingMessages}`
+    });
+  }
 
   return (
     <div className="flex items-center space-x-4">
@@ -143,7 +155,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
                 : 'text-purple-500'
         }`} />
         
-        <div className="text-right">
+        <div className="text-right relative">
           <div className={`text-sm font-semibold ${
             isCriticalBalance 
               ? 'text-red-700' 
@@ -160,6 +172,39 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
                 : t('remainingMessages', { count: remainingMessages })}
             </span>
           </div>
+        </div>
+        
+        {/* 情報アイコンとツールチップ */}
+        <div className="relative">
+          <button
+            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            onClick={() => setShowTooltip(!showTooltip)}
+          >
+            <Info className="w-4 h-4 text-gray-400" />
+          </button>
+          
+          {showTooltip && (
+            <div className="absolute top-full mt-2 right-0 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg z-50">
+              <div className="mb-2 font-semibold">トークン消費の仕組み</div>
+              <div className="space-y-1 text-gray-300">
+                <p>• 1メッセージ = 約{estimatedMessageCost}トークン</p>
+                <p>• キャラクターの設定や会話履歴により変動</p>
+                <p>• 長い会話ほど多くのトークンを消費</p>
+                {lastMessageCost > 0 && (
+                  <p className="mt-2 pt-2 border-t border-gray-700">
+                    前回の消費: {lastMessageCost}トークン
+                  </p>
+                )}
+              </div>
+              <div className="absolute -top-2 right-4 w-0 h-0 
+                border-l-[6px] border-l-transparent
+                border-r-[6px] border-r-transparent
+                border-b-[6px] border-b-gray-900">
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
