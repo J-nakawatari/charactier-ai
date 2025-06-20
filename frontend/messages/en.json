@@ -442,10 +442,22 @@
       "deleteAccount": "Delete Account",
       "dangerZone": "Danger Zone",
       "deleteWarning": "Deleting your account will permanently lose all data. This action cannot be undone.",
+      "deleteDescription": "Once you delete your account, all data will be lost and cannot be recovered.",
       "deletePasswordConfirmation": "To confirm account deletion, please enter your password.",
       "deleteConfirmation": "To confirm account deletion, please type \"退会する\" in the text box below.",
       "deleteButton": "Delete Account",
-      "deleteInput": "退会する"
+      "deleteInput": "退会する",
+      "deleteModal": {
+        "title": "Are you sure you want to delete your account?",
+        "description": "Please read and understand the following before proceeding with deletion.",
+        "consequence1": "All your talk tickets will be lost",
+        "consequence2": "All chat history and affinity with characters will be deleted",
+        "consequence3": "Deleted accounts can never be restored",
+        "warning": "⚠️ This action cannot be undone. Deleting your account will permanently lose all data.",
+        "confirmText": "I understand the above and agree to delete my account",
+        "deleteButton": "Permanently Delete Account",
+        "cancelButton": "Cancel"
+      }
     },
     "language": {
       "title": "Language Settings",

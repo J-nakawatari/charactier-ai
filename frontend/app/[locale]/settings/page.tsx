@@ -16,7 +16,8 @@ import {
   UserX,
   Edit3,
   X,
-  Globe
+  Globe,
+  Trash2
 } from 'lucide-react';
 
 interface UserData {
@@ -62,8 +63,8 @@ export default function SettingsPage() {
   });
   
   // 退会用
-  const [deletePassword, setDeletePassword] = useState('');
-  const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmChecked, setDeleteConfirmChecked] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   // 言語設定用
@@ -212,15 +213,6 @@ export default function SettingsPage() {
 
   // アカウント削除
   const handleAccountDeletion = async () => {
-    if (!deletePassword) {
-      error(t('errors.passwordRequired'));
-      return;
-    }
-
-    if (!confirm(t('confirmDialog.deleteAccount'))) {
-      return;
-    }
-
     try {
       setDeleteLoading(true);
       const token = localStorage.getItem('accessToken');
@@ -231,14 +223,11 @@ export default function SettingsPage() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ password: deletePassword })
+        body: JSON.stringify({ confirmDeletion: true })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        if (response.status === 401) {
-          throw new Error(t('errors.incorrectPassword'));
-        }
         throw new Error(errorData.message || 'Failed to delete account');
       }
 
@@ -253,7 +242,8 @@ export default function SettingsPage() {
       error(err instanceof Error ? err.message : t('errors.accountDeleteFailed'));
     } finally {
       setDeleteLoading(false);
-      setDeletePassword('');
+      setShowDeleteModal(false);
+      setDeleteConfirmChecked(false);
     }
   };
 
@@ -582,39 +572,16 @@ export default function SettingsPage() {
                       <h3 className="text-lg font-medium text-gray-900 mb-4">{t('labels.deleteAccount')}</h3>
                       
                       <div className="space-y-4">
-                        <div>
-                          <p className="text-sm text-gray-600 mb-3">
-                            {t('account.deletePasswordConfirmation')}
-                          </p>
-                          <div className="relative">
-                            <input
-                              type={showDeletePassword ? 'text' : 'password'}
-                              value={deletePassword}
-                              onChange={(e) => setDeletePassword(e.target.value)}
-                              className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 text-gray-900 bg-white"
-                              placeholder={t('placeholders.password')}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowDeletePassword(!showDeletePassword)}
-                              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                            >
-                              {showDeletePassword ? (
-                                <EyeOff className="h-5 w-5 text-gray-400" />
-                              ) : (
-                                <Eye className="h-5 w-5 text-gray-400" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
+                        <p className="text-sm text-gray-600">
+                          {t('account.deleteDescription')}
+                        </p>
 
                         <button
-                          onClick={handleAccountDeletion}
-                          disabled={deleteLoading || !deletePassword}
-                          className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => setShowDeleteModal(true)}
+                          className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none"
                         >
-                          <UserX className="w-4 h-4" />
-                          <span>{deleteLoading ? t('buttons.deleting') : t('account.deleteButton')}</span>
+                          <Trash2 className="w-4 h-4" />
+                          <span>{t('account.deleteButton')}</span>
                         </button>
                       </div>
                     </div>
@@ -625,6 +592,102 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+      
+      {/* 削除確認モーダル */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            {/* 背景オーバーレイ */}
+            <div
+              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+              onClick={() => {
+                setShowDeleteModal(false);
+                setDeleteConfirmChecked(false);
+              }}
+            />
+
+            {/* モーダル本体 */}
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+              <div className="sm:flex sm:items-start">
+                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                  <AlertTriangle className="h-6 w-6 text-red-600" />
+                </div>
+                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    {t('account.deleteModal.title')}
+                  </h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500 mb-4">
+                      {t('account.deleteModal.description')}
+                    </p>
+                    <ul className="text-sm text-gray-600 space-y-2 mb-4">
+                      <li className="flex items-start">
+                        <span className="text-red-500 mr-2">•</span>
+                        <span>{t('account.deleteModal.consequence1')}</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-red-500 mr-2">•</span>
+                        <span>{t('account.deleteModal.consequence2')}</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-red-500 mr-2">•</span>
+                        <span>{t('account.deleteModal.consequence3')}</span>
+                      </li>
+                    </ul>
+                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <p className="text-sm text-yellow-800">
+                        {t('account.deleteModal.warning')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-5">
+                <label className="flex items-start">
+                  <input
+                    type="checkbox"
+                    checked={deleteConfirmChecked}
+                    onChange={(e) => setDeleteConfirmChecked(e.target.checked)}
+                    className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-3 text-sm text-gray-700">
+                    {t('account.deleteModal.confirmText')}
+                  </span>
+                </label>
+              </div>
+              
+              <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  disabled={!deleteConfirmChecked || deleteLoading}
+                  onClick={handleAccountDeletion}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  {deleteLoading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {t('buttons.deleting')}
+                    </div>
+                  ) : (
+                    t('account.deleteModal.deleteButton')
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteConfirmChecked(false);
+                  }}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm"
+                >
+                  {t('account.deleteModal.cancelButton')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -5745,13 +5745,13 @@ app.delete('/api/user/delete-account', authenticateToken, async (req: AuthReques
     return;
   }
 
-  const { password } = req.body;
+  const { confirmDeletion } = req.body;
 
-  // パスワード確認が必要
-  if (!password) {
+  // 削除確認が必要
+  if (!confirmDeletion) {
     res.status(400).json({ 
-      error: 'Password required',
-      message: 'アカウント削除にはパスワードの確認が必要です'
+      error: 'Confirmation required',
+      message: 'アカウント削除の確認が必要です'
     });
     return;
   }
@@ -5762,23 +5762,12 @@ app.delete('/api/user/delete-account', authenticateToken, async (req: AuthReques
       return;
     }
 
-    // ユーザーを取得（パスワードフィールドも含む）
-    const user = await UserModel.findById(req.user._id).select('+password');
+    // ユーザーを取得
+    const user = await UserModel.findById(req.user._id);
     if (!user) {
       res.status(404).json({ 
         error: 'User not found',
         message: 'ユーザーが見つかりません'
-      });
-      return;
-    }
-
-    // パスワードを確認
-    const bcrypt = require('bcryptjs');
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      res.status(401).json({ 
-        error: 'Invalid password',
-        message: 'パスワードが正しくありません'
       });
       return;
     }

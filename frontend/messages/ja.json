@@ -442,10 +442,22 @@
       "deleteAccount": "アカウント削除",
       "dangerZone": "危険エリア",
       "deleteWarning": "アカウントを削除すると、全てのデータが永久に失われます。この操作は取り消せません。",
+      "deleteDescription": "アカウントを削除すると、全てのデータが失われ、復元することはできません。",
       "deletePasswordConfirmation": "アカウント削除を確認するため、パスワードを入力してください。",
       "deleteConfirmation": "アカウント削除を確認するため、下のテキストボックスに「退会する」と入力してください。",
       "deleteButton": "アカウントを削除",
-      "deleteInput": "退会する"
+      "deleteInput": "退会する",
+      "deleteModal": {
+        "title": "本当にアカウントを削除しますか？",
+        "description": "以下の内容をよくお読みになり、理解した上で削除を実行してください。",
+        "consequence1": "所持しているトークチケットは全て失われます",
+        "consequence2": "キャラクターとの会話履歴や親密度は全て削除されます",
+        "consequence3": "削除されたアカウントは二度と復元することはできません",
+        "warning": "⚠️ この操作は取り消すことができません。アカウントを削除すると、全てのデータが永久に失われます。",
+        "confirmText": "上記の内容を理解し、アカウントを削除することに同意します",
+        "deleteButton": "アカウントを完全に削除",
+        "cancelButton": "キャンセル"
+      }
     },
     "language": {
       "title": "言語設定",
