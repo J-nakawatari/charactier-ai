@@ -1976,7 +1976,10 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
             apiCost = (inputTokens * 0.00015 + outputTokens * 0.0006) / 1000; // デフォルト
           }
           
-          const apiCostYen = apiCost * 150; // USD→JPY換算（150円/ドル想定）
+          // 動的為替レートを取得
+          const { getCurrentExchangeRate } = require('./services/exchangeRateService');
+          const exchangeRate = await getCurrentExchangeRate();
+          const apiCostYen = apiCost * exchangeRate; // USD→JPY換算
           const sessionId = `chat_${req.user._id}_${characterId}_${Date.now()}`;
           
           // 利益分析計算
