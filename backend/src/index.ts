@@ -4955,6 +4955,72 @@ app.get('/api/admin/error-stats', authenticateToken, async (req: AuthRequest, re
 });
 
 /**
+ * 📊 エラー一覧取得API
+ */
+app.get('/api/admin/errors', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || !(req.user as any).isAdmin) {
+      res.status(401).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const { range = '24h', limit = 50, offset = 0, resolved, errorType, statusCode } = req.query;
+    
+    // 時間範囲の計算
+    let startDate: Date;
+    switch (range) {
+      case '1h':
+        startDate = new Date(Date.now() - 60 * 60 * 1000);
+        break;
+      case '24h':
+        startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        break;
+      case '7d':
+        startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '30d':
+        startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    }
+
+    // フィルタ条件の構築
+    const filter: any = { timestamp: { $gte: startDate } };
+    if (resolved !== undefined) filter.resolved = resolved === 'true';
+    if (errorType) filter.errorType = errorType;
+    if (statusCode) filter.statusCode = parseInt(statusCode as string);
+
+    const errors = await APIErrorModel
+      .find(filter)
+      .sort({ timestamp: -1 })
+      .limit(parseInt(limit as string))
+      .skip(parseInt(offset as string))
+      .lean();
+
+    const total = await APIErrorModel.countDocuments(filter);
+
+    res.json({
+      success: true,
+      errors,
+      pagination: {
+        total,
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string)
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching errors:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'エラー一覧の取得に失敗しました'
+    });
+  }
+});
+
+/**
  * 🔧 エラー管理API - エラー解決マーク
  */
 app.post('/api/admin/errors/resolve', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {

@@ -12,7 +12,8 @@ import {
   X,
   UserCog,
   Cpu,
-  BarChart3
+  BarChart3,
+  AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -27,6 +28,7 @@ const sidebarItems = [
   { href: '/admin/admins', icon: UserCog, label: '管理者管理' },
   { href: '/admin/notifications', icon: Bell, label: '通知管理' },
   { href: '/admin/security', icon: Shield, label: 'セキュリティ' },
+  { href: '/admin/errors', icon: AlertTriangle, label: 'エラー統計' },
   { href: '/admin/settings/analytics', icon: BarChart3, label: 'Google Analytics' },
 ];
 
