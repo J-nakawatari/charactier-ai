@@ -48,64 +48,90 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
           <p className="text-sm text-gray-500 mb-8">{t('lastUpdated')}</p>
           
           <div className="prose prose-gray max-w-none">
-            <h3 className="text-xl font-semibold mb-4">第1条（本規約の適用）</h3>
             <p className="text-gray-700 mb-6">
-              本利用規約（以下「本規約」といいます。）は、Charactier AI（以下「当サービス」といいます。）の利用に関する条件を定めるものです。
-              ユーザーの皆様には、本規約に同意いただいた上で、当サービスをご利用いただきます。
+              本利用規約（以下「本規約」）は、Charactier（以下「当サービス」）が提供する
+              すべての機能の利用条件を定めるものです。ユーザーは本規約に同意のうえ
+              当サービスを利用するものとします。
             </p>
 
-            <h3 className="text-xl font-semibold mb-4">第2条（利用登録）</h3>
-            <p className="text-gray-700 mb-6">
-              利用登録を希望する方は、当サービスの定める方法により利用登録を申請し、当サービスがこれを承認することによって、利用登録が完了するものとします。
-            </p>
+            <h3 className="text-xl font-semibold mb-4">第1条（定義）</h3>
+            <div className="text-gray-700 mb-6">
+              <p className="mb-2">1. 「トークチケット」とは、キャラクターとのチャット送信に必要なデジタルポイントをいいます。</p>
+              <p>2. 「プレミアムキャラクター」とは、別途代金を支払うことで解放されるキャラクターをいいます。</p>
+            </div>
 
-            <h3 className="text-xl font-semibold mb-4">第3条（トークンの購入と利用）</h3>
-            <p className="text-gray-700 mb-6">
-              ユーザーは、当サービス内でトークンを購入し、キャラクターとのチャットに利用することができます。
-              購入したトークンの返金は原則として行いません。
-            </p>
-
-            <h3 className="text-xl font-semibold mb-4">第4条（禁止事項）</h3>
+            <h3 className="text-xl font-semibold mb-4">第2条（アカウント）</h3>
             <ul className="list-disc pl-6 text-gray-700 mb-6">
-              <li>法令または公序良俗に違反する行為</li>
-              <li>犯罪行為に関連する行為</li>
-              <li>当サービスのサーバーまたはネットワークの機能を破壊したり、妨害したりする行為</li>
-              <li>当サービスの運営を妨害するおそれのある行為</li>
-              <li>他のユーザーに関する個人情報等を収集または蓄積する行為</li>
-              <li>他のユーザーに成りすます行為</li>
-              <li>当サービスに関連して、反社会的勢力に対して直接または間接に利益を供与する行為</li>
+              <li>登録時は最新かつ正確な情報を入力してください。</li>
+              <li>同一人物による複数アカウントの作成は禁止します。</li>
             </ul>
 
-            <h3 className="text-xl font-semibold mb-4">第5条（本サービスの提供の停止等）</h3>
+            <h3 className="text-xl font-semibold mb-4">第3条（禁止事項）</h3>
+            <ol className="list-decimal pl-6 text-gray-700 mb-6">
+              <li>法令・公序良俗に反する行為</li>
+              <li>第三者の権利を侵害する行為</li>
+              <li>生成 AI の応答内容を無断で転載・商用利用する行為</li>
+              <li>リバースエンジニアリング・スクレイピング等の不正アクセス行為</li>
+            </ol>
+
+            <h3 className="text-xl font-semibold mb-4">第4条（トークチケット）</h3>
+            <ol className="list-decimal pl-6 text-gray-700 mb-6">
+              <li>ユーザーは Stripe 決済によりトークチケットを購入できます。</li>
+              <li>トークチケットは譲渡・換金・返金できません。</li>
+              <li>トークチケット残高は前払式支払手段（資金決済法）に準拠し管理します。</li>
+            </ol>
+
+            <h3 className="text-xl font-semibold mb-4">第5条（プレミアムキャラクター）</h3>
+            <ol className="list-decimal pl-6 text-gray-700 mb-6">
+              <li>ユーザーが定められた代金を支払うことでプレミアムキャラクターを解放できます。</li>
+              <li>解放後は追加料金なくトークチケットを消費して会話可能です。</li>
+              <li>解放権は譲渡・換金・返金できません。</li>
+            </ol>
+
+            <h3 className="text-xl font-semibold mb-4">第6条（生成 AI コンテンツの性質）</h3>
+            <ol className="list-decimal pl-6 text-gray-700 mb-6">
+              <li>当サービスの応答は生成 AI により自動生成されるものであり、その正確性・合法性・有用性を保証しません。</li>
+              <li>AI 応答に起因するいかなる損害・トラブル・事件性についても、当サービスは一切の責任を負わないものとします。</li>
+              <li>ユーザーは自己の判断と責任において AI 応答を利用してください。</li>
+            </ol>
+
+            <h3 className="text-xl font-semibold mb-4">第7条（料金・返金）</h3>
+            <ol className="list-decimal pl-6 text-gray-700 mb-6">
+              <li>支払方法はクレジットカード決済（Stripe）とします。</li>
+              <li className="font-bold">デジタル商品の特性上、購入済みのトークチケットおよびプレミアムキャラクターの代金は、いかなる理由でも返金いたしません。</li>
+              <li>月額プランが導入された場合、ユーザーは更新日前までにマイページで解約手続きを行うものとします。</li>
+            </ol>
+
+            <h3 className="text-xl font-semibold mb-4">第8条（免責・損害賠償）</h3>
+            <ol className="list-decimal pl-6 text-gray-700 mb-6">
+              <li>当サービスは天災・ネットワーク障害その他不可抗力によりサービスを提供できない場合、一切の責任を負いません。</li>
+              <li>当サービスの過失が軽微な場合、当サービスは利用に起因または関連してユーザーが被った損害について責任を負いません。</li>
+              <li>当サービスが責任を負う場合でも、賠償額は当該ユーザーが過去 12 か月に当サービスへ支払った総額を上限とします。</li>
+            </ol>
+
+            <h3 className="text-xl font-semibold mb-4">第9条（本規約の変更）</h3>
             <p className="text-gray-700 mb-6">
-              当サービスは、以下のいずれかの事由があると判断した場合、ユーザーに事前に通知することなく本サービスの全部または一部の提供を停止または中断することができるものとします。
+              当サービスは必要に応じて本規約を変更できます。
+              変更後の規約は、本ページに掲示した時点で効力を生じます。
             </p>
 
-            <h3 className="text-xl font-semibold mb-4">第6条（免責事項）</h3>
+            <h3 className="text-xl font-semibold mb-4">第10条（準拠法・合意管轄）</h3>
             <p className="text-gray-700 mb-6">
-              当サービスは、本サービスに関して、ユーザーと他のユーザーまたは第三者との間において生じた取引、連絡または紛争等について一切責任を負いません。
-            </p>
-
-            <h3 className="text-xl font-semibold mb-4">第7条（利用規約の変更）</h3>
-            <p className="text-gray-700 mb-6">
-              当サービスは、必要と判断した場合には、ユーザーに通知することなくいつでも本規約を変更することができるものとします。
-            </p>
-
-            <h3 className="text-xl font-semibold mb-4">第8条（準拠法・裁判管轄）</h3>
-            <p className="text-gray-700 mb-6">
-              本規約の解釈にあたっては、日本法を準拠法とします。
-              本サービスに関して紛争が生じた場合には、当サービスの本店所在地を管轄する裁判所を専属的合意管轄とします。
+              本規約は日本法を準拠法とし、本サービスに関して紛争が生じた場合、
+              東京地方裁判所を第一審の専属的合意管轄裁判所とします。
             </p>
           </div>
         </div>
         
         <div className="sticky bottom-0 p-6 bg-white border-t">
-          <button
-            onClick={onClose}
-            className="w-full md:w-auto px-8 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
-          >
-            {t('close')}
-          </button>
+          <div className="flex justify-center">
+            <button
+              onClick={onClose}
+              className="px-8 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
+            >
+              {t('close')}
+            </button>
+          </div>
         </div>
       </div>
     </div>

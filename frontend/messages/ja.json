@@ -166,12 +166,12 @@
     "tokenBalance": "トークチケット: {count, number}",
     "termsModal": {
       "title": "利用規約",
-      "lastUpdated": "最終更新日: 2024年1月1日",
+      "lastUpdated": "最終更新日: 2025年1月1日",
       "close": "閉じる"
     },
     "privacyModal": {
       "title": "プライバシーポリシー",
-      "lastUpdated": "最終更新日: 2024年1月1日",
+      "lastUpdated": "最終改定日：2025-07-01",
       "close": "閉じる"
     },
     "menu": "メニュー",

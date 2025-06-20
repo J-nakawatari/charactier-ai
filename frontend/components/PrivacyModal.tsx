@@ -48,80 +48,109 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           <p className="text-sm text-gray-500 mb-8">{t('lastUpdated')}</p>
           
           <div className="prose prose-gray max-w-none">
-            <h3 className="text-xl font-semibold mb-4">1. 個人情報の収集</h3>
             <p className="text-gray-700 mb-6">
-              当サービスは、利用者から以下の情報を収集することがあります：
+              Charactier（以下「当サービス」）は、ユーザーの個人情報を適切に取り扱うため、
+              以下のプライバシーポリシー（以下「本ポリシー」）を定めます。
             </p>
+
+            <h3 className="text-xl font-semibold mb-4">1. 取得する情報</h3>
             <ul className="list-disc pl-6 text-gray-700 mb-6">
-              <li>メールアドレス</li>
-              <li>ユーザー名</li>
-              <li>支払い情報（Stripe経由で安全に処理されます）</li>
-              <li>サービス利用履歴</li>
-              <li>IPアドレスおよびブラウザ情報</li>
+              <li>氏名・ニックネーム、メールアドレス</li>
+              <li>決済情報（Stripeを通じて取得。カード番号は当サービスに保存しません）</li>
+              <li>Cookie・端末識別子・アクセスログ</li>
+              <li>チャット内容および生成 AI への入力プロンプト</li>
             </ul>
 
-            <h3 className="text-xl font-semibold mb-4">2. 個人情報の利用目的</h3>
-            <p className="text-gray-700 mb-6">
-              収集した個人情報は以下の目的で利用します：
-            </p>
+            <h3 className="text-xl font-semibold mb-4">2. 利用目的</h3>
             <ul className="list-disc pl-6 text-gray-700 mb-6">
-              <li>サービスの提供・運営</li>
-              <li>ユーザーサポート</li>
-              <li>利用料金の請求</li>
-              <li>サービスの改善・新機能の開発</li>
-              <li>重要なお知らせの送信</li>
+              <li>キャラクターとのチャット提供、トークチケット残高管理</li>
+              <li>料金請求・決済処理</li>
+              <li>利用状況の分析によるサービス改善</li>
+              <li>法令・利用規約違反への対応</li>
             </ul>
 
-            <h3 className="text-xl font-semibold mb-4">3. 個人情報の第三者提供</h3>
+            <h3 className="text-xl font-semibold mb-4">3. 外部送信・Cookie 等の取扱い</h3>
             <p className="text-gray-700 mb-6">
-              当サービスは、以下の場合を除き、個人情報を第三者に提供することはありません：
+              当サービスは利便性向上および利用状況の解析のため、
+              Cookie や類似技術を用いて第三者サービスへ情報を送信します。
+              ブラウザ設定で Cookie を無効にすると、一部機能が利用できない場合があります。
             </p>
-            <ul className="list-disc pl-6 text-gray-700 mb-6">
+
+            <div className="overflow-x-auto mb-6">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">送信先</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">送信される情報</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">利用目的</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">Google Analytics 4</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">Cookie（_ga など）、IPアドレス、閲覧ページURL</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">アクセス解析</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">Stripe</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">決済金額、メールアドレス、決済トークン等</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">クレジットカード決済処理</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">Cloudflare</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">IPアドレス、User-Agent 等</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">サイト保護・パフォーマンス最適化</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg mb-6">
+              <p className="text-sm font-semibold text-gray-900 mb-2">オプトアウト方法</p>
+              <p className="text-sm text-gray-700">
+                GA4 の計測は <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-pink-500 underline hover:text-pink-600">Google Analytics オプトアウトアドオン</a> を
+                利用することで無効化できます。その他 Cookie はブラウザ設定で削除／拒否が可能です。
+              </p>
+            </div>
+
+            <h3 className="text-xl font-semibold mb-4">4. 第三者提供</h3>
+            <p className="text-gray-700 mb-2">取得した個人情報は次の場合を除き第三者に提供しません。</p>
+            <ol className="list-decimal pl-6 text-gray-700 mb-6">
               <li>ユーザーの同意がある場合</li>
               <li>法令に基づく場合</li>
-              <li>人の生命、身体または財産の保護のために必要がある場合</li>
-              <li>公衆衛生の向上または児童の健全な育成の推進のために特に必要がある場合</li>
+              <li>決済業務委託のため Stripe へ提供する場合</li>
+            </ol>
+
+            <h3 className="text-xl font-semibold mb-4">5. 個人情報の安全管理</h3>
+            <ul className="list-disc pl-6 text-gray-700 mb-6">
+              <li>通信は TLS により暗号化</li>
+              <li>重要データはアクセス権限を最小限にした環境で管理</li>
+              <li>社内ポリシーに基づくログ監査を実施</li>
             </ul>
 
-            <h3 className="text-xl font-semibold mb-4">4. Cookie（クッキー）について</h3>
+            <h3 className="text-xl font-semibold mb-4">6. 開示・訂正・削除の請求</h3>
             <p className="text-gray-700 mb-6">
-              当サービスは、ユーザーの利便性向上のためCookieを使用しています。
-              Cookieにより収集された情報は、個人を特定するものではありません。
-              ブラウザの設定によりCookieを無効にすることも可能ですが、その場合一部のサービスがご利用いただけない場合があります。
+              ユーザーは個人情報保護法に基づき、自己の個人情報の開示等を請求できます。<br />
+              お問い合わせフォーム：<a href="https://forms.gle/ZkYUQSmpqxrQaa4m8" target="_blank" rel="noopener noreferrer" className="text-pink-500 underline hover:text-pink-600">https://forms.gle/ZkYUQSmpqxrQaa4m8</a>
             </p>
 
-            <h3 className="text-xl font-semibold mb-4">5. セキュリティ</h3>
+            <h3 className="text-xl font-semibold mb-4">7. 改定</h3>
             <p className="text-gray-700 mb-6">
-              当サービスは、個人情報の紛失、破壊、改ざん及び漏洩などを防ぐため、適切なセキュリティ対策を実施しています。
-              ただし、インターネット上での情報の送信は100%安全ではないことをご理解ください。
-            </p>
-
-            <h3 className="text-xl font-semibold mb-4">6. 個人情報の開示・訂正・削除</h3>
-            <p className="text-gray-700 mb-6">
-              ユーザーは、当サービスが保有する自己の個人情報の開示、訂正、削除を求めることができます。
-              お問い合わせフォームよりご連絡ください。
-            </p>
-
-            <h3 className="text-xl font-semibold mb-4">7. プライバシーポリシーの変更</h3>
-            <p className="text-gray-700 mb-6">
-              当サービスは、必要に応じて本プライバシーポリシーを変更することがあります。
-              変更後のプライバシーポリシーは、本ページに掲載した時点から効力を生じるものとします。
-            </p>
-
-            <h3 className="text-xl font-semibold mb-4">8. お問い合わせ</h3>
-            <p className="text-gray-700 mb-6">
-              本プライバシーポリシーに関するお問い合わせは、サービス内のお問い合わせフォームよりお願いいたします。
+              法令変更やサービス内容の変更に応じ、本ポリシーを改定することがあります。<br />
+              最新の内容は本ページで公表します。
             </p>
           </div>
         </div>
         
         <div className="sticky bottom-0 p-6 bg-white border-t">
-          <button
-            onClick={onClose}
-            className="w-full md:w-auto px-8 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
-          >
-            {t('close')}
-          </button>
+          <div className="flex justify-center">
+            <button
+              onClick={onClose}
+              className="px-8 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
+            >
+              {t('close')}
+            </button>
+          </div>
         </div>
       </div>
     </div>
