@@ -52,7 +52,7 @@ const TokenUsageSchema = new mongoose_1.Schema({
         type: String,
         required: true,
         index: true,
-        maxlength: 64
+        maxlength: 128
     },
     // 使用量詳細
     tokensUsed: {
@@ -81,7 +81,7 @@ const TokenUsageSchema = new mongoose_1.Schema({
     aiModel: {
         type: String,
         required: true,
-        enum: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o'],
+        enum: ['gpt-3.5-turbo', 'gpt-4o-mini'],
         index: true
     },
     inputTokens: {
@@ -348,7 +348,7 @@ TokenUsageSchema.statics.getProfitAnalysis = async function (startDate, endDate)
 TokenUsageSchema.pre('save', function (next) {
     // 利益率計算
     if (this.apiCostYen > 0) {
-        this.profitMargin = Math.max(0, (this.grossProfit - this.apiCostYen) / this.grossProfit);
+        this.profitMargin = Math.max(0, Math.min(1, (this.grossProfit - this.apiCostYen) / this.grossProfit));
     }
     // 親密度変化計算
     this.affinityChange = this.intimacyAfter - this.intimacyBefore;

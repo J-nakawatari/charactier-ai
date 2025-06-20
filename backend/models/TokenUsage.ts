@@ -106,7 +106,7 @@ const TokenUsageSchema = new Schema<ITokenUsage>({
   aiModel: {
     type: String,
     required: true,
-    enum: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o'],
+    enum: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o','gpt-4o-mini'],
     index: true
   },
   inputTokens: {
