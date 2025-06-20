@@ -43,6 +43,9 @@ export default function TopBar() {
 
   // 通知を取得
   useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    let shouldContinue = true;
+
     const fetchNotifications = async () => {
       try {
         const token = localStorage.getItem('adminAccessToken');
@@ -62,6 +65,14 @@ export default function TopBar() {
           // 未読数をカウント
           const unread = data.notifications.filter((n: SystemNotification) => !n.isRead).length;
           setUnreadCount(unread);
+        } else if (response.status === 403 || response.status === 401) {
+          // 認証エラーの場合はリトライを停止
+          console.error('認証エラー: 通知の取得を停止します');
+          shouldContinue = false;
+          if (interval) {
+            clearInterval(interval);
+            interval = null;
+          }
         }
       } catch (error) {
         console.error('通知の取得エラー:', error);
@@ -69,10 +80,19 @@ export default function TopBar() {
     };
 
     fetchNotifications();
-    // 30秒ごとに更新
-    const interval = setInterval(fetchNotifications, 30000);
     
-    return () => clearInterval(interval);
+    // 認証エラーでなければ30秒ごとに更新
+    if (shouldContinue) {
+      interval = setInterval(() => {
+        if (shouldContinue) {
+          fetchNotifications();
+        }
+      }, 30000);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
