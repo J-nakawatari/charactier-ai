@@ -15,7 +15,7 @@ interface ModelUnitCostUSD {
 
 export const MODEL_UNIT_COST_USD: Record<string, ModelUnitCostUSD> = {
   'gpt-3.5-turbo': { input: 0.0000005, output: 0.0000015 },  // $0.5/$1.5 per 1M
-  'o4-mini': { input: 0.0000011, output: 0.0000044 }         // $1.1/$4.4 per 1M
+  'gpt-4o-mini': { input: 0.00000015, output: 0.0000006 }    // $0.15/$0.6 per 1M
 };
 
 export const USD_JPY_RATE = 150;                             // フォールバック固定レート（動的取得失敗時）

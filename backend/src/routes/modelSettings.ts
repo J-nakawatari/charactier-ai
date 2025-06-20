@@ -10,15 +10,15 @@ const AVAILABLE_MODELS = [
   {
     id: 'gpt-3.5-turbo', 
     name: 'GPT-3.5 Turbo',
-    description: '基本モデル - 高速・低コスト',
+    description: '開発・テスト用',
     cost: '$0.5/$1.5 per 1M tokens',
     recommended: false
   },
   {
-    id: 'o4-mini',
-    name: 'OpenAI o4-mini',
-    description: '推奨 - 高性能リーズニングモデル（コーディング・ビジョン特化）',
-    cost: '$1.1/$4.4 per 1M tokens',
+    id: 'gpt-4o-mini',
+    name: 'GPT-4o mini',
+    description: '本番環境用 - 推奨',
+    cost: '$0.15/$0.6 per 1M tokens',
     recommended: true
   }
 ];

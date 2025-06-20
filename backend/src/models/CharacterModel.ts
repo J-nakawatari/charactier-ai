@@ -70,7 +70,7 @@ export interface ICharacter extends Document {
   description: LocalizedString;
   
   // AI・モデル設定
-  aiModel: 'gpt-3.5-turbo' | 'o4-mini';
+  aiModel: 'gpt-3.5-turbo' | 'gpt-4o-mini';
   characterAccessType: 'free' | 'purchaseOnly';
   requiresUnlock: boolean;
   purchasePrice?: number; // 円
@@ -315,9 +315,9 @@ const CharacterSchema = new Schema<ICharacter>({
   // AI・モデル設定
   aiModel: {
     type: String,
-    enum: ['gpt-3.5-turbo', 'o4-mini'],
+    enum: ['gpt-3.5-turbo', 'gpt-4o-mini'],
     required: true,
-    default: 'o4-mini'
+    default: 'gpt-4o-mini'
   },
   characterAccessType: {
     type: String,
