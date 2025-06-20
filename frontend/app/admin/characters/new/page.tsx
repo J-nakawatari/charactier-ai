@@ -21,7 +21,7 @@ import {
 const DEFAULT_AI_MODELS = [
   { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: '基本モデル - 高速・低コスト' },
   { value: 'gpt-4o-mini', label: 'GPT-4o Mini', description: 'バランス型 - コスパ良好' },
-  { value: 'o4-mini', label: 'o4-mini', description: '推奨 - 高性能リーズニングモデル' }
+  { value: 'o4-mini', label: 'OpenAI o4-mini', description: '推奨 - 高性能リーズニングモデル' }
 ];
 
 

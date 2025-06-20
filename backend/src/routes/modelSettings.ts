@@ -23,7 +23,7 @@ const AVAILABLE_MODELS = [
   },
   {
     id: 'o4-mini',
-    name: 'o4-mini',
+    name: 'OpenAI o4-mini',
     description: '推奨 - 高性能リーズニングモデル（コーディング・ビジョン特化）',
     cost: '$1.1/$4.4 per 1M tokens',
     recommended: true
