@@ -20,7 +20,7 @@ import {
 // AIモデル（初期値、APIから動的取得）
 const DEFAULT_AI_MODELS = [
   { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: '高速で経済的なモデル' },
-  { value: 'o4-mini', label: 'OpenAI o4-mini', description: '本番推奨モデル - 高品質・低コスト' }
+  { value: 'gpt-4o-mini', label: 'GPT-4o Mini', description: '本番推奨モデル - 高品質・低コスト' }
 ];
 
 
