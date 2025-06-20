@@ -86,7 +86,9 @@
       "en": "English"
     },
     "terms": "登録することで、",
-    "termsLink": "利用規約とプライバシーポリシー",
+    "termsOfService": "利用規約",
+    "privacyPolicy": "プライバシーポリシー",
+    "and": "と",
     "termsAccept": "に同意したものとみなします。",
     "registerButton": "利用規約に同意して登録する",
     "hasAccount": "すでにアカウントをお持ちの方は",
@@ -162,6 +164,16 @@
     "appDescription": "AIキャラクターチャット",
     "user": "ユーザー",
     "tokenBalance": "トークチケット: {count, number}",
+    "termsModal": {
+      "title": "利用規約",
+      "lastUpdated": "最終更新日: 2024年1月1日",
+      "close": "閉じる"
+    },
+    "privacyModal": {
+      "title": "プライバシーポリシー",
+      "lastUpdated": "最終更新日: 2024年1月1日",
+      "close": "閉じる"
+    },
     "menu": "メニュー",
     "account": "アカウント",
     "preferences": "設定",

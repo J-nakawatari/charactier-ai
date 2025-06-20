@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
 import { API_BASE_URL } from '@/lib/api-config';
+import { TermsModal } from '@/components/TermsModal';
+import { PrivacyModal } from '@/components/PrivacyModal';
 
 const orbitron = Orbitron({ 
   weight: ['400', '700'], 
@@ -32,6 +34,8 @@ export default function RegisterPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   
   const videoSources = [
     '/video/hero-videos_01.mp4',
@@ -417,12 +421,18 @@ export default function RegisterPage() {
                   type="button"
                   className="underline hover:opacity-80 transition-colors"
                   style={{ color: '#E95295' }}
-                  onClick={() => {
-                    // TODO: 利用規約・プライバシーポリシーページを開く
-                    console.log('利用規約・プライバシーポリシーを開く');
-                  }}
+                  onClick={() => setShowTermsModal(true)}
                 >
-                  {t('termsLink')}
+                  {t('termsOfService')}
+                </button>
+                {t('and')}
+                <button
+                  type="button"
+                  className="underline hover:opacity-80 transition-colors ml-1"
+                  style={{ color: '#E95295' }}
+                  onClick={() => setShowPrivacyModal(true)}
+                >
+                  {t('privacyPolicy')}
                 </button>
                 {t('termsAccept')}
               </div>
@@ -471,6 +481,10 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+      
+      {/* Modals */}
+      <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
+      <PrivacyModal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
     </div>
   );
 }

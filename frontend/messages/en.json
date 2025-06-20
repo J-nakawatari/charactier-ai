@@ -86,7 +86,9 @@
       "en": "English"
     },
     "terms": "By registering, you agree to our ",
-    "termsLink": "Terms of Service and Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "and": "and",
     "termsAccept": ".",
     "registerButton": "Agree to Terms and Sign Up",
     "hasAccount": "Already have an account?",
@@ -162,6 +164,16 @@
     "appDescription": "AI Character Chat",
     "user": "User",
     "tokenBalance": "Talk Tickets: {count, number}",
+    "termsModal": {
+      "title": "Terms of Service",
+      "lastUpdated": "Last updated: January 1, 2024",
+      "close": "Close"
+    },
+    "privacyModal": {
+      "title": "Privacy Policy",
+      "lastUpdated": "Last updated: January 1, 2024",
+      "close": "Close"
+    },
     "menu": "Menu",
     "account": "Account",
     "preferences": "Settings",
