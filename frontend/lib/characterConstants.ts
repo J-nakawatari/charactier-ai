@@ -63,7 +63,19 @@ export const PERSONALITY_TAGS = {
   '敬語': { ja: '敬語', en: 'Polite' },
   'タメ口': { ja: 'タメ口', en: 'Casual' },
   '方言': { ja: '方言', en: 'Dialect' },
-  'お嬢様口調': { ja: 'お嬢様口調', en: 'Ladylike' }
+  'お嬢様口調': { ja: 'お嬢様口調', en: 'Ladylike' },
+  
+  // 追加のタグ
+  'ポジティブ': { ja: 'ポジティブ', en: 'Positive' },
+  '積極的': { ja: '積極的', en: 'Proactive' },
+  '癒し系': { ja: '癒し系', en: 'Healing' },
+  'おしゃべり': { ja: 'おしゃべり', en: 'Talkative' },
+  '控えめ': { ja: '控えめ', en: 'Modest' },
+  '知的': { ja: '知的', en: 'Intellectual' },
+  'ロマンチスト': { ja: 'ロマンチスト', en: 'Romantic' },
+  '素直': { ja: '素直', en: 'Honest' },
+  '面倒見がいい': { ja: '面倒見がいい', en: 'Nurturing' },
+  'さっぱり': { ja: 'さっぱり', en: 'Straightforward' }
 } as const;
 
 export type PersonalityPreset = keyof typeof PERSONALITY_PRESETS;
