@@ -487,7 +487,8 @@
       "currentPassword": "現在のパスワード",
       "newPassword": "新しいパスワード（8文字以上）",
       "confirmPassword": "新しいパスワード（確認）",
-      "deleteInput": "退会する"
+      "deleteInput": "退会する",
+      "password": "パスワード"
     },
     "labels": {
       "changePassword": "パスワード変更",
