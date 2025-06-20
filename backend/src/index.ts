@@ -3518,6 +3518,179 @@ app.get('/api/admin/admins', authenticateToken, async (req: AuthRequest, res: Re
   }
 });
 
+// 管理者個別取得API
+app.get('/api/admin/admins/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
+    return;
+  }
+
+  const { id } = req.params;
+
+  try {
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database not connected' });
+      return;
+    }
+
+    const admin = await AdminModel.findById(id).select('-password');
+    
+    if (!admin) {
+      res.status(404).json({
+        error: 'Admin not found',
+        message: '管理者が見つかりません'
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      admin: admin
+    });
+  } catch (error) {
+    console.error('Admin fetch error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: '管理者情報の取得に失敗しました'
+    });
+  }
+});
+
+// 管理者更新API
+app.put('/api/admin/admins/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
+    return;
+  }
+
+  const { id } = req.params;
+  const { name, email, role, permissions, isActive } = req.body;
+
+  try {
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database not connected' });
+      return;
+    }
+
+    // メールアドレスの重複チェック
+    if (email) {
+      const existingAdmin = await AdminModel.findOne({ 
+        email: email.toLowerCase(), 
+        _id: { $ne: id } 
+      });
+      
+      if (existingAdmin) {
+        res.status(400).json({
+          error: 'Email already exists',
+          message: 'このメールアドレスは既に使用されています'
+        });
+        return;
+      }
+    }
+
+    const updateData: any = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email.toLowerCase();
+    if (role) updateData.role = role;
+    if (permissions !== undefined) updateData.permissions = permissions;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    const updatedAdmin = await AdminModel.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, select: '-password', runValidators: true }
+    );
+
+    if (!updatedAdmin) {
+      res.status(404).json({
+        error: 'Admin not found',
+        message: '管理者が見つかりません'
+      });
+      return;
+    }
+
+    console.log('Admin updated:', updatedAdmin._id);
+
+    res.json({
+      success: true,
+      message: '管理者情報を更新しました',
+      admin: updatedAdmin
+    });
+  } catch (error) {
+    console.error('Admin update error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: '管理者情報の更新に失敗しました'
+    });
+  }
+});
+
+// 管理者削除API
+app.delete('/api/admin/admins/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user || !(req.user as any).isAdmin) {
+    res.status(401).json({ error: 'Admin access required' });
+    return;
+  }
+
+  const { id } = req.params;
+
+  try {
+    if (!isMongoConnected) {
+      res.status(500).json({ error: 'Database not connected' });
+      return;
+    }
+
+    // 自分自身を削除できないようにする
+    if (req.user._id.toString() === id) {
+      res.status(400).json({
+        error: 'Cannot delete yourself',
+        message: '自分自身を削除することはできません'
+      });
+      return;
+    }
+
+    // スーパー管理者が1人しかいない場合は削除を防ぐ
+    const adminToDelete = await AdminModel.findById(id);
+    if (adminToDelete?.role === 'super_admin') {
+      const superAdminCount = await AdminModel.countDocuments({ 
+        role: 'super_admin',
+        isActive: true 
+      });
+      
+      if (superAdminCount <= 1) {
+        res.status(400).json({
+          error: 'Cannot delete last super admin',
+          message: '最後のスーパー管理者は削除できません'
+        });
+        return;
+      }
+    }
+
+    const deletedAdmin = await AdminModel.findByIdAndDelete(id);
+
+    if (!deletedAdmin) {
+      res.status(404).json({
+        error: 'Admin not found',
+        message: '管理者が見つかりません'
+      });
+      return;
+    }
+
+    console.log('Admin deleted:', deletedAdmin._id);
+
+    res.json({
+      success: true,
+      message: `管理者 ${deletedAdmin.name} を削除しました`
+    });
+  } catch (error) {
+    console.error('Admin delete error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: '管理者の削除に失敗しました'
+    });
+  }
+});
+
 
 // 🔄 リアルタイムセキュリティイベントストリーム（SSE）
 app.get('/api/admin/security/events-stream', async (req: Request, res: Response): Promise<void> => {
