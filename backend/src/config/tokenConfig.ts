@@ -1,11 +1,13 @@
 /**
- * トークン計算設定の一元管理（利益率94%）
+ * トークン計算設定の一元管理（99%利益率システム）
  * 
  * ⚠️ 重要: この設定値の変更は収益に直接影響します
  * 変更前に必ず以下を確認してください:
  * 1. 利益率の計算
  * 2. 既存ユーザーへの影響
  * 3. テスト環境での検証
+ * 
+ * 99%利益率システム: ユーザー支払額の1%のみをコストとして使用
  */
 
 interface ModelUnitCostUSD {
@@ -19,8 +21,11 @@ export const MODEL_UNIT_COST_USD: Record<string, ModelUnitCostUSD> = {
 };
 
 export const USD_JPY_RATE = 150;                             // フォールバック固定レート（動的取得失敗時）
-export const PROFIT_MARGIN = 0.94;                           // 利益率94%
-export const COST_RATIO = 1 - PROFIT_MARGIN;                 // 原価率6%
+export const PROFIT_MARGIN = 0.99;                           // 利益率99%（99%利益率システム）
+export const COST_RATIO = 1 - PROFIT_MARGIN;                 // 原価率1%
+
+// 固定トークンレートは使用しない（99%利益率システムでは動的計算のみ）
+export const USE_FIXED_TOKEN_RATE = false;                   // 99%利益率システムでは常にfalse
 
 /**
  * 平均原価計算（入力:出力 = 1:2の比率）
@@ -46,18 +51,20 @@ export const avgTokenCostYen = async (model: string): Promise<number> => {
 };
 
 /**
- * 1円あたりのトークン数
+ * 1円あたりのトークン数（99%利益率システム）
  */
 export const tokensPerYen = async (model: string): Promise<number> => {
+  // 99%利益率システムでは常に動的計算
   const costYen = await avgTokenCostYen(model);
   const result = COST_RATIO / costYen;
   
   // デバッグログ
-  console.log('💰 tokensPerYen calculation:', {
+  console.log('💰 99%利益率システム - tokensPerYen calculation:', {
     model,
     costYen,
     COST_RATIO,
-    result
+    result,
+    profitMargin: PROFIT_MARGIN * 100 + '%'
   });
   
   return result;
@@ -95,11 +102,18 @@ export const logTokenConfig = async (model: string = 'gpt-4o-mini'): Promise<voi
   const tokensPerYenValue = await tokensPerYen(model);
   const tokens500 = await calcTokensToGive(500, model);
   
-  console.log('🔧 Token Configuration:');
+  console.log('🔧 99%利益率システム - Token Configuration:');
   console.log(`   Model: ${model}`);
   console.log(`   Average Cost: ${costYen.toFixed(8)}円/token`);
   console.log(`   Profit Margin: ${PROFIT_MARGIN * 100}%`);
   console.log(`   Cost Ratio: ${COST_RATIO * 100}%`);
   console.log(`   Tokens per Yen: ${tokensPerYenValue.toFixed(2)}tokens/円`);
   console.log(`   500円購入時: ${tokens500}tokens`);
+  
+  // 実際の利益率計算
+  const actualCostYen = tokens500 * costYen;
+  const actualProfitMargin = ((500 - actualCostYen) / 500) * 100;
+  console.log(`   実際のコスト: ${actualCostYen.toFixed(2)}円`);
+  console.log(`   実際の利益: ${(500 - actualCostYen).toFixed(2)}円`);
+  console.log(`   実際の利益率: ${actualProfitMargin.toFixed(1)}%`);
 };

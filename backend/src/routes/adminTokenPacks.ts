@@ -57,13 +57,13 @@ router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, r
     const { calcTokensToGive } = require('../config/tokenConfig');
     const currentModel = 'gpt-4o-mini'; // デフォルトモデルを指定
     
-    // 各パックの実際の利益率を計算（固定90%）
+    // 各パックの実際の利益率を計算（99%利益率システム）
     const tokenPacksWithProfitMargin = await Promise.all(tokenPacks.map(async (pack) => {
       const expectedTokens = await calcTokensToGive(pack.price, currentModel);
       
       return {
         ...pack,
-        profitMargin: 90, // 実際の利益率は90%固定
+        profitMargin: 99, // 99%利益率システム
         tokenPerYen: pack.tokens / pack.price,
         expectedTokens: expectedTokens // 参考値として期待トークン数も含める
       };
@@ -100,7 +100,7 @@ router.post('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, 
       price,
       priceId,
       isActive = true,
-      profitMargin = 50,
+      profitMargin = 99,
       bonusTokens = 0,
       popularTag = false,
       limitedTime = false,
@@ -162,8 +162,8 @@ router.put('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest
     if (updateData.tokens && updateData.price) {
       updateData.tokenPerYen = updateData.tokens / updateData.price;
       
-      // 利益率は90%固定（gpt-4o-miniモデル使用時）
-      updateData.profitMargin = 90;
+      // 99%利益率システム
+      updateData.profitMargin = 99;
     }
 
     if (updateData.validUntil) {

@@ -77,9 +77,9 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
     if (tokens <= 0 || price <= 0) return { profitMargin: 0, tokenPerYen: 0, isValid: true };
     
     const tokenPerYen = tokens / price;
-    // 実際の利益率は94%固定（バックエンドで計算済み）
-    const profitMargin = 94;
-    const isValid = true; // 94%利益ルールは常に適合
+    // 99%利益率システム（バックエンドで計算済み）
+    const profitMargin = 99;
+    const isValid = true; // 99%利益率システムは常に適合
     
     return { profitMargin, tokenPerYen, isValid };
   };
@@ -383,7 +383,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
                 <AlertCircle className="w-5 h-5 mt-0.5 text-green-600" />
                 <div className="flex-1">
                   <h4 className="font-medium text-green-800">
-                    94%利益ルール適合済み
+                    99%利益率システム適合済み
                   </h4>
                   <div className="mt-2 text-sm space-y-1">
                     <p className="text-green-700">
@@ -394,6 +394,9 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
                     </p>
                     <p className="text-green-700">
                       • 総付与トークン: <span className="font-medium">{formData.tokens?.toLocaleString()}トークン</span>
+                    </p>
+                    <p className="text-green-700 text-xs mt-2">
+                      ※ ユーザー支払額の1%のみをコストとして使用
                     </p>
                   </div>
                 </div>

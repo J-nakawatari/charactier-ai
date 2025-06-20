@@ -124,10 +124,10 @@ const TokenUsageSchema = new mongoose_1.Schema({
         required: true,
         validate: {
             validator: function (v) {
-                // 50%利益ルールチェック
-                return v >= (this.apiCostYen * 0.5);
+                // 99%利益率システムチェック
+                return v >= (this.apiCostYen * 99);
             },
-            message: 'Profit margin below 50% rule'
+            message: 'Profit margin below 99% rule'
         }
     },
     profitMargin: {
@@ -137,9 +137,9 @@ const TokenUsageSchema = new mongoose_1.Schema({
         max: 1,
         validate: {
             validator: function (v) {
-                return v >= 0.5; // 50%利益ルール強制
+                return v >= 0.99; // 99%利益率システム
             },
-            message: 'Profit margin must be at least 50%'
+            message: 'Profit margin must be at least 99%'
         }
     },
     // 親密度変化
@@ -363,7 +363,7 @@ TokenUsageSchema.post('save', async function (doc) {
         console.warn(`High API cost detected: ${doc.apiCostYen} yen for user ${doc.userId}`);
     }
     // 利益率違反アラート
-    if (doc.profitMargin < 0.5) {
+    if (doc.profitMargin < 0.99) {
         console.error(`Profit margin violation: ${doc.profitMargin} for user ${doc.userId}`);
     }
 });
