@@ -136,8 +136,8 @@ router.post('/simulate', authenticateToken, async (req: AuthRequest, res: Respon
         modelInfo,
         purchaseAmount,
         tokensToGive,
-        profitMargin: 0.90,
-        costRatio: 0.10
+        profitMargin: 0.99, // 99%利益率システム
+        costRatio: 0.01 // 1%コスト
       }
     });
   } catch (error) {

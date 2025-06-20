@@ -3843,10 +3843,10 @@ app.get('/api/admin/token-analytics/overview', authenticateToken, async (req: Au
             totalRevenue: { $sum: '$grossProfit' },
             totalCost: { $sum: '$apiCostYen' },
             profitableMessages: {
-              $sum: { $cond: [{ $gte: ['$profitMargin', 0.5] }, 1, 0] }
+              $sum: { $cond: [{ $gte: ['$profitMargin', 0.99] }, 1, 0] }
             },
             lowProfitMessages: {
-              $sum: { $cond: [{ $lt: ['$profitMargin', 0.5] }, 1, 0] }
+              $sum: { $cond: [{ $lt: ['$profitMargin', 0.99] }, 1, 0] }
             },
             highCostMessages: {
               $sum: { $cond: [{ $gt: ['$apiCostYen', 50] }, 1, 0] }
@@ -4097,7 +4097,7 @@ app.get('/api/admin/token-analytics/profit-analysis', authenticateToken, async (
         { 
           $match: { 
             createdAt: { $gte: startDate },
-            profitMargin: { $lt: 0.5 }
+            profitMargin: { $lt: 0.99 } // 99%利益率システム
           } 
         },
         {

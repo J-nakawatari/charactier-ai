@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 /**
  * UserTokenPack Schema（簡素化版）
- * 50%利益保証を実現するシンプルなトークンパック管理
+ * 99%利益率システムを実現するシンプルなトークンパック管理
  */
 const userTokenPackSchema = new mongoose.Schema({
   // ユーザー情報
@@ -66,7 +66,7 @@ const userTokenPackSchema = new mongoose.Schema({
   // 利益管理（参考情報）
   profitMarginUsed: {
     type: Number,
-    default: 0.5,
+    default: 0.99, // 99%利益率システム
     min: 0,
     max: 1
   },
