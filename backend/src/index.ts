@@ -800,6 +800,9 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
       return;
     }
 
+    // UserTokenPackモデルをインポート
+    const UserTokenPack = require('../../models/UserTokenPack');
+    
     // トークン使用状況
     const tokenUsage = await TokenUsage.aggregate([
       { $match: { userId: new mongoose.Types.ObjectId(userId) } },
@@ -996,9 +999,9 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
         purchasedCharacters: user.purchasedCharacters || []
       },
       tokens: {
-        balance: user.tokenBalance || 0,
+        balance: await UserTokenPack.calculateUserTokenBalance(userId),
         totalUsed: tokenUsage[0]?.totalUsed || 0,
-        totalPurchased: user.totalSpent || 0,
+        totalPurchased: await UserTokenPack.calculateTotalPurchasedTokens(userId),
         recentUsage: []
       },
       affinities: validAffinities,

@@ -130,6 +130,25 @@ userTokenPackSchema.statics.calculateUserTokenBalance = async function(userId) {
   return result.length > 0 ? result[0].totalRemaining : 0;
 };
 
+// 静的メソッド：ユーザーの総購入トークン数計算
+userTokenPackSchema.statics.calculateTotalPurchasedTokens = async function(userId) {
+  const result = await this.aggregate([
+    {
+      $match: {
+        userId: new mongoose.Types.ObjectId(userId)
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalPurchased: { $sum: '$tokensPurchased' }
+      }
+    }
+  ]);
+  
+  return result.length > 0 ? result[0].totalPurchased : 0;
+};
+
 // 静的メソッド：システム全体の統計取得
 userTokenPackSchema.statics.getSystemStats = async function(days = 30) {
   const startDate = new Date();
