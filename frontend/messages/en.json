@@ -609,6 +609,7 @@
     "balance": "Token Balance",
     "unit": " tokens",
     "remainingMessages": "(About {count} more messages)",
+    "noTokensLeft": "(No tokens left)",
     "purchase": "Buy Talk Tickets",
     "loading": "Loading...",
     "consumed": "Used: {amount} tokens",
