@@ -1959,34 +1959,29 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         // 🚀 詳細TokenUsage記録（仕様書に基づく高度トラッキング）
         try {
           
-          // API費用計算
+          // API費用計算（tokenConfig.tsの統一された計算を使用）
           const model = character.aiModel || process.env.OPENAI_MODEL || 'gpt-4o-mini';
           const inputTokens = Math.floor(aiResponse.tokensUsed * 0.6); // 推定入力トークン
           const outputTokens = Math.floor(aiResponse.tokensUsed * 0.4); // 推定出力トークン
           
-          // GPTモデル別の料金計算（USD）
-          let apiCost = 0;
-          if (model === 'gpt-4') {
-            apiCost = (inputTokens * 0.03 + outputTokens * 0.06) / 1000;
-          } else if (model === 'gpt-3.5-turbo') {
-            apiCost = (inputTokens * 0.0005 + outputTokens * 0.0015) / 1000;
-          } else if (model === 'gpt-4o-mini') {
-            apiCost = (inputTokens * 0.00015 + outputTokens * 0.0006) / 1000;
-          } else {
-            apiCost = (inputTokens * 0.00015 + outputTokens * 0.0006) / 1000; // デフォルト
-          }
-          
-          // 動的為替レートを取得
+          // tokenConfig.tsから統一された料金設定を使用
+          const { MODEL_UNIT_COST_USD, PROFIT_MARGIN } = require('./config/tokenConfig');
           const { getCurrentExchangeRate } = require('./services/exchangeRateService');
+          
+          const modelCost = MODEL_UNIT_COST_USD[model] || MODEL_UNIT_COST_USD['gpt-4o-mini'];
+          const apiCost = (inputTokens * modelCost.input + outputTokens * modelCost.output);
+          
           const exchangeRate = await getCurrentExchangeRate();
           const apiCostYen = apiCost * exchangeRate; // USD→JPY換算
           const sessionId = `chat_${req.user._id}_${characterId}_${Date.now()}`;
           
-          // 利益分析計算
-          const tokenPrice = userTokenBalance > 0 ? (500 / 15000) : 0; // 500円で15000トークンの想定
+          // 利益分析計算（tokenConfig.tsのPROFIT_MARGINを使用）
+          const { tokensPerYen } = require('./config/tokenConfig');
+          const tokensPerYenValue = await tokensPerYen(model);
+          const tokenPrice = 1 / tokensPerYenValue; // 1トークンあたりの価格（円）
           const grossRevenue = aiResponse.tokensUsed * tokenPrice;
           const grossProfit = grossRevenue - apiCostYen;
-          const profitMargin = grossRevenue > 0 ? (grossProfit / grossRevenue) : 0;
+          const profitMargin = grossRevenue > 0 ? (grossProfit / grossRevenue) : PROFIT_MARGIN;
           
           const tokenUsageRecord = new TokenUsage({
             // 基本情報

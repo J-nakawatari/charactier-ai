@@ -150,10 +150,10 @@ const TokenUsageSchema = new Schema<ITokenUsage>({
     required: true,
     validate: {
       validator: function(v: number) {
-        // 50%利益ルールチェック
-        return v >= (this.apiCostYen * 0.5);
+        // 94%利益ルールチェック
+        return v >= (this.apiCostYen * 0.06); // 6%原価率
       },
-      message: 'Profit margin below 50% rule'
+      message: 'Profit margin below 94% rule'
     }
   },
   profitMargin: {
@@ -163,9 +163,9 @@ const TokenUsageSchema = new Schema<ITokenUsage>({
     max: 1,
     validate: {
       validator: function(v: number) {
-        return v >= 0.5; // 50%利益ルール強制
+        return v >= 0.9; // 90%利益ルール（安全マージン）
       },
-      message: 'Profit margin must be at least 50%'
+      message: 'Profit margin must be at least 90%'
     }
   },
 
@@ -419,7 +419,7 @@ TokenUsageSchema.post('save', async function(doc) {
   }
   
   // 利益率違反アラート
-  if (doc.profitMargin < 0.5) {
+  if (doc.profitMargin < 0.9) {
     console.error(`Profit margin violation: ${doc.profitMargin} for user ${doc.userId}`);
   }
 });
