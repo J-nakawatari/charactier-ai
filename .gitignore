@@ -73,4 +73,4 @@ docs/logs/
 # Upload files - アップロードされた画像ファイル
 uploads/*
 !uploads/.gitkeep
-uploads/images/*
+uploads/images/*_archived/
