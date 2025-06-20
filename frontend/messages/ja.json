@@ -442,6 +442,7 @@
       "deleteAccount": "アカウント削除",
       "dangerZone": "危険エリア",
       "deleteWarning": "アカウントを削除すると、全てのデータが永久に失われます。この操作は取り消せません。",
+      "deletePasswordConfirmation": "アカウント削除を確認するため、パスワードを入力してください。",
       "deleteConfirmation": "アカウント削除を確認するため、下のテキストボックスに「退会する」と入力してください。",
       "deleteButton": "アカウントを削除",
       "deleteInput": "退会する"
@@ -468,6 +469,8 @@
       "newPasswordTooShort": "新しいパスワードは8文字以上で入力してください",
       "newPasswordMismatch": "新しいパスワードが一致しません",
       "confirmTextIncorrect": "確認テキストが正しくありません",
+      "passwordRequired": "パスワードを入力してください",
+      "incorrectPassword": "パスワードが正しくありません",
       "userDataFetchFailed": "ユーザー情報の取得に失敗しました",
       "profileUpdateFailed": "プロフィールの更新に失敗しました",
       "passwordChangeFailed": "パスワードの変更に失敗しました",

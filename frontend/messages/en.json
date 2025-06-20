@@ -442,6 +442,7 @@
       "deleteAccount": "Delete Account",
       "dangerZone": "Danger Zone",
       "deleteWarning": "Deleting your account will permanently lose all data. This action cannot be undone.",
+      "deletePasswordConfirmation": "To confirm account deletion, please enter your password.",
       "deleteConfirmation": "To confirm account deletion, please type \"退会する\" in the text box below.",
       "deleteButton": "Delete Account",
       "deleteInput": "退会する"
@@ -468,6 +469,8 @@
       "newPasswordTooShort": "New password must be at least 8 characters",
       "newPasswordMismatch": "New passwords do not match",
       "confirmTextIncorrect": "Confirmation text is incorrect",
+      "passwordRequired": "Please enter your password",
+      "incorrectPassword": "Incorrect password",
       "userDataFetchFailed": "Failed to fetch user information",
       "profileUpdateFailed": "Failed to update profile",
       "passwordChangeFailed": "Failed to change password",

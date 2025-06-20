@@ -62,7 +62,8 @@ export default function SettingsPage() {
   });
   
   // 退会用
-  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   // 言語設定用
@@ -211,8 +212,8 @@ export default function SettingsPage() {
 
   // アカウント削除
   const handleAccountDeletion = async () => {
-    if (deleteConfirmation !== t('placeholders.deleteInput')) {
-      error(t('errors.confirmTextIncorrect'));
+    if (!deletePassword) {
+      error(t('errors.passwordRequired'));
       return;
     }
 
@@ -229,11 +230,15 @@ export default function SettingsPage() {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({ password: deletePassword })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        if (response.status === 401) {
+          throw new Error(t('errors.incorrectPassword'));
+        }
         throw new Error(errorData.message || 'Failed to delete account');
       }
 
@@ -245,9 +250,10 @@ export default function SettingsPage() {
       router.push(`/${locale}/`);
     } catch (err) {
       console.error('Error deleting account:', err);
-      error(t('errors.accountDeleteFailed'));
+      error(err instanceof Error ? err.message : t('errors.accountDeleteFailed'));
     } finally {
       setDeleteLoading(false);
+      setDeletePassword('');
     }
   };
 
@@ -578,20 +584,33 @@ export default function SettingsPage() {
                       <div className="space-y-4">
                         <div>
                           <p className="text-sm text-gray-600 mb-3">
-                            {t('account.deleteConfirmation')}
+                            {t('account.deletePasswordConfirmation')}
                           </p>
-                          <input
-                            type="text"
-                            value={deleteConfirmation}
-                            onChange={(e) => setDeleteConfirmation(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none  text-gray-900 bg-white"
-                            placeholder={t('placeholders.deleteInput')}
-                          />
+                          <div className="relative">
+                            <input
+                              type={showDeletePassword ? 'text' : 'password'}
+                              value={deletePassword}
+                              onChange={(e) => setDeletePassword(e.target.value)}
+                              className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 text-gray-900 bg-white"
+                              placeholder={t('placeholders.password')}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowDeletePassword(!showDeletePassword)}
+                              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            >
+                              {showDeletePassword ? (
+                                <EyeOff className="h-5 w-5 text-gray-400" />
+                              ) : (
+                                <Eye className="h-5 w-5 text-gray-400" />
+                              )}
+                            </button>
+                          </div>
                         </div>
 
                         <button
                           onClick={handleAccountDeletion}
-                          disabled={deleteLoading || deleteConfirmation !== t('placeholders.deleteInput')}
+                          disabled={deleteLoading || !deletePassword}
                           className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <UserX className="w-4 h-4" />
