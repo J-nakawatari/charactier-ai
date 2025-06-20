@@ -511,13 +511,21 @@
     }
   },
   "setup": {
-    "greeting": "はじめまして！",
+    "greeting": "はじめまして",
     "namePrompt": "あなたのお名前を教えてください",
     "nameLabel": "お名前",
-    "namePlaceholder": "お名前を入力してください",
+    "namePlaceholder": "例：太郎",
     "next": "次へ",
     "startChat": "チャットを始める",
-    "characterSelection": "好きなキャラクターを選択してください"
+    "characterSelection": "好きなキャラクターを選択してください",
+    "settingUp": "セットアップ中...",
+    "errors": {
+      "nameRequired": "お名前を入力してください",
+      "characterRequired": "キャラクターを選択してください",
+      "charactersFetchFailed": "キャラクター情報の取得に失敗しました",
+      "setupFailed": "セットアップに失敗しました",
+      "setupFailedRetry": "セットアップに失敗しました。もう一度お試しください。"
+    }
   },
   "chatLayout": {
     "advancedOn": "高度表示オン",

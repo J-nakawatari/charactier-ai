@@ -511,13 +511,21 @@
     }
   },
   "setup": {
-    "greeting": "Nice to meet you!",
+    "greeting": "Nice to meet you",
     "namePrompt": "Please tell us your name",
     "nameLabel": "Name",
-    "namePlaceholder": "Enter your name",
+    "namePlaceholder": "e.g. John",
     "next": "Next",
     "startChat": "Start Chatting",
-    "characterSelection": "Please select your favorite character"
+    "characterSelection": "Please select your favorite character",
+    "settingUp": "Setting up...",
+    "errors": {
+      "nameRequired": "Please enter your name",
+      "characterRequired": "Please select a character",
+      "charactersFetchFailed": "Failed to fetch character information",
+      "setupFailed": "Setup failed",
+      "setupFailedRetry": "Setup failed. Please try again."
+    }
   },
   "chatLayout": {
     "advancedOn": "Advanced Display On",
