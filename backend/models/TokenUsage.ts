@@ -75,7 +75,7 @@ const TokenUsageSchema = new Schema<ITokenUsage>({
     type: String,
     required: true,
     index: true,
-    maxlength: 64
+    maxlength: 128
   },
 
   // 使用量詳細
@@ -106,7 +106,7 @@ const TokenUsageSchema = new Schema<ITokenUsage>({
   aiModel: {
     type: String,
     required: true,
-    enum: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o','gpt-4o-mini'],
+    enum: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4o-mini'],
     index: true
   },
   inputTokens: {
@@ -394,9 +394,12 @@ TokenUsageSchema.statics.getProfitAnalysis = async function(startDate: Date, end
 
 // 保存前バリデーション
 TokenUsageSchema.pre('save', function(next) {
-  // 利益率計算
-  if (this.apiCostYen > 0) {
-    this.profitMargin = Math.max(0, (this.grossProfit - this.apiCostYen) / this.grossProfit);
+  // 利益率計算（0-1の範囲に収める）
+  if (this.apiCostYen > 0 && this.grossProfit > 0) {
+    const margin = (this.grossProfit - this.apiCostYen) / this.grossProfit;
+    this.profitMargin = Math.max(0, Math.min(1, margin));
+  } else {
+    this.profitMargin = 0;
   }
   
   // 親密度変化計算
