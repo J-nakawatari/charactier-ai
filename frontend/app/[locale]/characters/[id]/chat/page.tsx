@@ -365,7 +365,7 @@ export default function ChatPage() {
         }, 'メッセージの送信に失敗しました');
       }
     }
-  }, [chatData, messages, tokenStatus, affinity, showError, showWarning, showApiError, characterId]);
+  }, [chatData, showError, showWarning, showApiError, characterId]);
 
   useEffect(() => {
     loadChatData();

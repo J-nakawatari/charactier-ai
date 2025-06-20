@@ -43,6 +43,7 @@ export default function EditAdminPage() {
 
   useEffect(() => {
     fetchAdminData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adminId]);
 
   const fetchAdminData = async () => {
