@@ -1,6 +1,7 @@
 import type { AuthRequest } from '../types/express';
 import { Router, Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { UserModel } from '../models/UserModel';
 import { AdminModel } from '../models/AdminModel';
 import { generateAccessToken, generateRefreshToken } from '../middleware/auth';
@@ -193,10 +194,20 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const jwt = require('jsonwebtoken');
     const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId: string };
 
-    // ユーザーの存在確認
+    // まず管理者として検索
+    const admin = await AdminModel.findById(decoded.userId);
+    if (admin && admin.isActive) {
+      // 管理者用の新しいアクセストークンを生成
+      const newAccessToken = generateAccessToken(admin._id.toString());
+      res.json({
+        accessToken: newAccessToken
+      });
+      return;
+    }
+
+    // 管理者で見つからない場合は一般ユーザーとして検索
     const user = await UserModel.findById(decoded.userId);
     if (!user || !user.isActive) {
       res.status(401).json({
@@ -215,10 +226,30 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
 
   } catch (error) {
     console.error('❌ Token refresh error:', error);
-    res.status(401).json({
-      error: 'Token refresh failed',
-      message: 'トークンの更新に失敗しました'
-    });
+    
+    if (error instanceof jwt.TokenExpiredError) {
+      console.error('⏰ Refresh token expired:', {
+        expiredAt: error.expiredAt,
+        message: error.message
+      });
+      res.status(401).json({
+        error: 'Refresh token expired',
+        message: 'リフレッシュトークンの有効期限が切れています。再度ログインしてください。',
+        requireRelogin: true
+      });
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      console.error('🔴 Invalid refresh token:', error.message);
+      res.status(401).json({
+        error: 'Invalid refresh token',
+        message: '無効なリフレッシュトークンです',
+        requireRelogin: true
+      });
+    } else {
+      res.status(500).json({
+        error: 'Token refresh failed',
+        message: 'トークンの更新に失敗しました'
+      });
+    }
   }
 });
 
