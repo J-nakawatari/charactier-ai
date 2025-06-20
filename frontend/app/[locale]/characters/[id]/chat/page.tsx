@@ -51,6 +51,9 @@ export default function ChatPage() {
   const [chatData, setChatData] = useState<ChatLayoutData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [tokenStatus, setTokenStatus] = useState<TokenStatus>({ tokensRemaining: 0, lastMessageCost: 0 });
+  const [affinity, setAffinity] = useState<UserCharacterAffinity>({ level: 0, currentExp: 0, nextLevelExp: 100, unlockedIllustrations: [] });
 
   const characterId = params.id as string;
   const locale = params.locale as string;
@@ -118,6 +121,9 @@ export default function ChatPage() {
         };
         
         setChatData(chatData);
+        setMessages(chatData.messages);
+        setTokenStatus(chatData.tokenStatus);
+        setAffinity(chatData.affinity);
         return; // 実API成功時は早期リターン
         
       } catch (apiError) {
@@ -192,6 +198,9 @@ export default function ChatPage() {
         };
         
         setChatData(fallbackData);
+        setMessages(fallbackData.messages);
+        setTokenStatus(fallbackData.tokenStatus);
+        setAffinity(fallbackData.affinity);
       }
     } catch (err) {
       console.error('Chat data loading error:', err);
@@ -225,10 +234,8 @@ export default function ChatPage() {
 
     try {
 
-      setChatData(prev => prev ? {
-        ...prev,
-        messages: [...prev.messages, tempUserMessage]
-      } : null);
+      // メッセージだけを更新（他のプロパティは更新しない）
+      setMessages(prev => [...prev, tempUserMessage]);
 
       // API呼び出し
       const response = await fetch(`/api/chats/${characterId}/messages`, {
@@ -277,26 +284,26 @@ export default function ChatPage() {
           tokens: responseData.aiResponse.tokensUsed
         };
         
-        setChatData(prev => prev ? {
+        // 各状態を個別に更新
+        setMessages(prev => [
+          ...prev.filter(m => m.id !== tempUserMessage.id),
+          newUserMessage,
+          newAiMessage
+        ]);
+        
+        setTokenStatus(prev => ({
           ...prev,
-          messages: [
-            ...prev.messages.filter(m => m.id !== tempUserMessage.id),
-            newUserMessage,
-            newAiMessage
-          ],
-          tokenStatus: {
-            ...prev.tokenStatus,
-            tokensRemaining: responseData.tokenBalance || prev.tokenStatus.tokensRemaining,
-            lastMessageCost: responseData.aiResponse.tokensUsed || 0
-          },
-          affinity: {
-            ...prev.affinity,
-            level: responseData.affinity?.level || prev.affinity.level,
-            currentExp: responseData.affinity?.increase 
-              ? prev.affinity.currentExp + responseData.affinity.increase 
-              : prev.affinity.currentExp
-          }
-        } : null);
+          tokensRemaining: responseData.tokenBalance || prev.tokensRemaining,
+          lastMessageCost: responseData.aiResponse.tokensUsed || 0
+        }));
+        
+        setAffinity(prev => ({
+          ...prev,
+          level: responseData.affinity?.level || prev.level,
+          currentExp: responseData.affinity?.increase 
+            ? prev.currentExp + responseData.affinity.increase 
+            : prev.currentExp
+        }));
 
         // レベルアップ情報の処理
         if (responseData.levelUp) {
@@ -314,10 +321,8 @@ export default function ChatPage() {
 
     } catch (error) {
       
-      setChatData(prev => prev ? {
-        ...prev,
-        messages: prev.messages.filter(m => m.id !== tempUserMessage.id)
-      } : null);
+      // エラー時は一時メッセージを削除
+      setMessages(prev => prev.filter(m => m.id !== tempUserMessage.id));
 
       
       if (typeof error === 'object' && error !== null && 'code' in error) {
@@ -360,7 +365,7 @@ export default function ChatPage() {
         }, 'メッセージの送信に失敗しました');
       }
     }
-  }, [chatData, showError, showWarning, showApiError, characterId]);
+  }, [chatData, messages, tokenStatus, affinity, showError, showWarning, showApiError, characterId]);
 
   useEffect(() => {
     loadChatData();
@@ -397,9 +402,9 @@ export default function ChatPage() {
   return (
     <ChatLayout
       character={chatData.character}
-      affinity={chatData.affinity}
-      tokenStatus={chatData.tokenStatus}
-      messages={chatData.messages}
+      affinity={affinity}
+      tokenStatus={tokenStatus}
+      messages={messages}
       onSendMessage={handleSendMessage}
       onTokenPurchaseSuccess={loadChatData}
     />
