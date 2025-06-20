@@ -140,7 +140,7 @@ export function AffinityBar({
           }`}
           style={{ backgroundColor: themeColor }}
         >
-          {level}
+          {Math.floor(level)}
         </div>
         
         {/* デスクトップ: ハートアイコン + Lv.12 */}
@@ -150,7 +150,7 @@ export function AffinityBar({
           }`} />
           <span className={`text-sm font-medium text-gray-700 transition-all duration-300 ${
             isLevelingUp ? 'text-yellow-600 font-bold' : ''
-          }`}>{t('levelUp', { level })}</span>
+          }`}>{t('levelUp', { level: Math.floor(level) })}</span>
           {isLevelingUp && (
             <span className="text-xs text-yellow-600 animate-bounce">{t('levelUpNotification')}</span>
           )}

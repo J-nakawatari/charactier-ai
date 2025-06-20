@@ -150,7 +150,7 @@ export default function SetupPage() {
       console.error('❌ Characters fetch error:', error);
       setError(t('errors.charactersFetchFailed'));
     }
-  }, [locale]);
+  }, [locale, t]);
 
   useEffect(() => {
     if (step === 2) {

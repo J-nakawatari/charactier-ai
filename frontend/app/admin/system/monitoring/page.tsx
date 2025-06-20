@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { adminAuthenticatedFetch } from '@/utils/auth';
 import { AlertCircle, Server, Activity, Users, Clock, Zap, RefreshCw, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -46,7 +46,7 @@ export default function SystemMonitoringPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMonitoringData = async () => {
+  const fetchMonitoringData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await adminAuthenticatedFetch(`/api/admin/system/monitoring?period=${period}`);
@@ -61,11 +61,11 @@ export default function SystemMonitoringPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]);
 
   useEffect(() => {
     fetchMonitoringData();
-  }, [period]);
+  }, [period, fetchMonitoringData]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('ja-JP', {

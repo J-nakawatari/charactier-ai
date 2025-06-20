@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { adminAuthenticatedFetch } from '@/utils/auth';
 import { AlertTriangle, Clock, Filter, RefreshCw, TrendingUp, AlertCircle } from 'lucide-react';
 
@@ -38,7 +38,7 @@ export default function ErrorStatsPage() {
   const [selectedError, setSelectedError] = useState<APIError | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchErrorData = async () => {
+  const fetchErrorData = useCallback(async () => {
     try {
       setRefreshing(true);
       
@@ -64,11 +64,11 @@ export default function ErrorStatsPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [timeRange]);
 
   useEffect(() => {
     fetchErrorData();
-  }, [timeRange]);
+  }, [timeRange, fetchErrorData]);
 
   const getErrorTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
