@@ -380,7 +380,7 @@ export default function HomePage() {
                 className="px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm md:text-base font-semibold"
                 style={{ 
                   color: '#E95295',
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.5)',
                   backdropFilter: 'blur(4px)'
                 }}
               >
@@ -397,7 +397,7 @@ export default function HomePage() {
                   height: 0,
                   borderLeft: '6px solid transparent',
                   borderRight: '6px solid transparent',
-                  borderBottom: '6px solid rgba(255, 255, 255, 0.2)'
+                  borderBottom: '6px solid rgba(255, 255, 255, 0.5)'
                 }}
               />
             </div>
