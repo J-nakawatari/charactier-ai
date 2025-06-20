@@ -7,6 +7,7 @@ import UserSidebar from '@/components/user/UserSidebar';
 import Image from 'next/image';
 import { authenticatedFetch } from '@/utils/auth';
 import { API_BASE_URL } from '@/lib/api-config';
+import { getSafeImageUrl } from '@/utils/imageUtils';
 import { 
   Images, 
   ChevronDown, 
@@ -426,7 +427,7 @@ export default function CharacterLibraryPage() {
                           onClick={() => handleImageClick(image)}
                         >
                           <Image 
-                            src={image.url} 
+                            src={getSafeImageUrl(image.url)} 
                             alt={image.title[locale as keyof typeof image.title] || 'Character gallery image'}
                             width={400}
                             height={192}
@@ -530,7 +531,7 @@ export default function CharacterLibraryPage() {
                         >
                           {/* ブラー処理された画像 */}
                           <Image 
-                            src={image.url} 
+                            src={getSafeImageUrl(image.url)} 
                             alt={t('locked.imageTitle')}
                             width={400}
                             height={192}
@@ -648,7 +649,7 @@ export default function CharacterLibraryPage() {
             {/* モーダル画像 - 白背景で透過PNG対応 */}
             <div className="relative bg-white p-8">
               <Image
-                src={selectedImage.url}
+                src={getSafeImageUrl(selectedImage.url)}
                 alt={selectedImage.title[locale] || t('modal.altText')}
                 width={800}
                 height={600}
