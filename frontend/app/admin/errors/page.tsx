@@ -192,7 +192,7 @@ export default function ErrorStatsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {/* エラータイプ別 */}
               <div className="bg-white p-6 rounded-lg border border-gray-200">
-                <h3 className="text-lg font-semibold mb-4">エラータイプ別</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-900">エラータイプ別</h3>
                 <div className="space-y-3">
                   {Object.entries(errorStats.errorsByType)
                     .sort(([,a], [,b]) => b - a)
@@ -215,7 +215,7 @@ export default function ErrorStatsPage() {
 
               {/* ステータスコード別 */}
               <div className="bg-white p-6 rounded-lg border border-gray-200">
-                <h3 className="text-lg font-semibold mb-4">ステータスコード別</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-900">ステータスコード別</h3>
                 <div className="space-y-3">
                   {Object.entries(errorStats.errorsByStatus)
                     .sort(([,a], [,b]) => b - a)
@@ -241,7 +241,7 @@ export default function ErrorStatsPage() {
 
             {/* エラー多発エンドポイント */}
             <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6">
-              <h3 className="text-lg font-semibold mb-4">エラー多発エンドポイント</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">エラー多発エンドポイント</h3>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -268,7 +268,7 @@ export default function ErrorStatsPage() {
 
             {/* 最近のエラー一覧 */}
             <div className="bg-white p-6 rounded-lg border border-gray-200">
-              <h3 className="text-lg font-semibold mb-4">最近のエラー</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">最近のエラー</h3>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -333,7 +333,7 @@ export default function ErrorStatsPage() {
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold">エラー詳細</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">エラー詳細</h3>
                   <button
                     onClick={() => setSelectedError(null)}
                     className="text-gray-400 hover:text-gray-600"
