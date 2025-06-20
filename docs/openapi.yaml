@@ -1471,7 +1471,7 @@ paths:
                       properties:
                         id:
                           type: string
-                          enum: [gpt-3.5-turbo, gpt-4o-mini, gpt-4, gpt-4-turbo]
+                          enum: [gpt-3.5-turbo, gpt-4o-mini]
                         name:
                           type: string
                         description:
@@ -1534,7 +1534,7 @@ paths:
               properties:
                 model:
                   type: string
-                  enum: [gpt-3.5-turbo, gpt-4o-mini, gpt-4, gpt-4-turbo]
+                  enum: [gpt-3.5-turbo, gpt-4o-mini]
                   description: 設定するGPTモデル
       responses:
         '200':
@@ -1612,7 +1612,7 @@ paths:
               properties:
                 model:
                   type: string
-                  enum: [gpt-3.5-turbo, gpt-4o-mini, gpt-4, gpt-4-turbo]
+                  enum: [gpt-3.5-turbo, gpt-4o-mini]
                 purchaseAmount:
                   type: number
                   description: 購入金額（円）

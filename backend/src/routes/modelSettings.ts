@@ -8,32 +8,18 @@ const router: Router = Router();
 // 利用可能なモデル一覧
 const AVAILABLE_MODELS = [
   {
-    id: 'gpt-4o-mini',
-    name: 'GPT-4o Mini', 
-    description: '本番推奨モデル - 高速・低コスト・高品質のバランス',
-    cost: '$0.15/$0.6 per 1M tokens',
-    recommended: true
-  },
-  {
     id: 'gpt-3.5-turbo', 
     name: 'GPT-3.5 Turbo',
-    description: '最低コストモデル - 開発・テスト環境に最適',
+    description: '基本モデル - 高速・低コスト',
     cost: '$0.5/$1.5 per 1M tokens',
     recommended: false
   },
   {
-    id: 'gpt-4',
-    name: 'GPT-4',
-    description: '最高品質モデル - 複雑な会話や創造的タスクに対応',
-    cost: '$30/$60 per 1M tokens',
-    recommended: false
-  },
-  {
-    id: 'gpt-4-turbo',
-    name: 'GPT-4 Turbo',
-    description: '高品質・高速モデル - GPT-4の性能を改善した最新版',
-    cost: '$10/$30 per 1M tokens',
-    recommended: false
+    id: 'gpt-4o-mini',
+    name: 'GPT-4o Mini', 
+    description: '推奨 - バランス型・コスパ最高',
+    cost: '$0.15/$0.6 per 1M tokens',
+    recommended: true
   }
 ];
 
