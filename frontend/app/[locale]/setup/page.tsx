@@ -7,6 +7,7 @@ import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
 import { getCurrentUser, authenticatedFetch } from '../../../utils/auth';
 import { API_BASE_URL } from '@/lib/api-config';
+import { getPersonalityPresetLabel } from '@/lib/characterConstants';
 
 const orbitron = Orbitron({ 
   weight: ['400', '700'], 
@@ -375,7 +376,7 @@ export default function SetupPage() {
                           {character.name[locale] || character.name.ja}
                         </h3>
                         <p className="text-sm text-pink-600 font-medium">
-                          {character.personalityPreset}
+                          {getPersonalityPresetLabel(character.personalityPreset, locale as 'ja' | 'en')}
                         </p>
                         {character.description && (
                           <p className="text-xs text-gray-500 mt-2 line-clamp-2">

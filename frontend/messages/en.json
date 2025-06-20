@@ -727,6 +727,17 @@
     "epic": "Epic",
     "legendary": "Legendary"
   },
+  "personalityTypes": {
+    "おっとり系": "Gentle",
+    "元気系": "Energetic",
+    "クール系": "Cool",
+    "真面目系": "Serious",
+    "セクシー系": "Sexy",
+    "天然系": "Natural",
+    "ボーイッシュ系": "Boyish",
+    "お姉さん系": "Big Sister",
+    "ツンデレ": "Tsundere"
+  },
   "analytics": {
     "title": "Analytics",
     "period": {

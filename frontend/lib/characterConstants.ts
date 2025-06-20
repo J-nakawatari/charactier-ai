@@ -23,7 +23,7 @@ export const PERSONALITY_PRESETS = {
   },
   '天然系': {
     ja: '天然系',
-    en: 'Airhead'
+    en: 'Natural'
   },
   'ボーイッシュ系': {
     ja: 'ボーイッシュ系',
