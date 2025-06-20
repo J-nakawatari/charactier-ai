@@ -37,13 +37,16 @@ export default function ImageCropper({
     switch (type) {
       case 'imageCharacterSelect':
       case 'imageDashboard':
-        return { shape: 'rect' as const, aspect: 1, label: '正方形' }; // 四角形（正方形）
+        return { shape: 'rect' as const, aspect: 1, label: '正方形', cropSize: { width: 400, height: 400 } }; // 四角形（正方形）
       case 'imageChatBackground':
-        return { shape: 'rect' as const, aspect: 9/16, label: '9:16（縦長）' }; // 四角形（9:16 縦長）
+        return { shape: 'rect' as const, aspect: 9/16, label: '9:16（縦長）', cropSize: { width: 225, height: 400 } }; // 四角形（9:16 縦長）
       case 'imageChatAvatar':
-        return { shape: 'round' as const, aspect: 1, label: '円形' }; // 円形
+        return { shape: 'round' as const, aspect: 1, label: '円形', cropSize: { width: 400, height: 400 } }; // 円形
+      case 'gallery':
+      case 'galleryImage':
+        return { shape: 'rect' as const, aspect: 1, label: '正方形（ギャラリー）', cropSize: { width: 300, height: 300 } }; // ギャラリー画像用
       default:
-        return { shape: 'rect' as const, aspect: 1, label: '正方形' }; // デフォルト
+        return { shape: 'rect' as const, aspect: 1, label: '正方形', cropSize: { width: 400, height: 400 } }; // デフォルト
     }
   };
 
@@ -106,6 +109,7 @@ export default function ImageCropper({
             onRotationChange={setRotation}
             cropShape={cropSettings.shape}
             showGrid={cropSettings.shape === 'rect'}
+            cropSize={cropSettings.cropSize}
             style={{
               containerStyle: {
                 background: 'transparent',
