@@ -38,9 +38,9 @@ export default function LoginPage() {
   ];
 
   const fallbackImages = [
-    '/images/hero/hero-fallback_01.jpg',
-    '/images/hero/hero-fallback_02.jpg', 
-    '/images/hero/hero-fallback_03.jpg'
+    '/images/hero/hero-fallback_01.png',
+    '/images/hero/hero-fallback_02.png', 
+    '/images/hero/hero-fallback_03.png'
   ];
 
   // Language switcher
