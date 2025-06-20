@@ -1,0 +1,33 @@
+# Charactier AI robots.txt
+# https://charactier-ai.com
+
+# All bots
+User-agent: *
+
+# Disallow everything except homepage
+Disallow: /admin/
+Disallow: /*/admin/
+Disallow: /login
+Disallow: /*/login
+Disallow: /register
+Disallow: /*/register
+Disallow: /setup
+Disallow: /*/setup
+Disallow: /api/
+Disallow: /*/characters
+Disallow: /characters
+Disallow: /*/terms
+Disallow: /terms
+Disallow: /*/privacy
+Disallow: /privacy
+
+# Only allow homepage
+Allow: /$
+Allow: /ja/$
+Allow: /en/$
+
+# Sitemap
+Sitemap: https://charactier-ai.com/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1

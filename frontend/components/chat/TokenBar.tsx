@@ -93,7 +93,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
   
   // トークンが0の場合、自動的に購入を促す
   useEffect(() => {
-    if (isZeroBalance && !isRefreshing) {
+    if (isZeroBalance && !isRefreshingRef.current) {
       // 3秒後に購入モーダルを表示
       const timer = setTimeout(() => {
         const event = new CustomEvent('showTokenPurchaseModal', {
@@ -104,7 +104,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
       
       return () => clearTimeout(timer);
     }
-  }, [isZeroBalance, isRefreshing]);
+  }, [isZeroBalance]);
   
   // ローディング中の処理
   if (currentTokens === null) {
