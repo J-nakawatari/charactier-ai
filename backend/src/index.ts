@@ -5776,7 +5776,7 @@ app.delete('/api/user/delete-account', authenticateToken, async (req: AuthReques
     const bcrypt = require('bcryptjs');
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      res.status(400).json({ 
+      res.status(401).json({ 
         error: 'Invalid password',
         message: 'パスワードが正しくありません'
       });
