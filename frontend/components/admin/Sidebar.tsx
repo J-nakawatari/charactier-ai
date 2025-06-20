@@ -25,7 +25,7 @@ const sidebarItems = [
   { href: '/admin/characters', icon: MessageSquare, label: 'キャラクター管理' },
   { href: '/admin/tokens', icon: Coins, label: 'トークチケット管理' },
   { href: '/admin/models', icon: Cpu, label: 'AIモデル管理' },
-  { href: '/admin/admins', icon: UserCog, label: '管理者管理' },
+  { href: '/admin/admins', icon: UserCog, label: '管理者設定' },
   { href: '/admin/notifications', icon: Bell, label: '通知管理' },
   { href: '/admin/security', icon: Shield, label: 'セキュリティ' },
   { href: '/admin/errors', icon: AlertTriangle, label: 'エラー統計' },

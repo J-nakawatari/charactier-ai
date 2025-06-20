@@ -113,7 +113,7 @@ export default function AdminListPage() {
       <header className="bg-white border-b border-gray-200 p-4 md:p-6 pr-16 lg:pr-6">
         <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">管理者管理</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">管理者設定</h1>
             <p className="text-sm text-gray-500 mt-1">
               システム管理者の追加・編集・権限管理
             </p>
