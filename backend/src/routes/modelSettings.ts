@@ -15,13 +15,6 @@ const AVAILABLE_MODELS = [
     recommended: false
   },
   {
-    id: 'gpt-4o-mini',
-    name: 'GPT-4o Mini', 
-    description: 'バランス型 - コスパ良好',
-    cost: '$0.15/$0.6 per 1M tokens',
-    recommended: false
-  },
-  {
     id: 'o4-mini',
     name: 'OpenAI o4-mini',
     description: '推奨 - 高性能リーズニングモデル（コーディング・ビジョン特化）',

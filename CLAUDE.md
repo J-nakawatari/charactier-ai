@@ -132,20 +132,17 @@ IMPORTANT:
 
 ## 🤖 AI Models
 
-現在利用可能なAIモデル：
+現在利用可能なAIモデル（2つ）：
 
 1. **GPT-3.5 Turbo** (`gpt-3.5-turbo`)
    - 基本モデル - 高速・低コスト
    - 価格: $0.5/$1.5 per 1M tokens (入力/出力)
 
-2. **GPT-4o Mini** (`gpt-4o-mini`)
-   - バランス型 - コスパ良好
-   - 価格: $0.15/$0.6 per 1M tokens (入力/出力)
-
-3. **OpenAI o4-mini** (`o4-mini`) ⭐推奨
+2. **OpenAI o4-mini** (`o4-mini`) ⭐推奨
    - 高性能リーズニングモデル（コーディング・ビジョン特化）
    - 価格: $1.1/$4.4 per 1M tokens (入力/出力)
    - 注意: 管理画面では「OpenAI o4-mini」と表示されるが、APIに送るモデルIDは「o4-mini」
+   - これは以前「GPT-4o Mini」と呼ばれていたモデルと同じもの
 
 **重要な注意事項：**
 - モデル名の表示名とモデルIDは異なる場合がある
