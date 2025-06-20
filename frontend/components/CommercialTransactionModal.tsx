@@ -52,84 +52,84 @@ export function CommercialTransactionModal({ isOpen, onClose }: CommercialTransa
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">項目</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">内容</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('tableHeaders.item')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('tableHeaders.content')}</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">事業者名</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.businessName.label')}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      Charactier 運営事務局<br />
-                      <span className="text-xs text-gray-500">※事業者の氏名は、請求があれば遅滞なく電子メールにより開示いたします。</span>
+                      {t('items.businessName.content')}<br />
+                      <span className="text-xs text-gray-500">{t('items.businessName.note')}</span>
                     </td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">所在地</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.address.label')}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      <span className="text-gray-500">〈バーチャルオフィス住所（確定後に記載）〉</span>
+                      <span className="text-gray-500">{t('items.address.content')}</span>
                     </td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">電話番号</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.phone.label')}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      <span className="text-xs text-gray-500">※請求があれば遅滞なく電子メールにより開示いたします。</span>
+                      <span className="text-xs text-gray-500">{t('items.phone.note')}</span>
                     </td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">お問い合わせ窓口</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.contact.label')}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      お問い合わせフォーム：<br />
+                      {t('items.contact.content')}<br />
                       <a 
-                        href="https://forms.gle/ZkYUQSmpqxrQaa4m8" 
+                        href={t('items.contact.url')} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-pink-500 underline hover:text-pink-600"
                       >
-                        https://forms.gle/ZkYUQSmpqxrQaa4m8
+                        {t('items.contact.url')}
                       </a>
                     </td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">販売価格</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.price.label')}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      サービス内で表示された金額（消費税込）
+                      {t('items.price.content')}
                     </td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">支払方法</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.payment.label')}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      クレジットカード決済（Stripe を使用）
+                      {t('items.payment.content')}
                     </td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">代金の支払時期</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.paymentTiming.label')}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      決済確定時に課金
+                      {t('items.paymentTiming.content')}
                     </td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">商品の引渡時期</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.delivery.label')}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      決済完了後、直ちにトークチケットを付与
+                      {t('items.delivery.content')}
                     </td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">返品・キャンセル</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.returns.label')}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      デジタル商品の特性上、購入後の返品・キャンセルはできません。
+                      {t('items.returns.content')}
                     </td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">月額課金の解約</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.subscription.label')}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      次回更新日の24時間前までにマイページから解約可能
+                      {t('items.subscription.content')}
                     </td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">不具合の対応</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.support.label')}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      サービスが利用できない場合は、利用規約・プライバシーポリシーに基づき適切に対応します。
+                      {t('items.support.content')}
                     </td>
                   </tr>
                 </tbody>

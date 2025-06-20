@@ -48,96 +48,98 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           <p className="text-sm text-gray-500 mb-8">{t('lastUpdated')}</p>
           
           <div className="prose prose-gray max-w-none">
-            <p className="text-gray-700 mb-6">
-              Charactier（以下「当サービス」）は、ユーザーの個人情報を適切に取り扱うため、
-              以下のプライバシーポリシー（以下「本ポリシー」）を定めます。
+            <p className="text-gray-700 mb-6 whitespace-pre-wrap">
+              {t('introduction')}
             </p>
 
-            <h3 className="text-xl font-semibold mb-4">1. 取得する情報</h3>
+            <h3 className="text-xl font-semibold mb-4">{t('section1.title')}</h3>
             <ul className="list-disc pl-6 text-gray-700 mb-6">
-              <li>氏名・ニックネーム、メールアドレス</li>
-              <li>決済情報（Stripeを通じて取得。カード番号は当サービスに保存しません）</li>
-              <li>Cookie・端末識別子・アクセスログ</li>
-              <li>チャット内容および生成 AI への入力プロンプト</li>
+              <li>{t('section1.item1')}</li>
+              <li>{t('section1.item2')}</li>
+              <li>{t('section1.item3')}</li>
+              <li>{t('section1.item4')}</li>
             </ul>
 
-            <h3 className="text-xl font-semibold mb-4">2. 利用目的</h3>
+            <h3 className="text-xl font-semibold mb-4">{t('section2.title')}</h3>
             <ul className="list-disc pl-6 text-gray-700 mb-6">
-              <li>キャラクターとのチャット提供、トークチケット残高管理</li>
-              <li>料金請求・決済処理</li>
-              <li>利用状況の分析によるサービス改善</li>
-              <li>法令・利用規約違反への対応</li>
+              <li>{t('section2.item1')}</li>
+              <li>{t('section2.item2')}</li>
+              <li>{t('section2.item3')}</li>
+              <li>{t('section2.item4')}</li>
             </ul>
 
-            <h3 className="text-xl font-semibold mb-4">3. 外部送信・Cookie 等の取扱い</h3>
-            <p className="text-gray-700 mb-6">
-              当サービスは利便性向上および利用状況の解析のため、
-              Cookie や類似技術を用いて第三者サービスへ情報を送信します。
-              ブラウザ設定で Cookie を無効にすると、一部機能が利用できない場合があります。
+            <h3 className="text-xl font-semibold mb-4">{t('section3.title')}</h3>
+            <p className="text-gray-700 mb-6 whitespace-pre-wrap">
+              {t('section3.description')}
             </p>
 
             <div className="overflow-x-auto mb-6">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">送信先</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">送信される情報</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">利用目的</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('section3.tableHeaders.destination')}</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('section3.tableHeaders.information')}</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('section3.tableHeaders.purpose')}</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   <tr>
-                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">Google Analytics 4</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">Cookie（_ga など）、IPアドレス、閲覧ページURL</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">アクセス解析</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">{t('section3.services.ga4.name')}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{t('section3.services.ga4.info')}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{t('section3.services.ga4.purpose')}</td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">Stripe</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">決済金額、メールアドレス、決済トークン等</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">クレジットカード決済処理</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">{t('section3.services.stripe.name')}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{t('section3.services.stripe.info')}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{t('section3.services.stripe.purpose')}</td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">Cloudflare</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">IPアドレス、User-Agent 等</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">サイト保護・パフォーマンス最適化</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">{t('section3.services.cloudflare.name')}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{t('section3.services.cloudflare.info')}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{t('section3.services.cloudflare.purpose')}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <p className="text-sm font-semibold text-gray-900 mb-2">オプトアウト方法</p>
+              <p className="text-sm font-semibold text-gray-900 mb-2">{t('section3.optOut.title')}</p>
               <p className="text-sm text-gray-700">
-                GA4 の計測は <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-pink-500 underline hover:text-pink-600">Google Analytics オプトアウトアドオン</a> を
-                利用することで無効化できます。その他 Cookie はブラウザ設定で削除／拒否が可能です。
+                {t('section3.optOut.description').split('Google Analytics').map((part, index) => (
+                  index === 0 ? part : (
+                    <span key={index}>
+                      <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-pink-500 underline hover:text-pink-600">Google Analytics</a>
+                      {part}
+                    </span>
+                  )
+                ))}
               </p>
             </div>
 
-            <h3 className="text-xl font-semibold mb-4">4. 第三者提供</h3>
-            <p className="text-gray-700 mb-2">取得した個人情報は次の場合を除き第三者に提供しません。</p>
+            <h3 className="text-xl font-semibold mb-4">{t('section4.title')}</h3>
+            <p className="text-gray-700 mb-2">{t('section4.description')}</p>
             <ol className="list-decimal pl-6 text-gray-700 mb-6">
-              <li>ユーザーの同意がある場合</li>
-              <li>法令に基づく場合</li>
-              <li>決済業務委託のため Stripe へ提供する場合</li>
+              <li>{t('section4.item1')}</li>
+              <li>{t('section4.item2')}</li>
+              <li>{t('section4.item3')}</li>
             </ol>
 
-            <h3 className="text-xl font-semibold mb-4">5. 個人情報の安全管理</h3>
+            <h3 className="text-xl font-semibold mb-4">{t('section5.title')}</h3>
             <ul className="list-disc pl-6 text-gray-700 mb-6">
-              <li>通信は TLS により暗号化</li>
-              <li>重要データはアクセス権限を最小限にした環境で管理</li>
-              <li>社内ポリシーに基づくログ監査を実施</li>
+              <li>{t('section5.item1')}</li>
+              <li>{t('section5.item2')}</li>
+              <li>{t('section5.item3')}</li>
             </ul>
 
-            <h3 className="text-xl font-semibold mb-4">6. 開示・訂正・削除の請求</h3>
+            <h3 className="text-xl font-semibold mb-4">{t('section6.title')}</h3>
             <p className="text-gray-700 mb-6">
-              ユーザーは個人情報保護法に基づき、自己の個人情報の開示等を請求できます。<br />
-              お問い合わせフォーム：<a href="https://forms.gle/ZkYUQSmpqxrQaa4m8" target="_blank" rel="noopener noreferrer" className="text-pink-500 underline hover:text-pink-600">https://forms.gle/ZkYUQSmpqxrQaa4m8</a>
+              {t('section6.content')}<br />
+              {t('section6.contactForm')}<a href="https://forms.gle/ZkYUQSmpqxrQaa4m8" target="_blank" rel="noopener noreferrer" className="text-pink-500 underline hover:text-pink-600">https://forms.gle/ZkYUQSmpqxrQaa4m8</a>
             </p>
 
-            <h3 className="text-xl font-semibold mb-4">7. 改定</h3>
-            <p className="text-gray-700 mb-6">
-              法令変更やサービス内容の変更に応じ、本ポリシーを改定することがあります。<br />
-              最新の内容は本ページで公表します。
+            <h3 className="text-xl font-semibold mb-4">{t('section7.title')}</h3>
+            <p className="text-gray-700 mb-6 whitespace-pre-wrap">
+              {t('section7.content')}
             </p>
           </div>
         </div>
