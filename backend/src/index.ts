@@ -1813,22 +1813,22 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         // レベル帯別の親密度上昇量を計算
         function calculateAffinityIncrease(currentLevel: number): number {
           if (currentLevel >= 90) {
-            return 0.1; // レベル90-100: 非常に困難（1000回のメッセージで1レベル）
+            return 0.05; // レベル90-100: 非常に困難（200回のメッセージで1レベル）
           } else if (currentLevel >= 80) {
-            return 0.2; // レベル80-89: 困難（500回のメッセージで1レベル）
+            return 0.1; // レベル80-89: 困難（100回のメッセージで1レベル）
           } else if (currentLevel >= 60) {
-            return 0.5; // レベル60-79: やや困難（200回のメッセージで1レベル）
+            return 0.2; // レベル60-79: やや困難（50回のメッセージで1レベル）
           } else if (currentLevel >= 40) {
-            return 0.8; // レベル40-59: 普通（125回のメッセージで1レベル）
+            return 0.3; // レベル40-59: 普通（約33回のメッセージで1レベル）
           } else if (currentLevel >= 20) {
-            return 1.0; // レベル20-39: やや簡単（100回のメッセージで1レベル）
+            return 0.4; // レベル20-39: やや簡単（25回のメッセージで1レベル）
           } else {
-            return 1.5; // レベル0-19: 簡単（67回のメッセージで1レベル）
+            return 0.5; // レベル0-19: 簡単（20回のメッセージで1レベル）
           }
         }
         
-        const currentLevel = Math.floor(currentUserAffinity / 10);
-        const affinityIncrease = calculateAffinityIncrease(currentLevel);
+        // currentUserAffinityは既に0-100のレベル値なので、そのまま使用
+        const affinityIncrease = calculateAffinityIncrease(currentUserAffinity);
         
         
         const previousAffinity = currentUserAffinity;
@@ -1907,8 +1907,9 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         // 🎭 レベルアップ検出とムードトリガー適用
         let levelUpInfo = null;
         try {
-          const previousLevel = Math.floor(previousAffinity / 10);
-          const currentLevel = Math.floor(newAffinity / 10);
+          // 親密度そのものをレベルとして扱う（0-100）
+          const previousLevel = Math.floor(previousAffinity);
+          const currentLevel = Math.floor(newAffinity);
           
           
           if (currentLevel > previousLevel) {

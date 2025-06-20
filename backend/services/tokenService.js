@@ -15,7 +15,7 @@ class TokenService {
    * @param {string} model - 使用モデル名
    * @returns {Promise<number>} 付与トークン数
    */
-  static async calculateTokensToGive(purchaseAmountYen, model = 'o4-mini') {
+  static async calculateTokensToGive(purchaseAmountYen, model = 'gpt-4o-mini') {
     // モデルの妥当性チェック
     if (!validateModel(model)) {
       throw new Error(`Invalid model: ${model}`);
@@ -39,7 +39,7 @@ class TokenService {
    * @param {string} model - 使用モデル名
    * @returns {Promise<Object>} 付与結果
    */
-  static async grantTokens(userId, stripeSessionId, purchaseAmountYen, model = 'o4-mini') {
+  static async grantTokens(userId, stripeSessionId, purchaseAmountYen, model = 'gpt-4o-mini') {
     try {
       // 1. 付与トークン数を計算
       const tokensToGive = await this.calculateTokensToGive(purchaseAmountYen, model);

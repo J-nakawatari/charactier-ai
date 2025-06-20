@@ -311,7 +311,7 @@ async function handleCheckoutSessionCompleted(event) {
           console.log(`⚠️ 価格ID ${priceId} のTokenPackが見つかりません`);
           console.log(`📊 計算方式にフォールバック`);
           
-          const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+          const currentModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
           console.log(`🤖 Webhook使用モデル: ${currentModel}`);
           
           grantResult = await TokenService.grantTokens(

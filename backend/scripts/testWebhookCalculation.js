@@ -15,7 +15,7 @@ async function testWebhookCalculation() {
     
     // Test 1: Direct calculation with different models
     console.log('=== Test 1: Direct calcTokensToGive ===');
-    const models = ['o4-mini', 'gpt-3.5-turbo'];
+    const models = ['gpt-4o-mini', 'gpt-3.5-turbo'];
     for (const model of models) {
       const tokens = await calcTokensToGive(500, model);
       console.log(`Model ${model}: ¥500 = ${tokens} tokens`);
@@ -23,7 +23,7 @@ async function testWebhookCalculation() {
     
     // Test 2: Using TokenService (what webhook uses)
     console.log('\n=== Test 2: TokenService.calculateTokensToGive ===');
-    const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+    const currentModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
     console.log(`Environment OPENAI_MODEL: ${process.env.OPENAI_MODEL || 'not set'}`);
     console.log(`Using model: ${currentModel}`);
     
@@ -38,7 +38,7 @@ async function testWebhookCalculation() {
     // Test 4: Show model configuration
     console.log('\n=== Test 4: Model Configuration ===');
     console.log('Available models:', Object.keys(MODEL_UNIT_COST_USD));
-    await logTokenConfig('o4-mini');
+    await logTokenConfig('gpt-4o-mini');
     
     // Test 5: Check if there's a mismatch in module loading
     console.log('\n=== Test 5: Module paths ===');

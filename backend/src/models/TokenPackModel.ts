@@ -64,24 +64,19 @@ TokenPackSchema.index({ isActive: 1, createdAt: -1 });
 
 // バリデーション
 TokenPackSchema.pre('save', function(next) {
-  // gpt-4o-mini原価モデルに基づく計算（デフォルトモデル）
-  // 平均原価: ($0.0000011 + 2 × $0.0000044) / 3 = $0.0000033/token
-  // 円換算（150円/USD）: $0.0000033 × 150 = 0.000495円/token
-  const TOKEN_COST_PER_UNIT = 0.000495;
-  
-  // 利益率94%を考慮した計算
-  const PROFIT_MARGIN = 0.94;
-  const COST_RATIO = 1 - PROFIT_MARGIN; // 0.06
-  
-  // 正しいtokenPerYen計算: 原価率 ÷ トークン原価
-  this.tokenPerYen = COST_RATIO / TOKEN_COST_PER_UNIT; // 0.06 / 0.000495 = 121.2
-  
-  // 実際の付与トークン数を価格から計算
-  this.tokens = Math.floor((this.price as number) * (this.tokenPerYen as number));
-  
-  // 利益率を計算
-  const totalCost = (this.tokens as number) * TOKEN_COST_PER_UNIT;
-  this.profitMargin = (((this.price as number) - totalCost) / (this.price as number)) * 100;
+  // tokenPerYenとprofitMarginのみ計算（tokensは管理画面の設定値を保持）
+  if (this.tokens && this.price) {
+    this.tokenPerYen = (this.tokens as number) / (this.price as number);
+    
+    // gpt-4o-mini原価モデルに基づく計算（参考値）
+    // 平均原価: ($0.00000015 + 2 × $0.0000006) / 3 = $0.00000045/token
+    // 円換算（150円/USD）: $0.00000045 × 150 = 0.0000675円/token
+    const TOKEN_COST_PER_UNIT = 0.0000675;
+    
+    // 実際の利益率を計算
+    const totalCost = (this.tokens as number) * TOKEN_COST_PER_UNIT;
+    this.profitMargin = (((this.price as number) - totalCost) / (this.price as number)) * 100;
+  }
   
   next();
 });
