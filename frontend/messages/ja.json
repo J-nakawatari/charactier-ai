@@ -658,5 +658,13 @@
       "chatStreak": "連続チャット日数",
       "tokenEfficiency": "トークン効率"
     }
+  },
+  "footer": {
+    "commercialTransaction": "特定商取引法に基づく表記",
+    "commercialTransactionModal": {
+      "title": "特定商取引法に基づく表記",
+      "lastUpdated": "最終改定日：2025-07-01",
+      "close": "閉じる"
+    }
   }
 }

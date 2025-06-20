@@ -657,5 +657,13 @@
         "quarter": "3 Months"
       }
     }
+  },
+  "footer": {
+    "commercialTransaction": "Commercial Transaction Act",
+    "commercialTransactionModal": {
+      "title": "Specified Commercial Transaction Act",
+      "lastUpdated": "Last updated: July 1, 2025",
+      "close": "Close"
+    }
   }
 }

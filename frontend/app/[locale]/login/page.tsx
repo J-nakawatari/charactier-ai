@@ -7,6 +7,7 @@ import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
 import { API_BASE_URL } from '@/lib/api-config';
 import * as gtag from '@/lib/gtag';
+import { CommercialTransactionModal } from '@/components/CommercialTransactionModal';
 
 const orbitron = Orbitron({ 
   weight: ['400', '700'], 
@@ -27,6 +28,7 @@ export default function LoginPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [showCommercialModal, setShowCommercialModal] = useState(false);
   
   const videoSources = [
     '/video/hero-videos_01.mp4',
@@ -347,6 +349,22 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      
+      {/* Footer with Commercial Transaction Act link */}
+      <div className="absolute bottom-4 left-0 right-0 text-center">
+        <button
+          onClick={() => setShowCommercialModal(true)}
+          className="text-white text-sm hover:opacity-80 transition-opacity underline"
+        >
+          {useTranslations('footer')('commercialTransaction')}
+        </button>
+      </div>
+      
+      {/* Modals */}
+      <CommercialTransactionModal 
+        isOpen={showCommercialModal} 
+        onClose={() => setShowCommercialModal(false)} 
+      />
     </div>
   );
 }

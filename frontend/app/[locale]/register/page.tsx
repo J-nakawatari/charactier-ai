@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { API_BASE_URL } from '@/lib/api-config';
 import { TermsModal } from '@/components/TermsModal';
 import { PrivacyModal } from '@/components/PrivacyModal';
+import { CommercialTransactionModal } from '@/components/CommercialTransactionModal';
 
 const orbitron = Orbitron({ 
   weight: ['400', '700'], 
@@ -36,6 +37,7 @@ export default function RegisterPage() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showCommercialModal, setShowCommercialModal] = useState(false);
   
   const videoSources = [
     '/video/hero-videos_01.mp4',
@@ -482,9 +484,23 @@ export default function RegisterPage() {
         </div>
       </div>
       
+      {/* Footer with Commercial Transaction Act link */}
+      <div className="absolute bottom-4 left-0 right-0 text-center">
+        <button
+          onClick={() => setShowCommercialModal(true)}
+          className="text-white text-sm hover:opacity-80 transition-opacity underline"
+        >
+          {useTranslations('footer')('commercialTransaction')}
+        </button>
+      </div>
+      
       {/* Modals */}
       <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
       <PrivacyModal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
+      <CommercialTransactionModal 
+        isOpen={showCommercialModal} 
+        onClose={() => setShowCommercialModal(false)} 
+      />
     </div>
   );
 }
