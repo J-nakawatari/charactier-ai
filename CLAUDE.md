@@ -130,6 +130,34 @@ IMPORTANT:
 * Messages consume tokens based on characterPrompt + userMessage
 * Cache character prompts to reduce cost
 
+## 🤖 AI Models
+
+現在利用可能なAIモデル：
+
+1. **GPT-3.5 Turbo** (`gpt-3.5-turbo`)
+   - 基本モデル - 高速・低コスト
+   - 価格: $0.5/$1.5 per 1M tokens (入力/出力)
+
+2. **GPT-4o Mini** (`gpt-4o-mini`)
+   - バランス型 - コスパ良好
+   - 価格: $0.15/$0.6 per 1M tokens (入力/出力)
+
+3. **OpenAI o4-mini** (`o4-mini`) ⭐推奨
+   - 高性能リーズニングモデル（コーディング・ビジョン特化）
+   - 価格: $1.1/$4.4 per 1M tokens (入力/出力)
+   - 注意: 管理画面では「OpenAI o4-mini」と表示されるが、APIに送るモデルIDは「o4-mini」
+
+**重要な注意事項：**
+- モデル名の表示名とモデルIDは異なる場合がある
+- 新しいモデルを追加する際は、以下のファイルを全て更新すること：
+  - `/backend/src/routes/modelSettings.ts` - モデル一覧
+  - `/backend/src/config/tokenConfig.ts` - 価格設定
+  - `/backend/src/models/CharacterModel.ts` - スキーマ定義
+  - `/backend/models/TokenUsage.js` - 使用履歴モデル（本番環境）
+  - `/frontend/app/admin/characters/[id]/edit/page.tsx` - 管理画面
+  - `/frontend/app/admin/characters/new/page.tsx` - 新規作成画面
+  - `/docs/openapi.yaml` - API仕様書
+
 ## 📡 API設計と実装ルール
 
 * すべてのAPIは `docs/openapi.yaml` に記述されている
