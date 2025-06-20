@@ -52,7 +52,7 @@ import {
 import { APIErrorModel } from './models/APIError';
 import { ExchangeRateModel } from './models/ExchangeRate';
 import { calcTokensToGive, logTokenConfig } from './config/tokenConfig';
-const TokenService = require('../services/tokenService');
+const TokenService = require('../../services/tokenService');
 import routeRegistry from './core/RouteRegistry';
 
 dotenv.config({ path: './.env' });
@@ -511,7 +511,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
               console.log(`  - Price: ¥${tokenPack.price}`);
               
               // 重複チェック
-              const UserTokenPack = require('../models/UserTokenPack');
+              const UserTokenPack = require('../../models/UserTokenPack');
               const existingPack = await UserTokenPack.findOne({ stripeSessionId: sessionId });
               if (existingPack) {
                 console.log(`⚠️ Duplicate prevention: session ${sessionId} already processed`);
@@ -564,7 +564,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
               console.log(`📊 Calculated tokens: ${tokensToGrant}`);
               
               // 重複チェック
-              const UserTokenPack = require('../models/UserTokenPack');
+              const UserTokenPack = require('../../models/UserTokenPack');
               const existingPack = await UserTokenPack.findOne({ stripeSessionId: sessionId });
               if (existingPack) {
                 console.log(`⚠️ Duplicate prevention: session ${sessionId} already processed`);
@@ -613,7 +613,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
             const { calcTokensToGive } = await import('./config/tokenConfig');
             const tokensToGrant = await calcTokensToGive(purchaseAmountYen, currentModel);
             
-            const UserTokenPack = require('../models/UserTokenPack');
+            const UserTokenPack = require('../../models/UserTokenPack');
             const newTokenPack = new UserTokenPack({
               userId,
               stripeSessionId: sessionId,
@@ -2957,7 +2957,7 @@ app.get('/api/admin/users', authenticateToken, async (req: AuthRequest, res: Res
         .lean();
       
       // ユーザーデータを管理画面用の形式に変換（UserTokenPackから正確なトークン残高を取得）
-      const UserTokenPack = require('../models/UserTokenPack');
+      const UserTokenPack = require('../../models/UserTokenPack');
       const formattedUsers = await Promise.all(users.map(async (user) => {
         let actualTokenBalance = 0; // デフォルト値
         try {
@@ -3268,7 +3268,7 @@ app.get('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res:
     // UserTokenPackから正確なトークン残高を計算
     let actualTokenBalance = user.tokenBalance; // fallback
     try {
-      const UserTokenPack = require('../models/UserTokenPack');
+      const UserTokenPack = require('../../models/UserTokenPack');
       actualTokenBalance = await UserTokenPack.calculateUserTokenBalance(user._id);
     } catch (error) {
     }
@@ -3549,7 +3549,7 @@ app.get('/api/admin/security/events-stream', async (req: Request, res: Response)
     res.write('data: {"type":"connected","message":"セキュリティイベントストリーム接続済み"}\n\n');
 
     // Redis Subscriber取得
-    const { getRedisSubscriber } = require('../lib/redis');
+    const { getRedisSubscriber } = require('../../lib/redis');
     const subscriber = await getRedisSubscriber();
 
     // セキュリティイベント購読
@@ -3603,7 +3603,7 @@ app.get('/api/admin/security-events', authenticateToken, async (req: AuthRequest
     }
 
     // ViolationRecordから最新のセキュリティイベントを取得
-    const ViolationRecord = require('../models/ViolationRecord');
+    const ViolationRecord = require('../../models/ViolationRecord');
     
     const events = await ViolationRecord.find()
       .sort({ timestamp: -1 })
@@ -3660,7 +3660,7 @@ app.post('/api/admin/resolve-violation/:id', authenticateToken, async (req: Auth
     const { id } = req.params;
     const { notes } = req.body;
     
-    const ViolationRecord = require('../models/ViolationRecord');
+    const ViolationRecord = require('../../models/ViolationRecord');
     
     const violation = await ViolationRecord.findByIdAndUpdate(
       id,
@@ -3706,7 +3706,7 @@ app.get('/api/admin/security-stats', authenticateToken, async (req: AuthRequest,
       return;
     }
 
-    const ViolationRecord = require('../models/ViolationRecord');
+    const ViolationRecord = require('../../models/ViolationRecord');
     
     const now = new Date();
     const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);

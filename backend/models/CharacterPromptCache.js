@@ -382,4 +382,5 @@ CharacterPromptCacheSchema.index({ userId: 1, characterId: 1, promptVersion: 1, 
 CharacterPromptCacheSchema.index({ ttl: 1 }, { expireAfterSeconds: 0 });
 CharacterPromptCacheSchema.index({ useCount: -1 });
 CharacterPromptCacheSchema.index({ languageCode: 1 });
-exports.default = mongoose_1.default.model('CharacterPromptCache', CharacterPromptCacheSchema);
+// モデルが既に存在する場合は再利用
+exports.default = mongoose_1.default.models.CharacterPromptCache || mongoose_1.default.model('CharacterPromptCache', CharacterPromptCacheSchema);

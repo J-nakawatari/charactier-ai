@@ -367,4 +367,5 @@ TokenUsageSchema.post('save', async function (doc) {
         console.error(`Profit margin violation: ${doc.profitMargin} for user ${doc.userId}`);
     }
 });
-exports.default = mongoose_1.default.model('TokenUsage', TokenUsageSchema);
+// モデルが既に存在する場合は再利用
+exports.default = mongoose_1.default.models.TokenUsage || mongoose_1.default.model('TokenUsage', TokenUsageSchema);
