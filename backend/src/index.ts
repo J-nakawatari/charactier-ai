@@ -1960,7 +1960,7 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
         try {
           
           // API費用計算
-          const model = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
+          const model = character.aiModel || process.env.OPENAI_MODEL || 'gpt-4o-mini';
           const inputTokens = Math.floor(aiResponse.tokensUsed * 0.6); // 推定入力トークン
           const outputTokens = Math.floor(aiResponse.tokensUsed * 0.4); // 推定出力トークン
           
@@ -1969,9 +1969,11 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           if (model === 'gpt-4') {
             apiCost = (inputTokens * 0.03 + outputTokens * 0.06) / 1000;
           } else if (model === 'gpt-3.5-turbo') {
-            apiCost = (inputTokens * 0.0015 + outputTokens * 0.002) / 1000;
+            apiCost = (inputTokens * 0.0005 + outputTokens * 0.0015) / 1000;
+          } else if (model === 'gpt-4o-mini') {
+            apiCost = (inputTokens * 0.00015 + outputTokens * 0.0006) / 1000;
           } else {
-            apiCost = (inputTokens * 0.01 + outputTokens * 0.03) / 1000; // デフォルト
+            apiCost = (inputTokens * 0.00015 + outputTokens * 0.0006) / 1000; // デフォルト
           }
           
           const apiCostYen = apiCost * 150; // USD→JPY換算（150円/ドル想定）
@@ -1981,7 +1983,7 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           const tokenPrice = userTokenBalance > 0 ? (500 / 15000) : 0; // 500円で15000トークンの想定
           const grossRevenue = aiResponse.tokensUsed * tokenPrice;
           const grossProfit = grossRevenue - apiCostYen;
-          const profitMargin = grossRevenue > 0 ? (grossProfit / grossRevenue) * 100 : 0;
+          const profitMargin = grossRevenue > 0 ? (grossProfit / grossRevenue) : 0;
           
           const tokenUsageRecord = new TokenUsage({
             // 基本情報
