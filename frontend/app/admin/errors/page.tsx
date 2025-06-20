@@ -121,7 +121,7 @@ export default function ErrorStatsPage() {
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg"
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white"
             >
               <option value="1h">過去1時間</option>
               <option value="24h">過去24時間</option>
@@ -133,10 +133,10 @@ export default function ErrorStatsPage() {
             <button
               onClick={fetchErrorData}
               disabled={refreshing}
-              className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+              className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-gray-700"
             >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              更新
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''} text-gray-600`} />
+              <span className="text-gray-700">更新</span>
             </button>
           </div>
         </div>
