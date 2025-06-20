@@ -96,6 +96,41 @@ export default function AdminListPage() {
     });
   };
 
+  const handleEdit = (adminId: string) => {
+    router.push(`/admin/admins/${adminId}/edit`);
+  };
+
+  const handleDelete = async (adminId: string, adminName: string) => {
+    if (!confirm(`管理者「${adminName}」を削除しますか？この操作は取り消せません。`)) {
+      return;
+    }
+
+    try {
+      const adminToken = localStorage.getItem('adminAccessToken');
+      if (!adminToken) {
+        throw new Error('管理者認証が必要です');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/admin/admins/${adminId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`削除エラー: ${response.status}`);
+      }
+
+      success('削除完了', `管理者「${adminName}」を削除しました`);
+      fetchAdmins(); // リストを再取得
+    } catch (err: any) {
+      console.error('✖ 管理者削除エラー:', err);
+      error('削除失敗', err.message || '管理者の削除に失敗しました');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -268,10 +303,18 @@ export default function AdminListPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
-                        <button className="text-indigo-600 hover:text-indigo-900">
+                        <button 
+                          onClick={() => handleEdit(admin._id)}
+                          className="text-indigo-600 hover:text-indigo-900 p-1 rounded hover:bg-indigo-50 transition-colors"
+                          title="編集"
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button className="text-red-600 hover:text-red-900">
+                        <button 
+                          onClick={() => handleDelete(admin._id, admin.name || '名前未設定')}
+                          className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
+                          title="削除"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
