@@ -18,6 +18,7 @@ export default function HomePage() {
   const router = useRouter();
   const locale = (params?.locale as string) || 'ja';
   const t = useTranslations('homepage');
+  const tFooter = useTranslations('footer');
   
   // Video state
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -470,12 +471,12 @@ export default function HomePage() {
       </div>
       
       {/* Footer with Commercial Transaction Act link */}
-      <div className="absolute bottom-4 left-0 right-0 text-center">
+      <div className="absolute bottom-4 left-0 right-0 text-center z-20">
         <button
           onClick={() => setShowCommercialModal(true)}
           className="text-white text-sm hover:opacity-80 transition-opacity underline"
         >
-          {useTranslations('footer')('commercialTransaction')}
+          {tFooter('commercialTransaction')}
         </button>
       </div>
       
