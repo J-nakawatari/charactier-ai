@@ -98,7 +98,7 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
                   className="absolute -bottom-1 -right-1 text-xs font-bold px-2 py-1 rounded-full text-white"
                   style={{ backgroundColor: affinity.character.themeColor }}
                 >
-                  {t('levelUp', { level: affinity.level })}
+                  {t('levelUp', { level: Math.floor(affinity.level) })}
                 </div>
               </div>
 

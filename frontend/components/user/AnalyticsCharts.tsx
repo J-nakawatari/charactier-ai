@@ -171,8 +171,8 @@ export default function AnalyticsCharts({ analytics, locale }: AnalyticsChartsPr
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                      <span>Lv.{character.level}</span>
-                      <span>{character.level}/100</span>
+                      <span>Lv.{Math.floor(character.level)}</span>
+                      <span>{Math.floor(character.level)}/100</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3">
                       <div 

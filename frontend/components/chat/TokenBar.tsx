@@ -186,7 +186,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
           </button>
           
           {showTooltip && (
-            <div className="absolute top-full mt-2 right-0 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg z-50">
+            <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg z-50">
               <div className="mb-2 font-semibold">トークン消費の仕組み</div>
               <div className="space-y-1 text-gray-300">
                 <p>• 1メッセージ = 約{estimatedMessageCost}トークン</p>
@@ -198,10 +198,10 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
                   </p>
                 )}
               </div>
-              <div className="absolute -top-2 right-4 w-0 h-0 
-                border-l-[6px] border-l-transparent
-                border-r-[6px] border-r-transparent
-                border-b-[6px] border-b-gray-900">
+              <div className="absolute top-1/2 -left-2 -translate-y-1/2 w-0 h-0 
+                border-t-[6px] border-t-transparent
+                border-b-[6px] border-b-transparent
+                border-r-[6px] border-r-gray-900">
               </div>
             </div>
           )}

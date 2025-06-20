@@ -339,7 +339,7 @@ export default function CharacterLibraryPage() {
                           <div className="flex items-center space-x-1 mt-1">
                             <Heart className="w-3 h-3 text-pink-500" />
                             <span className="text-xs text-gray-500">
-                              {t('character.level', { level: userAffinities[selectedCharacter._id] || 0 })}
+                              {t('character.level', { level: Math.floor(userAffinities[selectedCharacter._id] || 0) })}
                             </span>
                           </div>
                         )}
@@ -367,7 +367,7 @@ export default function CharacterLibraryPage() {
                               <span>{t('character.unlockedCount', { count: character.galleryImages.filter(img => 
                                 isImageUnlocked(img.unlockLevel, character._id)
                               ).length })}</span>
-                              <span>{t('character.level', { level: userAffinities[character._id] || 0 })}</span>
+                              <span>{t('character.level', { level: Math.floor(userAffinities[character._id] || 0) })}</span>
                             </div>
                           </div>
                         </button>

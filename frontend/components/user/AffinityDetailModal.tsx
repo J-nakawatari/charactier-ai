@@ -118,7 +118,7 @@ export default function AffinityDetailModal({
                         className="absolute -bottom-2 -right-2 text-sm font-bold px-2 py-1 rounded-full text-white shadow-lg"
                         style={{ backgroundColor: affinity.character.themeColor }}
                       >
-                        {t('levelUp', { level: affinity.level })}
+                        {t('levelUp', { level: Math.floor(affinity.level) })}
                       </div>
                     </div>
 

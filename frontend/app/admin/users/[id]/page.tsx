@@ -567,7 +567,7 @@ export default function UserDetailPage() {
                 <div key={index} className="p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium text-gray-900">{affinity.characterName || `キャラクター ${String(affinity.characterId)}`}</span>
-                    <span className="text-sm text-gray-500">Lv.{String(affinity.level)}</span>
+                    <span className="text-sm text-gray-500">Lv.{Math.floor(affinity.level)}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                     <div 
