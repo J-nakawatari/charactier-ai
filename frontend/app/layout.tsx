@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     default: 'Charactier AI - 個性豊かなAIキャラクターとチャット | 24時間365日話し相手',
     template: '%s | Charactier AI'
   },
-  description: 'Charactier AIは、個性豊かなAIキャラクターと24時間いつでもチャットできるサービスです。友達のような会話から恋愛相談まで、あなたに寄り添うAIパートナーを見つけましょう。親密度システムで関係性が深まります。',
+  description: 'Charactier（キャラクティア）は、あなた好みのAIキャラーと気持ちを共有しながら過ごす新しいコミュニケーション体験です。24時間いつでも話せる、あなただけのAIパートナーを見つけましょう。親密度システムで関係性が深まります。',
   keywords: ['AI チャット', 'AIキャラクター', 'バーチャル友達', 'AI会話', 'チャットボット', 'AI恋愛', 'AIパートナー', '24時間チャット', '親密度システム', 'Charactier'],
   authors: [{ name: 'Charactier AI Team' }],
   creator: 'Charactier AI',
