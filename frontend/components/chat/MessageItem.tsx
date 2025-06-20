@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import Image from 'next/image';
@@ -26,7 +27,7 @@ interface MessageItemProps {
   affinityLevel?: number; // 親密度レベル（ムード情報のため）
 }
 
-export function MessageItem({ message, character, showAdvanced = false, affinityLevel = 0 }: MessageItemProps) {
+export const MessageItem = memo(function MessageItem({ message, character, showAdvanced = false, affinityLevel = 0 }: MessageItemProps) {
   const isUser = message.role === 'user';
   const timeAgo = formatDistanceToNow(message.timestamp, { 
     addSuffix: true, 
@@ -113,4 +114,4 @@ export function MessageItem({ message, character, showAdvanced = false, affinity
       </div>
     </div>
   );
-}
+});

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useTranslations } from 'next-intl';
 import { logout } from '../../utils/auth';
 import { TokenPurchaseModal } from '../chat/TokenPurchaseModal';
@@ -34,7 +34,7 @@ interface User {
   isSetupComplete?: boolean;
 }
 
-export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
+const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
   const pathname = usePathname();
   const params = useParams();
   
@@ -359,4 +359,6 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
       />
     </>
   );
-}
+});
+
+export default UserSidebar;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 import Image from 'next/image';
 import { Send, Heart, Zap, Settings, Eye, EyeOff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -11,6 +11,7 @@ import { MoodVisualizer } from './MoodVisualizer';
 import { TokenBar } from './TokenBar';
 import { UnlockPopup } from './UnlockPopup';
 import { TokenPurchaseModal } from './TokenPurchaseModal';
+import { ChatInput } from './ChatInput';
 import UserSidebar from '../user/UserSidebar';
 import { TypingIndicator } from './TypingIndicator';
 import { ConnectionIndicator } from './ConnectionIndicator';
@@ -75,7 +76,7 @@ interface ChatLayoutProps {
   onTokenPurchaseSuccess?: () => void;
 }
 
-export function ChatLayout({ 
+export const ChatLayout = memo(function ChatLayout({ 
   character, 
   affinity, 
   tokenStatus, 
@@ -88,7 +89,6 @@ export function ChatLayout({
 }: ChatLayoutProps) {
   const t = useTranslations('chatLayout');
   const locale = useLocale();
-  const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [localMessages, setLocalMessages] = useState<Message[]>(messages);
 
@@ -108,7 +108,7 @@ export function ChatLayout({
   
   // 🎨 感情に基づく背景スタイル
   const currentMood = (affinity as any).currentMood || 'neutral';
-  const moodGradient = getMoodBackgroundGradient(currentMood);
+  const moodGradient = useMemo(() => getMoodBackgroundGradient(currentMood), [currentMood]);
   
   // デバッグ: 画像URLを確認
   useEffect(() => {
@@ -215,12 +215,9 @@ export function ChatLayout({
   // - visibilitychangeイベントでの更新
   // - 購入完了イベントでの更新
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+  const handleSendMessage = useCallback(async (messageToSend: string) => {
+    if (!messageToSend.trim() || isLoading) return;
 
-    // メッセージを保存してから入力をクリア
-    const messageToSend = inputMessage.trim();
-    setInputMessage('');
     setIsLoading(true);
 
     try {
@@ -251,15 +248,7 @@ export function ChatLayout({
       setIsLoading(false);
       realtimeChat.setCharacterTyping(false);
     }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-    // シフト+エンターの場合は何もしない（デフォルトの改行）
-  };
+  }, [isLoading, character._id, onSendMessage, stopTyping, realtimeChat]);
 
   return (
     <div className="flex h-screen">
@@ -292,23 +281,26 @@ export function ChatLayout({
           </div>
           
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="hidden sm:block w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
-              <Image 
-                src={getSafeImageUrl(character.imageChatAvatar || character.imageCharacterSelect, character.name)} 
-                alt={character.name}
-                width={48}
-                height={48}
-                className="w-full h-full object-cover"
-                style={{ backgroundColor: 'transparent' }}
-                unoptimized={true}
-                onError={(e) => {
-                  console.error('ChatLayout Avatar image loading error:', {
-                    characterId: character._id,
-                    finalSrc: getSafeImageUrl(character.imageChatAvatar || character.imageCharacterSelect, character.name)
-                  });
-                }}
-              />
-            </div>
+            {useMemo(() => (
+              <div className="hidden sm:block w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                <Image 
+                  src={getSafeImageUrl(character.imageChatAvatar || character.imageCharacterSelect, character.name)} 
+                  alt={character.name}
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-cover"
+                  style={{ backgroundColor: 'transparent' }}
+                  unoptimized={true}
+                  placeholder="empty"
+                  onError={(e) => {
+                    console.error('ChatLayout Avatar image loading error:', {
+                      characterId: character._id,
+                      finalSrc: getSafeImageUrl(character.imageChatAvatar || character.imageCharacterSelect, character.name)
+                    });
+                  }}
+                />
+              </div>
+            ), [character.imageChatAvatar, character.imageCharacterSelect, character.name, character._id])}
             <div className="hidden sm:block">
               <h1 className="font-semibold text-gray-900 text-base">{character.name}</h1>
               {/* 🎭 高度機能表示 */}
@@ -365,7 +357,7 @@ export function ChatLayout({
       {/* メッセージエリア */}
       <div className="flex-1 relative z-10 overflow-hidden" style={{ backgroundColor: 'transparent' }}>
         {/* キャラクター画像（真ん中に配置） */}
-        {character.imageChatBackground && (
+        {useMemo(() => character.imageChatBackground && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
             <Image 
               src={getSafeImageUrl(character.imageChatBackground, character.name)}
@@ -382,6 +374,7 @@ export function ChatLayout({
                 position: 'absolute'
               }}
               priority
+              placeholder="empty"
               onError={(e) => {
                 console.error('ChatLayout background image loading error:', {
                   characterId: character._id,
@@ -391,7 +384,7 @@ export function ChatLayout({
               }}
             />
           </div>
-        )}
+        ), [character.imageChatBackground, character.name, character._id])}
         
         <MessageList 
           messages={localMessages}
@@ -407,40 +400,15 @@ export function ChatLayout({
 
       {/* 入力エリア */}
       <div className="relative z-10 bg-white/90 backdrop-blur-sm border-t border-gray-200/50 p-3 sm:p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-start space-x-2 sm:space-x-3">
-            <div className="flex-1 relative">
-              <textarea
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={t('messagePlaceholder', { characterName: character.name })}
-                className="w-full resize-none rounded-lg border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 focus:outline-none [#ec4899] bg-white text-gray-900 placeholder-gray-500 text-sm sm:text-base min-h-[40px] sm:min-h-[48px]"
-                rows={1}
-                style={{ maxHeight: '80px' }}
-              />
-              <div className="absolute bottom-2 right-2 text-xs text-gray-500">
-                {t('cost', { cost: tokenStatus.lastMessageCost })}
-              </div>
-            </div>
-            
-            <button
-              onClick={handleSendMessage}
-              disabled={!inputMessage.trim() || isLoading}
-              className="px-3 sm:px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg min-h-[40px] sm:min-h-[48px]"
-              style={{ backgroundColor: character.themeColor }}
-            >
-              {isLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
-              ) : (
-                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-              )}
-            </button>
-          </div>
-          
-          {/* 改行説明テキスト */}
-          <span className="block text-center text-xs text-gray-400 m-0" style={{ lineHeight: 0, marginTop: '4px' }}>{t('shiftEnterHint')}</span>
-        </div>
+        <ChatInput
+          characterName={character.name}
+          themeColor={character.themeColor}
+          lastMessageCost={tokenStatus.lastMessageCost}
+          isLoading={isLoading}
+          onSendMessage={handleSendMessage}
+          onTyping={handleTyping}
+          onStopTyping={stopTyping}
+        />
       </div>
 
         {/* アンロック演出ポップアップ */}
@@ -470,4 +438,4 @@ export function ChatLayout({
       </div>
     </div>
   );
-}
+});

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import Image from 'next/image';
 import { MessageItem } from './MessageItem';
 import { Loader2, ChevronUp } from 'lucide-react';
@@ -33,7 +33,7 @@ interface MessageListProps {
   affinityLevel?: number; // 親密度レベル（ムード情報のため）
 }
 
-export function MessageList({ 
+export const MessageList = memo(function MessageList({ 
   messages, 
   character, 
   isLoading, 
@@ -191,4 +191,4 @@ export function MessageList({
       )}
     </div>
   );
-}
+});

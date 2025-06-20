@@ -14,25 +14,25 @@ interface TokenBarProps {
 export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: TokenBarProps) {
   const t = useTranslations('tokens');
   const [currentTokens, setCurrentTokens] = useState<number | null>(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [errorCount, setErrorCount] = useState(0);
-  const [lastErrorTime, setLastErrorTime] = useState<number>(0);
   const [showTooltip, setShowTooltip] = useState(false);
   const refreshTokenBalanceRef = useRef<() => Promise<void>>();
+  const isRefreshingRef = useRef(false);
+  const errorCountRef = useRef(0);
+  const lastErrorTimeRef = useRef<number>(0);
 
   // トークン残高の手動更新
   const refreshTokenBalance = useCallback(async () => {
-    if (isRefreshing) return;
+    if (isRefreshingRef.current) return;
     
     // エラーが5回以上の場合はリトライを停止
-    if (errorCount >= 5) return;
+    if (errorCountRef.current >= 5) return;
     
     // 最後のエラーから5分経過していない場合はスキップ
     const now = Date.now();
-    if (lastErrorTime && now - lastErrorTime < 300000) return;
+    if (lastErrorTimeRef.current && now - lastErrorTimeRef.current < 300000) return;
     
     try {
-      setIsRefreshing(true);
+      isRefreshingRef.current = true;
       const response = await fetch('/api/user/profile', {
         headers: getAuthHeaders()
       });
@@ -42,21 +42,21 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
         const newTokens = userData.tokenBalance || userData.user?.tokenBalance || 0;
         setCurrentTokens(newTokens);
         onTokenUpdate?.(newTokens);
-        setErrorCount(0); // 成功したらエラーカウントをリセット
-        setLastErrorTime(0); // エラー時刻もリセット
+        errorCountRef.current = 0; // 成功したらエラーカウントをリセット
+        lastErrorTimeRef.current = 0; // エラー時刻もリセット
       } else {
-        setErrorCount(prev => prev + 1);
-        setLastErrorTime(now);
+        errorCountRef.current += 1;
+        lastErrorTimeRef.current = now;
         console.warn(`Token balance API returned ${response.status}`);
       }
     } catch (error) {
       console.error('Token balance refresh failed:', error);
-      setErrorCount(prev => prev + 1);
-      setLastErrorTime(now);
+      errorCountRef.current += 1;
+      lastErrorTimeRef.current = now;
     } finally {
-      setIsRefreshing(false);
+      isRefreshingRef.current = false;
     }
-  }, [onTokenUpdate, isRefreshing, errorCount, lastErrorTime]);
+  }, [onTokenUpdate]);
 
   // ref＆最新の関数を保持
   refreshTokenBalanceRef.current = refreshTokenBalance;
@@ -163,7 +163,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
                 ? 'text-yellow-700'
                 : 'text-gray-700'
           }`}>
-            <span className={isRefreshing && !isZeroBalance ? 'opacity-50' : ''}>
+            <span>
               {currentTokens.toLocaleString()}{t('tokenUnit')}
             </span>
             <span className="hidden sm:inline">
