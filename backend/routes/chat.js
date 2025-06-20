@@ -417,7 +417,7 @@ router.post('/:characterId/messages', auth, async (req, res) => {
       outputTokens: aiResponse.outputTokens || Math.floor(aiResponse.tokensUsed * 0.7),
       apiCost: aiResponse.apiCost || 0.001,
       apiCostYen: (aiResponse.apiCost || 0.001) * 150,
-      aiModel: 'gpt-4-turbo', // 固定値で試す
+      aiModel: character.model || 'gpt-3.5-turbo', // キャラクターの設定モデルを使用
       sessionId: currentSessionId,
       messageContent: message.substring(0, 200), // 最初の200文字のみ保存
       responseContent: aiResponse.response.substring(0, 500) // AI応答の最初の500文字
