@@ -103,7 +103,7 @@ export default function CharacterNewPage() {
     occupation: '',
     
     // AI設定
-    model: 'o4-mini', // デフォルトを現在の推奨モデルに
+    model: 'gpt-4o-mini', // デフォルトを現在の推奨モデルに
     characterAccessType: 'free',
     stripePriceId: '',
     displayPrice: 0,

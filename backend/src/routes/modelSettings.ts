@@ -8,24 +8,31 @@ const router: Router = Router();
 // 利用可能なモデル一覧
 const AVAILABLE_MODELS = [
   {
-    id: 'o4-mini',
-    name: 'OpenAI o4-mini',
-    description: '本番推奨モデル - 高品質・低コスト',
-    cost: '$1.1/$4.4 per 1M tokens',
+    id: 'gpt-4o-mini',
+    name: 'GPT-4o Mini', 
+    description: '本番推奨モデル - 高速・低コスト・高品質のバランス',
+    cost: '$0.15/$0.6 per 1M tokens',
     recommended: true
   },
   {
     id: 'gpt-3.5-turbo', 
     name: 'GPT-3.5 Turbo',
-    description: '開発・テスト用 - 最低コスト',
+    description: '最低コストモデル - 開発・テスト環境に最適',
     cost: '$0.5/$1.5 per 1M tokens',
     recommended: false
   },
   {
-    id: 'gpt-4o-mini',
-    name: 'GPT-4o Mini', 
-    description: 'バランス型 - 中コスト',
-    cost: '$0.15/$0.6 per 1M tokens',
+    id: 'gpt-4',
+    name: 'GPT-4',
+    description: '最高品質モデル - 複雑な会話や創造的タスクに対応',
+    cost: '$30/$60 per 1M tokens',
+    recommended: false
+  },
+  {
+    id: 'gpt-4-turbo',
+    name: 'GPT-4 Turbo',
+    description: '高品質・高速モデル - GPT-4の性能を改善した最新版',
+    cost: '$10/$30 per 1M tokens',
     recommended: false
   }
 ];
@@ -48,7 +55,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
     res.json({
       success: true,
       models: modelsWithCalc,
-      currentModel: process.env.OPENAI_MODEL || 'o4-mini'
+      currentModel: process.env.OPENAI_MODEL || 'gpt-4o-mini'
     });
   } catch (error) {
     console.error('❌ Models取得エラー:', error);
@@ -61,7 +68,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
  */
 router.get('/current', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+    const currentModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
     const modelInfo = AVAILABLE_MODELS.find(m => m.id === currentModel);
     
     res.json({

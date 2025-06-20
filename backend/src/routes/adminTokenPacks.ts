@@ -55,7 +55,7 @@ router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, r
 
     // 現在の為替レートを取得して実際の利益率を計算
     const { calcTokensToGive } = require('../config/tokenConfig');
-    const currentModel = 'o4-mini'; // 明示的にo4-miniを指定
+    const currentModel = 'gpt-4o-mini'; // デフォルトモデルを指定
     
     // 各パックの実際の利益率を計算（固定90%）
     const tokenPacksWithProfitMargin = await Promise.all(tokenPacks.map(async (pack) => {
@@ -162,7 +162,7 @@ router.put('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest
     if (updateData.tokens && updateData.price) {
       updateData.tokenPerYen = updateData.tokens / updateData.price;
       
-      // 利益率は90%固定（o4-miniモデル使用時）
+      // 利益率は90%固定（gpt-4o-miniモデル使用時）
       updateData.profitMargin = 90;
     }
 

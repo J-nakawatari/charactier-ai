@@ -64,7 +64,7 @@ TokenPackSchema.index({ isActive: 1, createdAt: -1 });
 
 // バリデーション
 TokenPackSchema.pre('save', function(next) {
-  // o4-mini原価モデルに基づく計算（デフォルトモデル）
+  // gpt-4o-mini原価モデルに基づく計算（デフォルトモデル）
   // 平均原価: ($0.0000011 + 2 × $0.0000044) / 3 = $0.0000033/token
   // 円換算（150円/USD）: $0.0000033 × 150 = 0.000495円/token
   const TOKEN_COST_PER_UNIT = 0.000495;
