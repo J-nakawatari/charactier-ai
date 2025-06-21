@@ -68,7 +68,7 @@ export const MessageItem = memo(function MessageItem({ message, character, showA
       <div className="flex-1 min-w-0">
         {/* 名前とタイムスタンプ - モバイルでも表示 */}
         <div className="flex items-center space-x-2 mb-1">
-          <span className="text-xs sm:text-sm font-medium text-gray-800">{character.name}</span>
+          <span className="text-sm font-medium text-gray-800">{character.name}</span>
           <span className="text-xs text-gray-500">{timeAgo}</span>
         </div>
         
@@ -77,7 +77,7 @@ export const MessageItem = memo(function MessageItem({ message, character, showA
           className="inline-block bg-white/70 backdrop-blur-md rounded-2xl rounded-tl-sm px-3 sm:px-4 py-2 sm:py-3 shadow-sm border border-gray-200/30 max-w-xs sm:max-w-sm lg:max-w-md"
           style={{ borderLeftColor: character.themeColor, borderLeftWidth: '3px' }}
         >
-          <p className="text-xs sm:text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">{message.content}</p>
+          <p className="text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">{message.content}</p>
         </div>
         
         {/* トークン消費情報と高度情報 - モバイルでも表示 */}

@@ -120,6 +120,7 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
         fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-100 
         flex flex-col shadow-sm overflow-y-auto transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
+        pb-safe
       `}>
         {/* ヘッダー */}
         <div className="p-6 border-b border-gray-200">

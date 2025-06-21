@@ -60,7 +60,7 @@ export const ChatInput = memo(function ChatInput({
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder={t('messagePlaceholder', { characterName })}
-            className="w-full resize-none rounded-lg border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900 placeholder-gray-500 text-sm sm:text-base min-h-[40px] sm:min-h-[48px]"
+            className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900 placeholder-gray-500 text-base min-h-[52px]"
             rows={1}
             style={{ maxHeight: '80px' }}
           />
@@ -72,7 +72,7 @@ export const ChatInput = memo(function ChatInput({
         <button
           onClick={handleSendMessage}
           disabled={!inputMessage.trim() || isLoading}
-          className="px-3 sm:px-4 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg min-h-[40px] sm:min-h-[48px]"
+          className="px-4 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg min-h-[52px]"
           style={{ backgroundColor: themeColor }}
         >
           {isLoading ? (
