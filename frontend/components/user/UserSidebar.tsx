@@ -169,11 +169,11 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
 
       {/* サイドバー */}
       <div className={`
-        fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-100 
-        flex flex-col shadow-sm overflow-y-auto transform transition-transform duration-300 ease-in-out
+        fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-100 
+        flex flex-col shadow-sm transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
-        pb-safe
-      `}>
+      `}
+      style={{ height: '100vh', paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {/* ヘッダー */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
@@ -205,7 +205,7 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
         </div>
 
         {/* ナビゲーション */}
-        <nav className="flex-1 p-4 space-y-1 min-h-0">
+        <nav className="flex-1 p-4 space-y-1 min-h-0 overflow-y-auto">
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
             {t('menu')}
           </div>
@@ -337,7 +337,7 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
         </nav>
 
         {/* フッター */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 20px))' }}>
           <button 
             onClick={handleLogout}
             className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 w-full transition-colors hover:bg-red-50 hover:text-red-600"

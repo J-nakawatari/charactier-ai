@@ -97,11 +97,11 @@ export default function Sidebar() {
 
       {/* サイドバー */}
       <div className={`
-        fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-100 
-        flex flex-col shadow-sm overflow-y-auto transform transition-transform duration-300 ease-in-out
+        fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-100 
+        flex flex-col shadow-sm transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
-        pb-safe
-      `}>
+      `}
+      style={{ height: '100vh', paddingBottom: 'env(safe-area-inset-bottom)' }}>
       {/* ヘッダー */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
@@ -114,7 +114,7 @@ export default function Sidebar() {
       </div>
 
       {/* ナビゲーション */}
-      <nav className="flex-1 p-4 space-y-1 min-h-0">
+      <nav className="flex-1 p-4 space-y-1 min-h-0 overflow-y-auto">
         <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
           一般
         </div>
@@ -161,7 +161,7 @@ export default function Sidebar() {
       </nav>
 
       {/* フッター */}
-      <div className="p-4 border-t border-gray-200 space-y-3">
+      <div className="p-4 border-t border-gray-200 space-y-3" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 20px))' }}>
         {/* 管理者情報 */}
         {adminUser && (
           <div className="px-3 py-2 bg-gray-50 rounded-lg">
