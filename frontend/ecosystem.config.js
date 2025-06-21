@@ -2,6 +2,7 @@ module.exports = {
   apps: [{
     name: 'charactier-frontend',
     script: './start.js',
+    interpreter: 'node',
     cwd: '/var/www/charactier-ai/frontend',
     env: {
       NODE_ENV: 'production',
