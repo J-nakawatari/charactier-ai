@@ -2941,7 +2941,7 @@ app.post('/api/user/add-tokens', authenticateToken, async (req: Request, res: Re
 });
 
 // 管理者用：ユーザー一覧取得（adminUsersRoutesで定義済みのため削除）
-// routeRegistry.define('GET', '/api/admin/users', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+/* routeRegistry.define('GET', '/api/admin/users', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   
   if (!req.user || !(req.user as any).isAdmin) {
     res.status(401).json({ error: 'Admin access required' });
