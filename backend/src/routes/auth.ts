@@ -461,7 +461,6 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
         name: admin.name,
         email: admin.email,
         role: admin.role,
-        permissions: admin.permissions,
         isAdmin: true // フロントエンド互換性のため
       }
     });
@@ -502,17 +501,7 @@ router.post('/create-admin', async (req: Request, res: Response): Promise<void> 
       name: '新しい管理者',
       email: adminEmail,
       password: hashedPassword,
-      role: 'admin',
-      permissions: [
-        'users.read',
-        'users.write',
-        'characters.read',
-        'characters.write',
-        'tokens.read',
-        'tokens.write',
-        'system.read',
-        'system.write'
-      ],
+      role: 'super_admin',
       isActive: true
     });
 

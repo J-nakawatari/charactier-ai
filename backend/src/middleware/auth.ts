@@ -154,3 +154,14 @@ export const generateRefreshToken = (userId: string): string => {
     { expiresIn: '7d' }
   );
 };
+
+// Helper function to check if admin is moderator (read-only)
+export const isModerator = (req: AuthRequest): boolean => {
+  return req.admin?.role === 'moderator' || req.user?.role === 'moderator';
+};
+
+// Helper function to check if admin has write permissions
+export const hasWritePermission = (req: AuthRequest): boolean => {
+  // Only super_admin has write permissions
+  return req.admin?.role === 'super_admin' || req.user?.role === 'super_admin';
+};

@@ -15,41 +15,13 @@ export default function CreateAdminPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'admin' as 'admin' | 'super_admin' | 'moderator'
+    role: 'moderator' as 'super_admin' | 'moderator'
   });
   
-  const [permissions, setPermissions] = useState({
-    users: 'read' as 'none' | 'read' | 'write',
-    characters: 'read' as 'none' | 'read' | 'write',
-    tokens: 'read' as 'none' | 'read' | 'write',
-    system: 'none' as 'none' | 'read' | 'write'
-  });
   
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const permissionCategories = [
-    { 
-      key: 'users' as keyof typeof permissions,
-      label: 'ユーザー管理', 
-      description: 'ユーザー情報の表示・編集・削除'
-    },
-    { 
-      key: 'characters' as keyof typeof permissions,
-      label: 'キャラクター管理', 
-      description: 'キャラクター情報の表示・作成・編集・削除'
-    },
-    { 
-      key: 'tokens' as keyof typeof permissions,
-      label: 'トークン管理', 
-      description: 'トークン使用状況・パック管理'
-    },
-    { 
-      key: 'system' as keyof typeof permissions,
-      label: 'システム管理', 
-      description: 'システム設定・管理者機能'
-    }
-  ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -61,24 +33,7 @@ export default function CreateAdminPage() {
     }
   };
 
-  const handlePermissionChange = (category: keyof typeof permissions, level: 'none' | 'read' | 'write') => {
-    setPermissions(prev => ({
-      ...prev,
-      [category]: level
-    }));
-  };
 
-  const generatePermissionsArray = (perms: typeof permissions): string[] => {
-    const result: string[] = [];
-    Object.entries(perms).forEach(([category, level]) => {
-      if (level === 'read') {
-        result.push(`${category}.read`);
-      } else if (level === 'write') {
-        result.push(`${category}.read`, `${category}.write`);
-      }
-    });
-    return result;
-  };
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -103,10 +58,6 @@ export default function CreateAdminPage() {
       newErrors.confirmPassword = 'パスワードが一致しません';
     }
 
-    const hasAnyPermission = Object.values(permissions).some(level => level !== 'none');
-    if (!hasAnyPermission) {
-      newErrors.permissions = '少なくとも1つの権限を設定してください';
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -137,8 +88,7 @@ export default function CreateAdminPage() {
           name: formData.name.trim(),
           email: formData.email.trim(),
           password: formData.password,
-          role: formData.role,
-          permissions: generatePermissionsArray(permissions)
+          role: formData.role
         })
       });
 
@@ -296,71 +246,13 @@ export default function CreateAdminPage() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none"
                     disabled={isLoading}
                   >
-                    <option value="admin">管理者</option>
-                    <option value="super_admin">スーパー管理者</option>
-                    <option value="moderator">モデレーター</option>
+                    <option value="moderator">モデレーター（閲覧のみ）</option>
+                    <option value="super_admin">スーパー管理者（全権限）</option>
                   </select>
                 </div>
               </div>
             </div>
 
-            {/* 権限設定 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">権限設定</h2>
-              
-              <div className="space-y-6">
-                {permissionCategories.map((category) => (
-                  <div key={category.key} className="border rounded-lg p-4">
-                    <div className="mb-4">
-                      <h3 className="text-sm font-medium text-gray-900">{category.label}</h3>
-                      <p className="text-xs text-gray-500 mt-1">{category.description}</p>
-                    </div>
-                    
-                    <div className="flex space-x-6">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name={`permission-${category.key}`}
-                          value="none"
-                          checked={permissions[category.key] === 'none'}
-                          onChange={() => handlePermissionChange(category.key, 'none')}
-                          className="mr-2"
-                        />
-                        <span className="text-sm text-gray-600">なし</span>
-                      </label>
-                      
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name={`permission-${category.key}`}
-                          value="read"
-                          checked={permissions[category.key] === 'read'}
-                          onChange={() => handlePermissionChange(category.key, 'read')}
-                          className="mr-2"
-                        />
-                        <span className="text-sm text-gray-600">閲覧のみ</span>
-                      </label>
-                      
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name={`permission-${category.key}`}
-                          value="write"
-                          checked={permissions[category.key] === 'write'}
-                          onChange={() => handlePermissionChange(category.key, 'write')}
-                          className="mr-2"
-                        />
-                        <span className="text-sm text-gray-600">閲覧・編集可能</span>
-                      </label>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {errors.permissions && (
-                <p className="mt-4 text-sm text-red-600">{errors.permissions}</p>
-              )}
-            </div>
 
             {/* 送信ボタン */}
             <div className="flex justify-end space-x-4">

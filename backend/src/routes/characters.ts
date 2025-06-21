@@ -2,7 +2,7 @@ import type { AuthRequest } from '../middleware/auth';
 import { Router, Response, NextFunction } from 'express';
 import { CharacterModel } from '../models/CharacterModel';
 import { UserModel } from '../models/UserModel';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, hasWritePermission } from '../middleware/auth';
 import { uploadImage, optimizeImage } from '../utils/fileUpload';
 
 const router: Router = Router();
@@ -51,6 +51,15 @@ router.post('/test-upload/image', uploadImage.single('image'), optimizeImage(800
 // キャラクター作成（管理者のみ）
 router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Check if user has write permission (only super_admin can create characters)
+    if (!hasWritePermission(req)) {
+      res.status(403).json({ 
+        error: 'Permission denied',
+        message: 'モデレーターはキャラクターを作成できません' 
+      });
+      return;
+    }
+
     console.log('📥 Received character creation request:', {
       headers: req.headers,
       body: req.body,
@@ -399,6 +408,15 @@ router.get('/:id/translations', authenticateToken, async (req: AuthRequest, res:
 // 翻訳データ保存（/:idより前に定義する必要あり）
 router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Check if user has write permission (only super_admin can update character translations)
+    if (!hasWritePermission(req)) {
+      res.status(403).json({ 
+        error: 'Permission denied',
+        message: 'モデレーターはキャラクターの翻訳を編集できません' 
+      });
+      return;
+    }
+
     const { name, description, personalityPreset, personalityTags, defaultMessage } = req.body;
     
     // バリデーション（オブジェクト構造のみチェック、空文字列は許可）
@@ -523,6 +541,15 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
 // キャラクター更新（管理者のみ）
 router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Check if user has write permission (only super_admin can update characters)
+    if (!hasWritePermission(req)) {
+      res.status(403).json({ 
+        error: 'Permission denied',
+        message: 'モデレーターはキャラクターを編集できません' 
+      });
+      return;
+    }
+
     console.log('📝 Character update request:', {
       id: req.params.id,
       body: req.body
@@ -566,6 +593,15 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
 // キャラクター削除（論理削除）
 router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Check if user has write permission (only super_admin can delete characters)
+    if (!hasWritePermission(req)) {
+      res.status(403).json({ 
+        error: 'Permission denied',
+        message: 'モデレーターはキャラクターを削除できません' 
+      });
+      return;
+    }
+
     const updatedCharacter = await CharacterModel.findByIdAndUpdate(
       req.params.id,
       { isActive: false },
@@ -597,6 +633,15 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
 // 画像アップロードAPI（管理者のみ）
 router.post('/upload/image', authenticateToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Check if user has write permission (only super_admin can upload images)
+    if (!hasWritePermission(req)) {
+      res.status(403).json({ 
+        error: 'Permission denied',
+        message: 'モデレーターは画像をアップロードできません' 
+      });
+      return;
+    }
+
     if (!req.file) {
       res.status(400).json({
         error: 'No image file',

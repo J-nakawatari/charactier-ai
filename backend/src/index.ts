@@ -18,7 +18,7 @@ import { CharacterModel, ICharacter } from './models/CharacterModel';
 import { PurchaseHistoryModel } from './models/PurchaseHistoryModel';
 import { NotificationModel } from './models/NotificationModel';
 import { UserNotificationReadStatusModel } from './models/UserNotificationReadStatusModel';
-import { authenticateToken, AuthRequest } from './middleware/auth';
+import { authenticateToken, AuthRequest, isModerator, hasWritePermission } from './middleware/auth';
 import authRoutes from './routes/auth';
 import characterRoutes from './routes/characters';
 import modelRoutes from './routes/modelSettings';
@@ -3108,6 +3108,15 @@ routeRegistry.define('PUT', '/api/admin/users/:id/status', authenticateToken, as
       return;
     }
 
+    // Check if user has write permission (only super_admin can change user status)
+    if (!hasWritePermission(req)) {
+      res.status(403).json({ 
+        error: 'Permission denied',
+        message: 'モデレーターはユーザーのステータスを変更できません' 
+      });
+      return;
+    }
+
     const { id } = req.params;
     const { status, banReason } = req.body;
     
@@ -3187,6 +3196,15 @@ routeRegistry.define('DELETE', '/api/admin/users/:id', authenticateToken, async 
   try {
     if (!req.user || !(req.user as any).isAdmin) {
       res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    // Check if user has write permission (only super_admin can delete users)
+    if (!hasWritePermission(req)) {
+      res.status(403).json({ 
+        error: 'Permission denied',
+        message: 'モデレーターはユーザーを削除できません' 
+      });
       return;
     }
 
@@ -3357,7 +3375,16 @@ app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, 
     return;
   }
 
-  const { name, email, password, role = 'admin', permissions } = req.body;
+  // Check if user has write permission (only super_admin can create admins)
+  if (!hasWritePermission(req)) {
+    res.status(403).json({ 
+      error: 'Permission denied',
+      message: 'モデレーターは管理者を作成できません' 
+    });
+    return;
+  }
+
+  const { name, email, password, role = 'moderator' } = req.body;
 
   // バリデーション
   if (!name || !email || !password) {
@@ -3393,23 +3420,12 @@ app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, 
       const saltRounds = 12;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-      // デフォルト権限
-      const defaultPermissions = permissions || [
-        'users.read',
-        'users.write',
-        'characters.read',
-        'characters.write',
-        'tokens.read',
-        'tokens.write'
-      ];
-
       // 新しい管理者を作成
       const newAdmin = new AdminModel({
         name: name.trim(),
         email: email.toLowerCase().trim(),
         password: hashedPassword,
         role: role,
-        permissions: defaultPermissions,
         isActive: true
       });
 
@@ -3423,7 +3439,6 @@ app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, 
           name: savedAdmin.name,
           email: savedAdmin.email,
           role: savedAdmin.role,
-          permissions: savedAdmin.permissions,
           isActive: savedAdmin.isActive,
           createdAt: savedAdmin.createdAt
         }
@@ -3438,7 +3453,6 @@ app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, 
           name,
           email,
           role,
-          permissions: permissions || ['users.read', 'characters.read'],
           isActive: true,
           createdAt: new Date().toISOString()
         }
@@ -3563,8 +3577,17 @@ app.put('/api/admin/admins/:id', authenticateToken, async (req: AuthRequest, res
     return;
   }
 
+  // Check if user has write permission (only super_admin can edit admins)
+  if (!hasWritePermission(req)) {
+    res.status(403).json({ 
+      error: 'Permission denied',
+      message: 'モデレーターは管理者を編集できません' 
+    });
+    return;
+  }
+
   const { id } = req.params;
-  const { name, email, role, permissions, isActive } = req.body;
+  const { name, email, role, isActive } = req.body;
 
   try {
     if (!isMongoConnected) {
@@ -3592,7 +3615,6 @@ app.put('/api/admin/admins/:id', authenticateToken, async (req: AuthRequest, res
     if (name) updateData.name = name;
     if (email) updateData.email = email.toLowerCase();
     if (role) updateData.role = role;
-    if (permissions !== undefined) updateData.permissions = permissions;
     if (isActive !== undefined) updateData.isActive = isActive;
 
     const updatedAdmin = await AdminModel.findByIdAndUpdate(
@@ -3629,6 +3651,15 @@ app.put('/api/admin/admins/:id', authenticateToken, async (req: AuthRequest, res
 app.delete('/api/admin/admins/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   if (!req.user || !(req.user as any).isAdmin) {
     res.status(401).json({ error: 'Admin access required' });
+    return;
+  }
+
+  // Check if user has write permission (only super_admin can delete admins)
+  if (!hasWritePermission(req)) {
+    res.status(403).json({ 
+      error: 'Permission denied',
+      message: 'モデレーターは管理者を削除できません' 
+    });
     return;
   }
 
@@ -5558,6 +5589,15 @@ app.post('/api/admin/cache/cleanup', authenticateToken, async (req: AuthRequest,
  */
 routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Check if user has write permission (only super_admin can delete cache)
+    if (!hasWritePermission(req)) {
+      res.status(403).json({ 
+        error: 'Permission denied',
+        message: 'モデレーターはキャッシュを削除できません' 
+      });
+      return;
+    }
+
     const { characterId } = req.params;
     const reason = req.body.reason || 'manual_admin_action';
     

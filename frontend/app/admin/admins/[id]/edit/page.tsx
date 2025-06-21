@@ -10,20 +10,10 @@ import { API_BASE_URL } from '@/lib/api-config';
 interface AdminForm {
   name: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'moderator';
-  permissions: string[];
+  role: 'super_admin' | 'moderator';
   isActive: boolean;
 }
 
-const AVAILABLE_PERMISSIONS = [
-  { value: 'user_management', label: 'ユーザー管理' },
-  { value: 'character_management', label: 'キャラクター管理' },
-  { value: 'token_management', label: 'トークン管理' },
-  { value: 'notification_management', label: '通知管理' },
-  { value: 'security_management', label: 'セキュリティ管理' },
-  { value: 'analytics_view', label: '分析データ閲覧' },
-  { value: 'system_settings', label: 'システム設定' }
-];
 
 export default function EditAdminPage() {
   const router = useRouter();
@@ -37,7 +27,6 @@ export default function EditAdminPage() {
     name: '',
     email: '',
     role: 'moderator',
-    permissions: [],
     isActive: true
   });
 
@@ -69,7 +58,6 @@ export default function EditAdminPage() {
         name: data.admin.name || '',
         email: data.admin.email || '',
         role: data.admin.role || 'moderator',
-        permissions: data.admin.permissions || [],
         isActive: data.admin.isActive !== false
       });
     } catch (err: any) {
@@ -120,14 +108,6 @@ export default function EditAdminPage() {
     }
   };
 
-  const handlePermissionToggle = (permission: string) => {
-    setFormData(prev => ({
-      ...prev,
-      permissions: prev.permissions.includes(permission)
-        ? prev.permissions.filter(p => p !== permission)
-        : [...prev.permissions, permission]
-    }));
-  };
 
   if (loading) {
     return (
@@ -209,9 +189,8 @@ export default function EditAdminPage() {
                     onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as any }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
-                    <option value="moderator">モデレーター</option>
-                    <option value="admin">管理者</option>
-                    <option value="super_admin">スーパー管理者</option>
+                    <option value="moderator">モデレーター（閲覧のみ）</option>
+                    <option value="super_admin">スーパー管理者（全権限）</option>
                   </select>
                 </div>
                 <div>
@@ -242,23 +221,6 @@ export default function EditAdminPage() {
               </div>
             </div>
 
-            {/* 権限 */}
-            <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">権限</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {AVAILABLE_PERMISSIONS.map(permission => (
-                  <label key={permission.value} className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      checked={formData.permissions.includes(permission.value)}
-                      onChange={() => handlePermissionToggle(permission.value)}
-                      className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                    <span className="text-sm text-gray-700">{permission.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* フッター */}

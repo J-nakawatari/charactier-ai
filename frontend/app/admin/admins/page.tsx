@@ -10,8 +10,7 @@ interface Admin {
   _id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'moderator';
-  permissions: string[];
+  role: 'super_admin' | 'moderator';
   isActive: boolean;
   lastLogin?: string;
   createdAt: string;
@@ -70,9 +69,8 @@ export default function AdminListPage() {
 
   const getRoleText = (role: string) => {
     const roleMap = {
-      'super_admin': 'スーパー管理者',
-      'admin': '管理者',
-      'moderator': 'モデレーター'
+      'super_admin': 'スーパー管理者（全権限）',
+      'moderator': 'モデレーター（閲覧のみ）'
     };
     return roleMap[role as keyof typeof roleMap] || role;
   };
@@ -80,7 +78,6 @@ export default function AdminListPage() {
   const getRoleBadgeColor = (role: string) => {
     const colorMap = {
       'super_admin': 'bg-red-100 text-red-800',
-      'admin': 'bg-purple-100 text-purple-800',
       'moderator': 'bg-blue-100 text-blue-800'
     };
     return colorMap[role as keyof typeof colorMap] || 'bg-gray-100 text-gray-800';
@@ -150,7 +147,7 @@ export default function AdminListPage() {
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">管理者設定</h1>
             <p className="text-sm text-gray-500 mt-1">
-              システム管理者の追加・編集・権限管理
+              システム管理者の追加・編集・役割管理
             </p>
           </div>
           
@@ -243,9 +240,6 @@ export default function AdminListPage() {
                     役割
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    権限数
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     最終ログイン
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -282,9 +276,6 @@ export default function AdminListPage() {
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeColor(admin.role)}`}>
                         {getRoleText(admin.role)}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {admin.permissions.length}個
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {admin.lastLogin ? formatDate(admin.lastLogin) : '未ログイン'}
