@@ -196,29 +196,37 @@ export default function RegisterPage() {
     try {
       console.log('🔐 新規登録実行中...');
       
-      // バックエンドの登録APIを呼び出し（名前は一時的に空文字で登録）
+      // バックエンドの登録APIを呼び出し（メール認証付き）
       const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ 
+          email, 
+          password,
+          locale // 言語設定を送信
+        }),
       });
       
       const data = await response.json();
       
       if (!response.ok) {
+        // エラーハンドリング
+        if (response.status === 429) {
+          throw new Error(data.message || '登録制限に達しました。しばらくしてから再試行してください。');
+        } else if (response.status === 400 && data.error === 'Invalid email') {
+          throw new Error('使い捨てメールアドレスは使用できません。');
+        }
         throw new Error(data.message || '登録に失敗しました');
       }
       
-      // JWTトークンを保存
-      localStorage.setItem('accessToken', data.tokens.accessToken);
-      localStorage.setItem('refreshToken', data.tokens.refreshToken);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // メール送信成功 - 登録メールアドレスを保存（再送信用）
+      sessionStorage.setItem('pendingEmail', email);
       
-      console.log('✅ 新規登録成功');
-      // 初回セットアップ画面に遷移
-      router.push(`/${locale}/setup`);
+      console.log('✅ 確認メール送信成功');
+      // メール確認画面に遷移
+      router.push(`/${locale}/register-complete`);
       
     } catch (err: any) {
       console.error('❌ 新規登録エラー:', err);

@@ -23,7 +23,7 @@ export default function LoginPage() {
   const tFooter = useTranslations('footer');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | React.ReactNode>('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isMobile, setIsMobile] = useState(false);
@@ -141,6 +141,23 @@ export default function LoginPage() {
       const data = await response.json();
       
       if (!response.ok) {
+        // メール未認証エラーの場合
+        if (response.status === 403 && data.emailNotVerified) {
+          // メールアドレスを保存（再送信用）
+          sessionStorage.setItem('pendingEmail', email);
+          setError(
+            <div className="space-y-2">
+              <p>{data.message}</p>
+              <button
+                onClick={() => router.push(`/${locale}/resend-verification`)}
+                className="text-purple-600 hover:text-purple-700 underline text-sm"
+              >
+                確認メールを再送信
+              </button>
+            </div>
+          );
+          return;
+        }
         throw new Error(data.message || 'ログインに失敗しました');
       }
       
