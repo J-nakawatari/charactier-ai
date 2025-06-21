@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'charactier-frontend',
-    script: 'npm',
+    script: './node_modules/.bin/next',
     args: 'start',
     cwd: '/var/www/charactier-ai/frontend',
     env: {
@@ -12,6 +12,7 @@ module.exports = {
     instances: 1,
     autorestart: true,
     watch: false,
-    max_memory_restart: '1G'
+    max_memory_restart: '1G',
+    interpreter: 'node'
   }]
 };
