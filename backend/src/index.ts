@@ -3283,7 +3283,7 @@ routeRegistry.define('DELETE', '/api/admin/users/:id', authenticateToken, async 
 });
 
 // 管理者向けユーザー詳細取得（一般的なルートを最後に定義）
-app.get('/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', '/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user || !(req.user as any).isAdmin) {
       res.status(403).json({ error: 'Admin access required' });
