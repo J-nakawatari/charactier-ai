@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'charactier-frontend',
-    script: './node_modules/.bin/next',
+    script: 'node_modules/next/dist/bin/next',
     args: 'start',
     cwd: '/var/www/charactier-ai/frontend',
     env: {
