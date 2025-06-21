@@ -2,7 +2,8 @@ import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+// PM2が環境変数を注入するため、dotenvは不要
+// import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import Stripe from 'stripe';
@@ -56,7 +57,24 @@ import { calcTokensToGive, logTokenConfig } from './config/tokenConfig';
 const TokenService = require('../../services/tokenService');
 import routeRegistry from './core/RouteRegistry';
 
-dotenv.config({ path: './.env' });
+// PM2が環境変数を注入するため、dotenv.config()は不要
+// 開発環境の場合のみdotenvを使用（PM2を使わない場合）
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    require('dotenv').config({ path: './.env' });
+  } catch (error) {
+    console.log('⚠️ dotenv not available in development, using process.env directly');
+  }
+}
+
+// 環境変数の読み込み状態をログに出力（値は出力しない）
+console.log('🔧 Environment configuration:', {
+  nodeEnv: process.env.NODE_ENV,
+  hasSendGridKey: !!process.env.SENDGRID_API_KEY,
+  hasMongoUri: !!process.env.MONGO_URI,
+  hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
+  loadedBy: process.env.NODE_ENV === 'production' ? 'PM2' : 'dotenv'
+});
 
 const app = express();
 routeRegistry.setApp(app);
