@@ -192,7 +192,7 @@ export function useChatConnectionStatus() {
   // 定期的な接続チェック
   useEffect(() => {
     checkConnectionQuality();
-    const interval = setInterval(checkConnectionQuality, 30000); // 30秒間隔
+    const interval = setInterval(checkConnectionQuality, 60000); // 60秒間隔に延長してサーバー負荷を軽減
 
     return () => clearInterval(interval);
   }, [checkConnectionQuality]);

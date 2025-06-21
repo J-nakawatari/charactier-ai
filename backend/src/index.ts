@@ -2105,6 +2105,10 @@ app.get('/api/ping', (_req: Request, res: Response): void => {
   res.send('pong');
 });
 
+app.head('/api/ping', (_req: Request, res: Response): void => {
+  res.status(200).end();
+});
+
 // Dashboard API route
 // 削除: 重複するダッシュボードAPI（routes/dashboard.jsを使用）
 
