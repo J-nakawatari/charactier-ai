@@ -45,6 +45,14 @@ export async function sendVerificationEmail(
         name: 'Charactier AI'
       },
       templateId: process.env.SENDGRID_VERIFICATION_TEMPLATE_ID,
+      trackingSettings: {
+        clickTracking: {
+          enable: false
+        },
+        openTracking: {
+          enable: false
+        }
+      },
       dynamicTemplateData: {
         // 言語切り替え用
         locale: locale,
