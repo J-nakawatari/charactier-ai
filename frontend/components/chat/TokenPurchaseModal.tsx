@@ -40,7 +40,15 @@ export function TokenPurchaseModal({
   useEffect(() => {
     if (isOpen) {
       fetchTokenPacks();
+      // モバイルでの背景スクロールを防止
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [isOpen]);
 
   const fetchTokenPacks = async () => {
@@ -115,11 +123,11 @@ export function TokenPurchaseModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+        className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
@@ -154,7 +162,7 @@ export function TokenPurchaseModal({
         </div>
 
         {/* コンテンツ */}
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-purple-600" />

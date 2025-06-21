@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, Award, Star, Target, TrendingUp, CheckCircle, Clock, Gift } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -17,6 +17,18 @@ export default function BadgeSystemModal({
 }: BadgeSystemModalProps) {
   const t = useTranslations('badges');
   const tCommon = useTranslations('common');
+  
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
   
   if (!isOpen) return null;
 

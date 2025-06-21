@@ -26,6 +26,9 @@ export function UnlockPopup({ level, illustration, characterName, onClose }: Unl
     setIsVisible(true);
     setShowConfetti(true);
     
+    // モバイルでの背景スクロールを防止
+    document.body.style.overflow = 'hidden';
+    
     // 紙吹雪エフェクトを3秒後に停止
     const confettiTimer = setTimeout(() => {
       setShowConfetti(false);
@@ -39,6 +42,7 @@ export function UnlockPopup({ level, illustration, characterName, onClose }: Unl
     return () => {
       clearTimeout(confettiTimer);
       clearTimeout(autoCloseTimer);
+      document.body.style.overflow = 'unset';
     };
   }, [handleClose]);
 

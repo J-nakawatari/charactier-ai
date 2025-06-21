@@ -350,7 +350,7 @@ export default function HomePage() {
           {/* Login Button */}
           <button
             onClick={() => router.push(`/${locale}/login`)}
-            className="flex items-center justify-center gap-3 text-white font-bold py-3 md:py-4 px-6 rounded-lg text-base md:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl mb-6 mx-auto w-full max-w-xs"
+            className="flex items-center justify-center gap-3 text-white font-bold py-4 md:py-4 px-6 rounded-lg text-base md:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl mb-6 mx-auto w-full max-w-xs"
             style={{
               backgroundColor: '#E95295',
               borderRadius: '8px'

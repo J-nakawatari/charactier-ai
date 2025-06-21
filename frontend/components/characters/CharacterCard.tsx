@@ -334,7 +334,7 @@ export default function CharacterCard({
           {isLocked ? (
             <button
               onClick={handleClick}
-              className={`w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg transition-colors font-medium ${
+              className={`w-full flex items-center justify-center space-x-2 py-4 sm:py-2.5 px-4 rounded-lg transition-colors font-medium ${
                 character.characterAccessType === 'purchaseOnly' 
                   ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white hover:from-amber-500 hover:to-yellow-600 shadow-md' 
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -364,7 +364,7 @@ export default function CharacterCard({
             <button
               onClick={handleChatStart}
               disabled={isUpdating}
-              className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center space-x-2 py-4 sm:py-2.5 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <MessageSquare className="w-4 h-4" />
               <span>{isUpdating ? 'Loading...' : t('actions.startChat')}</span>
