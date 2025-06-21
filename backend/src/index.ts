@@ -1120,7 +1120,7 @@ routeRegistry.define('GET', '/api/user/profile', authenticateToken, async (req: 
 
     // ユーザー基本情報を取得（populateを削除して高速化）
     const user = await UserModel.findById(userId)
-      .select('_id email name createdAt lastLogin affinities tokenBalance totalSpent selectedCharacter purchasedCharacters')
+      .select('_id email name createdAt lastLogin affinities tokenBalance totalSpent selectedCharacter purchasedCharacters isSetupComplete')
       .lean();
 
     if (!user) {
@@ -1144,7 +1144,8 @@ routeRegistry.define('GET', '/api/user/profile', authenticateToken, async (req: 
         lastLogin: user.lastLogin,
         selectedCharacter: user.selectedCharacter,
         tokenBalance: user.tokenBalance || 0,
-        totalSpent: user.totalSpent || 0
+        totalSpent: user.totalSpent || 0,
+        isSetupComplete: user.isSetupComplete || false
       },
       tokenBalance: user.tokenBalance || 0,
       totalPurchased: totalPurchased,
