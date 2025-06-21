@@ -26,6 +26,7 @@ import notificationRoutes from './routes/notifications';
 import systemSettingsRoutes from './routes/systemSettings';
 import systemRoutes from './routes/system';
 import { monitoringMiddleware } from './middleware/monitoring';
+import { registrationRateLimit } from './middleware/registrationLimit';
 // const userRoutes = require('./routes/user');
 // const dashboardRoutes = require('./routes/dashboard');
 import { validateMessage } from './utils/contentFilter';

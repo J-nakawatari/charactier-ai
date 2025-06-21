@@ -80,6 +80,11 @@ export interface IUser extends Document {
   preferredLanguage: 'ja' | 'en';
   isAdmin: boolean;
   
+  // メール認証
+  emailVerified: boolean;
+  emailVerificationToken?: string;
+  emailVerificationExpires?: Date;
+  
   // キャラクター関連
   selectedCharacter?: string; // ObjectId
   purchasedCharacters: string[]; // ObjectId[]
@@ -321,6 +326,20 @@ const UserSchema: Schema = new Schema({
   isAdmin: {
     type: Boolean,
     default: false
+  },
+  
+  // メール認証
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationToken: {
+    type: String,
+    select: false // セキュリティのため通常のクエリでは取得しない
+  },
+  emailVerificationExpires: {
+    type: Date,
+    select: false
   },
   
   // キャラクター関連
