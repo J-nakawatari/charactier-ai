@@ -8,15 +8,21 @@ import { Mail, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function ResendVerificationPage({ 
-  params: { locale }
+  params
 }: { 
-  params: { locale: string } 
+  params: Promise<{ locale: string }>
 }) {
+  const [locale, setLocale] = useState<string>('ja');
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [isResending, setIsResending] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    // paramsからlocaleを取得
+    params.then(p => setLocale(p.locale));
+  }, [params]);
 
   useEffect(() => {
     // ログイン時に保存したメールアドレスを取得

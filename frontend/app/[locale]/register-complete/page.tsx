@@ -9,16 +9,22 @@ import { Mail, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function RegisterCompletePage({ 
-  params: { locale }
+  params
 }: { 
-  params: { locale: string } 
+  params: Promise<{ locale: string }>
 }) {
+  const [locale, setLocale] = useState<string>('ja');
   const t = useTranslations('registerComplete');
   const router = useRouter();
   const [email, setEmail] = useState<string>('');
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState('');
   const [resendError, setResendError] = useState('');
+
+  useEffect(() => {
+    // paramsからlocaleを取得
+    params.then(p => setLocale(p.locale));
+  }, [params]);
 
   useEffect(() => {
     // 登録時のメールアドレスを取得

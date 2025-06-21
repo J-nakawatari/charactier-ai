@@ -8,15 +8,21 @@ import Link from 'next/link';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function VerifyEmailPage({ 
-  params: { locale }
+  params
 }: { 
-  params: { locale: string } 
+  params: Promise<{ locale: string }>
 }) {
+  const [locale, setLocale] = useState<string>('ja');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
   const [countdown, setCountdown] = useState(5);
+
+  useEffect(() => {
+    // paramsからlocaleを取得
+    params.then(p => setLocale(p.locale));
+  }, [params]);
 
   useEffect(() => {
     const verifyEmail = async () => {
