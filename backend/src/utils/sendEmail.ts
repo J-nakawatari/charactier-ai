@@ -44,6 +44,10 @@ export async function sendVerificationEmail(
         email: process.env.SENDGRID_FROM_EMAIL || 'noreply@charactier-ai.com',
         name: 'Charactier AI'
       },
+      // コード内で直接件名を設定（Dynamic Templateの件名設定を上書き）
+      subject: locale === 'ja' 
+        ? '【Charactier AI】メールアドレスの確認をお願いします'
+        : '[Charactier AI] Please verify your email address',
       templateId: process.env.SENDGRID_VERIFICATION_TEMPLATE_ID,
       trackingSettings: {
         clickTracking: {
