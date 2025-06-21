@@ -39,6 +39,25 @@ function VerifyEmailContent({ locale }: { locale: string }) {
           if (data.tokens) {
             localStorage.setItem('accessToken', data.tokens.accessToken);
             localStorage.setItem('refreshToken', data.tokens.refreshToken);
+            
+            // ユーザー情報を取得
+            try {
+              const userResponse = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                headers: {
+                  'Authorization': `Bearer ${data.tokens.accessToken}`
+                }
+              });
+              
+              if (userResponse.ok) {
+                const userData = await userResponse.json();
+                localStorage.setItem('user', JSON.stringify(userData));
+                console.log('✅ User data saved:', userData);
+              } else {
+                console.error('❌ Failed to fetch user profile');
+              }
+            } catch (error) {
+              console.error('❌ Error fetching user profile:', error);
+            }
           }
           
           // カウントダウン開始
