@@ -355,7 +355,7 @@ export const ChatLayout = memo(function ChatLayout({
       </div>
 
       {/* メッセージエリア */}
-      <div className="flex-1 relative z-10 overflow-hidden pb-20" style={{ backgroundColor: 'transparent' }}>
+      <div className="flex-1 relative z-10 overflow-hidden" style={{ backgroundColor: 'transparent' }}>
         {/* キャラクター画像（真ん中に配置） */}
         {useMemo(() => character.imageChatBackground && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
