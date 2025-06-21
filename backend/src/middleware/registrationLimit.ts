@@ -31,9 +31,22 @@ export const registrationRateLimit = async (
 
   try {
     const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    console.log('🔍 Registration rate limit check - IP:', ip, 'Headers:', {
+      'x-real-ip': req.headers['x-real-ip'],
+      'x-forwarded-for': req.headers['x-forwarded-for'],
+      'req.ip': req.ip
+    });
     
     // 短期間制限をチェック
     try {
+      const limiterRes = await shortTermLimiter.get(ip);
+      console.log('📊 Short-term limiter status:', {
+        ip,
+        consumedPoints: limiterRes ? limiterRes.consumedPoints : 0,
+        remainingPoints: limiterRes ? limiterRes.remainingPoints : 1,
+        msBeforeNext: limiterRes ? limiterRes.msBeforeNext : 0
+      });
+      
       await shortTermLimiter.consume(ip);
     } catch (shortTermError) {
       res.status(429).json({
