@@ -1,14 +1,14 @@
 module.exports = {
   apps: [{
     name: 'charactier-frontend',
-    script: 'node_modules/.bin/next',
-    args: 'start',
+    script: 'npm',
+    args: 'run start',
     cwd: '/var/www/charactier-ai/frontend',
     env: {
       NODE_ENV: 'production',
       PORT: 3000
     },
-    interpreter: 'node',
+    interpreter: '/bin/bash',
     exec_mode: 'fork',
     instances: 1,
     autorestart: true,
