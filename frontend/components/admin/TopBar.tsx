@@ -198,7 +198,7 @@ export default function TopBar() {
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-4">
+    <div className="bg-white border-b border-gray-200 px-6 py-4 pt-safe">
       <div className="flex items-center justify-between">
         {/* 左側：タイトル */}
         <div>

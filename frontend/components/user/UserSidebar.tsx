@@ -154,7 +154,8 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
       {/* ハンバーガーメニューボタン（モバイル用） */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 right-4 z-50 p-3 bg-purple-600 text-white rounded-lg shadow-lg lg:hidden hover:bg-purple-700 transition-colors"
+        className="fixed right-4 z-50 p-3 bg-purple-600 text-white rounded-lg shadow-lg lg:hidden hover:bg-purple-700 transition-colors"
+        style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
       >
         {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -173,7 +174,7 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
         flex flex-col shadow-sm transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
       `}
-      style={{ height: '100vh', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      style={{ height: '100vh', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {/* ヘッダー */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
