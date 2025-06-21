@@ -2940,8 +2940,8 @@ app.post('/api/user/add-tokens', authenticateToken, async (req: Request, res: Re
   }
 });
 
-// 管理者用：ユーザー一覧取得（adminUsersRoutesで定義済みのため削除）
-/* routeRegistry.define('GET', '/api/admin/users', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+// 管理者用：ユーザー一覧取得
+routeRegistry.define('GET', '/api/admin/users', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   
   if (!req.user || !(req.user as any).isAdmin) {
     res.status(401).json({ error: 'Admin access required' });
@@ -3057,7 +3057,7 @@ app.post('/api/user/add-tokens', authenticateToken, async (req: Request, res: Re
       error: 'ユーザー一覧の取得に失敗しました'
     });
   }
-}); */
+});
 
 // ⚠️ 管理者用：ユーザーのトークンをゼロにリセット（一時的機能）
 app.post('/admin/users/:userId/reset-tokens', authenticateToken, async (req: Request, res: Response): Promise<void> => {
