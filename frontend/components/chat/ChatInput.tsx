@@ -82,10 +82,6 @@ export const ChatInput = memo(function ChatInput({
           )}
         </button>
       </div>
-      
-      <span className="block text-center text-xs text-gray-400 m-0" style={{ lineHeight: 0, marginTop: '4px' }}>
-        {t('shiftEnterHint')}
-      </span>
     </div>
   );
 });
