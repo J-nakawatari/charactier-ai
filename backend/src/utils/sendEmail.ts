@@ -63,7 +63,7 @@ export async function sendVerificationEmail(
         verifyUrl: verifyUrl,
         
         // 日本語テキスト
-        subjectJa: 'メールアドレスの確認 - Charactier AI',
+        subjectJa: '【Charactier AI】メールアドレスの確認をお願いします',
         titleJa: 'Charactier AIへようこそ！',
         bodyJa: 'アカウントの登録を完了するには、以下のボタンをクリックしてメールアドレスを確認してください。',
         buttonJa: 'メールアドレスを確認する',
@@ -71,7 +71,7 @@ export async function sendVerificationEmail(
         ignoreJa: '心当たりがない場合は、このメールを無視してください。',
         
         // 英語テキスト
-        subjectEn: 'Verify your email - Charactier AI',
+        subjectEn: '[Charactier AI] Please verify your email address',
         titleEn: 'Welcome to Charactier AI!',
         bodyEn: 'Please click the button below to verify your email address.',
         buttonEn: 'Verify Email',
