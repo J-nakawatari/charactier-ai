@@ -8,7 +8,8 @@ module.exports = {
       exec_mode: 'fork',
       env_file: '.env',                 // cwdからの相対パスでOK
       env: {                            // ここに直書きでも可
-        NODE_ENV: 'production'
+        NODE_ENV: 'production',
+        DISABLE_RATE_LIMIT: 'true'
       },
       // 任意: 自動リスタートなど
       watch: false,
