@@ -14,7 +14,7 @@ export default function RegisterCompletePage({
   params: Promise<{ locale: string }>
 }) {
   const [locale, setLocale] = useState<string>('ja');
-  const t = useTranslations('registerComplete');
+  // const t = useTranslations('registerComplete'); // 翻訳ファイルは後で追加
   const router = useRouter();
   const [email, setEmail] = useState<string>('');
   const [isResending, setIsResending] = useState(false);

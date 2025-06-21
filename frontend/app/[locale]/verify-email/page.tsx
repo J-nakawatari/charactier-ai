@@ -1,28 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-export default function VerifyEmailPage({ 
-  params
-}: { 
-  params: Promise<{ locale: string }>
-}) {
-  const [locale, setLocale] = useState<string>('ja');
+function VerifyEmailContent({ locale }: { locale: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
   const [countdown, setCountdown] = useState(5);
-
-  useEffect(() => {
-    // paramsからlocaleを取得
-    params.then(p => setLocale(p.locale));
-  }, [params]);
 
   useEffect(() => {
     const verifyEmail = async () => {
@@ -164,5 +154,28 @@ export default function VerifyEmailPage({
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage({ 
+  params
+}: { 
+  params: Promise<{ locale: string }>
+}) {
+  const [locale, setLocale] = useState<string>('ja');
+
+  useEffect(() => {
+    // paramsからlocaleを取得
+    params.then(p => setLocale(p.locale));
+  }, [params]);
+
+  return (
+    <Suspense fallback={
+      <div className="min-h-dvh bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+        <Loader2 className="w-10 h-10 text-purple-600 animate-spin" />
+      </div>
+    }>
+      <VerifyEmailContent locale={locale} />
+    </Suspense>
   );
 }
