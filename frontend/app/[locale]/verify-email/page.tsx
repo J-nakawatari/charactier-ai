@@ -88,7 +88,7 @@ function VerifyEmailContent({ locale }: { locale: string }) {
     };
 
     verifyEmail();
-  }, [searchParams, locale, router]);
+  }, [searchParams, locale]);
 
   return (
     <div className="min-h-dvh bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
