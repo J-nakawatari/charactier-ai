@@ -136,7 +136,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
   return (
     <div className="flex items-center space-x-2 sm:space-x-4">
       {/* トークン残量表示 */}
-      <div className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 sm:py-2 rounded-lg ${
+      <div className={`flex items-center space-x-1 sm:space-x-2 p-[0.7rem] rounded-lg ${
         isZeroBalance
           ? 'bg-red-100 border border-red-300 animate-pulse'
           : isCriticalBalance 
@@ -219,7 +219,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
 
       {/* チャージボタン */}
       <button 
-        className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+        className={`flex items-center space-x-1 sm:space-x-2 p-[0.7rem] rounded-lg text-sm font-medium transition-colors ${
           isCriticalBalance
             ? 'bg-red-600 text-white hover:bg-red-700'
             : isLowBalance
