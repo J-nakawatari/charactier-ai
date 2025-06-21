@@ -386,7 +386,8 @@ router.post('/user/setup-complete', async (req: Request, res: Response): Promise
       { 
         name: name.trim(),
         selectedCharacter: selectedCharacterId,
-        isSetupComplete: true
+        isSetupComplete: true,
+        tokenBalance: 10000 // 初回セットアップ完了ボーナス
       },
       { new: true, select: '-password' }
     );
@@ -402,7 +403,8 @@ router.post('/user/setup-complete', async (req: Request, res: Response): Promise
     console.log('✅ Setup completed:', { 
       id: updatedUser._id, 
       name: updatedUser.name,
-      selectedCharacter: selectedCharacterId 
+      selectedCharacter: selectedCharacterId,
+      tokenBonus: 10000
     });
 
     res.json({
@@ -468,11 +470,7 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
     user.emailVerificationToken = undefined;
     user.emailVerificationExpires = undefined;
     
-    // 初回認証ボーナスを付与
-    if (user.tokenBalance === 0) {
-      user.tokenBalance = 2000; // 認証完了で2000トークン付与
-      console.log(`✅ Initial token bonus granted: ${user.email} (+2000 tokens)`);
-    }
+    // メール認証時のトークン付与を削除（セットアップ完了時に付与するため）
 
     await user.save();
 
