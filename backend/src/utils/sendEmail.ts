@@ -24,6 +24,9 @@ export async function sendVerificationEmail(
   console.log('📧 Preparing to send verification email:', {
     to: email,
     locale: locale,
+    verifyUrl: verifyUrl,
+    isJapanese: locale === 'ja',
+    isEnglish: locale === 'en',
     nodeEnv: process.env.NODE_ENV,
     hasSendGridKey: !!process.env.SENDGRID_API_KEY,
     hasFromEmail: !!process.env.SENDGRID_FROM_EMAIL,
