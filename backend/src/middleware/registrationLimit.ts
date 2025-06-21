@@ -22,6 +22,13 @@ export const registrationRateLimit = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  // 一時的にレート制限を無効化（テスト用）
+  if (process.env.DISABLE_RATE_LIMIT === 'true') {
+    console.log('⚠️ Registration rate limit is temporarily disabled for testing');
+    next();
+    return;
+  }
+
   try {
     const ip = req.ip || req.connection.remoteAddress || 'unknown';
     
