@@ -20,9 +20,18 @@ export async function sendVerificationEmail(
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   const verifyUrl = `${frontendUrl}/${locale}/verify-email?token=${token}`;
 
+  // デバッグ情報を出力
+  console.log('📧 Preparing to send verification email:', {
+    to: email,
+    locale: locale,
+    nodeEnv: process.env.NODE_ENV,
+    hasSendGridKey: !!process.env.SENDGRID_API_KEY,
+    hasFromEmail: !!process.env.SENDGRID_FROM_EMAIL,
+    hasTemplateId: !!process.env.SENDGRID_VERIFICATION_TEMPLATE_ID
+  });
+
   // 開発環境では実際に送信しない
   if (process.env.NODE_ENV === 'development') {
-    console.log('📧 [DEV] Verification email would be sent to:', email);
     console.log('🔗 [DEV] Verification URL:', verifyUrl);
     console.log('🎫 [DEV] Token:', token);
     return;

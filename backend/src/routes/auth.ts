@@ -82,10 +82,15 @@ router.post('/register', registrationRateLimit, async (req: Request, res: Respon
     // 認証メールを送信
     try {
       await sendVerificationEmail(email, verificationToken, locale as 'ja' | 'en');
-      console.log('✅ Verification email sent');
+      console.log('✅ Verification email sent successfully to:', email);
     } catch (emailError) {
       console.error('❌ Failed to send verification email:', emailError);
-      // メール送信に失敗してもユーザー登録は続行
+      // エラーの詳細をログに出力
+      if (emailError instanceof Error) {
+        console.error('Error details:', emailError.message);
+        console.error('Stack trace:', emailError.stack);
+      }
+      // メール送信に失敗してもユーザー登録は続行（セキュリティのため）
     }
 
     // レスポンス（トークンは返さない）
