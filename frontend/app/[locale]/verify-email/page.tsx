@@ -88,6 +88,7 @@ function VerifyEmailContent({ locale }: { locale: string }) {
     };
 
     verifyEmail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, locale]);
 
   return (
