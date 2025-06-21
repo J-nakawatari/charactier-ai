@@ -176,17 +176,12 @@ function VerifyEmailContent({ locale }: { locale: string }) {
   );
 }
 
-export default function VerifyEmailPage({ 
+export default async function VerifyEmailPage({ 
   params
 }: { 
   params: Promise<{ locale: string }>
 }) {
-  const [locale, setLocale] = useState<string>('ja');
-
-  useEffect(() => {
-    // paramsからlocaleを取得
-    params.then(p => setLocale(p.locale));
-  }, [params]);
+  const { locale } = await params;
 
   return (
     <Suspense fallback={
