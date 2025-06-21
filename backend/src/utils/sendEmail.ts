@@ -16,8 +16,8 @@ export async function sendVerificationEmail(
   token: string,
   locale: 'ja' | 'en' = 'ja'
 ): Promise<void> {
-  // フロントエンドのURLを環境変数から取得
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  // フロントエンドのURLを環境変数から取得（末尾のスラッシュを除去）
+  const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
   const verifyUrl = `${frontendUrl}/${locale}/verify-email?token=${token}`;
 
   // デバッグ情報を出力
