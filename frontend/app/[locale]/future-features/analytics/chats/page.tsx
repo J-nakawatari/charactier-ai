@@ -172,7 +172,7 @@ export default function ChatAnalyticsPage() {
   const DEPTH_COLORS = ['#81C784', '#64B5F6', '#FFB74D', '#F06292'];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-dvh bg-gray-50 flex">
       <UserSidebar locale={locale} />
       
       <div className="flex-1 lg:ml-64">

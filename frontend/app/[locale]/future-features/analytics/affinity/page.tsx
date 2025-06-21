@@ -66,7 +66,7 @@ export default function AffinityAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-dvh bg-gray-50 flex">
         <UserSidebar locale={locale} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -79,7 +79,7 @@ export default function AffinityAnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-dvh bg-gray-50 flex">
       <UserSidebar locale={locale} />
       
       <div className="flex-1 lg:ml-64 p-8">

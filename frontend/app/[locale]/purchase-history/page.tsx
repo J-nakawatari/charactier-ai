@@ -143,7 +143,7 @@ export default function PurchaseHistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex overflow-x-hidden">
+    <div className="min-h-dvh bg-gray-50 flex overflow-x-hidden">
       {/* サイドバー */}
       <UserSidebar locale={locale} />
       

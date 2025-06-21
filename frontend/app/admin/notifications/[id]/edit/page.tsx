@@ -228,7 +228,7 @@ export default function EditNotificationPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-dvh bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="animate-pulse">
@@ -246,7 +246,7 @@ export default function EditNotificationPage() {
 
   if (error || !notification) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-dvh bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-red-600 text-center">
@@ -266,7 +266,7 @@ export default function EditNotificationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-dvh bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* ヘッダー */}
         <div className="mb-6">

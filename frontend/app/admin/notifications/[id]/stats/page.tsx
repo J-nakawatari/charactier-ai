@@ -107,7 +107,7 @@ export default function NotificationStatsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-dvh bg-gray-50 py-8">
         <div className="max-w-6xl mx-auto px-4">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="animate-pulse">
@@ -125,7 +125,7 @@ export default function NotificationStatsPage() {
 
   if (error || !stats) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-dvh bg-gray-50 py-8">
         <div className="max-w-6xl mx-auto px-4">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-red-600 text-center">
@@ -159,7 +159,7 @@ export default function NotificationStatsPage() {
   const maxHourlyViews = Math.max(...stats.viewsByHour.map(item => item.views), 1);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-dvh bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* ヘッダー */}
         <div className="mb-6">

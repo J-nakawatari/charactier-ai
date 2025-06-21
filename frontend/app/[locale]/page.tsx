@@ -226,7 +226,7 @@ export default function HomePage() {
   }, [chatMessages]);
   
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-dvh overflow-hidden">
       {/* Background Video/Image Container */}
       <div className="absolute inset-0 w-full h-full">
         {/* Desktop: Video Background */}
@@ -315,7 +315,7 @@ export default function HomePage() {
       </div>
       
       {/* Main Content */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
+      <div className="relative z-10 flex items-center justify-center min-h-dvh px-4">
         <div className="relative text-center w-full max-w-4xl">
           {/* Small Title */}
           <p className="text-white text-sm sm:text-base md:text-lg font-medium mb-4 tracking-wide">

@@ -251,7 +251,7 @@ export const ChatLayout = memo(function ChatLayout({
   }, [isLoading, character._id, onSendMessage, stopTyping, realtimeChat]);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-dvh">
       {/* サイドバー */}
       <UserSidebar locale="ja" />
       
@@ -399,7 +399,7 @@ export const ChatLayout = memo(function ChatLayout({
       </div>
 
       {/* 入力エリア - スティッキー/固定配置 */}
-      <div className="sticky bottom-0 z-20 bg-white/95 backdrop-blur-sm border-t border-gray-200/50 p-3 sm:p-4 shadow-lg">
+      <div className="sticky bottom-0 z-20 bg-white/95 backdrop-blur-sm border-t border-gray-200/50 p-3 sm:p-4 pb-safe shadow-lg">
         <ChatInput
           characterName={character.name}
           themeColor={character.themeColor}

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Marvel, Maven_Pro, Orbitron } from 'next/font/google';
 import { ToastProvider } from '@/contexts/ToastContext';
+import { DynamicViewportProvider } from '@/components/DynamicViewportProvider';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -106,9 +107,11 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={inter.className}>
-        <ToastProvider>
-          {children}
-        </ToastProvider>
+        <DynamicViewportProvider>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </DynamicViewportProvider>
       </body>
     </html>
   );

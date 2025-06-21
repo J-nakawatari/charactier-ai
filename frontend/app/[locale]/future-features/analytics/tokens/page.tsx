@@ -113,7 +113,7 @@ export default function TokenAnalyticsPage() {
   const COLORS = ['#E95295', '#9C27B0', '#2196F3', '#4CAF50', '#FF9800', '#F44336'];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-dvh bg-gray-50 flex">
       <UserSidebar locale={locale} />
       
       <div className="flex-1 lg:ml-64">

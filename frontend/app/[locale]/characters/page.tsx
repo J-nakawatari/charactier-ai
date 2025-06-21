@@ -188,7 +188,7 @@ function CharactersPageContent({
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-dvh bg-gray-50 flex">
         <UserSidebar locale={locale} />
         <div className="flex-1 lg:ml-64 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
@@ -210,7 +210,7 @@ function CharactersPageContent({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-dvh bg-gray-50 flex">
       <UserSidebar locale={locale} />
       
       <div className="flex-1 lg:ml-64">

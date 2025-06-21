@@ -167,7 +167,7 @@ function PurchaseSuccessContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8 text-center">
         {processing ? (
           <>
@@ -278,7 +278,7 @@ function PurchaseSuccessContent() {
 export default function PurchaseSuccessPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-gray-50 flex items-center justify-center p-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
       </div>
     }>

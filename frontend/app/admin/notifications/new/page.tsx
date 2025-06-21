@@ -128,7 +128,7 @@ export default function NewNotificationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-dvh bg-gray-50">
       <div className="max-w-4xl mx-auto p-8">
         {/* ヘッダー */}
         <div className="mb-8">

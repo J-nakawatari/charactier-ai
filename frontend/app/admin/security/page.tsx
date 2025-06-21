@@ -140,7 +140,7 @@ export default function SecurityPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-dvh bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
           <p className="text-gray-600">セキュリティページを読み込んでいます...</p>
@@ -150,7 +150,7 @@ export default function SecurityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-dvh bg-gray-50">
       <div className="max-w-7xl mx-auto p-8">
         {/* ヘッダー */}
         <div className="mb-8">
