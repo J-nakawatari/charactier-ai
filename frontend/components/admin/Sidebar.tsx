@@ -98,13 +98,15 @@ export default function Sidebar() {
 
       {/* サイドバー */}
       <div className={`
-        fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-100 
+        fixed inset-0 z-50 w-64 bg-white border-r border-gray-100 
         flex flex-col shadow-sm transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
-      `}
-      style={{ height: '100vh', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      `}>
+      {/* Safe area top padding */}
+      <div className="h-[env(safe-area-inset-top,0px)]" />
+      
       {/* ヘッダー */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
             <MessageSquare className="w-5 h-5 text-white" />
@@ -162,7 +164,7 @@ export default function Sidebar() {
       </nav>
 
       {/* フッター */}
-      <div className="p-4 border-t border-gray-200 space-y-3" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 20px))' }}>
+      <div className="flex-shrink-0 p-4 border-t border-gray-200 space-y-3">
         {/* 管理者情報 */}
         {adminUser && (
           <div className="px-3 py-2 bg-gray-50 rounded-lg">
@@ -191,6 +193,9 @@ export default function Sidebar() {
           <span>ログアウト</span>
         </button>
       </div>
+      
+      {/* Safe area bottom padding */}
+      <div className="h-[env(safe-area-inset-bottom,20px)]" />
     </div>
     </>
   );

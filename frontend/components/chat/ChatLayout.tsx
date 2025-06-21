@@ -269,7 +269,7 @@ export const ChatLayout = memo(function ChatLayout({
         <div className={`absolute inset-0 backdrop-blur-sm transition-all duration-1000 ease-in-out ${moodGradient.overlay}`}></div>
       
       {/* ヘッダー */}
-      <header className="relative z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200/50 p-3 sm:p-4 pt-safe">
+      <header className="relative z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200/50 p-3 sm:p-4" style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top, 20px))' }}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between max-w-4xl mx-auto">
           {/* モバイル: TokenBarを上に配置、デスクトップ: 左側にキャラクター情報 */}
           <div className="sm:hidden mb-2">
