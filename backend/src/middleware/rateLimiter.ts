@@ -19,7 +19,7 @@ export const rateLimitConfigs = {
   
   // チャットAPI（コスト保護）
   chat: {
-    points: 30,      // 30メッセージ
+    points: 60,      // 60メッセージ
     duration: 3600,  // 1時間
     blockDuration: 3600 // 1時間ブロック
   },
