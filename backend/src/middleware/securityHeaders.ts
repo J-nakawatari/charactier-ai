@@ -26,6 +26,7 @@ export function configureSecurityHeaders(app: Express): void {
         ],
         fontSrc: [
           "'self'",
+          "data:", // base64 encoded fonts
           "https://fonts.gstatic.com"
         ],
         imgSrc: [
