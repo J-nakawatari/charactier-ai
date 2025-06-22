@@ -184,7 +184,7 @@ export default function SetupPage() {
     setError('');
 
     try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/api/user/setup-complete`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/api/auth/user/setup-complete`, {
         method: 'POST',
         body: JSON.stringify({ 
           name: name.trim(), 
