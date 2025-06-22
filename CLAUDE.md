@@ -1,188 +1,172 @@
-# CLAUDE.md - Charactier AI Chat Service
+# CLAUDE.md
 
-## Project Overview
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Charactier is an AI character chat service where users can talk with unique characters using tokens.
-Some characters are free, others must be purchased. Tokens are consumed per message, and intimacy level increases with conversations.
+## プロジェクト概要
 
-* **Frontend**: Next.js + Tailwind CSS
-* **Backend**: Express.js (Node.js)
-* **Database**: MongoDB Atlas
-* **Payment**: Stripe (Webhooks for character purchase)
-* **Deployment**: VPS (Xserver) + Nginx + PM2
-* **Fully responsive design required (mobile-first supported)**
-* **Multilingual support for user-facing pages only (i18n-ready, currently Japanese & English planned)**
-* `frontend/`, `backend/` にもCLAUDE.mdを個別設置し、モジュールごとの文脈を明確化
+Charactier AIは、ユーザーがトークンを使ってAIキャラクターとチャットできるサービスです。
+- 無料キャラクターと有料キャラクターが存在
+- トークンは購入制（サブスクリプションではない）
+- 会話を重ねることで親密度が上がる
+- 99%の利益率を維持する設計
 
-## Architecture
+### 技術スタック
+- **フロントエンド**: Next.js 15 + TypeScript + Tailwind CSS
+- **バックエンド**: Express.js + TypeScript + MongoDB
+- **決済**: Stripe（キャラクター購入とトークン購入）
+- **AI**: OpenAI API (GPT-4o-mini)
+- **キャッシュ**: Redis（プロンプトキャッシュ、SSE）
+- **デプロイ**: VPS (Xserver) + Nginx + PM2
 
-* `frontend/`: Contains the user UI and admin dashboard
-* `backend/`: Contains API routes, models, and logic
-* `webhooks/`: Stripe purchase hooks — **DO NOT TOUCH**
-* `models/`: Includes User.js, TokenPack.js, Character.js, TokenUsage.js
-* `middleware/`: Includes rate limiters, error loggers
+## アーキテクチャ
 
-## Rules for AI Assistant
-
-NEVER:
-* NEVER edit or delete any file inside `backend/webhooks/`
-* NEVER change token calculation logic (`User.js`, `TokenUsage.js`, etc.)
-* NEVER touch `.env` or credentials
-* NEVER run destructive git or bash commands
-* NEVER edit .env files or environment variables
-* NEVER hardcode or log secret keys, DB passwords, or other sensitive data
-* NEVER start multiple servers without checking for existing processes first
-
-YOU MUST:
-* YOU MUST cache character system prompts after first use (performance optimization)
-* YOU MUST support intimacy level unlocking images at every 10 levels
-* YOU MUST maintain the profit margin specified in docs/99-percent-profit-system.md
-* YOU MUST include comments in complex prompt-related logic
-* YOU MUST check for existing server processes before starting new ones
-* YOU MUST ask permission before modifying any configuration files
-* YOU MUST maintain strict security practices with sensitive data
-
-IMPORTANT:
-* IMPORTANT: Maintain a flat and minimalistic UI (white + Lucide icons)
-* IMPORTANT: Trailing stop logic for paid chat should not be altered without explicit instruction
-* IMPORTANT: All new features must be mobile responsive
-
-## Development Workflow
-
-### Step 1: 探索
-* Use `@` to explore existing API endpoints or models
-* Example: `@backend/models/Character.js` を読み、まだコードは書かないで
-
-### Step 2: 計画
-* Use `think` to plan before coding
-* Example: `この親密度機能を think hard で改善案を出して`
-
-### Step 3: 実装
-* Implement only after a clear plan is created
-* Use TDD when API contracts are fixed (OpenAPI if available)
-
-### Step 4: コミット
-* Split commits: `feat:`, `fix:`, `test:`, `refactor:`
-* Pull requests must include:
-  * Purpose of change
-  * Implementation approach
-  * Test results
-  * Migration note (if any)
-  * Attention for reviewer
-
-## Frequently Used Commands
-
-* `npm run dev` - Start development server
-* `npm run lint` - Check ESLint rules
-* `npm run test` - Run all tests
-* `pm2 restart all` - Restart production services
-* `mongo shell` - Check database directly (admin only)
-
-## Documentation Notes
-
-* Use `docs/architecture.md` for architectural decisions
-* Write test plans in `docs/test-cases/`
-* Update README.md after any major feature
-
-## UI Design
-
-* Sidebar layout with top nav bar
-* Use `toast` for all user feedback
-* Consistent spacing & button design
-* Tailwind utilities only — no inline styles
-* MUST be **responsive for all screen sizes (mobile, tablet, desktop)**
-* Components and pages MUST be **i18n-ready (via Next.js `app/[locale]/`) for user-facing pages only**
-* 管理画面は多言語対応 **不要（日本語のみ）**
-
-## Intimacy System
-
-* Character intimacy (0–100), stored per user
-* Unlock images every 10 levels
-* Change tone/personality gradually as intimacy grows
-
-## Notification System
-
-* Notify users on:
-  * Low token balance
-  * New intimacy unlock
-  * Character promo
-* Admin can trigger messages from dashboard
-
-## Token System
-
-* Tokens purchased via Stripe
-* One-time purchases (not subscriptions)
-* Log usage in `TokenUsage.js`
-* User's balance in `UserTokenPack.js`
-* **重要**: トークン計算・利益率の詳細は `docs/99-percent-profit-system.md` を参照
-
-## Chat System
-
-* Uses OpenAI API for chat completion
-* Messages consume tokens based on characterPrompt + userMessage
-* Cache character prompts to reduce cost
-
-## AI Models
-
-現在利用可能なAIモデル（2つ）：
-
-1. **GPT-3.5 Turbo** (`gpt-3.5-turbo`)
-   - 開発・テスト用
-
-2. **GPT-4o mini** (`gpt-4o-mini`) 本番環境用
-   - 推奨モデル - バランスの取れた性能とコスト
-   - 全てのキャラクターに使用
-   - 価格詳細は `docs/99-percent-profit-system.md` を参照
-
-**重要な注意事項：**
-- モデル名の混同に注意（o4-mini vs gpt-4o-miniの違いなど、詳細は `docs/99-percent-profit-system.md` 参照）
-- モデル名の表示名とモデルIDは異なる場合がある
-- 新しいモデルを追加する際は、以下のファイルを全て更新すること：
-  - `/backend/src/routes/modelSettings.ts` - モデル一覧
-  - `/backend/src/config/tokenConfig.ts` - 価格設定
-  - `/backend/src/models/CharacterModel.ts` - スキーマ定義
-  - `/backend/models/TokenUsage.js` - 使用履歴モデル（本番環境）
-  - `/frontend/app/admin/characters/[id]/edit/page.tsx` - 管理画面
-  - `/frontend/app/admin/characters/new/page.tsx` - 新規作成画面
-  - `/docs/openapi.yaml` - API仕様書
-
-## API設計と実装ルール
-
-* すべてのAPIは `docs/openapi.yaml` に記述されている
-* 新しいAPIを追加する前に必ず **既存の定義を確認**
-* ない場合のみ `paths:` に追記し、必要に応じて `components.schemas` も拡張
-* 実装は `backend/src/index.ts` に、型は `types.ts` に追加
-* Claudeが実装する場合もこのルールに従うこと
-
-## API仕様管理ルール
-
-- 新しく作るAPIは必ず `/docs/openapi.yaml` に定義を追加してください
-- Claudeが自動生成する場合も、まず `openapi.yaml` の `paths:` に追記してから `index.ts` に実装
-- `components.schemas` に型が必要な場合は再利用 or 追加
-
-## Claudeへの指示テンプレート
-
-```plaintext
-この画面に使うAPIを追加したい。
-
-- メソッド：POST
-- パス：/api/user/reset-affinity
-- ボディ：{ "characterId": "string" }
-- 認証：JWT
-- レスポンス：{ "success": true, "message": "リセット完了" }
-
-まず `openapi.yaml` に同じAPIがあるか確認して、
-なければ `paths:` に追加してください。
-
-その上で、型を `types.ts` に、実装を `index.ts` にお願いします。
+### ディレクトリ構造
+```
+charactier-ai/
+├── frontend/          # Next.js アプリケーション
+├── backend/           # Express.js APIサーバー
+├── docs/              # ドキュメント（openapi.yaml含む）
+├── scripts/           # ユーティリティスクリプト
+└── uploads/           # アップロードされたファイル
 ```
 
-## SSE (Server-Sent Events) システム
+### APIアーキテクチャ
+- バックエンドAPI: `/api/v1/` で始まる
+- フロントエンドプロキシ: `/api/` 経由（v1なし）
+- RouteRegistry: 重複ルート防止システム
+- OpenAPI仕様: `docs/openapi.yaml` に全API定義
 
-購入完了のリアルタイム通知にSSEを使用：
+### 重要なアーキテクチャ決定
+1. **99%利益率システム**: `backend/src/config/tokenConfig.ts` で一元管理
+2. **プロンプトキャッシュ**: コスト削減のためRedis/MongoDBにキャッシュ
+3. **SSE通知**: 購入完了通知にServer-Sent Events使用
+4. **国際化**: Next.jsの`[locale]`パラメータによる多言語対応
+5. **型安全性**: TypeScript厳格モード（フロントエンドで有効）
 
-* **Redis**: 一時的な通知データストア (`purchase:${sessionId}`, TTL: 60秒)
-* **バックエンド**: `/api/purchase/events/:sessionId` でSSEストリーム提供
-* **フロントエンド**: EventSource APIでリアルタイム受信
-* **フォールバック**: SSE失敗時は従来のポーリング方式に自動切替
-* **クリーンアップ**: 接続終了時の適切なリソース解放
+## 開発コマンド
+
+### ルートレベル
+```bash
+npm run dev              # フロントエンドとバックエンドを同時起動
+```
+
+### バックエンド
+```bash
+npm run dev              # 開発サーバー起動
+npm run build            # TypeScriptビルド
+npm run start            # 本番サーバー起動
+npm run lint             # ESLintチェック
+npm run type-check       # TypeScript型チェック
+npm run check-api-duplicates  # API重複チェック
+```
+
+### フロントエンド
+```bash
+npm run dev              # Next.js開発サーバー
+npm run build            # 本番ビルド
+npm run start            # 本番サーバー起動
+npm run lint             # ESLintチェック
+```
+
+## 厳守ルール
+
+### 絶対にやってはいけないこと（NEVER）
+- `backend/webhooks/` 内のファイルを編集・削除しない
+- トークン計算ロジックを変更しない
+- `.env`ファイルや認証情報を触らない
+- 破壊的なgitコマンドを実行しない
+- 機密情報をハードコードしない
+- 既存プロセスを確認せずに新しいサーバーを起動しない
+
+### 必ず守ること（MUST）
+- キャラクタープロンプトは初回使用後にキャッシュする
+- 親密度レベル10ごとに画像をアンロックする
+- 99%の利益率を維持する（`docs/99-percent-profit-system.md`参照）
+- 複雑なロジックにはコメントを追加する
+- 設定ファイルの変更前に許可を求める
+- すべての新機能はモバイルレスポンシブにする
+
+## 開発ワークフロー
+
+### 1. 探索
+既存のコードを読んで理解する（コードは書かない）
+
+### 2. 計画
+実装前に計画を立てる
+
+### 3. 実装
+明確な計画ができてから実装する
+
+### 4. コミット
+- コンベンショナルコミット使用: `feat:`, `fix:`, `test:`, `refactor:`
+- PRには以下を含める：
+  - 変更の目的
+  - 実装アプローチ
+  - テスト結果
+  - マイグレーション注意事項（あれば）
+  - レビュアーへの注意点
+
+## APIの追加・変更
+
+新しいAPIを追加する際は：
+1. まず `docs/openapi.yaml` で既存の定義を確認
+2. なければ `paths:` に追加
+3. 実装は `backend/src/index.ts` に追加
+4. 型定義は `types.ts` に追加
+
+## 重要なシステム
+
+### 99%利益システム
+- トークン価格計算は `tokenConfig.ts` で管理
+- 動的為替レート対応（フォールバック: 150 JPY/USD）
+- 利益率の厳格な検証
+
+### 親密度システム
+- 0-100のレベル範囲（ユーザー×キャラクター）
+- 10レベルごとに画像アンロック
+- レベルに応じてトーン変化
+- ムードシステムが応答に影響
+
+### セキュリティとパフォーマンス
+- JWT認証（アクセス/リフレッシュトークン）
+- 全エンドポイントでレート制限
+- 不適切なメッセージのフィルタリング
+- IPモニタリングとブロック
+- 違反者への制裁システム
+
+## デプロイ構成
+
+### PM2エコシステム
+- フロントエンド: bashインタープリターでforkモード
+- バックエンド: コンパイル済みJSをforkモード
+- 環境変数はPM2が注入
+
+### 本番環境構成
+```
+Nginx (SSL終端) → 
+  Frontend (port 3000) → 
+    Backend (port 5000) → 
+      MongoDB Atlas + Redis + Stripe
+```
+
+## UI設計原則
+- フラットでミニマリスティックなUI（白 + Lucideアイコン）
+- すべてのユーザーフィードバックにtoast通知を使用
+- Tailwindユーティリティのみ使用（インラインスタイル禁止）
+- レスポンシブデザイン必須（モバイルファースト）
+- ユーザー向けページのみi18n対応（管理画面は日本語のみ）
+
+## AIモデル
+
+現在利用可能なモデル：
+1. **GPT-3.5 Turbo** - 開発・テスト用
+2. **GPT-4o mini** - 本番環境用（推奨）
+
+新しいモデル追加時は以下のファイルを更新：
+- `/backend/src/routes/modelSettings.ts`
+- `/backend/src/config/tokenConfig.ts`
+- `/backend/src/models/CharacterModel.ts`
+- `/backend/models/TokenUsage.js`
+- `/frontend/app/admin/characters/[id]/edit/page.tsx`
+- `/frontend/app/admin/characters/new/page.tsx`
+- `/docs/openapi.yaml`
