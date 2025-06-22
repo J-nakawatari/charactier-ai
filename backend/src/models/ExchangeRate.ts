@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
+import log from '../utils/logger';
 
 export interface IExchangeRate extends Document {
   baseCurrency: string;  // 'USD'
@@ -84,7 +85,7 @@ ExchangeRateSchema.statics.getLatestValidRate = async function(
   }
 
   // フォールバック: デフォルト値を返す
-  console.warn(`⚠️ No valid exchange rate found for ${baseCurrency}/${targetCurrency}, using fallback rate: 150`);
+  log.warn(`No valid exchange rate found for ${baseCurrency}/${targetCurrency}, using fallback rate: 150`);
   return 150;
 };
 

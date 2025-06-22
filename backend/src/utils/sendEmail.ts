@@ -1,11 +1,12 @@
 import sgMail from '@sendgrid/mail';
 import crypto from 'crypto';
+import log from './logger';
 
 // SendGrid初期化（環境変数から読み込み）
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 } else {
-  console.warn('⚠️ SENDGRID_API_KEY is not set');
+  log.warn('SENDGRID_API_KEY is not set');
 }
 
 /**
@@ -21,10 +22,9 @@ export async function sendVerificationEmail(
   const verifyUrl = `${frontendUrl}/${locale}/verify-email?token=${token}`;
 
   // デバッグ情報を出力
-  console.log('📧 Preparing to send verification email:', {
+  log.debug('Preparing to send verification email', {
     to: email,
     locale: locale,
-    verifyUrl: verifyUrl,
     isJapanese: locale === 'ja',
     isEnglish: locale === 'en',
     nodeEnv: process.env.NODE_ENV,
@@ -35,8 +35,10 @@ export async function sendVerificationEmail(
 
   // 開発環境では実際に送信しない
   if (process.env.NODE_ENV === 'development') {
-    console.log('🔗 [DEV] Verification URL:', verifyUrl);
-    console.log('🎫 [DEV] Token:', token);
+    log.info('[DEV] Verification email would be sent', { 
+      to: email,
+      verifyUrl 
+    });
     return;
   }
 
@@ -88,9 +90,9 @@ export async function sendVerificationEmail(
     };
 
     await sgMail.send(msg);
-    console.log('✅ Verification email sent to:', email);
+    log.info('Verification email sent', { to: email });
   } catch (error) {
-    console.error('❌ Failed to send verification email:', error);
+    log.error('Failed to send verification email', error, { to: email });
     // エラーでも処理を続行（セキュリティ上、ユーザーには成功したように見せる）
     throw error;
   }

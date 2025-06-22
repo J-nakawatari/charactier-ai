@@ -5,20 +5,20 @@ import { authenticateToken } from '../middleware/auth';
 import { UserModel } from '../models/UserModel';
 import { validate, validateObjectId } from '../middleware/validation';
 import { adminSchemas } from '../validation/schemas';
+import log from '../utils/logger';
 
 const router: Router = Router();
 
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {
-  console.log('🔍 Admin authentication check for users API:', {
+  log.debug('Admin authentication check for users API', {
     hasUser: !!req.user,
-    userId: req.user?._id,
-    isAdmin: req.user?.isAdmin,
-    email: req.user?.email
+    userId: req.user?._id?.toString(),
+    isAdmin: req.user?.isAdmin
   });
 
   if (!req.user?.isAdmin) {
-    console.log('❌ Admin access denied - user is not admin');
+    log.warn('Admin access denied - user is not admin', { userId: req.user?._id?.toString() });
     res.status(403).json({ 
       error: '管理者権限が必要です',
       debug: {
@@ -29,7 +29,7 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
     return;
   }
   
-  console.log('✅ Admin access granted for users API');
+  log.debug('Admin access granted for users API', { userId: req.user?._id?.toString() });
   next();
 };
 
@@ -45,7 +45,7 @@ router.get('/',
     const search = req.query.search as string;
     const status = req.query.status as string;
 
-    console.log('🔍 Admin users query:', { page, limit, search, status });
+    log.debug('Admin users query', { page, limit, search, status });
 
     // クエリ構築
     const query: any = {

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible';
+import log from '../utils/logger';
 
 // レート制限の設定
 export const rateLimitConfigs = {
@@ -103,7 +104,7 @@ export function createRateLimiter(configName: keyof typeof rateLimitConfigs) {
         res.setHeader('X-RateLimit-Reset', new Date(Date.now() + error.msBeforeNext).toISOString());
         res.setHeader('Retry-After', Math.round(error.msBeforeNext / 1000));
         
-        console.warn(`⚠️ Rate limit exceeded for ${configName}:`, {
+        log.warn(`Rate limit exceeded for ${configName}`, {
           ip: req.ip,
           path: req.path,
           userId: (req as any).user?.userId
@@ -118,7 +119,7 @@ export function createRateLimiter(configName: keyof typeof rateLimitConfigs) {
       }
       
       // その他のエラー
-      console.error('Rate limiter error:', error);
+      log.error('Rate limiter error', error as Error);
       next();
     }
   };
@@ -173,7 +174,7 @@ export function createCustomRateLimiter(points: number, duration: number, blockD
         return;
       }
       
-      console.error('Custom rate limiter error:', error);
+      log.error('Custom rate limiter error', error as Error);
       next();
     }
   };

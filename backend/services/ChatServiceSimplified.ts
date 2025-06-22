@@ -10,6 +10,7 @@ import {
 import { UserModel } from '../src/models/UserModel';
 import { CharacterModel } from '../src/models/CharacterModel';
 import { OpenAI } from 'openai';
+import log from '../src/utils/logger';
 const TokenService = require('../services/tokenService');
 
 /**
@@ -351,7 +352,7 @@ ${toneConfig.moodAdjustedPrompt}
 
       await cacheData.save();
     } catch (cacheError) {
-      console.warn('Failed to save prompt cache:', cacheError);
+      log.warn('Failed to save prompt cache', { error: (cacheError as Error).message });
     }
 
     return systemPrompt;

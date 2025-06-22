@@ -62,6 +62,8 @@ import { validate, validateObjectId } from './middleware/validation';
 import { authSchemas, characterSchemas, chatSchemas, paymentSchemas, adminSchemas, objectId, email, password, name } from './validation/schemas';
 import Joi from 'joi';
 import { configureSecurityHeaders } from './middleware/securityHeaders';
+import log from './utils/logger';
+import { requestLoggingMiddleware, securityAuditMiddleware } from './middleware/requestLogger';
 
 // PM2が環境変数を注入するため、dotenv.config()は不要
 // 開発環境の場合のみdotenvを使用（PM2を使わない場合）
@@ -74,7 +76,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // 環境変数の読み込み状態をログに出力（値は出力しない）
-console.log('🔧 Environment configuration:', {
+log.info('Environment configuration', {
   nodeEnv: process.env.NODE_ENV,
   hasSendGridKey: !!process.env.SENDGRID_API_KEY,
   hasMongoUri: !!process.env.MONGO_URI,
@@ -391,6 +393,10 @@ app.use(monitoringMiddleware);
 // セキュリティヘッダーの設定（CORSの後、express.json()の前）
 configureSecurityHeaders(app);
 
+// リクエストロギングとセキュリティ監査
+app.use(requestLoggingMiddleware);
+app.use(securityAuditMiddleware);
+
 // ⚠️ IMPORTANT: Stripe webhook MUST come BEFORE express.json()
 // Stripe webhook endpoint (needs raw body)
 app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req: Request, res: Response): Promise<void> => {
@@ -406,11 +412,13 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
   try {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     
-    console.log('[Stripe Webhook] Webhook secret:', webhookSecret ? 'Set' : 'Not set');
-    console.log('[Stripe Webhook] Stripe instance:', stripe ? 'Initialized' : 'Not initialized');
+    log.debug('[Stripe Webhook] Configuration', {
+      webhookSecretSet: !!webhookSecret,
+      stripeInitialized: !!stripe
+    });
     
     if (!stripe || !webhookSecret) {
-      console.error('[Stripe Webhook] Configuration error');
+      log.error('[Stripe Webhook] Configuration error', undefined);
       res.status(500).json({ error: 'Stripe not configured' });
       return;
     }
@@ -520,7 +528,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
           
         } else {
           // トークン購入処理
-          console.log('🎁 Processing token purchase...');
+          log.info('Processing token purchase', { sessionId: session.id });
           console.log(`💰 Amount: ¥${purchaseAmountYen}`);
           console.log(`🔑 Price ID: ${priceId}`);
           
@@ -534,9 +542,11 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
               // 管理画面で設定されたトークン数を使用
               const tokensToGrant = tokenPack.tokens;
               console.log(`📦 Using TokenPack configuration:`);
-              console.log(`  - Pack name: ${tokenPack.name}`);
-              console.log(`  - Tokens to grant: ${tokensToGrant}`);
-              console.log(`  - Price: ¥${tokenPack.price}`);
+              log.info('Token pack details', {
+                packName: tokenPack.name,
+                tokensToGrant,
+                price: tokenPack.price
+              });
               
               // 重複チェック
               const UserTokenPack = require('../../models/UserTokenPack');
@@ -589,7 +599,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
               // calcTokensToGiveを直接使用してトークン数を計算
               const { calcTokensToGive } = await import('./config/tokenConfig');
               const tokensToGrant = await calcTokensToGive(purchaseAmountYen, currentModel);
-              console.log(`📊 Calculated tokens: ${tokensToGrant}`);
+              log.info('Calculated tokens', { tokensToGrant });
               
               // 重複チェック
               const UserTokenPack = require('../../models/UserTokenPack');
@@ -634,7 +644,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
             }
           } catch (tokenPackError) {
             // エラーの場合も計算方式にフォールバック
-            console.error('❌ TokenPack lookup error:', tokenPackError.message);
+            log.error('TokenPack lookup error', tokenPackError);
             console.log(`📊 Falling back to calculation method due to error`);
             
             const currentModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
@@ -2097,7 +2107,7 @@ app.post('/api/chats/:characterId/messages', authenticateToken, async (req: Requ
           
         } catch (tokenUsageError) {
           // TokenUsage記録の失敗はチャット機能に影響させない
-          console.error('❌ TokenUsage save error:', tokenUsageError);
+          log.error('TokenUsage save error', tokenUsageError);
         }
 
         res.json({
@@ -2948,7 +2958,7 @@ app.post('/api/user/add-tokens', authenticateToken, async (req: Request, res: Re
       
       await user.save();
       
-      console.log("Admin token grant completed:", {
+      log.info("Admin token grant completed", {
         userId: user._id,
         newBalance: user.tokenBalance,
         addedTokens: tokens

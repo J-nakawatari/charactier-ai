@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { APIErrorModel } from '../models/APIError';
+import log from '../utils/logger';
 
 // 拡張されたRequestインターフェース
 interface ErrorRequest extends Request {
@@ -50,11 +51,11 @@ export const errorLoggingMiddleware = (
     userId: req.user?._id?.toString(),
     userAgent: req.get('User-Agent'),
     ipAddress: req.ip || req.connection?.remoteAddress,
-    requestBody: req.method !== 'GET' ? req.body : undefined,
+    requestBody: undefined, // Don't log request body for security
     stackTrace: err.stack,
     responseTime
   }).catch(logError => {
-    console.error('❌ Failed to log API error to database:', logError);
+    log.error('Failed to log API error to database', logError);
   });
 
   // エラーレスポンスの送信
@@ -140,10 +141,10 @@ function logIfError(req: ErrorRequest, res: Response, body: any): void {
       userId: req.user?._id?.toString(),
       userAgent: req.get('User-Agent'),
       ipAddress: req.ip || req.connection?.remoteAddress,
-      requestBody: req.method !== 'GET' ? req.body : undefined,
+      requestBody: undefined, // Don't log request body for security
       responseTime
     }).catch(logError => {
-      console.error('❌ Failed to log API error to database:', logError);
+      log.error('Failed to log API error to database', logError);
     });
   }
 }

@@ -9,6 +9,7 @@ import { sendVerificationEmail, generateVerificationToken, isDisposableEmail } f
 import { registrationRateLimit } from '../middleware/registrationLimit';
 import { validate } from '../middleware/validation';
 import { authSchemas } from '../validation/schemas';
+import log from '../utils/logger';
 
 const router: Router = Router();
 
@@ -65,18 +66,20 @@ router.post('/register',
     });
 
     const savedUser = await newUser.save();
-    console.log('✅ New user registered (pending verification):', { id: savedUser._id, email: savedUser.email });
+    log.info('New user registered (pending verification)', { userId: savedUser._id.toString(), email: savedUser.email });
 
     // 認証メールを送信
     try {
       await sendVerificationEmail(email, verificationToken, locale as 'ja' | 'en');
-      console.log('✅ Verification email sent successfully to:', email);
+      log.info('Verification email sent successfully', { email });
     } catch (emailError) {
-      console.error('❌ Failed to send verification email:', emailError);
+      log.error('Failed to send verification email', emailError, { email });
       // エラーの詳細をログに出力
       if (emailError instanceof Error) {
-        console.error('Error details:', emailError.message);
-        console.error('Stack trace:', emailError.stack);
+        log.error('Email error details', emailError, { 
+          message: emailError.message,
+          stack: emailError.stack 
+        });
       }
       // メール送信に失敗してもユーザー登録は続行（セキュリティのため）
     }
@@ -90,7 +93,7 @@ router.post('/register',
     });
 
   } catch (error) {
-    console.error('❌ User registration error:', error);
+    log.error('User registration error', error);
     res.status(500).json({
       error: 'Registration failed',
       message: 'ユーザー登録中にエラーが発生しました'
@@ -148,11 +151,13 @@ router.post('/login',
     const accessToken = generateAccessToken(user._id.toString());
     const refreshToken = generateRefreshToken(user._id.toString());
 
-    console.log('✅ User logged in:', { id: user._id, email: user.email });
-    console.log('🔍 Raw user object fields:', Object.keys(user.toObject()));
-    console.log('🔍 User isSetupComplete raw:', user.isSetupComplete);
-    console.log('🔍 User isSetupComplete type:', typeof user.isSetupComplete);
-    console.log('🔍 User full object:', JSON.stringify(user.toObject(), null, 2));
+    log.info('User logged in', { userId: user._id.toString(), email: user.email });
+    log.debug('User login details', {
+      userId: user._id.toString(),
+      fields: Object.keys(user.toObject()),
+      isSetupComplete: user.isSetupComplete,
+      isSetupCompleteType: typeof user.isSetupComplete
+    });
 
     // Cookie設定（本番環境では secure: true にする）
     const isProduction = process.env.NODE_ENV === 'production';
@@ -183,7 +188,7 @@ router.post('/login',
       isSetupComplete: user.isSetupComplete
     };
     
-    console.log('🔍 Sending user response:', JSON.stringify(userResponse, null, 2));
+    log.debug('Sending user response', { userId: user._id.toString(), isSetupComplete: userResponse.isSetupComplete });
     
     res.json({
       message: 'ログインしました',
@@ -195,7 +200,7 @@ router.post('/login',
     });
 
   } catch (error) {
-    console.error('❌ User login error:', error);
+    log.error('User login error', error);
     res.status(500).json({
       error: 'Login failed',
       message: 'ログイン中にエラーが発生しました'
@@ -277,10 +282,10 @@ router.post('/refresh',
     });
 
   } catch (error) {
-    console.error('❌ Token refresh error:', error);
+    log.error('Token refresh error', error);
     
     if (error instanceof jwt.TokenExpiredError) {
-      console.error('⏰ Refresh token expired:', {
+      log.warn('Refresh token expired', {
         expiredAt: error.expiredAt,
         message: error.message
       });
@@ -290,7 +295,7 @@ router.post('/refresh',
         requireRelogin: true
       });
     } else if (error instanceof jwt.JsonWebTokenError) {
-      console.error('🔴 Invalid refresh token:', error.message);
+      log.warn('Invalid refresh token', { message: error.message });
       res.status(401).json({
         error: 'Invalid refresh token',
         message: '無効なリフレッシュトークンです',
@@ -340,7 +345,7 @@ router.put('/user/profile',
       return;
     }
 
-    console.log('✅ Profile updated:', { id: updatedUser._id, name: updatedUser.name });
+    log.info('Profile updated', { userId: updatedUser._id.toString(), name: updatedUser.name });
 
     res.json({
       success: true,
@@ -355,7 +360,7 @@ router.put('/user/profile',
     });
 
   } catch (error) {
-    console.error('❌ Profile update error:', error);
+    log.error('Profile update error', error);
     res.status(500).json({
       error: 'Profile update failed',
       message: 'プロフィール更新中にエラーが発生しました'
@@ -416,8 +421,8 @@ router.post('/user/setup-complete', authenticateToken, async (req: Request, res:
       return;
     }
 
-    console.log('✅ Setup completed:', { 
-      id: updatedUser._id, 
+    log.info('Setup completed', { 
+      userId: updatedUser._id.toString(), 
       name: updatedUser.name,
       selectedCharacter: selectedCharacterId,
       tokenBonus: 10000
@@ -437,7 +442,7 @@ router.post('/user/setup-complete', authenticateToken, async (req: Request, res:
     });
 
   } catch (error) {
-    console.error('❌ Setup completion error:', error);
+    log.error('Setup completion error', error);
     res.status(500).json({
       error: 'Setup completion failed',
       message: 'セットアップ完了中にエラーが発生しました'

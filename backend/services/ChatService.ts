@@ -12,6 +12,7 @@ import { CharacterModel } from '../src/models/CharacterModel';
 import CharacterPromptCache from '../models/CharacterPromptCache';
 import TokenUsage from '../models/TokenUsage';
 import { OpenAI } from 'openai';
+import log from '../src/utils/logger';
 
 /**
  * ChatService - チャット機能とトーン管理の統合サービス
@@ -98,11 +99,14 @@ export class ChatService {
       );
 
       if (options.debugMode) {
-        console.log('=== Chat Tone Debug ===');
-        console.log(`User: ${userId}, Character: ${characterId}`);
-        console.log(`Intimacy: ${intimacyLevel}, Tone: ${toneConfig.toneStyle}`);
-        console.log(`Moods: ${moodModifiers.map(m => m.type).join(', ')}`);
-        console.log(`Relationship: ${toneConfig.relationshipStatus}`);
+        log.debug('Chat Tone Debug', {
+          userId,
+          characterId,
+          intimacyLevel,
+          toneStyle: toneConfig.toneStyle,
+          moods: moodModifiers.map(m => m.type),
+          relationshipStatus: toneConfig.relationshipStatus
+        });
       }
 
       // 5. システムプロンプト構築（キャッシュ優先）
@@ -199,7 +203,7 @@ export class ChatService {
       };
 
     } catch (error) {
-      console.error('Chat generation error:', error);
+      log.error('Chat generation error', error, { userId, characterId });
       throw error;
     }
   }
@@ -269,7 +273,7 @@ ${toneConfig.moodAdjustedPrompt}
 
       await cacheData.save();
     } catch (cacheError) {
-      console.warn('Failed to save prompt cache:', cacheError);
+      log.warn('Failed to save prompt cache', { error: cacheError.message });
     }
 
     return finalSystemPrompt;
@@ -422,7 +426,7 @@ ${toneConfig.moodAdjustedPrompt}
 
       await tokenUsage.save();
     } catch (error) {
-      console.error('Failed to record token usage:', error);
+      log.error('Failed to record token usage', error);
     }
   }
 
@@ -450,7 +454,7 @@ ${toneConfig.moodAdjustedPrompt}
         }
       );
     } catch (error) {
-      console.error('Failed to update affinity:', error);
+      log.error('Failed to update affinity', error, { userId, characterId });
     }
   }
 

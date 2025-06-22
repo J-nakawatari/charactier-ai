@@ -2,6 +2,7 @@ const { UserModel: User } = require('../dist/src/models/UserModel');
 const UserTokenPack = require('../models/UserTokenPack');
 const TokenUsage = require('../models/TokenUsage');
 const { calcTokensToGive, validateModel, logTokenConfig } = require('../dist/src/config/tokenConfig');
+const log = require('../dist/src/utils/logger').default;
 
 /**
  * トークンサービス（利益率94%）
@@ -23,10 +24,12 @@ class TokenService {
     
     const tokensToGive = await calcTokensToGive(purchaseAmountYen, model);
     
-    console.log(`💰 購入金額: ${purchaseAmountYen}円`);
-    console.log(`🤖 使用モデル: ${model}`);
-    console.log(`🎁 付与トークン数: ${tokensToGive}トークン`);
-    console.log(`📊 利益率: 94%保証`);
+    log.info('トークン付与計算', {
+      purchaseAmountYen,
+      model,
+      tokensToGive,
+      profitMargin: '94%保証'
+    });
     
     return tokensToGive;
   }
@@ -47,7 +50,7 @@ class TokenService {
       // 2. 重複チェック（同じセッションIDでの二重付与防止）
       const existingPack = await UserTokenPack.findOne({ stripeSessionId });
       if (existingPack) {
-        console.log(`⚠️ 重複付与防止: セッション ${stripeSessionId} は既に処理済み`);
+        log.warn('重複付与防止', { stripeSessionId, message: '既に処理済み' });
         return {
           success: false,
           reason: 'Already processed',
@@ -177,7 +180,7 @@ class TokenService {
     }
     
     if (remainingToDeduct > 0) {
-      console.warn(`⚠️ トークン残高不整合: ${remainingToDeduct}トークン分が不足`);
+      log.warn('トークン残高不整合', { remainingToDeduct, message: 'トークン分が不足' });
     }
   }
   

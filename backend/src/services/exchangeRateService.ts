@@ -1,4 +1,5 @@
 import { ExchangeRateModel } from '../models/ExchangeRate';
+import log from '../utils/logger';
 
 /**
  * 為替レート取得サービス
@@ -28,7 +29,7 @@ interface FixerAPIResponse {
  */
 export async function fetchUSDJPYRate(): Promise<number | null> {
   try {
-    console.log('🌍 Fetching USD/JPY exchange rate from API...');
+    log.debug('Fetching USD/JPY exchange rate from API');
     
     const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
     
@@ -43,11 +44,11 @@ export async function fetchUSDJPYRate(): Promise<number | null> {
     }
 
     const rate = data.rates.JPY;
-    console.log(`📊 Fetched USD/JPY rate: ${rate} (date: ${data.date})`);
+    log.debug('Fetched USD/JPY rate', { rate, date: data.date });
     
     return rate;
   } catch (error) {
-    console.error('❌ Failed to fetch exchange rate:', error);
+    log.error('Failed to fetch exchange rate', error as Error);
     return null;
   }
 }
@@ -62,11 +63,11 @@ export async function fetchUSDJPYRateFromFixer(): Promise<number | null> {
     // 環境変数がない場合はスキップ
     const apiKey = process.env.FIXER_IO_API_KEY;
     if (!apiKey) {
-      console.log('⚠️ Fixer.io API key not found, skipping backup fetch');
+      log.debug('Fixer.io API key not found, skipping backup fetch');
       return null;
     }
 
-    console.log('🌍 Fetching USD/JPY rate from Fixer.io (backup)...');
+    log.debug('Fetching USD/JPY rate from Fixer.io (backup)');
     
     const response = await fetch(`http://data.fixer.io/api/latest?access_key=${apiKey}&base=USD&symbols=JPY`);
     
@@ -81,11 +82,11 @@ export async function fetchUSDJPYRateFromFixer(): Promise<number | null> {
     }
 
     const rate = data.rates.JPY;
-    console.log(`📊 Fetched USD/JPY rate from Fixer: ${rate}`);
+    log.debug('Fetched USD/JPY rate from Fixer', { rate });
     
     return rate;
   } catch (error) {
-    console.error('❌ Failed to fetch exchange rate from Fixer:', error);
+    log.error('Failed to fetch exchange rate from Fixer', error as Error);
     return null;
   }
 }
@@ -107,14 +108,14 @@ export async function updateExchangeRate(): Promise<{
 
     // メインAPIが失敗した場合、バックアップAPIを試行
     if (rate === null) {
-      console.log('⚠️ Main API failed, trying backup API...');
+      log.warn('Main API failed, trying backup API');
       rate = await fetchUSDJPYRateFromFixer();
       source = 'fixer-io';
     }
 
     // 両方のAPIが失敗した場合
     if (rate === null) {
-      console.error('❌ All APIs failed, using fallback rate');
+      log.error('All APIs failed, using fallback rate');
       const fallbackRate = 150;
       
       // フォールバック値を記録
@@ -151,9 +152,15 @@ export async function updateExchangeRate(): Promise<{
     });
 
     if (validation.isValid) {
-      console.log(`✅ Exchange rate updated successfully: ${rate} JPY/USD (source: ${source})`);
+      log.info('Exchange rate updated successfully', {
+        rate: `${rate} JPY/USD`,
+        source
+      });
     } else {
-      console.warn(`⚠️ Exchange rate flagged as invalid: ${rate} JPY/USD (reason: ${validation.reason})`);
+      log.warn('Exchange rate flagged as invalid', {
+        rate: `${rate} JPY/USD`,
+        reason: validation.reason
+      });
     }
 
     return {
@@ -165,7 +172,7 @@ export async function updateExchangeRate(): Promise<{
     };
 
   } catch (error) {
-    console.error('❌ Error in updateExchangeRate:', error);
+    log.error('Error in updateExchangeRate', error as Error);
     
     // エラー時もフォールバック値で記録
     const fallbackRate = 150;
@@ -194,10 +201,10 @@ export async function updateExchangeRate(): Promise<{
 export async function getCurrentExchangeRate(): Promise<number> {
   try {
     const rate = await (ExchangeRateModel as any).getLatestValidRate('USD', 'JPY');
-    console.log(`📊 Using exchange rate for token calculation: ${rate} JPY/USD`);
+    log.debug('Using exchange rate for token calculation', { rate: `${rate} JPY/USD` });
     return rate;
   } catch (error) {
-    console.error('❌ Error getting current exchange rate:', error);
+    log.error('Error getting current exchange rate', error as Error);
     return 150; // 最終フォールバック
   }
 }

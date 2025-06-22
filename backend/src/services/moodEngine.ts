@@ -1,5 +1,6 @@
 import { UserModel } from '../models/UserModel';
 import dayjs from 'dayjs';
+import log from '../utils/logger';
 
 // MoodTrigger型定義
 export type MoodTrigger =
@@ -20,12 +21,12 @@ export async function applyMoodTrigger(
   trigger: MoodTrigger
 ): Promise<void> {
   try {
-    console.log(`🎭 Applying mood trigger:`, { userId, characterId, trigger });
+    log.info('Applying mood trigger', { userId, characterId, trigger });
 
     // ユーザーとキャラクターの親密度データを取得
     const user = await UserModel.findById(userId);
     if (!user) {
-      console.error('❌ User not found for mood trigger:', userId);
+      log.error('User not found for mood trigger', { userId });
       return;
     }
 
@@ -35,7 +36,7 @@ export async function applyMoodTrigger(
     );
 
     if (affinityIndex === -1) {
-      console.error('❌ Affinity not found for character:', characterId);
+      log.error('Affinity not found for character', { characterId });
       return;
     }
 
@@ -65,7 +66,7 @@ export async function applyMoodTrigger(
             expiresAt: dayjs(now).add(30, 'minute').toDate()
           });
           pushHistory('happy', 8, 'gift', 30);
-          console.log(`🎁 Gift mood applied: excited (${strength}) for 30 minutes`);
+          log.debug('Gift mood applied', { type: 'excited', strength, duration: '30 minutes' });
         }
         break;
 
@@ -77,7 +78,7 @@ export async function applyMoodTrigger(
           expiresAt: dayjs(now).add(30, 'minute').toDate()
         });
         pushHistory('happy', 7, 'level_up', 30);
-        console.log(`📈 Level up mood applied: excited (0.8) for 30 minutes`);
+        log.debug('Level up mood applied', { type: 'excited', strength: 0.8, duration: '30 minutes' });
         break;
 
       case 'INACTIVITY':
@@ -89,7 +90,7 @@ export async function applyMoodTrigger(
             expiresAt: dayjs(now).add(10, 'minute').toDate()
           });
           pushHistory('sad', 6, 'inactivity', 10);
-          console.log(`😔 Inactivity mood applied: melancholic (0.6) for 10 minutes`);
+          log.debug('Inactivity mood applied', { type: 'melancholic', strength: 0.6, duration: '10 minutes' });
         }
         break;
 
@@ -102,12 +103,12 @@ export async function applyMoodTrigger(
             expiresAt: dayjs(now).add(10, 'minute').toDate()
           });
           pushHistory('sad', 4, 'neg_msg', 10);
-          console.log(`😞 Negative sentiment mood applied: melancholic (0.4) for 10 minutes`);
+          log.debug('Negative sentiment mood applied', { type: 'melancholic', strength: 0.4, duration: '10 minutes' });
         }
         break;
 
       default:
-        console.warn('⚠️ Unknown mood trigger kind:', trigger);
+        log.warn('Unknown mood trigger kind', { trigger });
         return;
     }
 
@@ -126,7 +127,12 @@ export async function applyMoodTrigger(
     
     // emotionalStateを更新
     if (affinity.emotionalState !== newEmotionalState) {
-      console.log(`🎭 Emotional state changed: ${affinity.emotionalState} → ${newEmotionalState}`);
+      log.info('Emotional state changed', {
+        from: affinity.emotionalState,
+        to: newEmotionalState,
+        userId,
+        characterId
+      });
       affinity.emotionalState = newEmotionalState as 'happy' | 'excited' | 'calm' | 'sad' | 'angry' | 'neutral' | 'melancholic';
     }
 
@@ -137,10 +143,10 @@ export async function applyMoodTrigger(
 
     // データベースに保存
     await user.save();
-    console.log(`✅ Mood trigger applied successfully for user ${userId}, character ${characterId}`);
+    log.info('Mood trigger applied successfully', { userId, characterId });
 
   } catch (error) {
-    console.error('❌ Error applying mood trigger:', error);
+    log.error('Error applying mood trigger', error as Error, { userId, characterId });
     throw error;
   }
 }
@@ -180,7 +186,10 @@ export async function cleanupExpiredMoodModifiers(userId?: string): Promise<void
           
           // 残っているmodifierがない場合はneutralに戻す
           if (affinity.currentMoodModifiers.length === 0 && affinity.emotionalState !== 'neutral') {
-            console.log(`🎭 Resetting mood to neutral for user ${user._id}, character ${affinity.character}`);
+            log.debug('Resetting mood to neutral', {
+              userId: user._id.toString(),
+              characterId: affinity.character.toString()
+            });
             affinity.emotionalState = 'neutral';
           }
         }
@@ -193,11 +202,11 @@ export async function cleanupExpiredMoodModifiers(userId?: string): Promise<void
     }
 
     if (cleanedCount > 0) {
-      console.log(`🧹 Cleaned up expired mood modifiers for ${cleanedCount} users`);
+      log.info('Cleaned up expired mood modifiers', { userCount: cleanedCount });
     }
 
   } catch (error) {
-    console.error('❌ Error cleaning up expired mood modifiers:', error);
+    log.error('Error cleaning up expired mood modifiers', error as Error);
     throw error;
   }
 }
@@ -219,7 +228,7 @@ export async function getCurrentMood(userId: string, characterId: string): Promi
 
     return affinity ? affinity.emotionalState : null;
   } catch (error) {
-    console.error('❌ Error getting current mood:', error);
+    log.error('Error getting current mood', error as Error, { userId, characterId });
     return null;
   }
 }

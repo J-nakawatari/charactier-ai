@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { UserModel, IUser } from '../models/UserModel';
 import { AdminModel, IAdmin } from '../models/AdminModel';
+import log from '../utils/logger';
 
 // JWT認証用の拡張Request型
 export interface AuthRequest extends Request {
@@ -31,7 +32,7 @@ export const authenticateToken = async (
       }
     }
     
-    console.log('🔐 authenticateToken middleware:', {
+    log.debug('authenticateToken middleware', {
       path: req.path,
       method: req.method,
       hasCookieToken: !!req.cookies?.accessToken,
@@ -40,7 +41,7 @@ export const authenticateToken = async (
     });
 
     if (!token) {
-      console.log('❌ No token found in request');
+      log.debug('No token found in request', { path: req.path });
       res.status(401).json({ 
         error: 'Access token required',
         message: 'アクセストークンが必要です'
@@ -52,7 +53,7 @@ export const authenticateToken = async (
     // JWT を検証
     const JWT_SECRET = process.env.JWT_SECRET;
     if (!JWT_SECRET) {
-      console.error('❌ JWT_SECRET not configured');
+      log.error('JWT_SECRET not configured', undefined);
       res.status(500).json({ 
         error: 'Authentication configuration error',
         message: '認証設定エラー'
@@ -62,7 +63,7 @@ export const authenticateToken = async (
 
     // トークンをデコード
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    console.log('✅ JWT decoded:', { userId: decoded.userId });
+    log.debug('JWT decoded', { userId: decoded.userId });
     
     // まず管理者として検索
     const admin = await AdminModel.findById(decoded.userId);
@@ -109,17 +110,17 @@ export const authenticateToken = async (
     });
 
   } catch (error) {
-    console.error('❌ JWT verification failed:', error);
+    log.debug('JWT verification failed', { error: error instanceof Error ? error.message : 'Unknown error' });
     
     if (error instanceof jwt.JsonWebTokenError) {
-      console.error('🔴 Invalid token error:', error.message);
+      log.debug('Invalid token error', { message: error.message });
       res.status(401).json({ 
         error: 'Invalid token',
         message: '無効なトークンです',
         details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     } else if (error instanceof jwt.TokenExpiredError) {
-      console.error('⏰ Token expired error:', {
+      log.debug('Token expired error', {
         expiredAt: error.expiredAt,
         message: error.message
       });
@@ -129,7 +130,7 @@ export const authenticateToken = async (
         expiredAt: error.expiredAt
       });
     } else {
-      console.error('🚨 Unknown authentication error:', error);
+      log.error('Unknown authentication error', error);
       res.status(500).json({ 
         error: 'Authentication error',
         message: '認証エラーが発生しました'

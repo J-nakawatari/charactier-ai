@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import log from '../src/utils/logger';
 
 /**
  * TokenUsage Model
@@ -415,12 +416,18 @@ TokenUsageSchema.pre('save', function(next) {
 TokenUsageSchema.post('save', async function(doc) {
   // 高コスト使用時のアラート
   if (doc.apiCostYen > 100) {
-    console.warn(`High API cost detected: ${doc.apiCostYen} yen for user ${doc.userId}`);
+    log.warn('High API cost detected', {
+      apiCostYen: doc.apiCostYen,
+      userId: doc.userId.toString()
+    });
   }
   
   // 利益率違反アラート
   if (doc.profitMargin < 0.9) {
-    console.error(`Profit margin violation: ${doc.profitMargin} for user ${doc.userId}`);
+    log.error('Profit margin violation', undefined, {
+      profitMargin: doc.profitMargin,
+      userId: doc.userId.toString()
+    });
   }
 });
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const log = require('../src/utils/logger').default;
 
 // ミドルウェア
 const { authenticateToken } = require('../src/middleware/auth');
@@ -23,7 +24,7 @@ const { UserBadgeModel } = require('../src/models/UserBadgeModel');
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log('📊 Dashboard API called for user:', userId);
+    log.info('Dashboard API called', { userId });
 
     // 1. ユーザー基本情報を取得（購入済みキャラクター含む）
     const user = await UserModel.findById(userId)
@@ -32,13 +33,15 @@ router.get('/', authenticateToken, async (req, res) => {
       .lean();
     
     if (!user) {
-      console.error('❌ User not found:', userId);
+      log.error('User not found', undefined, { userId });
       return res.status(404).json({ error: 'User not found' });
     }
 
-    console.log('✅ User found:', user.name);
-    console.log('🔍 User selectedCharacter:', user.selectedCharacter);
-    console.log('🔍 User affinities:', user.affinities);
+    log.debug('User found', {
+      userName: user.name,
+      selectedCharacter: user.selectedCharacter,
+      affinitiesCount: user.affinities?.length || 0
+    });
 
     // 2. トークン残高と統計
     const tokenPacks = await UserTokenPack.find({ userId }).lean();
@@ -102,7 +105,7 @@ router.get('/', authenticateToken, async (req, res) => {
             .lean();
           
           if (!character) {
-            console.warn('⚠️ Character not found for affinity:', affinity.character);
+            log.warn('Character not found for affinity', { characterId: affinity.character });
             return null;
           }
           
@@ -168,7 +171,7 @@ router.get('/', authenticateToken, async (req, res) => {
       user._id,
       { limit: 10, sortBy: 'createdAt', sortOrder: 'desc' }
     ).catch(error => {
-      console.warn('⚠️ Purchase history fetch failed:', error);
+      log.warn('Purchase history fetch failed', { error: error.message });
       return [];
     });
 

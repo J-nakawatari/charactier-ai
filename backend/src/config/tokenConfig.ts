@@ -10,6 +10,8 @@
  * 99%利益率システム: ユーザー支払額の1%のみをコストとして使用
  */
 
+import log from '../utils/logger';
+
 interface ModelUnitCostUSD {
   input: number;
   output: number;
@@ -43,7 +45,7 @@ export const avgTokenCostYen = async (model: string): Promise<number> => {
     const { getCurrentExchangeRate } = await import('../services/exchangeRateService');
     exchangeRate = await getCurrentExchangeRate();
   } catch (error) {
-    console.warn('⚠️ Failed to get dynamic exchange rate, using fallback:', error);
+    log.warn('Failed to get dynamic exchange rate, using fallback', { error: error instanceof Error ? error.message : error });
     exchangeRate = USD_JPY_RATE;
   }
   
@@ -59,7 +61,7 @@ export const tokensPerYen = async (model: string): Promise<number> => {
   const result = COST_RATIO / costYen;
   
   // デバッグログ
-  console.log('💰 99%利益率システム - tokensPerYen calculation:', {
+  log.debug('99%利益率システム - tokensPerYen calculation', {
     model,
     costYen,
     COST_RATIO,
@@ -86,7 +88,7 @@ export const calcTokensToGive = async (
  */
 export const validateModel = (model: string): boolean => {
   if (!MODEL_UNIT_COST_USD[model]) {
-    console.error(`❌ Unknown model: ${model}`);
+    log.error(`Unknown model: ${model}`);
     return false;
   }
   return true;
@@ -102,18 +104,18 @@ export const logTokenConfig = async (model: string = 'gpt-4o-mini'): Promise<voi
   const tokensPerYenValue = await tokensPerYen(model);
   const tokens500 = await calcTokensToGive(500, model);
   
-  console.log('🔧 99%利益率システム - Token Configuration:');
-  console.log(`   Model: ${model}`);
-  console.log(`   Average Cost: ${costYen.toFixed(8)}円/token`);
-  console.log(`   Profit Margin: ${PROFIT_MARGIN * 100}%`);
-  console.log(`   Cost Ratio: ${COST_RATIO * 100}%`);
-  console.log(`   Tokens per Yen: ${tokensPerYenValue.toFixed(2)}tokens/円`);
-  console.log(`   500円購入時: ${tokens500}tokens`);
-  
-  // 実際の利益率計算
   const actualCostYen = tokens500 * costYen;
   const actualProfitMargin = ((500 - actualCostYen) / 500) * 100;
-  console.log(`   実際のコスト: ${actualCostYen.toFixed(2)}円`);
-  console.log(`   実際の利益: ${(500 - actualCostYen).toFixed(2)}円`);
-  console.log(`   実際の利益率: ${actualProfitMargin.toFixed(1)}%`);
+  
+  log.info('99%利益率システム - Token Configuration', {
+    model,
+    averageCost: `${costYen.toFixed(8)}円/token`,
+    profitMargin: `${PROFIT_MARGIN * 100}%`,
+    costRatio: `${COST_RATIO * 100}%`,
+    tokensPerYen: `${tokensPerYenValue.toFixed(2)}tokens/円`,
+    tokens500Yen: `${tokens500}tokens`,
+    actualCostYen: `${actualCostYen.toFixed(2)}円`,
+    actualProfit: `${(500 - actualCostYen).toFixed(2)}円`,
+    actualProfitMargin: `${actualProfitMargin.toFixed(1)}%`
+  });
 };
