@@ -54,6 +54,54 @@ const nextConfig = {
       },
     ];
   },
+  async headers() {
+    return [
+      {
+        // Apply security headers to all routes
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(self), usb=()'
+          },
+          {
+            key: 'X-Permitted-Cross-Domain-Policies',
+            value: 'none'
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: process.env.NODE_ENV === 'production'
+              ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com wss: " + (process.env.NEXT_PUBLIC_API_URL || 'https://charactier-ai.com') + "; frame-src 'self' https://js.stripe.com https://checkout.stripe.com; object-src 'none'; media-src 'self'; child-src 'self'; form-action 'self'; upgrade-insecure-requests; block-all-mixed-content"
+              : "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https: http://localhost:*; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com wss: ws: http://localhost:*; frame-src 'self' https://js.stripe.com https://checkout.stripe.com; object-src 'none'; media-src 'self'; child-src 'self'; form-action 'self'"
+          }
+        ]
+      }
+    ];
+  },
 };
 
 module.exports = withNextIntl(nextConfig);

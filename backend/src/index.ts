@@ -61,6 +61,7 @@ import routeRegistry from './core/RouteRegistry';
 import { validate, validateObjectId } from './middleware/validation';
 import { authSchemas, characterSchemas, chatSchemas, paymentSchemas, adminSchemas, objectId, email, password, name } from './validation/schemas';
 import Joi from 'joi';
+import { configureSecurityHeaders } from './middleware/securityHeaders';
 
 // PM2が環境変数を注入するため、dotenv.config()は不要
 // 開発環境の場合のみdotenvを使用（PM2を使わない場合）
@@ -386,6 +387,9 @@ app.use(statusCodeLoggerMiddleware);
 
 // 監視ミドルウェア（リクエスト統計収集）
 app.use(monitoringMiddleware);
+
+// セキュリティヘッダーの設定（CORSの後、express.json()の前）
+configureSecurityHeaders(app);
 
 // ⚠️ IMPORTANT: Stripe webhook MUST come BEFORE express.json()
 // Stripe webhook endpoint (needs raw body)
