@@ -3,6 +3,8 @@ import { Router, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { authenticateToken } from '../middleware/auth';
 import { UserModel } from '../models/UserModel';
+import { validate, validateObjectId } from '../middleware/validation';
+import { adminSchemas } from '../validation/schemas';
 
 const router: Router = Router();
 
@@ -32,7 +34,11 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
 };
 
 // 管理者用ユーザー一覧取得
-router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/', 
+  authenticateToken, 
+  authenticateAdmin, 
+  validate({ query: adminSchemas.searchUsers }),
+  async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
@@ -115,15 +121,15 @@ router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, r
 });
 
 // 個別ユーザーのトークン残高リセット
-router.post('/:userId/reset-tokens', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/:userId/reset-tokens', 
+  authenticateToken, 
+  authenticateAdmin,
+  validateObjectId('userId'),
+  validate({ body: adminSchemas.updateUserBalance }),
+  async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
     const { newBalance } = req.body;
-
-    if (typeof newBalance !== 'number' || newBalance < 0) {
-      res.status(400).json({ error: '有効なトークン残高を指定してください' });
-      return;
-    }
 
     const user = await UserModel.findById(userId);
     if (!user) {

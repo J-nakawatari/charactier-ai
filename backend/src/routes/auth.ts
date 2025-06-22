@@ -7,30 +7,18 @@ import { AdminModel } from '../models/AdminModel';
 import { generateAccessToken, generateRefreshToken, authenticateToken } from '../middleware/auth';
 import { sendVerificationEmail, generateVerificationToken, isDisposableEmail } from '../utils/sendEmail';
 import { registrationRateLimit } from '../middleware/registrationLimit';
+import { validate } from '../middleware/validation';
+import { authSchemas } from '../validation/schemas';
 
 const router: Router = Router();
 
 // ユーザー登録（メール認証付き）
-router.post('/register', registrationRateLimit, async (req: Request, res: Response): Promise<void> => {
+router.post('/register', 
+  registrationRateLimit, 
+  validate({ body: authSchemas.register }),
+  async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, locale = 'ja' } = req.body;
-
-    // バリデーション
-    if (!email || !password) {
-      res.status(400).json({
-        error: 'Missing required fields',
-        message: 'メールアドレスとパスワードを入力してください'
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      res.status(400).json({
-        error: 'Password too short',
-        message: 'パスワードは6文字以上で入力してください'
-      });
-      return;
-    }
+    const { name, email, password, locale = 'ja' } = req.body;
 
     // 使い捨てメールアドレスのチェック
     if (isDisposableEmail(email)) {
@@ -111,18 +99,11 @@ router.post('/register', registrationRateLimit, async (req: Request, res: Respon
 });
 
 // ユーザーログイン
-router.post('/login', async (req: Request, res: Response): Promise<void> => {
+router.post('/login', 
+  validate({ body: authSchemas.login }),
+  async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
-
-    // バリデーション
-    if (!email || !password) {
-      res.status(400).json({
-        error: 'Missing credentials',
-        message: 'メールアドレスとパスワードを入力してください'
-      });
-      return;
-    }
 
     // ユーザーを検索
     const user = await UserModel.findOne({ email });
@@ -203,17 +184,11 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
 });
 
 // トークンリフレッシュ
-router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
+router.post('/refresh', 
+  validate({ body: authSchemas.refreshToken }),
+  async (req: Request, res: Response): Promise<void> => {
   try {
     const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      res.status(400).json({
-        error: 'Refresh token required',
-        message: 'リフレッシュトークンが必要です'
-      });
-      return;
-    }
 
     // リフレッシュトークンを検証
     const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
@@ -285,17 +260,12 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
 });
 
 // ユーザープロフィール更新
-router.put('/user/profile', async (req: Request, res: Response): Promise<void> => {
+router.put('/user/profile', 
+  authenticateToken,
+  validate({ body: authSchemas.updateProfile }),
+  async (req: Request, res: Response): Promise<void> => {
   try {
     const { name } = req.body;
-
-    if (!name || name.trim().length === 0) {
-      res.status(400).json({
-        error: 'Name required',
-        message: '名前を入力してください'
-      });
-      return;
-    }
 
     // JWTからユーザーIDを取得（authenticateTokenミドルウェアで設定）
     const authReq = req as AuthRequest;
