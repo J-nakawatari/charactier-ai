@@ -28,6 +28,7 @@ import systemSettingsRoutes from './routes/systemSettings';
 import systemRoutes from './routes/system';
 import { monitoringMiddleware } from './middleware/monitoring';
 import { registrationRateLimit } from './middleware/registrationLimit';
+import { createRateLimiter } from './middleware/rateLimiter';
 // const userRoutes = require('./routes/user');
 // const dashboardRoutes = require('./routes/dashboard');
 import { validateMessage } from './utils/contentFilter';
@@ -744,6 +745,30 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
 // JSON body parser (AFTER Stripe webhook)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// レート制限の適用
+// 認証エンドポイント（厳しい制限）
+app.use('/api/auth/login', createRateLimiter('auth'));
+app.use('/api/auth/register', registrationRateLimit); // 既存の登録制限を維持
+app.use('/api/auth/refresh', createRateLimiter('auth'));
+app.use('/api/auth/forgot-password', createRateLimiter('auth'));
+
+// チャットAPI（コスト保護のため最も重要）
+app.use('/api/chats/:characterId/messages', createRateLimiter('chat'));
+
+// 決済関連（中程度の制限）
+app.use('/api/payment', createRateLimiter('payment'));
+app.use('/api/purchase', createRateLimiter('payment'));
+app.use('/api/token-packs', createRateLimiter('payment'));
+
+// 管理者API（緩い制限）
+app.use('/api/admin', createRateLimiter('admin'));
+
+// ファイルアップロード（厳しい制限）
+app.use('/api/upload', createRateLimiter('upload'));
+
+// 一般的なAPI（標準的な制限）
+app.use('/api', createRateLimiter('general'));
 
 // 認証ルート
 app.use('/api/auth', authRoutes);
