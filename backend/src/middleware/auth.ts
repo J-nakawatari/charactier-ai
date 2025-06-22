@@ -20,6 +20,13 @@ export const authenticateToken = async (
     const authHeader = req.headers.authorization;
     const mockToken = req.headers['x-auth-token'] as string;
     
+    console.log('🔐 authenticateToken middleware:', {
+      path: req.path,
+      method: req.method,
+      hasAuthHeader: !!authHeader,
+      authHeader: authHeader ? authHeader.substring(0, 20) + '...' : undefined
+    });
+    
     let token: string | undefined;
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -29,6 +36,7 @@ export const authenticateToken = async (
     }
 
     if (!token) {
+      console.log('❌ No token found in request');
       res.status(401).json({ 
         error: 'Access token required',
         message: 'アクセストークンが必要です'
@@ -50,6 +58,7 @@ export const authenticateToken = async (
 
     // トークンをデコード
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    console.log('✅ JWT decoded:', { userId: decoded.userId });
     
     // まず管理者として検索
     const admin = await AdminModel.findById(decoded.userId);
