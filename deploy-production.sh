@@ -13,6 +13,10 @@ git pull origin main
 echo "🔧 バックエンドをビルド中..."
 cd backend
 
+# 依存関係をインストール
+echo "📦 依存関係をインストール..."
+npm install
+
 # TypeScriptをコンパイル
 npm run build
 
@@ -25,24 +29,29 @@ echo "📋 services/tokenService.jsをコピー..."
 mkdir -p dist/services
 cp services/tokenService.js dist/services/tokenService.js
 
-# PM2でバックエンドを再起動
+# systemdでバックエンドを再起動
 echo "🔄 バックエンドを再起動..."
-pm2 restart charactier-backend
+sudo systemctl restart charactier-backend
 
 # 3. フロントエンドのビルドとデプロイ
 echo "🎨 フロントエンドをビルド中..."
 cd ../frontend
 
+# 依存関係をインストール
+echo "📦 フロントエンドの依存関係をインストール..."
+npm install
+
 # Next.jsアプリケーションをビルド
 npm run build
 
-# PM2でフロントエンドを再起動
+# systemdでフロントエンドを再起動
 echo "🔄 フロントエンドを再起動..."
-pm2 restart charactier-frontend
+sudo systemctl restart charactier-frontend
 
-# 4. PM2の状態を確認
-echo "✅ デプロイ完了！現在のPM2状態："
-pm2 status
+# 4. systemdサービスの状態を確認
+echo "✅ デプロイ完了！現在のサービス状態："
+sudo systemctl status charactier-backend --no-pager
+sudo systemctl status charactier-frontend --no-pager
 
 echo "🎉 デプロイが完了しました！"
 echo ""
