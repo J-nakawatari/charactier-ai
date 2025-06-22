@@ -9,7 +9,6 @@ module.exports = {
       env_file: '.env',                 // cwdからの相対パスでOK
       env: {                            // ここに直書きでも可
         NODE_ENV: 'production',
-        DISABLE_RATE_LIMIT: 'true',
         SENDGRID_FROM_EMAIL: 'no-reply@charactier-ai.com'
       },
       // 任意: 自動リスタートなど
