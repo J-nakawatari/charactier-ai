@@ -4,6 +4,8 @@ import { CharacterModel } from '../models/CharacterModel';
 import { UserModel } from '../models/UserModel';
 import { authenticateToken, hasWritePermission } from '../middleware/auth';
 import { uploadImage, optimizeImage } from '../utils/fileUpload';
+import { validate, validateObjectId } from '../middleware/validation';
+import { characterSchemas } from '../validation/schemas';
 
 const router: Router = Router();
 
@@ -49,7 +51,10 @@ router.post('/test-upload/image', uploadImage.single('image'), optimizeImage(800
 });
 
 // キャラクター作成（管理者のみ）
-router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/', 
+  authenticateToken, 
+  validate({ body: characterSchemas.create }),
+  async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Check if user has write permission (only super_admin can create characters)
     if (!hasWritePermission(req)) {
@@ -84,23 +89,6 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
       stripeProductId,
       purchasePrice
     } = req.body;
-
-    // バリデーション
-    if (!name || !name.ja || !name.en) {
-      res.status(400).json({
-        error: 'Name is required in both Japanese and English',
-        message: '日本語と英語の名前が必要です'
-      });
-      return;
-    }
-
-    if (!description || !description.ja || !description.en) {
-      res.status(400).json({
-        error: 'Description is required in both Japanese and English',
-        message: '日本語と英語の説明が必要です'
-      });
-      return;
-    }
 
     // 新しいキャラクターを作成
     const character = new CharacterModel({
@@ -539,7 +527,11 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
 });
 
 // キャラクター更新（管理者のみ）
-router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:id', 
+  authenticateToken, 
+  validateObjectId('id'),
+  validate({ body: characterSchemas.update }),
+  async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Check if user has write permission (only super_admin can update characters)
     if (!hasWritePermission(req)) {

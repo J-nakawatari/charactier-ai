@@ -55,8 +55,11 @@ import {
 import { APIErrorModel } from './models/APIError';
 import { ExchangeRateModel } from './models/ExchangeRate';
 import { calcTokensToGive, logTokenConfig } from './config/tokenConfig';
-const TokenService = require('../../services/tokenService');
+// const TokenService = require('../../services/tokenService');
 import routeRegistry from './core/RouteRegistry';
+import { validate, validateObjectId } from './middleware/validation';
+import { authSchemas, characterSchemas, chatSchemas, paymentSchemas, adminSchemas, objectId, email, password, name } from './validation/schemas';
+import Joi from 'joi';
 
 // PM2が環境変数を注入するため、dotenv.config()は不要
 // 開発環境の場合のみdotenvを使用（PM2を使わない場合）
@@ -652,7 +655,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
             grantResult = {
               success: true,
               tokensGranted: tokensToGrant,
-              newBalance: await TokenService.getUserTokenBalance(userId),
+              newBalance: (await UserModel.findById(userId))?.tokenBalance || 0,
               purchaseAmountYen,
               profitMargin: 0.90,
               model: currentModel
