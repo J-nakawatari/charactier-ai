@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { UserModel } from '../models/UserModel';
 import { AdminModel } from '../models/AdminModel';
-import { generateAccessToken, generateRefreshToken } from '../middleware/auth';
+import { generateAccessToken, generateRefreshToken, authenticateToken } from '../middleware/auth';
 import { sendVerificationEmail, generateVerificationToken, isDisposableEmail } from '../utils/sendEmail';
 import { registrationRateLimit } from '../middleware/registrationLimit';
 
@@ -348,7 +348,7 @@ router.put('/user/profile', async (req: Request, res: Response): Promise<void> =
 });
 
 // 初回セットアップ完了
-router.post('/user/setup-complete', async (req: Request, res: Response): Promise<void> => {
+router.post('/user/setup-complete', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, selectedCharacterId } = req.body;
 
