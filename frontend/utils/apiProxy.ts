@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 interface ApiProxyOptions {
   requireAuth?: boolean;
   method?: string;
+  useCookieAuth?: boolean; // Cookie認証を使用するか
 }
 
 /**
@@ -29,8 +30,17 @@ export async function createApiProxy(
       'Content-Type': 'application/json',
     };
     
+    // Cookie転送の設定
+    if (options.useCookieAuth) {
+      // Cookieヘッダーを転送
+      const cookieHeader = request.headers.get('cookie');
+      if (cookieHeader) {
+        headers['Cookie'] = cookieHeader;
+      }
+    }
+    
     // 認証が必要な場合、Authorizationヘッダーを転送
-    if (options.requireAuth) {
+    if (options.requireAuth && !options.useCookieAuth) {
       const authHeader = request.headers.get('authorization');
       if (authHeader) {
         headers['Authorization'] = authHeader;
@@ -72,7 +82,16 @@ export async function createApiProxy(
     const data = await response.json();
     console.log(`✅ API Proxy success: ${backendPath}`);
     
-    return NextResponse.json(data);
+    // Cookie認証の場合、Set-Cookieヘッダーを転送
+    const nextResponse = NextResponse.json(data);
+    if (options.useCookieAuth) {
+      const setCookieHeader = response.headers.get('set-cookie');
+      if (setCookieHeader) {
+        nextResponse.headers.set('set-cookie', setCookieHeader);
+      }
+    }
+    
+    return nextResponse;
     
   } catch (error) {
     console.error('❌ API Proxy error:', error);

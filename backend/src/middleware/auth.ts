@@ -16,24 +16,28 @@ export const authenticateToken = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Authorization ヘッダーまたは x-auth-token ヘッダーから JWT を取得
-    const authHeader = req.headers.authorization;
-    const mockToken = req.headers['x-auth-token'] as string;
+    // 1. Cookieからトークン取得を試みる
+    let token: string | undefined = req.cookies?.accessToken;
+    
+    // 2. Cookieになければ、Authorization ヘッダーまたは x-auth-token ヘッダーから JWT を取得
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      const mockToken = req.headers['x-auth-token'] as string;
+      
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1]; // "Bearer TOKEN"
+      } else if (mockToken) {
+        token = mockToken; // 開発用モック認証
+      }
+    }
     
     console.log('🔐 authenticateToken middleware:', {
       path: req.path,
       method: req.method,
-      hasAuthHeader: !!authHeader,
-      authHeader: authHeader ? authHeader.substring(0, 20) + '...' : undefined
+      hasCookieToken: !!req.cookies?.accessToken,
+      hasAuthHeader: !!req.headers.authorization,
+      tokenSource: req.cookies?.accessToken ? 'cookie' : (req.headers.authorization ? 'bearer' : 'none')
     });
-    
-    let token: string | undefined;
-    
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.split(' ')[1]; // "Bearer TOKEN"
-    } else if (mockToken) {
-      token = mockToken; // 開発用モック認証
-    }
 
     if (!token) {
       console.log('❌ No token found in request');

@@ -2,6 +2,7 @@ import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 // PM2が環境変数を注入するため、dotenvは不要
 // import dotenv from 'dotenv';
 import path from 'path';
@@ -748,6 +749,9 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
 // JSON body parser (AFTER Stripe webhook)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Cookie parser設定
+app.use(cookieParser());
 
 // レート制限の適用
 // 認証エンドポイント（厳しい制限）

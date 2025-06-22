@@ -154,6 +154,26 @@ router.post('/login',
     console.log('🔍 User isSetupComplete type:', typeof user.isSetupComplete);
     console.log('🔍 User full object:', JSON.stringify(user.toObject(), null, 2));
 
+    // Cookie設定（本番環境では secure: true にする）
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict' as const,
+      maxAge: 24 * 60 * 60 * 1000 // 24時間
+    };
+    
+    const refreshCookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict' as const,
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7日間
+    };
+    
+    // Cookieにトークンを設定
+    res.cookie('accessToken', accessToken, cookieOptions);
+    res.cookie('refreshToken', refreshToken, refreshCookieOptions);
+    
     // ログイン成功レスポンス
     const userResponse = {
       _id: user._id,
@@ -188,7 +208,8 @@ router.post('/refresh',
   validate({ body: authSchemas.refreshToken }),
   async (req: Request, res: Response): Promise<void> => {
   try {
-    const { refreshToken } = req.body;
+    // Cookieまたはボディからリフレッシュトークンを取得
+    const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
 
     // リフレッシュトークンを検証
     const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
@@ -207,6 +228,19 @@ router.post('/refresh',
     if (admin && admin.isActive) {
       // 管理者用の新しいアクセストークンを生成
       const newAccessToken = generateAccessToken(admin._id.toString());
+      
+      // Cookie設定
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieOptions = {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'strict' as const,
+        maxAge: 24 * 60 * 60 * 1000 // 24時間
+      };
+      
+      // Cookieに新しいアクセストークンを設定
+      res.cookie('accessToken', newAccessToken, cookieOptions);
+      
       res.json({
         accessToken: newAccessToken
       });
@@ -225,6 +259,18 @@ router.post('/refresh',
 
     // 新しいアクセストークンを生成
     const newAccessToken = generateAccessToken(user._id.toString());
+    
+    // Cookie設定
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict' as const,
+      maxAge: 24 * 60 * 60 * 1000 // 24時間
+    };
+    
+    // Cookieに新しいアクセストークンを設定
+    res.cookie('accessToken', newAccessToken, cookieOptions);
 
     res.json({
       accessToken: newAccessToken
@@ -447,6 +493,26 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
     // JWTトークンを生成
     const accessToken = generateAccessToken(user._id.toString());
     const refreshToken = generateRefreshToken(user._id.toString());
+    
+    // Cookie設定
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict' as const,
+      maxAge: 24 * 60 * 60 * 1000 // 24時間
+    };
+    
+    const refreshCookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict' as const,
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7日間
+    };
+    
+    // Cookieにトークンを設定
+    res.cookie('accessToken', accessToken, cookieOptions);
+    res.cookie('refreshToken', refreshToken, refreshCookieOptions);
 
     console.log('✅ Email verified:', user.email);
 
@@ -582,6 +648,26 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
     const adminId = admin._id as string;
     const accessToken = generateAccessToken(adminId.toString());
     const refreshToken = generateRefreshToken(adminId.toString());
+    
+    // Cookie設定
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict' as const,
+      maxAge: 24 * 60 * 60 * 1000 // 24時間
+    };
+    
+    const refreshCookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict' as const,
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7日間
+    };
+    
+    // Cookieにトークンを設定
+    res.cookie('accessToken', accessToken, cookieOptions);
+    res.cookie('refreshToken', refreshToken, refreshCookieOptions);
 
     console.log('✅ Admin login successful:', { id: admin._id, email: admin.email, role: admin.role });
 
@@ -605,6 +691,57 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
     res.status(500).json({
       error: 'Internal server error',
       message: 'サーバーエラーが発生しました'
+    });
+  }
+});
+
+// トークン検証
+router.get('/verify-token', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        error: 'Invalid token',
+        message: '無効なトークンです'
+      });
+      return;
+    }
+    
+    res.json({
+      valid: true,
+      user: {
+        _id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        tokenBalance: req.user.tokenBalance,
+        isSetupComplete: req.user.isSetupComplete,
+        isAdmin: req.user.isAdmin || false
+      }
+    });
+  } catch (error) {
+    console.error('❌ Token verification error:', error);
+    res.status(500).json({
+      error: 'Verification failed',
+      message: 'トークン検証に失敗しました'
+    });
+  }
+});
+
+// ログアウト
+router.post('/logout', async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Cookieをクリア
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    
+    res.json({
+      success: true,
+      message: 'ログアウトしました'
+    });
+  } catch (error) {
+    console.error('❌ Logout error:', error);
+    res.status(500).json({
+      error: 'Logout failed',
+      message: 'ログアウトに失敗しました'
     });
   }
 });
