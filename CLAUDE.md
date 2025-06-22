@@ -68,6 +68,21 @@ npm run start            # 本番サーバー起動
 npm run lint             # ESLintチェック
 ```
 
+### 本番サーバー管理
+```bash
+# サービス管理
+sudo systemctl status charactier-backend charactier-frontend
+sudo systemctl restart charactier-backend
+sudo systemctl restart charactier-frontend
+
+# ログ確認
+sudo journalctl -u charactier-backend -f
+sudo journalctl -u charactier-frontend -f
+
+# デプロイ
+git pull  # 自動的にビルド・再起動される
+```
+
 ## 厳守ルール
 
 ### 絶対にやってはいけないこと（NEVER）
@@ -130,16 +145,21 @@ npm run lint             # ESLintチェック
 ### セキュリティとパフォーマンス
 - JWT認証（アクセス/リフレッシュトークン）
 - 全エンドポイントでレート制限
+  - 一般API: 100リクエスト/分
+  - チャットAPI: 60メッセージ/時間（ユーザーごと）
+  - 認証API: 5リクエスト/分
+  - 詳細: `docs/rate-limiting.md`
 - 不適切なメッセージのフィルタリング
 - IPモニタリングとブロック
 - 違反者への制裁システム
 
 ## デプロイ構成
 
-### PM2エコシステム
-- フロントエンド: bashインタープリターでforkモード
-- バックエンド: コンパイル済みJSをforkモード
-- 環境変数はPM2が注入
+### systemdサービス管理
+- フロントエンド: `charactier-frontend.service`
+- バックエンド: `charactier-backend.service`
+- 自動起動・再起動設定済み
+- ログ: `journalctl -u サービス名`
 
 ### 本番環境構成
 ```
@@ -148,6 +168,11 @@ Nginx (SSL終端) →
     Backend (port 5000) → 
       MongoDB Atlas + Redis + Stripe
 ```
+
+### デプロイフロー
+1. `git pull` → 自動的にビルド実行（post-merge hook）
+2. systemdサービスの自動再起動
+3. 権限自動修正（.next/ディレクトリ）
 
 ## UI設計原則
 - フラットでミニマリスティックなUI（白 + Lucideアイコン）
