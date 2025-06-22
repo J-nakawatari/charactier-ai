@@ -1,5 +1,191 @@
 openapi: 3.0.0
-  info:
-    title: Charactier AI API
-    version: 1.0.0
-  paths: {}
+info:
+  title: Charactier AI API
+  version: 1.0.0
+paths:
+  /api/admin/security/violation-stats:
+    get:
+      summary: 違反統計取得
+      tags: [Admin Security]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: timeframe
+          in: query
+          schema:
+            type: integer
+            default: 86400000
+          description: 集計期間（ミリ秒）
+      responses:
+        '200':
+          description: 違反統計
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  violationStats:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        count:
+                          type: integer
+                        avgSeverity:
+                          type: number
+                  totalStats:
+                    type: object
+                    properties:
+                      totalViolations:
+                        type: integer
+                      uniqueUserCount:
+                        type: integer
+                      avgSeverity:
+                        type: number
+                  sanctionStats:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        count:
+                          type: integer
+
+  /api/admin/security/recent-violations:
+    get:
+      summary: 最近の違反記録取得
+      tags: [Admin Security]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: 取得件数
+      responses:
+        '200':
+          description: 違反記録一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  violations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ViolationRecord'
+
+  /api/admin/security/sanctioned-users:
+    get:
+      summary: 制裁中ユーザー一覧
+      tags: [Admin Security]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 制裁中ユーザー一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        name:
+                          type: string
+                        email:
+                          type: string
+                        accountStatus:
+                          type: string
+                        suspensionEndDate:
+                          type: string
+                          format: date-time
+                        violationCount:
+                          type: integer
+
+  /api/admin/security/lift-sanction/{userId}:
+    post:
+      summary: 制裁解除
+      tags: [Admin Security]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ユーザーID
+      responses:
+        '200':
+          description: 制裁解除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+components:
+  schemas:
+    ViolationRecord:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          type: object
+          properties:
+            _id:
+              type: string
+            name:
+              type: string
+            email:
+              type: string
+            accountStatus:
+              type: string
+        violationType:
+          type: string
+          enum: [blocked_word, openai_moderation]
+        messageContent:
+          type: string
+        reason:
+          type: string
+        detectedWord:
+          type: string
+        severityLevel:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        ipAddress:
+          type: string
+        userAgent:
+          type: string
+        isResolved:
+          type: boolean
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

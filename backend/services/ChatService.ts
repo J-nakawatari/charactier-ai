@@ -400,8 +400,8 @@ ${toneConfig.moodAdjustedPrompt}
     const apiCost = (inputTokens / 1000) * rates.input + (outputTokens / 1000) * rates.output;
     const apiCostYen = apiCost * 150; // USD to JPY (概算)
     
-    // 50%利益ルール（仮の売上設定）
-    const assumedRevenue = apiCostYen * 2.5; // 想定売上
+    // 99%利益率システム（仮の売上設定）
+    const assumedRevenue = apiCostYen * 100; // 想定売上 (1%コストで運用)
     const profitMargin = (assumedRevenue - apiCostYen) / assumedRevenue;
 
     return { apiCost, apiCostYen, profitMargin };

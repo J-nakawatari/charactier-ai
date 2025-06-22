@@ -416,7 +416,7 @@ export default function AchievementSystem({ userId, className = '' }: Achievemen
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 rounded-lg "
               >
                 <option value="all">すべて</option>
                 <option value="conversation">会話</option>

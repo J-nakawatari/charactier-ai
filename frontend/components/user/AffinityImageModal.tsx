@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { X, Eye, Star, Calendar, Tag } from 'lucide-react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 interface LocalizedString {
   ja: string;
@@ -38,6 +39,8 @@ export default function AffinityImageModal({
   userAffinityLevel,
   locale
 }: AffinityImageModalProps) {
+  const t = useTranslations('affinity');
+  const tRarity = useTranslations('rarity');
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
@@ -109,12 +112,7 @@ export default function AffinityImageModal({
   };
 
   const getRarityLabel = (rarity: string) => {
-    switch (rarity) {
-      case 'legendary': return 'レジェンダリー';
-      case 'epic': return 'エピック';
-      case 'rare': return 'レア';
-      default: return 'コモン';
-    }
+    return tRarity(rarity as any) || rarity;
   };
 
   if (!isOpen) return null;
@@ -139,12 +137,12 @@ export default function AffinityImageModal({
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">
-                {characterName} の親密度画像
+                {t('characterAffinityImage', { characterName })}
               </h2>
               <p className="text-sm text-gray-500">
-                現在のレベル: {userAffinityLevel} | 
-                解放済み: {unlockedImages.length}枚 | 
-                未解放: {lockedImages.length}枚
+                {t('currentLevel', { level: userAffinityLevel })} | 
+                {t('unlockedCount', { count: unlockedImages.length })} | 
+                {t('lockedCount', { count: lockedImages.length })}
               </p>
             </div>
           </div>
@@ -159,14 +157,14 @@ export default function AffinityImageModal({
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
-            <span className="ml-3 text-gray-600">画像を読み込み中...</span>
+            <span className="ml-3 text-gray-600">{t('loading')}</span>
           </div>
         ) : (
           <div className="flex">
             {/* 画像リスト */}
             <div className="w-1/3 border-r border-gray-200 overflow-y-auto max-h-[60vh]">
               <div className="p-4">
-                <h3 className="font-medium text-gray-900 mb-3">解放済み画像</h3>
+                <h3 className="font-medium text-gray-900 mb-3">{t('unlockedSection')}</h3>
                 <div className="space-y-2">
                   {unlockedImages.map((image, index) => (
                     <button
@@ -192,7 +190,7 @@ export default function AffinityImageModal({
                           <p className="text-sm font-medium text-gray-900 truncate">
                             {image.title[locale as keyof LocalizedString]}
                           </p>
-                          <p className="text-xs text-gray-500">Lv.{image.unlockLevel}</p>
+                          <p className="text-xs text-gray-500">{t('levelUp', { level: image.unlockLevel })}</p>
                         </div>
                       </div>
                     </button>
@@ -201,7 +199,7 @@ export default function AffinityImageModal({
 
                 {lockedImages.length > 0 && (
                   <>
-                    <h3 className="font-medium text-gray-900 mb-3 mt-6">未解放画像</h3>
+                    <h3 className="font-medium text-gray-900 mb-3 mt-6">{t('lockedSection')}</h3>
                     <div className="space-y-2">
                       {lockedImages.map((image, index) => (
                         <div
@@ -214,7 +212,7 @@ export default function AffinityImageModal({
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-500 truncate">
-                                Lv.{image.unlockLevel}で解放
+                                {t('unlocksAt', { level: image.unlockLevel })}
                               </p>
                               <p className="text-xs text-gray-400">
                                 {getRarityLabel(image.rarity)}
@@ -266,7 +264,7 @@ export default function AffinityImageModal({
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <div className="flex items-center space-x-1">
                         <Star className="w-4 h-4" />
-                        <span>レベル {selectedImage.unlockLevel}</span>
+                        <span>{t('currentLevel', { level: selectedImage.unlockLevel })}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-4 h-4" />
@@ -296,7 +294,7 @@ export default function AffinityImageModal({
                 <div className="flex items-center justify-center h-80 text-gray-500">
                   <div className="text-center">
                     <Eye className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                    <p>画像を選択してください</p>
+                    <p>{t('viewImages')}</p>
                   </div>
                 </div>
               )}
@@ -308,7 +306,7 @@ export default function AffinityImageModal({
         {!loading && (
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
             <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>親密度を上げて新しい画像を解放しましょう！</span>
+              <span>{t('unlockByLevel')}</span>
               <span>合計 {images.length} 枚の画像</span>
             </div>
           </div>

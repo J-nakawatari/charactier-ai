@@ -54,8 +54,8 @@ export interface CharacterDocument {
   price?: number;
   affinityStats?: AffinityStats;
   defaultMessage?: LocalizedString;
-  limitMessage?: LocalizedString;
-  adminPrompt?: LocalizedString;
+  limitMessage?: LocalizedString; // オプショナル - 削除予定
+  adminPrompt?: LocalizedString; // オプショナル - 削除予定
   translations?: CharacterTranslation; // Optional translation data for mock storage
 }
 

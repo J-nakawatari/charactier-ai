@@ -76,9 +76,9 @@ export default function TokensPage() {
           'Content-Type': 'application/json'
         };
 
-        // 実際のAPIコールを実行
+        // 実際のAPIコールを実行（既存の動作しているエンドポイントを使用）
         const [tokenRes, usersRes] = await Promise.all([
-          fetch('/api/admin/token-usage', { headers }),
+          fetch('/api/admin/token-analytics/overview', { headers }),
           fetch('/api/admin/users', { headers })
         ]);
 
@@ -94,10 +94,11 @@ export default function TokensPage() {
           usersRes.json()
         ]);
 
-        console.log('🔍 Token usage data:', tokenData);
+        console.log('🔍 Token analytics data:', tokenData);
         console.log('🔍 Users data:', usersData);
 
-        setTokenUsage(tokenData.tokenUsages || []);
+        // token-analytics/overview のデータ構造に合わせて調整
+        setTokenUsage(tokenData.breakdown?.daily || []);
         setUsers(usersData.users || []);
         setTokenStats(usersData.tokenStats || null);
         setError(null);
@@ -192,7 +193,7 @@ export default function TokensPage() {
                 <input
                   type="text"
                   placeholder="ユーザー検索..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:w-auto"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg  text-sm sm:w-auto"
                 />
               </div>
             )}
@@ -254,11 +255,59 @@ export default function TokensPage() {
           
           {/* タブコンテンツ */}
           {activeTab === 'users' ? (
-            <TokenManagementTable users={users.map(user => ({
-              ...user,
-              id: user.id || user._id,
-              status: user.status || (user.isActive ? 'active' : 'inactive')
-            }))} />
+            <TokenManagementTable 
+              users={users.map(user => ({
+                ...user,
+                id: user.id || user._id,
+                status: user.status || (user.isActive ? 'active' : 'inactive')
+              }))} 
+              onUserUpdate={() => {
+                // データを再取得
+                const fetchTokenData = async () => {
+                  try {
+                    setLoading(true);
+                    const token = localStorage.getItem('adminAccessToken');
+                    
+                    if (!token) {
+                      setError('認証トークンが見つかりません');
+                      return;
+                    }
+
+                    const headers = {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
+                    };
+
+                    const [tokenRes, usersRes] = await Promise.all([
+                      fetch('/api/admin/token-analytics/overview', { headers }),
+                      fetch('/api/admin/users', { headers })
+                    ]);
+
+                    if (tokenRes.ok && usersRes.ok) {
+                      const [tokenData, usersData] = await Promise.all([
+                        tokenRes.json(),
+                        usersRes.json()
+                      ]);
+
+                      const totalUsers = usersData.pagination?.total || usersData.users?.length || 0;
+                      
+                      setTokenStats({
+                        totalBalance: usersData.tokenStats?.totalBalance || 0,
+                        totalUsers: totalUsers,
+                        averageBalance: usersData.tokenStats?.averageBalance || 0
+                      });
+
+                      setUsers(usersData.users || []);
+                    }
+                  } catch (err) {
+                    console.error('Token data refresh error:', err);
+                  } finally {
+                    setLoading(false);
+                  }
+                };
+                fetchTokenData();
+              }}
+            />
           ) : (
             <TokenPackTable 
               ref={tokenPackTableRef}

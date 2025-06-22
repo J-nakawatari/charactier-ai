@@ -1,14 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import { useToast } from '@/contexts/ToastContext';
-import { Eye, Edit, CreditCard, Plus, Minus } from 'lucide-react';
+import { CreditCard, Edit2 } from 'lucide-react';
 import { ensureUserNameString } from '@/utils/userUtils';
+import { API_BASE_URL } from '@/lib/api-config';
+import TokenUpdateModal from './TokenUpdateModal';
 
 interface UserData {
   id: string;
   name: string;
   email: string;
-  status: 'active' | 'inactive' | 'suspended';
+  status: 'active' | 'inactive' | 'suspended' | 'banned';
   isTrialUser: boolean;
   tokenBalance: number;
   totalSpent: number;
@@ -18,20 +21,24 @@ interface UserData {
 
 interface TokenManagementTableProps {
   users: UserData[];
+  onUserUpdate?: () => void;
 }
 
-export default function TokenManagementTable({ users }: TokenManagementTableProps) {
-  const { success, warning, info } = useToast();
+export default function TokenManagementTable({ users, onUserUpdate }: TokenManagementTableProps) {
+  const { success, error } = useToast();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   
   // 統一されたユーティリティ関数を使用
   const getStatusBadge = (status: string, isTrialUser: boolean) => {
     const statusConfig = {
       active: { label: 'アクティブ', color: 'bg-green-100 text-green-800' },
       inactive: { label: '非アクティブ', color: 'bg-gray-100 text-gray-800' },
-      suspended: { label: '停止中', color: 'bg-red-100 text-red-800' }
+      suspended: { label: '停止中', color: 'bg-yellow-100 text-yellow-800' },
+      banned: { label: 'BAN', color: 'bg-red-100 text-red-800' }
     };
     
-    const config = statusConfig[status as keyof typeof statusConfig];
+    const config = statusConfig[status as keyof typeof statusConfig] || { label: '不明', color: 'bg-gray-100 text-gray-800' };
     
     return (
       <div className="flex space-x-1">
@@ -61,20 +68,48 @@ export default function TokenManagementTable({ users }: TokenManagementTableProp
     return 'text-green-600';
   };
 
-  const handleViewUser = (user: UserData) => {
-    info('ユーザー詳細', `${ensureUserNameString(user.name)}のトークン詳細を表示しました`);
+  // トークン更新機能
+  const handleUpdateTokens = async (newBalance: number) => {
+    if (!selectedUser) return;
+
+    try {
+      const adminToken = localStorage.getItem('adminAccessToken');
+      
+      if (!adminToken) {
+        error('認証エラー', '管理者認証が必要です');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/${selectedUser.id}/reset-tokens`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({
+          newBalance: newBalance
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Token update failed');
+      }
+
+      const result = await response.json();
+      success('トークン更新完了', `${ensureUserNameString(selectedUser.name)}のトークン残高を${formatNumber(result.previousBalance)}から${formatNumber(result.newBalance)}に更新しました`);
+      
+      // ユーザー一覧を更新
+      onUserUpdate?.();
+      
+    } catch (err) {
+      error('更新エラー', 'トークンの更新に失敗しました');
+      console.error('Token update error:', err);
+    }
   };
 
-  const handleEditUser = (user: UserData) => {
-    success('編集モード', `${ensureUserNameString(user.name)}の情報編集画面を開きました`);
-  };
-
-  const handleAddTokens = (user: UserData) => {
-    success('トークン追加', `${ensureUserNameString(user.name)}にトークンを追加しました`);
-  };
-
-  const handleRemoveTokens = (user: UserData) => {
-    warning('トークン減算', `${ensureUserNameString(user.name)}からトークンを減算しました`);
+  const handleOpenModal = (user: UserData) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
   };
 
   return (
@@ -107,7 +142,7 @@ export default function TokenManagementTable({ users }: TokenManagementTableProp
                 最終ログイン
               </th>
               <th className="px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                操作
+                トークン編集
               </th>
             </tr>
           </thead>
@@ -150,42 +185,30 @@ export default function TokenManagementTable({ users }: TokenManagementTableProp
                   {formatDate(user.lastLogin)}
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end space-x-2">
-                    <button 
-                      onClick={() => handleViewUser(user)}
-                      className="text-gray-400 hover:text-gray-600" 
-                      title="詳細表示"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleEditUser(user)}
-                      className="text-gray-400 hover:text-purple-600" 
-                      title="編集"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleAddTokens(user)}
-                      className="text-gray-400 hover:text-green-600" 
-                      title="トークン追加"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleRemoveTokens(user)}
-                      className="text-gray-400 hover:text-red-600" 
-                      title="トークン減算"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <button 
+                    onClick={() => handleOpenModal(user)}
+                    className="text-gray-400 hover:text-purple-600 transition-colors" 
+                    title="トークン残高を編集"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      
+      {/* トークン更新モーダル */}
+      <TokenUpdateModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedUser(null);
+        }}
+        onUpdate={handleUpdateTokens}
+        user={selectedUser}
+      />
     </div>
   );
 }

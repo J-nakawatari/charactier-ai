@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 import Image from 'next/image';
 import { Send, Heart, Zap, Settings, Eye, EyeOff } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useLocale } from '@/hooks/useLocale';
 import { MessageList } from './MessageList';
 import { AffinityBar } from './AffinityBar';
 import { MoodVisualizer } from './MoodVisualizer';
 import { TokenBar } from './TokenBar';
 import { UnlockPopup } from './UnlockPopup';
 import { TokenPurchaseModal } from './TokenPurchaseModal';
+import { ChatInput } from './ChatInput';
 import UserSidebar from '../user/UserSidebar';
 import { TypingIndicator } from './TypingIndicator';
 import { ConnectionIndicator } from './ConnectionIndicator';
@@ -18,6 +21,8 @@ import { useAffinityStore } from '@/store/affinityStore';
 import { getMoodBackgroundGradient } from '@/utils/moodUtils';
 import { getAuthHeaders } from '@/utils/auth';
 import { getSafeImageUrl } from '@/utils/imageUtils';
+import { validateMessageBeforeSend } from '@/utils/contentFilter';
+import * as gtag from '@/lib/gtag';
 
 interface Character {
   _id: string;
@@ -31,6 +36,12 @@ interface Character {
   // 🎭 その他のフィールド
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
+  // 🤖 AIモデル情報
+  aiModel?: string;
+  model?: string;
+  // 💬 プロンプト情報
+  personalityPrompt?: string;
+  adminPrompt?: string;
 }
 
 interface UserCharacterAffinity {
@@ -65,7 +76,7 @@ interface ChatLayoutProps {
   onTokenPurchaseSuccess?: () => void;
 }
 
-export function ChatLayout({ 
+export const ChatLayout = memo(function ChatLayout({ 
   character, 
   affinity, 
   tokenStatus, 
@@ -76,7 +87,8 @@ export function ChatLayout({
   isLoadingMore = false,
   onTokenPurchaseSuccess
 }: ChatLayoutProps) {
-  const [inputMessage, setInputMessage] = useState('');
+  const t = useTranslations('chatLayout');
+  const locale = useLocale();
   const [isLoading, setIsLoading] = useState(false);
   const [localMessages, setLocalMessages] = useState<Message[]>(messages);
 
@@ -96,7 +108,17 @@ export function ChatLayout({
   
   // 🎨 感情に基づく背景スタイル
   const currentMood = (affinity as any).currentMood || 'neutral';
-  const moodGradient = getMoodBackgroundGradient(currentMood);
+  const moodGradient = useMemo(() => getMoodBackgroundGradient(currentMood), [currentMood]);
+  
+  // デバッグ: 画像URLを確認
+  useEffect(() => {
+    console.log('ChatLayout - Character images:', {
+      characterId: character._id,
+      imageChatBackground: character.imageChatBackground,
+      imageChatAvatar: character.imageChatAvatar,
+      imageCharacterSelect: character.imageCharacterSelect
+    });
+  }, [character]);
   
   // リアルタイムチャット機能
   const realtimeChat = useRealtimeChat(character._id);
@@ -114,6 +136,11 @@ export function ChatLayout({
     setCurrentTokens(tokenStatus.tokensRemaining);
   }, [tokenStatus.tokensRemaining]);
 
+  // Google Analytics: チャット開始イベント（初回のみ）
+  useEffect(() => {
+    gtag.chatStart(character._id, character.name);
+  }, [character._id, character.name]);
+
   // 🎭 初期データでAffinityStoreを更新
   useEffect(() => {
     updateAffinity({
@@ -123,18 +150,41 @@ export function ChatLayout({
     });
   }, [affinity, updateAffinity]);
 
-  // 🖼️ キャラクター画像データのデバッグログ
+  // 🎉 レベルアップイベントリスナー
   useEffect(() => {
-    console.log('🔍 ChatLayout キャラクター画像データ:', {
-      characterId: character._id,
-      name: character.name,
-      imageCharacterSelect: character.imageCharacterSelect,
-      imageDashboard: character.imageDashboard,
-      imageChatBackground: character.imageChatBackground,
-      imageChatAvatar: character.imageChatAvatar,
-      actualDisplayImage: character.imageChatBackground || character.imageChatAvatar || character.imageCharacterSelect
-    });
-  }, [character]);
+    const handleLevelUp = (event: CustomEvent) => {
+      setUnlockData({
+        level: event.detail.level,
+        illustration: event.detail.illustration
+      });
+      setShowUnlockPopup(true);
+      
+      // Google Analytics: 親密度レベルアップイベント
+      gtag.affinityLevelUp(character._id, event.detail.level);
+    };
+
+    window.addEventListener('levelUp', handleLevelUp as EventListener);
+    
+    return () => {
+      window.removeEventListener('levelUp', handleLevelUp as EventListener);
+    };
+  }, [character._id]);
+
+  // 💰 トークン購入モーダル表示イベントリスナー
+  useEffect(() => {
+    const handleShowTokenPurchase = (event: CustomEvent) => {
+      console.log('🛒 Token purchase modal triggered:', event.detail);
+      setShowPurchaseModal(true);
+    };
+
+    window.addEventListener('showTokenPurchaseModal', handleShowTokenPurchase as EventListener);
+    
+    return () => {
+      window.removeEventListener('showTokenPurchaseModal', handleShowTokenPurchase as EventListener);
+    };
+  }, []);
+
+
 
   // 定期的にトークン残高を更新する関数
   const refreshTokenBalance = useCallback(async () => {
@@ -158,54 +208,39 @@ export function ChatLayout({
   // ref に最新の関数を保持
   refreshTokenBalanceRef.current = refreshTokenBalance;
 
-  // ページがフォーカスされた時（購入完了から戻ってきた時など）にトークン残高を更新
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && refreshTokenBalanceRef.current) {
-        refreshTokenBalanceRef.current();
-      }
-    };
+  // トークン残高の更新はTokenBarコンポーネントに完全に委譲
+  // ChatLayoutでの重複した更新処理をすべて無効化
+  // TokenBarが以下を担当:
+  // - 60秒ごとの定期更新
+  // - visibilitychangeイベントでの更新
+  // - 購入完了イベントでの更新
 
-    const intervalHandler = () => {
-      if (refreshTokenBalanceRef.current) {
-        refreshTokenBalanceRef.current();
-      }
-    };
+  const handleSendMessage = useCallback(async (messageToSend: string) => {
+    if (!messageToSend.trim() || isLoading) return;
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // 定期的な更新（30秒間隔）
-    const interval = setInterval(intervalHandler, 30000);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      clearInterval(interval);
-    };
-  }, []); // 依存関係を削除してrefパターンを使用
-
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
-
-    setInputMessage('');
     setIsLoading(true);
 
     try {
       // 親コンポーネントのonSendMessage関数を呼び出し
       // メッセージの更新は親コンポーネントで管理される
-      const messageToSend = inputMessage.trim();
-      setInputMessage('');
+      
+      // 禁止用語チェック（フロントエンド側）
+      const validation = validateMessageBeforeSend(messageToSend);
+      
+      // フロントエンドの禁止用語チェックは一時的に無効化
+      // バックエンドの制裁システムをテストするため
       
       // タイピング停止とキャラクタータイピング開始
       stopTyping();
       realtimeChat.setCharacterTyping(true);
       
+      // Google Analytics: メッセージ送信イベント
+      gtag.messageSent(character._id, messageToSend.length);
+      
       await onSendMessage(messageToSend);
+      
 
-      // レベルアップ演出のトリガー（テスト用）
-      if (Math.random() > 0.8) {
-        setUnlockData({ level: affinity.level + 1, illustration: 'new_smile' });
-        setShowUnlockPopup(true);
-      }
+      // レベルアップ演出のトリガーは削除（実際のレベルアップ情報に基づいて表示）
 
     } catch (error) {
       console.error('Message send error:', error);
@@ -213,18 +248,10 @@ export function ChatLayout({
       setIsLoading(false);
       realtimeChat.setCharacterTyping(false);
     }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-    // シフト+エンターの場合は何もしない（デフォルトの改行）
-  };
+  }, [isLoading, character._id, onSendMessage, stopTyping, realtimeChat]);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-dvh">
       {/* サイドバー */}
       <UserSidebar locale="ja" />
       
@@ -242,28 +269,38 @@ export function ChatLayout({
         <div className={`absolute inset-0 backdrop-blur-sm transition-all duration-1000 ease-in-out ${moodGradient.overlay}`}></div>
       
       {/* ヘッダー */}
-      <header className="relative z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200/50 p-3 sm:p-4">
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
+      <header className="relative z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200/50 p-3 sm:p-4" style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top, 20px))' }}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between max-w-4xl mx-auto">
+          {/* モバイル: TokenBarを上に配置、デスクトップ: 左側にキャラクター情報 */}
+          <div className="sm:hidden mb-2">
+            <TokenBar 
+              lastMessageCost={tokenStatus.lastMessageCost}
+              onPurchaseClick={() => setShowPurchaseModal(true)}
+              onTokenUpdate={(newTokens) => setCurrentTokens(newTokens)}
+            />
+          </div>
+          
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="hidden sm:block w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
-              <Image 
-                src={getSafeImageUrl(character.imageChatAvatar || character.imageCharacterSelect, character.name)} 
-                alt={character.name}
-                width={48}
-                height={48}
-                className="w-full h-full object-cover"
-                style={{ backgroundColor: 'transparent' }}
-                unoptimized={true}
-                onError={(e) => {
-                  console.error('🖼️ ChatLayout Avatar画像読み込みエラー:', {
-                    imageChatAvatar: character.imageChatAvatar,
-                    imageCharacterSelect: character.imageCharacterSelect,
-                    characterId: character._id,
-                    finalSrc: getSafeImageUrl(character.imageChatAvatar || character.imageCharacterSelect, character.name)
-                  });
-                }}
-              />
-            </div>
+            {useMemo(() => (
+              <div className="hidden sm:block w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                <Image 
+                  src={getSafeImageUrl(character.imageChatAvatar || character.imageCharacterSelect, character.name)} 
+                  alt={character.name}
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-cover"
+                  style={{ backgroundColor: 'transparent' }}
+                  unoptimized={true}
+                  placeholder="empty"
+                  onError={(e) => {
+                    console.error('ChatLayout Avatar image loading error:', {
+                      characterId: character._id,
+                      finalSrc: getSafeImageUrl(character.imageChatAvatar || character.imageCharacterSelect, character.name)
+                    });
+                  }}
+                />
+              </div>
+            ), [character.imageChatAvatar, character.imageCharacterSelect, character.name, character._id])}
             <div className="hidden sm:block">
               <h1 className="font-semibold text-gray-900 text-base">{character.name}</h1>
               {/* 🎭 高度機能表示 */}
@@ -276,7 +313,8 @@ export function ChatLayout({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          {/* デスクトップ: 右側にTokenBarと高度機能ボタン */}
+          <div className="hidden sm:flex items-center space-x-2">
             {/* 🎯 高度機能表示切り替え */}
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
@@ -285,7 +323,7 @@ export function ChatLayout({
                   ? 'bg-purple-100 text-purple-600 hover:bg-purple-200' 
                   : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
               }`}
-              title={showAdvanced ? '高度表示オフ' : '高度表示オン'}
+              title={showAdvanced ? t('advancedOff') : t('advancedOn')}
             >
               {showAdvanced ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </button>
@@ -319,29 +357,34 @@ export function ChatLayout({
       {/* メッセージエリア */}
       <div className="flex-1 relative z-10 overflow-hidden" style={{ backgroundColor: 'transparent' }}>
         {/* キャラクター画像（真ん中に配置） */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ backgroundColor: 'transparent' }}>
-          <div className="h-full w-auto" style={{ backgroundColor: 'transparent' }}>
-            <img 
-              src={getSafeImageUrl(character.imageChatBackground || character.imageChatAvatar || character.imageCharacterSelect, character.name)}
-              alt={character.name}
-              className="h-full w-auto object-contain bg-transparent"
+        {useMemo(() => character.imageChatBackground && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+            <Image 
+              src={getSafeImageUrl(character.imageChatBackground, character.name)}
+              alt={`${character.name}のキャラクター画像`}
+              width={600}
+              height={800}
+              className="object-contain opacity-100"
               style={{ 
-                backgroundColor: 'transparent',
-                imageRendering: 'auto',
-                mixBlendMode: 'normal'
+                maxWidth: '90%',
+                maxHeight: '90%',
+                width: 'auto',
+                height: 'auto',
+                bottom: 0,
+                position: 'absolute'
               }}
+              priority
+              placeholder="empty"
               onError={(e) => {
-                console.error('🖼️ ChatLayout 背景画像読み込みエラー:', {
-                  imageChatBackground: character.imageChatBackground,
-                  imageChatAvatar: character.imageChatAvatar,
-                  imageCharacterSelect: character.imageCharacterSelect,
+                console.error('ChatLayout background image loading error:', {
                   characterId: character._id,
-                  finalSrc: getSafeImageUrl(character.imageChatBackground || character.imageChatAvatar || character.imageCharacterSelect, character.name)
+                  imageChatBackground: character.imageChatBackground,
+                  finalSrc: getSafeImageUrl(character.imageChatBackground, character.name)
                 });
               }}
             />
           </div>
-        </div>
+        ), [character.imageChatBackground, character.name, character._id])}
         
         <MessageList 
           messages={localMessages}
@@ -355,42 +398,17 @@ export function ChatLayout({
         />
       </div>
 
-      {/* 入力エリア */}
-      <div className="relative z-10 bg-white/90 backdrop-blur-sm border-t border-gray-200/50 p-3 sm:p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-start space-x-2 sm:space-x-3">
-            <div className="flex-1 relative">
-              <textarea
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={`${character.name}にメッセージを送る...`}
-                className="w-full resize-none rounded-lg border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 focus:outline-none focus:border-[#ec4899] bg-white text-gray-900 placeholder-gray-500 text-sm sm:text-base min-h-[40px] sm:min-h-[48px]"
-                rows={1}
-                style={{ maxHeight: '80px' }}
-              />
-              <div className="absolute bottom-2 right-2 text-xs text-gray-500">
-                ~{tokenStatus.lastMessageCost}枚
-              </div>
-            </div>
-            
-            <button
-              onClick={handleSendMessage}
-              disabled={!inputMessage.trim() || isLoading}
-              className="px-3 sm:px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg min-h-[40px] sm:min-h-[48px]"
-              style={{ backgroundColor: character.themeColor }}
-            >
-              {isLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
-              ) : (
-                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-              )}
-            </button>
-          </div>
-          
-          {/* 改行説明テキスト */}
-          <span className="block text-center text-xs text-gray-400 m-0" style={{ lineHeight: 0, marginTop: '4px' }}>Shift+エンターで改行できます</span>
-        </div>
+      {/* 入力エリア - スティッキー/固定配置 */}
+      <div className="sticky bottom-0 z-20 bg-white/95 backdrop-blur-sm border-t border-gray-200/50 p-3 sm:p-4 pb-safe shadow-lg">
+        <ChatInput
+          characterName={character.name}
+          themeColor={character.themeColor}
+          lastMessageCost={tokenStatus.lastMessageCost}
+          isLoading={isLoading}
+          onSendMessage={handleSendMessage}
+          onTyping={handleTyping}
+          onStopTyping={stopTyping}
+        />
       </div>
 
         {/* アンロック演出ポップアップ */}
@@ -420,4 +438,4 @@ export function ChatLayout({
       </div>
     </div>
   );
-}
+});

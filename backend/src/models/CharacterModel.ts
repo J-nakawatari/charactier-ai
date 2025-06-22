@@ -70,7 +70,7 @@ export interface ICharacter extends Document {
   description: LocalizedString;
   
   // AI・モデル設定
-  aiModel: 'gpt-3.5-turbo' | 'gpt-4o-mini' | 'o4-mini';
+  aiModel: 'gpt-3.5-turbo' | 'gpt-4o-mini';
   characterAccessType: 'free' | 'purchaseOnly';
   requiresUnlock: boolean;
   purchasePrice?: number; // 円
@@ -84,7 +84,7 @@ export interface ICharacter extends Document {
   
   // プロンプト設定
   personalityPrompt: LocalizedString;
-  adminPrompt: LocalizedString;
+  adminPrompt?: LocalizedString; // オプショナルに変更
   systemPromptCache: LocalizedString; // 生成済みプロンプト
   
   // 視覚・音声
@@ -105,7 +105,7 @@ export interface ICharacter extends Document {
   
   // メッセージ設定
   defaultMessage: LocalizedString;
-  limitMessage: LocalizedString;
+  limitMessage?: LocalizedString; // オプショナルに変更
   
   // 親密度・報酬システム
   affinitySettings: IAffinitySettings;
@@ -315,9 +315,9 @@ const CharacterSchema = new Schema<ICharacter>({
   // AI・モデル設定
   aiModel: {
     type: String,
-    enum: ['gpt-3.5-turbo', 'gpt-4o-mini', 'o4-mini'],
+    enum: ['gpt-3.5-turbo', 'gpt-4o-mini'],
     required: true,
-    default: 'o4-mini'
+    default: 'gpt-4o-mini'
   },
   characterAccessType: {
     type: String,
@@ -359,7 +359,7 @@ const CharacterSchema = new Schema<ICharacter>({
   },
   adminPrompt: {
     type: LocalizedStringSchema,
-    required: true
+    required: false // オプショナルに変更
   },
   systemPromptCache: {
     type: LocalizedStringSchema
@@ -395,7 +395,7 @@ const CharacterSchema = new Schema<ICharacter>({
   },
   limitMessage: {
     type: LocalizedStringSchema,
-    required: true
+    required: false // オプショナルに変更
   },
   
   // 親密度・報酬システム

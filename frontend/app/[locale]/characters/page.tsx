@@ -8,11 +8,12 @@ import CharacterGrid from '@/components/characters/CharacterGrid';
 import CharacterFilters from '@/components/characters/CharacterFilters';
 import UserSidebar from '@/components/user/UserSidebar';
 import { getAuthHeaders } from '@/utils/auth';
+import { handleFetchError } from '@/utils/errorHandler';
 
 interface Character {
   _id: string;
-  name: string;
-  description: string;
+  name: string | { ja: string; en: string };
+  description: string | { ja: string; en: string };
   personalityPreset: string;
   personalityTags: string[];
   gender: string;
@@ -72,9 +73,10 @@ function CharactersPageContent({
         setUserAffinities(userData.affinities || []);
         setUserPurchasedCharacters(userData.purchasedCharacters?.map((id: string) => id.toString()) || []);
       } else {
+        await handleFetchError(response);
       }
     } catch (err) {
-      console.error('ユーザー情報取得エラー:', err);
+      console.error('User info fetch error:', err);
     }
   }, []);
 
@@ -99,7 +101,8 @@ function CharactersPageContent({
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const apiError = await handleFetchError(response);
+        throw new Error(apiError.message);
       }
 
       const data = await response.json();
@@ -107,14 +110,14 @@ function CharactersPageContent({
       setTotalCount(data.total || 0);
 
     } catch (err) {
-      console.error('キャラクター一覧取得エラー:', err);
-      setError(err instanceof Error ? err.message : 'キャラクター一覧の取得に失敗しました');
+      console.error('Character list fetch error:', err);
+      setError(err instanceof Error ? err.message : t('errors.loadFailed'));
       setCharacters([]);
       setTotalCount(0);
     } finally {
       // setIsLoading削除（チラツキ防止）
     }
-  }, [locale, filters]);
+  }, [locale, filters, t]);
 
   // 新規会員ウェルカムモーダルチェック
   useEffect(() => {
@@ -142,7 +145,7 @@ function CharactersPageContent({
         fetchCharacters();
       }, 1000);
     }
-  }, []);  // 空の依存配列に変更
+  }, [fetchCharacters, fetchUserData]);
 
   // 購入完了イベントリスナー
   useEffect(() => {
@@ -156,20 +159,10 @@ function CharactersPageContent({
     return () => {
       window.removeEventListener('characterPurchaseCompleted', handlePurchaseComplete);
     };
-  }, []);  // 空の依存配列に変更
+  }, [fetchCharacters, fetchUserData]);
 
-  // ページフォーカス時の再取得（購入完了後に戻ってきた場合）
-  useEffect(() => {
-    const handleFocus = () => {
-      fetchUserData();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);  // 空の依存配列に変更
+  // フォーカスイベントでの更新を削除
+  // 購入完了は characterPurchaseCompleted イベントで既に処理されている
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -179,7 +172,7 @@ function CharactersPageContent({
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [filters.keyword, filters.characterType, filters.sort]);  // 関数依存を削除
+  }, [filters.keyword, filters.characterType, filters.sort, fetchCharacters]);
 
   const handleCharacterClick = (character: Character) => {
     if (character.characterAccessType === 'purchaseOnly') {
@@ -195,7 +188,7 @@ function CharactersPageContent({
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-dvh bg-gray-50 flex">
         <UserSidebar locale={locale} />
         <div className="flex-1 lg:ml-64 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
@@ -217,7 +210,7 @@ function CharactersPageContent({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-dvh bg-gray-50 flex">
       <UserSidebar locale={locale} />
       
       <div className="flex-1 lg:ml-64">
@@ -229,18 +222,11 @@ function CharactersPageContent({
           <p className="text-gray-600">
             {t('subtitle')}
           </p>
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-4">
             <div className="flex items-center text-sm text-gray-500">
               <Users className="w-4 h-4 mr-1" />
               <span>{t('totalCount', { count: totalCount })}</span>
             </div>
-            {/* テスト用ボタン */}
-            <button
-              onClick={() => setShowWelcomeModal(true)}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700"
-            >
-              ウェルカムモーダルテスト
-            </button>
           </div>
         </div>
 
@@ -258,13 +244,21 @@ function CharactersPageContent({
           <CharacterGrid
             characters={characters.map(char => ({
               ...char,
-              name: typeof char.name === 'string' ? char.name : (char.name as any).ja || (char.name as any).en,
-              description: typeof char.description === 'string' ? char.description : (char.description as any).ja || (char.description as any).en,
+              // LocalizedString型に正規化
+              name: typeof char.name === 'string' 
+                ? { ja: char.name, en: char.name } 
+                : char.name,
+              description: typeof char.description === 'string'
+                ? { ja: char.description, en: char.description }
+                : char.description,
               characterAccessType: char.characterAccessType === 'free' ? 'free' : 'purchaseOnly',
               imageChatAvatar: (char as any).imageChatAvatar || '/images/default-avatar.png',
               imageChatBackground: (char as any).imageChatBackground || '/images/default-bg.png',
               currentMood: (char as any).currentMood || 'happy',
-              themeColor: (char as any).themeColor || '#8B5CF6'
+              themeColor: (char as any).themeColor || '#8B5CF6',
+              aiModel: (char as any).aiModel || 'gpt-4o-mini',
+              isActive: true,
+              createdAt: (char as any).createdAt || new Date().toISOString()
             }))}
             onCharacterClick={(gridChar) => {
               // GridCharacterをCharacterに変換してhandleCharacterClickに渡す
@@ -338,15 +332,12 @@ function CharactersPageContent({
 
               {/* メインメッセージ */}
               <h2 className="text-3xl font-bold mb-4 animate-pulse">
-                🎉 ご登録ありがとうございます！
+                {t('welcome.title')}
               </h2>
               
               {/* サブメッセージ */}
               <p className="text-xl mb-6 leading-relaxed">
-                新規会員登録された方には<br />
-                今だけ<span className="text-yellow-300 font-bold text-2xl mx-1 animate-pulse">10,000</span>
-                <span className="text-yellow-300 font-bold">トークチケット</span><br />
-                プレゼント！
+                {t('welcome.description')}
               </p>
 
               {/* トークンアイコン */}
@@ -385,12 +376,12 @@ function CharactersPageContent({
                 }}
                 className="bg-white text-purple-600 font-bold py-4 px-8 rounded-full text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg animate-pulse"
               >
-                さっそくチャットしてみる！
+{t('welcome.startButton')}
               </button>
 
               {/* 小さなテキスト */}
               <p className="text-xs mt-4 opacity-80">
-                トークチケットは自動で付与されました
+                {t('welcome.tokensGranted')}
               </p>
             </div>
 

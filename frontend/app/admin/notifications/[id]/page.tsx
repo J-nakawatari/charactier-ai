@@ -5,7 +5,6 @@ import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { 
   Edit, 
-  BarChart3, 
   Users, 
   Calendar,
   Target,
@@ -155,7 +154,7 @@ export default function NotificationDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-dvh bg-gray-50 flex">
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
@@ -168,7 +167,7 @@ export default function NotificationDetailPage() {
 
   if (error || !notification) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-dvh bg-gray-50 flex">
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -186,7 +185,7 @@ export default function NotificationDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-dvh bg-gray-50">
       <div className="max-w-6xl mx-auto p-8">
         {/* ヘッダー */}
         <div className="mb-8">
@@ -214,13 +213,6 @@ export default function NotificationDetailPage() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <button
-                onClick={() => router.push(`/admin/notifications/${notification._id}/stats`)}
-                className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span>統計を見る</span>
-              </button>
               <button
                 onClick={() => router.push(`/admin/notifications/${notification._id}/edit`)}
                 className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -430,8 +422,8 @@ export default function NotificationDetailPage() {
               <div className="space-y-3">
                 <div>
                   <span className="text-sm text-gray-600">作成者</span>
-                  <p className="font-medium">{notification.createdBy.name}</p>
-                  <p className="text-sm text-gray-500">{notification.createdBy.email}</p>
+                  <p className="font-medium">{notification.createdBy?.name || '不明'}</p>
+                  <p className="text-sm text-gray-500">{notification.createdBy?.email || ''}</p>
                 </div>
                 
                 <div>

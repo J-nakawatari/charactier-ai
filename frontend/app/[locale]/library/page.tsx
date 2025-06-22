@@ -7,6 +7,7 @@ import UserSidebar from '@/components/user/UserSidebar';
 import Image from 'next/image';
 import { authenticatedFetch } from '@/utils/auth';
 import { API_BASE_URL } from '@/lib/api-config';
+import { getSafeImageUrl } from '@/utils/imageUtils';
 import { 
   Images, 
   ChevronDown, 
@@ -90,16 +91,62 @@ export default function CharacterLibraryPage() {
         );
         setCharacters(charactersWithGallery);
         
-        // ユーザーの親密度データを取得（今後実装予定）
-        // TODO: ユーザーの各キャラクターとの親密度レベルを取得するAPI呼び出し
-        // const affinityResponse = await fetch('/api/user/affinities', { ... });
+        // 🔍 デバッグ: 実際のユーザー親密度データを取得
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('📚 Library API - ユーザー親密度データ取得');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
-        // 仮のデータとして全キャラクターのレベル50を設定
-        const tempAffinities: Record<string, number> = {};
-        charactersWithGallery.forEach((char: Character) => {
-          tempAffinities[char._id] = 50; // 仮のレベル
-        });
-        setUserAffinities(tempAffinities);
+        try {
+          // 実際のユーザー親密度データを取得
+          const affinityResponse = await fetch('/api/user/profile', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (affinityResponse.ok) {
+            const userData = await affinityResponse.json();
+            console.log('👤 Library - ユーザープロファイルレスポンス:', userData);
+            
+            // ユーザーの親密度データを抽出
+            const realAffinities: Record<string, number> = {};
+            // userData.affinities または userData.user.affinities の両方をチェック
+            const affinitiesData = userData.affinities || userData.user?.affinities;
+            if (affinitiesData && Array.isArray(affinitiesData)) {
+              affinitiesData.forEach((affinity: any) => {
+                realAffinities[affinity.character] = affinity.level || 0;
+                console.log('❤️ Library - キャラクター親密度:', {
+                  characterId: affinity.character,
+                  level: affinity.level,
+                  experience: affinity.experience
+                });
+              });
+            }
+            
+            console.log('📊 Library - 全体親密度マップ:', realAffinities);
+            setUserAffinities(realAffinities);
+            
+          } else {
+            console.error('❌ Library - 親密度データ取得失敗');
+            // フォールバック: デフォルト値
+            const fallbackAffinities: Record<string, number> = {};
+            charactersWithGallery.forEach((char: Character) => {
+              fallbackAffinities[char._id] = 0;
+            });
+            setUserAffinities(fallbackAffinities);
+          }
+        } catch (error) {
+          console.error('❌ Library - 親密度取得エラー:', error);
+          // フォールバック: デフォルト値
+          const fallbackAffinities: Record<string, number> = {};
+          charactersWithGallery.forEach((char: Character) => {
+            fallbackAffinities[char._id] = 0;
+          });
+          setUserAffinities(fallbackAffinities);
+        }
+        
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         if (charactersWithGallery.length > 0 && !selectedCharacter) {
           setSelectedCharacter(charactersWithGallery[0]);
@@ -185,13 +232,8 @@ export default function CharacterLibraryPage() {
   };
 
   const getRarityText = (rarity: string) => {
-    const texts = {
-      common: 'コモン',
-      rare: 'レア',
-      epic: 'エピック',
-      legendary: 'レジェンダリー'
-    };
-    return texts[rarity as keyof typeof texts] || rarity;
+    const rarityKey = `rarity.${rarity}` as const;
+    return t(rarityKey) || rarity;
   };
 
   const isImageUnlocked = (unlockLevel: number, characterId: string) => {
@@ -229,7 +271,7 @@ export default function CharacterLibraryPage() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">ライブラリを読み込み中...</p>
+          <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>
     );
@@ -239,7 +281,7 @@ export default function CharacterLibraryPage() {
   const lockedImages = getLockedImages();
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-dvh bg-gray-50 flex">
       {/* サイドバー */}
       <UserSidebar locale={locale} />
       
@@ -254,23 +296,14 @@ export default function CharacterLibraryPage() {
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-                キャラクターライブラリ
+                {t('title')}
               </h1>
               <p className="text-sm text-gray-500 mt-1">
-                親密度で解放した思い出の画像コレクション
+                {t('subtitle')}
               </p>
             </div>
           </div>
           
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              {viewMode === 'grid' ? <List className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
-              <span className="hidden sm:inline">{viewMode === 'grid' ? 'リスト' : 'グリッド'}</span>
-            </button>
-          </div>
         </div>
       </header>
 
@@ -285,12 +318,12 @@ export default function CharacterLibraryPage() {
               {/* キャラクター選択 */}
               <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  キャラクター選択
+                  {t('character.selectLabel')}
                 </label>
                 <div className="relative">
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="w-64 px-4 py-2 text-left bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 flex items-center justify-between"
+                    className="w-64 px-4 py-2 text-left bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none  flex items-center justify-between"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
@@ -300,13 +333,13 @@ export default function CharacterLibraryPage() {
                       </div>
                       <div className="flex-1">
                         <span className="text-gray-900">
-                          {selectedCharacter?.name[locale as keyof typeof selectedCharacter.name] || 'キャラクターを選択'}
+                          {selectedCharacter?.name[locale as keyof typeof selectedCharacter.name] || t('character.selectPlaceholder')}
                         </span>
                         {selectedCharacter && (
                           <div className="flex items-center space-x-1 mt-1">
                             <Heart className="w-3 h-3 text-pink-500" />
                             <span className="text-xs text-gray-500">
-                              レベル {userAffinities[selectedCharacter._id] || 0}
+                              {t('character.level', { level: Math.floor(userAffinities[selectedCharacter._id] || 0) })}
                             </span>
                           </div>
                         )}
@@ -331,10 +364,10 @@ export default function CharacterLibraryPage() {
                           <div className="flex-1">
                             <p className="text-gray-900 font-medium">{character.name[locale as keyof typeof character.name]}</p>
                             <div className="flex items-center space-x-4 text-sm text-gray-500">
-                              <span>解放済み: {character.galleryImages.filter(img => 
+                              <span>{t('character.unlockedCount', { count: character.galleryImages.filter(img => 
                                 isImageUnlocked(img.unlockLevel, character._id)
-                              ).length}枚</span>
-                              <span>レベル{userAffinities[character._id] || 0}</span>
+                              ).length })}</span>
+                              <span>{t('character.level', { level: Math.floor(userAffinities[character._id] || 0) })}</span>
                             </div>
                           </div>
                         </button>
@@ -350,7 +383,7 @@ export default function CharacterLibraryPage() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="画像を検索..."
+                    placeholder={t('search.placeholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-900 placeholder-gray-500"
@@ -370,10 +403,10 @@ export default function CharacterLibraryPage() {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
                       <Unlock className="w-5 h-5 text-green-600" />
-                      <span>解放済みの思い出</span>
+                      <span>{t('unlocked.title')}</span>
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
-                      {unlockedImages.length}枚の画像が解放されています
+                      {t('unlocked.subtitle', { count: unlockedImages.length })}
                     </p>
                   </div>
                 </div>
@@ -394,7 +427,7 @@ export default function CharacterLibraryPage() {
                           onClick={() => handleImageClick(image)}
                         >
                           <Image 
-                            src={image.url} 
+                            src={getSafeImageUrl(image.url)} 
                             alt={image.title[locale as keyof typeof image.title] || 'Character gallery image'}
                             width={400}
                             height={192}
@@ -424,10 +457,10 @@ export default function CharacterLibraryPage() {
                         
                         <div className="p-4">
                           <h4 className="font-medium text-gray-900 mb-2">
-                            {image.title[locale as keyof typeof image.title] || image.title.ja || '思い出の画像'}
+                            {t('unlocked.imageTitle', { level: image.unlockLevel })}
                           </h4>
                           <p className="text-sm text-gray-600 mb-3">
-                            {image.description[locale as keyof typeof image.description] || image.description.ja || ''}
+                            {t('unlocked.imageDescription')}
                           </p>
                           
                           {/* タグ */}
@@ -451,9 +484,9 @@ export default function CharacterLibraryPage() {
                 ) : (
                   <div className="text-center py-12">
                     <Unlock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">まだ解放された画像がありません</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">{t('unlocked.empty.title')}</h3>
                     <p className="text-gray-500">
-                      親密度を上げて新しい思い出を解放しましょう
+                      {t('unlocked.empty.description')}
                     </p>
                   </div>
                 )}
@@ -466,11 +499,20 @@ export default function CharacterLibraryPage() {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
                         <Lock className="w-5 h-5 text-gray-400" />
-                        <span>未解放の思い出</span>
+                        <span>{t('locked.title')}</span>
                       </h3>
                       <p className="text-sm text-gray-500 mt-1">
-                        親密度を上げると解放される{lockedImages.length}枚の画像
+                        {t('locked.subtitle', { count: lockedImages.length })}
                       </p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                        className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+                      >
+                        {viewMode === 'grid' ? <List className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
+                        <span className="hidden sm:inline">{viewMode === 'grid' ? t('view.list') : t('view.grid')}</span>
+                      </button>
                     </div>
                   </div>
 
@@ -489,8 +531,8 @@ export default function CharacterLibraryPage() {
                         >
                           {/* ブラー処理された画像 */}
                           <Image 
-                            src={image.url} 
-                            alt="未解放の思い出"
+                            src={getSafeImageUrl(image.url)} 
+                            alt={t('locked.imageTitle')}
                             width={400}
                             height={192}
                             className="w-full h-48 object-contain filter blur-md scale-110 p-2"
@@ -501,7 +543,7 @@ export default function CharacterLibraryPage() {
                             <div className="text-center">
                               <Lock className="w-6 h-6 text-white mb-1 mx-auto drop-shadow-md" />
                               <span className="text-white text-xs font-medium drop-shadow-md">
-                                レベル{image.unlockLevel}
+                                {t('character.level', { level: image.unlockLevel })}
                               </span>
                             </div>
                           </div>
@@ -511,7 +553,7 @@ export default function CharacterLibraryPage() {
                             <div className="text-center text-white">
                               <Heart className="w-8 h-8 mx-auto mb-2 animate-pulse drop-shadow-lg" />
                               <span className="text-sm font-bold drop-shadow-lg bg-black/50 px-3 py-1 rounded-full">
-                                親密度を上げて解放！
+                                {t('locked.hoverMessage')}
                               </span>
                             </div>
                           </div>
@@ -534,10 +576,10 @@ export default function CharacterLibraryPage() {
                         
                         <div className="p-4">
                           <h4 className="font-medium text-gray-900 mb-2">
-                            {image.title[locale as keyof typeof image.title] || image.title.ja || '思い出の画像'}
+                            {t('locked.lockedImageTitle', { level: image.unlockLevel })}
                           </h4>
                           <p className="text-sm text-gray-600 mb-3">
-                            レベル{image.unlockLevel}で解放
+                            {t('locked.unlockLevel', { level: image.unlockLevel })}
                           </p>
                           
                           {/* タグ */}
@@ -564,9 +606,9 @@ export default function CharacterLibraryPage() {
           ) : (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
               <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">キャラクターを選択してください</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{t('noCharacter.title')}</h3>
               <p className="text-gray-500">
-                上記のドロップダウンから思い出を見たいキャラクターを選択してください
+                {t('noCharacter.description')}
               </p>
             </div>
           )}
@@ -607,8 +649,8 @@ export default function CharacterLibraryPage() {
             {/* モーダル画像 - 白背景で透過PNG対応 */}
             <div className="relative bg-white p-8">
               <Image
-                src={selectedImage.url}
-                alt={selectedImage.title[locale] || 'Selected image'}
+                src={getSafeImageUrl(selectedImage.url)}
+                alt={selectedImage.title[locale] || t('modal.altText')}
                 width={800}
                 height={600}
                 className="w-full max-h-[70vh] object-contain mx-auto"
@@ -619,10 +661,10 @@ export default function CharacterLibraryPage() {
             {/* モーダル情報部分 */}
             <div className="bg-white border-t border-gray-200 p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {selectedImage.title[locale] || selectedImage.title.ja || '思い出の画像'}
+                {selectedImage.title[locale] || t('modal.imageTitle')}
               </h3>
               <p className="text-sm text-gray-600 mb-3">
-                {selectedImage.description[locale] || selectedImage.description.ja || ''}
+                {selectedImage.description[locale] || t('modal.imageDescription')}
               </p>
               
               {/* タグ */}

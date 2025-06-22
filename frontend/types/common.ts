@@ -96,6 +96,27 @@ export interface DashboardStats {
   totalTokensUsed: number;
   totalCharacters: number;
   apiErrors: number;
+  trends?: {
+    userGrowth?: number;
+    tokenUsageGrowth?: number;
+    apiErrorTrend?: number;
+    characterPopularity?: number;
+  };
+  financial?: {
+    totalRevenue?: number;
+    availableBalance?: number;
+    creditLimit?: number;
+    outstandingDebt?: number;
+    projectedBalance14Days?: number;
+  };
+  evaluation?: {
+    overallScore?: number;
+    breakdown?: {
+      excellent?: number;
+      good?: number;
+      needsImprovement?: number;
+    };
+  };
 }
 
 /**
@@ -209,8 +230,8 @@ export interface Character {
   personalityPreset?: string;
   personalityTags?: string[];
   // 管理画面・統計用プロパティ
-  totalChats?: number;
-  avgIntimacy?: number;
+  totalMessages?: number;
+  averageAffinityLevel?: number;
   isFree?: boolean;
   price?: number;
   isActive?: boolean;

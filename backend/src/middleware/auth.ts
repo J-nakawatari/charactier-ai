@@ -20,6 +20,13 @@ export const authenticateToken = async (
     const authHeader = req.headers.authorization;
     const mockToken = req.headers['x-auth-token'] as string;
     
+    console.log('🔐 authenticateToken middleware:', {
+      path: req.path,
+      method: req.method,
+      hasAuthHeader: !!authHeader,
+      authHeader: authHeader ? authHeader.substring(0, 20) + '...' : undefined
+    });
+    
     let token: string | undefined;
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -29,6 +36,7 @@ export const authenticateToken = async (
     }
 
     if (!token) {
+      console.log('❌ No token found in request');
       res.status(401).json({ 
         error: 'Access token required',
         message: 'アクセストークンが必要です'
@@ -50,11 +58,10 @@ export const authenticateToken = async (
 
     // トークンをデコード
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    console.log('🔍 JWT decoded userId:', decoded.userId);
+    console.log('✅ JWT decoded:', { userId: decoded.userId });
     
     // まず管理者として検索
     const admin = await AdminModel.findById(decoded.userId);
-    console.log('🔍 Admin found by userId:', admin ? `${admin.email} (${admin.role})` : 'null');
     if (admin && admin.isActive) {
       // 管理者として認証成功
       req.admin = admin;
@@ -73,7 +80,6 @@ export const authenticateToken = async (
     
     // 管理者で見つからない場合は一般ユーザーとして検索
     const user = await UserModel.findById(decoded.userId);
-    console.log('🔍 User found by userId:', user ? `${user.email}` : 'null');
     if (user) {
       // アカウント状態チェック（停止・削除ユーザーのアクセス拒否）
       if (!user.isActive || user.accountStatus === 'suspended' || user.accountStatus === 'banned') {
@@ -102,16 +108,24 @@ export const authenticateToken = async (
     console.error('❌ JWT verification failed:', error);
     
     if (error instanceof jwt.JsonWebTokenError) {
+      console.error('🔴 Invalid token error:', error.message);
       res.status(401).json({ 
         error: 'Invalid token',
-        message: '無効なトークンです'
+        message: '無効なトークンです',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     } else if (error instanceof jwt.TokenExpiredError) {
+      console.error('⏰ Token expired error:', {
+        expiredAt: error.expiredAt,
+        message: error.message
+      });
       res.status(401).json({ 
         error: 'Token expired',
-        message: 'トークンの有効期限が切れています'
+        message: 'トークンの有効期限が切れています',
+        expiredAt: error.expiredAt
       });
     } else {
+      console.error('🚨 Unknown authentication error:', error);
       res.status(500).json({ 
         error: 'Authentication error',
         message: '認証エラーが発生しました'
@@ -148,4 +162,15 @@ export const generateRefreshToken = (userId: string): string => {
     JWT_REFRESH_SECRET, 
     { expiresIn: '7d' }
   );
+};
+
+// Helper function to check if admin is moderator (read-only)
+export const isModerator = (req: AuthRequest): boolean => {
+  return req.admin?.role === 'moderator' || req.user?.role === 'moderator';
+};
+
+// Helper function to check if admin has write permissions
+export const hasWritePermission = (req: AuthRequest): boolean => {
+  // Only super_admin has write permissions
+  return req.admin?.role === 'super_admin' || req.user?.role === 'super_admin';
 };

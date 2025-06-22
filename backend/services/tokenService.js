@@ -1,11 +1,11 @@
-const { UserModel: User } = require('../src/models/UserModel');
+const { UserModel: User } = require('../dist/src/models/UserModel');
 const UserTokenPack = require('../models/UserTokenPack');
 const TokenUsage = require('../models/TokenUsage');
-const { calcTokensToGive, validateModel, logTokenConfig } = require('../src/config/tokenConfig');
+const { calcTokensToGive, validateModel, logTokenConfig } = require('../dist/src/config/tokenConfig');
 
 /**
- * トークンサービス（利益率90%）
- * 90%利益保証を確実に実現するシンプルなトークン管理システム
+ * トークンサービス（利益率94%）
+ * 94%利益保証を確実に実現するシンプルなトークン管理システム
  */
 class TokenService {
   
@@ -13,20 +13,20 @@ class TokenService {
    * トークン付与数の計算（モデル別対応版）
    * @param {number} purchaseAmountYen - 購入金額（円）
    * @param {string} model - 使用モデル名
-   * @returns {number} 付与トークン数
+   * @returns {Promise<number>} 付与トークン数
    */
-  static calculateTokensToGive(purchaseAmountYen, model = 'o4-mini') {
+  static async calculateTokensToGive(purchaseAmountYen, model = 'gpt-4o-mini') {
     // モデルの妥当性チェック
     if (!validateModel(model)) {
       throw new Error(`Invalid model: ${model}`);
     }
     
-    const tokensToGive = calcTokensToGive(purchaseAmountYen, model);
+    const tokensToGive = await calcTokensToGive(purchaseAmountYen, model);
     
     console.log(`💰 購入金額: ${purchaseAmountYen}円`);
     console.log(`🤖 使用モデル: ${model}`);
     console.log(`🎁 付与トークン数: ${tokensToGive}トークン`);
-    console.log(`📊 利益率: 90%保証`);
+    console.log(`📊 利益率: 94%保証`);
     
     return tokensToGive;
   }
@@ -39,10 +39,10 @@ class TokenService {
    * @param {string} model - 使用モデル名
    * @returns {Promise<Object>} 付与結果
    */
-  static async grantTokens(userId, stripeSessionId, purchaseAmountYen, model = 'o4-mini') {
+  static async grantTokens(userId, stripeSessionId, purchaseAmountYen, model = 'gpt-4o-mini') {
     try {
       // 1. 付与トークン数を計算
-      const tokensToGive = this.calculateTokensToGive(purchaseAmountYen, model);
+      const tokensToGive = await this.calculateTokensToGive(purchaseAmountYen, model);
       
       // 2. 重複チェック（同じセッションIDでの二重付与防止）
       const existingPack = await UserTokenPack.findOne({ stripeSessionId });
@@ -323,9 +323,9 @@ class TokenService {
   
   /**
    * トークン料金プラン計算
-   * @returns {Array} 料金プラン配列
+   * @returns {Promise<Array>} 料金プラン配列
    */
-  static getTokenPlans() {
+  static async getTokenPlans() {
     const tokenCostPerUnit = parseFloat(process.env.TOKEN_COST_PER_UNIT || '0.0003');
     const profitMargin = parseFloat(process.env.PROFIT_MARGIN || '0.8');
     
@@ -336,12 +336,15 @@ class TokenService {
       { priceYen: 5000, name: 'ヘビーユーザー', description: '本格的にご利用の方向け' }
     ];
     
-    return plans.map(plan => ({
-      ...plan,
-      tokensGiven: this.calculateTokensToGive(plan.priceYen),
-      tokensPerYen: (this.calculateTokensToGive(plan.priceYen) / plan.priceYen).toFixed(3),
-      estimatedMessages: Math.floor(this.calculateTokensToGive(plan.priceYen) / 150), // 1メッセージ約150トークンと仮定
-      profitGuaranteed: `${profitMargin * 100}%`
+    return Promise.all(plans.map(async plan => {
+      const tokensGiven = await this.calculateTokensToGive(plan.priceYen);
+      return {
+        ...plan,
+        tokensGiven: tokensGiven,
+        tokensPerYen: (tokensGiven / plan.priceYen).toFixed(3),
+        estimatedMessages: Math.floor(tokensGiven / 150), // 1メッセージ約150トークンと仮定
+        profitGuaranteed: `${profitMargin * 100}%`
+      };
     }));
   }
 }

@@ -7,11 +7,12 @@
       "placeholder": "Search by character name or personality...",
       "notFound": "No characters found",
       "notFoundDesc": "Please try changing your search criteria",
-      "resetFilters": "Reset Filters"
+      "resetFilters": "Reset Filters",
+      "activeFilter": "Search: {keyword}"
     },
     "filters": {
       "all": "Show All",
-      "initial": "Base Characters Only",
+      "free": "Base Characters Only",
       "purchased": "Purchased Characters Only", 
       "unpurchased": "Unpurchased Characters Only"
     },
@@ -24,18 +25,34 @@
     },
     "actions": {
       "unlock": "Unlock",
+      "unlockWith": " to unlock",
       "startChat": "Start Chat",
       "needTokens": "Talk Tickets Required",
-      "viewAll": "View All"
+      "viewAll": "View All",
+      "purchase": "Purchase"
     },
     "characterTypes": {
-      "initial": "Base Character",
+      "free": "Base Character",
       "premium": "Premium",
       "locked": "Locked"
     },
     "loading": "Loading character list...",
     "loadError": "Loading Error",
-    "retry": "Retry"
+    "retry": "Retry",
+    "errors": {
+      "loadFailed": "Failed to load character list",
+      "userInfoFailed": "User information retrieval error",
+      "loginRequired": "Login required",
+      "checkoutFailed": "Could not retrieve checkout URL",
+      "purchaseError": "An error occurred during character purchase"
+    },
+    "welcome": {
+      "title": "🎉 Thank you for registering!",
+      "subtitle": "10,000 tokens as a gift!",
+      "description": "Welcome to the new AI world! Start conversations with your special characters. As a first-time registration bonus, we'll give you 10,000 tokens.",
+      "startButton": "Start chatting now!",
+      "tokensGranted": "Talk tickets have been automatically granted"
+    }
   },
   "common": {
     "reset": "Reset",
@@ -69,7 +86,9 @@
       "en": "English"
     },
     "terms": "By registering, you agree to our ",
-    "termsLink": "Terms of Service and Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "and": "and",
     "termsAccept": ".",
     "registerButton": "Agree to Terms and Sign Up",
     "hasAccount": "Already have an account?",
@@ -83,11 +102,55 @@
   },
   "library": {
     "title": "Character Library",
-    "subtitle": "Enjoy special images unlocked based on your intimacy level",
-    "noImages": "No unlocked images yet",
-    "unlockedAt": "Unlocked at intimacy level {level}",
-    "loading": "Loading...",
-    "error": "Failed to load data"
+    "subtitle": "Collection of memory images unlocked through intimacy",
+    "loading": "Loading library...",
+    "character": {
+      "selectLabel": "Character Selection",
+      "selectPlaceholder": "Select a character",
+      "level": "Level {level}",
+      "unlockedCount": "Unlocked: {count} images"
+    },
+    "search": {
+      "placeholder": "Search images...",
+      "noResults": "No search results"
+    },
+    "view": {
+      "grid": "Grid",
+      "list": "List"
+    },
+    "unlocked": {
+      "title": "Unlocked Memories",
+      "subtitle": "{count} images are unlocked",
+      "empty": {
+        "title": "No unlocked images yet",
+        "description": "Increase intimacy to unlock new memories"
+      },
+      "imageTitle": "Level {level} Unlock Image",
+      "imageDescription": "This is an intimacy unlock image"
+    },
+    "locked": {
+      "title": "Locked Memories",
+      "subtitle": "{count} images that will be unlocked by increasing intimacy",
+      "hoverMessage": "Increase intimacy to unlock!",
+      "unlockLevel": "Unlocks at Level {level}",
+      "imageTitle": "Locked memory",
+      "lockedImageTitle": "Level {level} Unlock Image"
+    },
+    "rarity": {
+      "common": "Common",
+      "rare": "Rare",
+      "epic": "Epic",
+      "legendary": "Legendary"
+    },
+    "modal": {
+      "imageTitle": "Memory image",
+      "imageDescription": "This is an intimacy unlock image",
+      "altText": "Selected image"
+    },
+    "noCharacter": {
+      "title": "Please select a character",
+      "description": "Please select the character whose memories you'd like to view from the dropdown above"
+    }
   },
   "sidebar": {
     "home": "Home",
@@ -101,8 +164,142 @@
     "appDescription": "AI Character Chat",
     "user": "User",
     "tokenBalance": "Talk Tickets: {count, number}",
+    "termsModal": {
+      "title": "Terms of Service",
+      "lastUpdated": "Last updated: January 1, 2025",
+      "close": "Close",
+      "introduction": "These Terms of Service (hereinafter referred to as \"Terms\") set forth the conditions for using all features provided by Charactier (hereinafter referred to as \"the Service\").\nUsers shall use the Service upon agreeing to these Terms.",
+      "article1": {
+        "title": "Article 1 (Definitions)",
+        "content1": "1. \"Talk Tickets\" refers to digital points required for sending chats with characters.",
+        "content2": "2. \"Premium Characters\" refers to characters that are unlocked by paying an additional fee."
+      },
+      "article2": {
+        "title": "Article 2 (Account)",
+        "item1": "Please enter the latest and accurate information when registering.",
+        "item2": "Creating multiple accounts by the same person is prohibited."
+      },
+      "article3": {
+        "title": "Article 3 (Prohibited Activities)",
+        "item1": "Acts that violate laws and public order and morals",
+        "item2": "Acts that infringe on the rights of third parties",
+        "item3": "Unauthorized reproduction or commercial use of AI-generated responses",
+        "item4": "Unauthorized access such as reverse engineering or scraping"
+      },
+      "article4": {
+        "title": "Article 4 (Talk Tickets)",
+        "item1": "Users can purchase Talk Tickets through Stripe payment.",
+        "item2": "Talk Tickets cannot be transferred, exchanged for cash, or refunded.",
+        "item3": "Talk Ticket balance is managed in accordance with prepaid payment instruments (Payment Services Act)."
+      },
+      "article5": {
+        "title": "Article 5 (Premium Characters)",
+        "item1": "Users can unlock Premium Characters by paying the specified fee.",
+        "item2": "After unlocking, conversations are possible by consuming Talk Tickets without additional charges.",
+        "item3": "Unlock rights cannot be transferred, exchanged for cash, or refunded."
+      },
+      "article6": {
+        "title": "Article 6 (Nature of AI-Generated Content)",
+        "item1": "Responses from the Service are automatically generated by AI and we do not guarantee their accuracy, legality, or usefulness.",
+        "item2": "The Service assumes no responsibility for any damage, trouble, or incidents arising from AI responses.",
+        "item3": "Users should use AI responses at their own judgment and responsibility."
+      },
+      "article7": {
+        "title": "Article 7 (Fees and Refunds)",
+        "item1": "Payment method is credit card payment (Stripe).",
+        "item2": "Due to the nature of digital goods, purchased Talk Tickets and Premium Character fees will not be refunded for any reason.",
+        "item3": "If a monthly plan is introduced, users must cancel from My Page before the renewal date."
+      },
+      "article8": {
+        "title": "Article 8 (Disclaimer and Damages)",
+        "item1": "The Service assumes no responsibility when unable to provide services due to natural disasters, network failures, or other force majeure.",
+        "item2": "If the Service's negligence is minor, the Service is not responsible for damages incurred by users arising from or related to use.",
+        "item3": "Even if the Service is liable, compensation is limited to the total amount paid by the user to the Service in the past 12 months."
+      },
+      "article9": {
+        "title": "Article 9 (Changes to Terms)",
+        "content": "The Service may change these Terms as necessary.\nRevised Terms take effect when posted on this page."
+      },
+      "article10": {
+        "title": "Article 10 (Governing Law and Jurisdiction)",
+        "content": "These Terms are governed by Japanese law, and in case of disputes regarding the Service,\nthe Tokyo District Court shall be the exclusive court of first instance."
+      }
+    },
+    "privacyModal": {
+      "title": "Privacy Policy",
+      "lastUpdated": "Last updated: July 1, 2025",
+      "close": "Close",
+      "introduction": "Charactier (hereinafter referred to as \"the Service\") establishes the following Privacy Policy\n(hereinafter referred to as \"this Policy\") to properly handle users' personal information.",
+      "section1": {
+        "title": "1. Information We Collect",
+        "item1": "Name/Nickname, Email address",
+        "item2": "Payment information (collected through Stripe; card numbers are not stored by the Service)",
+        "item3": "Cookies, device identifiers, access logs",
+        "item4": "Chat content and input prompts to AI"
+      },
+      "section2": {
+        "title": "2. Purpose of Use",
+        "item1": "Providing character chats, managing Talk Ticket balance",
+        "item2": "Billing and payment processing",
+        "item3": "Service improvement through usage analysis",
+        "item4": "Responding to violations of laws and terms of service"
+      },
+      "section3": {
+        "title": "3. External Transmission and Cookie Handling",
+        "description": "The Service uses cookies and similar technologies to send information to third-party services\nfor convenience and usage analysis.\nDisabling cookies in browser settings may prevent some features from being available.",
+        "tableHeaders": {
+          "destination": "Destination",
+          "information": "Information Sent",
+          "purpose": "Purpose"
+        },
+        "services": {
+          "ga4": {
+            "name": "Google Analytics 4",
+            "info": "Cookies (_ga, etc.), IP address, page URLs",
+            "purpose": "Access analysis"
+          },
+          "stripe": {
+            "name": "Stripe",
+            "info": "Payment amount, email address, payment tokens, etc.",
+            "purpose": "Credit card payment processing"
+          },
+          "cloudflare": {
+            "name": "Cloudflare",
+            "info": "IP address, User-Agent, etc.",
+            "purpose": "Site protection and performance optimization"
+          }
+        },
+        "optOut": {
+          "title": "Opt-out Method",
+          "description": "GA4 tracking can be disabled using the Google Analytics Opt-out Add-on.\nOther cookies can be deleted/rejected through browser settings."
+        }
+      },
+      "section4": {
+        "title": "4. Third-Party Disclosure",
+        "description": "Personal information collected will not be provided to third parties except in the following cases:",
+        "item1": "When user consent is obtained",
+        "item2": "When required by law",
+        "item3": "When providing to Stripe for payment processing"
+      },
+      "section5": {
+        "title": "5. Personal Information Security",
+        "item1": "Communications are encrypted with TLS",
+        "item2": "Important data is managed with minimal access permissions",
+        "item3": "Log audits based on internal policies"
+      },
+      "section6": {
+        "title": "6. Requests for Disclosure, Correction, or Deletion",
+        "content": "Users can request disclosure of their personal information based on the Personal Information Protection Act.",
+        "contactForm": "Contact Form: "
+      },
+      "section7": {
+        "title": "7. Revisions",
+        "content": "This Policy may be revised in response to legal changes or service content changes.\nThe latest content will be published on this page."
+      }
+    },
     "menu": "Menu",
     "account": "Account",
+    "preferences": "Settings",
     "logout": "Logout"
   },
   "chat": {
@@ -111,7 +308,10 @@
     "retry": "Retry",
     "notFound": "Chat not found",
     "sendMessage": "Send message",
-    "placeholder": "Enter message..."
+    "placeholder": "Enter message...",
+    "startConversation": "Start a conversation with {characterName}",
+    "loadingPastMessages": "Loading past messages...",
+    "scrollToTop": "Scroll to top"
   },
   "homepage": {
     "title": "Charactier",
@@ -142,7 +342,8 @@
     "welcome": "Have a wonderful day!",
     "loading": "Loading...",
     "error": "Failed to fetch data",
-    "retry": "Retry"
+    "retry": "Retry",
+    "defaultUser": "User"
   },
   "purchaseHistory": {
     "title": "Purchase History",
@@ -193,34 +394,447 @@
     "types": {
       "token": "{amount} tokens",
       "character": "1 character",
-      "subscription": "Subscription"
+      "subscription": "Subscription",
+      "tokenUnit": "tokens",
+      "characterUnit": "character"
+    },
+    "purchaseTypes": {
+      "tokenPurchase": "Token Purchase",
+      "characterPurchase": "Character Purchase",
+      "subscriptionPurchase": "Subscription Purchase"
     },
     "empty": {
       "title": "No Purchase History",
       "description": "No purchases have been made yet."
     }
   },
+  "moods": {
+    "happy": "Happy",
+    "sad": "Sad",
+    "angry": "Angry",
+    "excited": "Excited",
+    "melancholic": "Melancholic",
+    "shy": "Shy",
+    "neutral": "Neutral",
+    "unknown": "Unknown"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account information and security settings",
+    "profile": {
+      "title": "Profile Information",
+      "username": "Username",
+      "email": "Email Address",
+      "edit": "Edit Profile",
+      "save": "Save Profile",
+      "cancel": "Cancel"
+    },
+    "security": {
+      "title": "Change Password",
+      "changePassword": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "savePassword": "Change Password"
+    },
+    "account": {
+      "title": "Account Settings",
+      "deleteAccount": "Delete Account",
+      "dangerZone": "Danger Zone",
+      "deleteWarning": "Deleting your account will permanently lose all data. This action cannot be undone.",
+      "deleteDescription": "Once you delete your account, all data will be lost and cannot be recovered.",
+      "deletePasswordConfirmation": "To confirm account deletion, please enter your password.",
+      "deleteConfirmation": "To confirm account deletion, please type \"退会する\" in the text box below.",
+      "deleteButton": "Delete Account",
+      "deleteInput": "退会する",
+      "deleteModal": {
+        "title": "Are you sure you want to delete your account?",
+        "description": "Please read and understand the following before proceeding with deletion.",
+        "consequence1": "All your talk tickets will be lost",
+        "consequence2": "All chat history and affinity with characters will be deleted",
+        "consequence3": "Deleted accounts can never be restored",
+        "warning": "⚠️ This action cannot be undone. Deleting your account will permanently lose all data.",
+        "confirmText": "I understand the above and agree to delete my account",
+        "deleteButton": "Permanently Delete Account",
+        "cancelButton": "Cancel"
+      }
+    },
+    "language": {
+      "title": "Language Settings",
+      "currentLanguage": "Current Language",
+      "selectLanguage": "Select Language",
+      "japanese": "日本語",
+      "english": "English",
+      "saveLanguage": "Save Language Settings",
+      "languageChanged": "Language settings have been changed"
+    },
+    "errors": {
+      "updateFailed": "Update failed",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "required": "This field is required",
+      "usernamePlaceholder": "Enter username",
+      "emailPlaceholder": "Enter email address",
+      "usernameRequired": "Please enter a username",
+      "emailRequired": "Please enter a valid email address",
+      "currentPasswordRequired": "Please enter your current password",
+      "newPasswordTooShort": "New password must be at least 8 characters",
+      "newPasswordMismatch": "New passwords do not match",
+      "confirmTextIncorrect": "Confirmation text is incorrect",
+      "passwordRequired": "Please enter your password",
+      "incorrectPassword": "Incorrect password",
+      "userDataFetchFailed": "Failed to fetch user information",
+      "profileUpdateFailed": "Failed to update profile",
+      "passwordChangeFailed": "Failed to change password",
+      "accountDeleteFailed": "Failed to delete account"
+    },
+    "success": {
+      "profileUpdated": "Profile updated successfully",
+      "passwordChanged": "Password changed successfully",
+      "accountDeleted": "Account deleted successfully"
+    },
+    "placeholders": {
+      "username": "Enter username",
+      "email": "Enter email address",
+      "currentPassword": "Current password",
+      "newPassword": "New password (8+ characters)",
+      "confirmPassword": "Confirm new password",
+      "deleteInput": "退会する",
+      "password": "Password"
+    },
+    "labels": {
+      "changePassword": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "deleteAccount": "Delete Account"
+    },
+    "buttons": {
+      "saving": "Saving...",
+      "changing": "Changing...",
+      "deleting": "Deleting..."
+    },
+    "noData": {
+      "username": "Username not set",
+      "email": "Email address not set"
+    },
+    "confirmDialog": {
+      "deleteAccount": "Are you sure you want to delete your account? This action cannot be undone."
+    }
+  },
+  "setup": {
+    "greeting": "Nice to meet you",
+    "namePrompt": "Please tell us your name",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g. John",
+    "next": "Next",
+    "startChat": "Start Chatting",
+    "characterSelection": "Please select your favorite character",
+    "settingUp": "Setting up...",
+    "errors": {
+      "nameRequired": "Please enter your name",
+      "characterRequired": "Please select a character",
+      "charactersFetchFailed": "Failed to fetch character information",
+      "setupFailed": "Setup failed",
+      "setupFailedRetry": "Setup failed. Please try again."
+    }
+  },
+  "chatLayout": {
+    "advancedOn": "Advanced Display On",
+    "advancedOff": "Advanced Display Off",
+    "tokens": " tokens",
+    "shiftEnterHint": "Shift+Enter to add line break",
+    "messagePlaceholder": "Send a message to {characterName}...",
+    "cost": "~{cost} tokens"
+  },
+  "errors": {
+    "loadFailed": "Failed to load data",
+    "chatLoadFailed": "Failed to load chat data",
+    "notFound": "Data not found",
+    "loginInProgress": "Logging in...",
+    "registrationFailed": "Registration failed",
+    "networkError": "Network error occurred"
+  },
+  "affinity": {
+    "title": "Intimacy",
+    "expNeeded": "{needed} EXP to go",
+    "levelUp": "Lv.{level}",
+    "levelUpNotification": "UP!",
+    "levelUpTitle": "Level Up!",
+    "unlockedImages": "Unlocked: {count} images",
+    "newImagesAvailable": "New images available!",
+    "unlocksAt": "Unlocks at Lv.{level}",
+    "newImageUnlocked": "New image unlocked!",
+    "newImageUnlockedTitle": "New illustrations unlocked!",
+    "viewImages": "View images",
+    "continueChat": "Continue chatting",
+    "galleryView": "View in gallery",
+    "improvesByChat": "Intimacy increases through conversations with characters",
+    "learnMore": "Learn more about intimacy",
+    "specialRewardSoon": "Special reward coming soon!",
+    "intimacy": "Intimacy",
+    "currentLevel": "Current Level: {level}",
+    "unlockedCount": "Unlocked: {count} images",
+    "lockedCount": "Locked: {count} images",
+    "loading": "Loading images...",
+    "unlockedSection": "Unlocked Images",
+    "lockedSection": "Locked Images",
+    "experienceProgress": "EXP: {current} / {max}",
+    "experienceToNext": "To next level: {exp} EXP",
+    "systemTitle": "About the Intimacy System",
+    "levelRewards": "Level Rewards",
+    "encourageChat": "Chat with characters to increase intimacy!",
+    "unlockByLevel": "Increase intimacy to unlock new images!",
+    "characterAffinityImage": "{characterName}'s intimacy image",
+    "ranks": {
+      "acquaintance": "Acquaintance",
+      "friend": "Friend",
+      "closeFriend": "Close Friend",
+      "expert": "Expert",
+      "master": "Master"
+    },
+    "intimacyWithRank": "Intimacy ({rank})",
+    "modalTitle": "Intimacy Details",
+    "modalSubtitle": "Check detailed relationship with characters",
+    "expGainMethods": "How to Gain Experience",
+    "expGainMessage": "Send message: +10 EXP",
+    "expGainLongChat": "Long conversation: +20 EXP",
+    "expGainDaily": "Daily login: +5 EXP",
+    "expGainEvent": "Special event: +50 EXP",
+    "rewardLv20": "Every Lv.20: New topics added",
+    "rewardLv50": "Every Lv.50: Exclusive content",
+    "rewardLv100": "Lv.100: Special ending"
+  },
+  "tokens": {
+    "balance": "Token Balance",
+    "unit": " tokens",
+    "remainingMessages": "(About {count} more messages)",
+    "noTokensLeft": "(No tokens left)",
+    "purchase": "Buy Talk Tickets",
+    "loading": "Loading...",
+    "consumed": "Used: {amount} tokens",
+    "lowBalanceWarning": "Low Balance Warning",
+    "totalPurchased": "Total Purchased",
+    "used": "Used",
+    "dailyAverage": "Daily Average Usage",
+    "estimatedDaysLeft": "Estimated Days Left",
+    "aboutDays": "About {days} days",
+    "lowBalanceTitle": "Token balance is running low",
+    "lowBalanceDesc": "Don't forget to refill your tokens to continue enjoying chats!",
+    "refill": "Refill tokens",
+    "buy": "Buy tokens",
+    "remaining": "Remaining",
+    "tokenUnit": " tokens"
+  },
+  "general": {
+    "logout": "Logout",
+    "logoutConfirm": "Are you sure you want to logout?",
+    "viewAll": "View All",
+    "markAllRead": "Mark All Read",
+    "read": "Read",
+    "unread": "Unread",
+    "close": "Close",
+    "ago": " ago",
+    "minutes": " minutes",
+    "hours": " hours",
+    "days": " days",
+    "items": " items",
+    "times": " times",
+    "unit": {
+      "times": " times"
+    }
+  },
+  "badges": {
+    "title": "Badge Collection",
+    "acquired": "Acquired",
+    "achievementRate": "Achievement Rate",
+    "progress": "Progress",
+    "all": "All",
+    "unlocked": "Unlocked",
+    "locked": "Locked",
+    "preparing": "Badge system is being prepared...",
+    "noAcquired": "No acquired badges",
+    "allCompleted": "All badges acquired!",
+    "noBadges": "No badges available",
+    "encouragement": "Acquire new badges through activities!",
+    "learnMore": "Learn more about badges",
+    "badgeDetail": "Badge Details",
+    "description": "Description",
+    "acquiredDate": "Acquired Date:",
+    "acquireCondition": "Acquisition Condition",
+    "completed": "% Completed",
+    "autoAcquire": "Automatically acquired when conditions are met",
+    "hint": "Achievement Hint",
+    "categories": {
+      "beginner": "Beginner",
+      "chat": "Chat",
+      "affinity": "Affinity",
+      "general": "General"
+    },
+    "hints": {
+      "startChat": "Start with your first chat with a character",
+      "continueChat": "Keep chatting consistently every day",
+      "buildAffinity": "Build affinity by spending time interacting with characters",
+      "general": "Try participating in various activities"
+    },
+    "modalTitle": "About Badge System",
+    "modalSubtitle": "Honor system that records your activities and achievements",
+    "whatIsBadge": "What is the Badge System?",
+    "badgeDescription": "Badges are special titles that record your activities and achievements on Charactier. You can earn various badges through conversations with characters, improving intimacy, and using the service.",
+    "badgeTypes": "Types of Badges",
+    "beginnerBadgeTitle": "Beginner Badges",
+    "beginnerBadgeDesc": "Badges for those who just started using the service. You can earn them by using basic features and taking your first actions.",
+    "chatBadgeTitle": "Chat Badges",
+    "chatBadgeDesc": "Badges related to conversations with characters. You can earn them based on message count, consecutive chat days, etc.",
+    "affinityBadgeTitle": "Intimacy Badges",
+    "affinityBadgeDesc": "Badges related to improving intimacy with characters. You can earn them by reaching specific levels or building relationships with multiple characters.",
+    "specialBadgeTitle": "Special Badges",
+    "specialBadgeDesc": "Special badges you can earn through specific conditions or limited-time events. Includes rare and valuable badges.",
+    "howToAcquire": "How to Earn Badges",
+    "autoAcquireTitle": "Automatic Acquisition",
+    "autoAcquireDesc": "Badges are automatically earned when you meet the conditions. You'll be notified when you earn one.",
+    "progressTrackTitle": "Progress Tracking",
+    "progressTrackDesc": "You can check the progress of badges you haven't earned yet. See how close you are to achieving them.",
+    "rewardTitle": "Rewards",
+    "rewardDesc": "Some badges come with special rewards. (To be implemented)",
+    "tipsTitle": "Tips for Earning Badges",
+    "tip1": "Continue chatting with characters daily to earn continuation-related badges",
+    "tip2": "Interact with multiple characters to earn a wider variety of badges",
+    "tip3": "Plan your intimacy growth to efficiently earn intimacy-related badges",
+    "tip4": "Use profile settings and service features to earn beginner badges",
+    "noticeTitle": "Notice",
+    "notice1": "Once earned, badges cannot be deleted",
+    "notice2": "Some badges may be available for a limited time",
+    "notice3": "Badge conditions and types may be added in future updates"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "loading": "Loading notifications...",
+    "unreadCount": " unread",
+    "important": "Important",
+    "viewAll": "View all notifications ({count} items)"
+  },
+  "recentChats": {
+    "title": "Recent Chats",
+    "noHistory": "No chat history yet",
+    "startChatting": "Start chatting with characters",
+    "messagesCount": " messages",
+    "continueReading": "Continue reading"
+  },
+  "purchaseHistorySummary": {
+    "title": "Purchase History",
+    "totalSpent": "Total Spent",
+    "purchasedTokens": "Purchased Tokens",
+    "noHistory": "No purchase history yet",
+    "buyTokens": "Buy tokens",
+    "types": {
+      "token": "{amount} tokens",
+      "tokenUnit": "Tokens",
+      "character": "Character",
+      "characterUnit": "Character"
+    }
+  },
+  "rarity": {
+    "common": "Common",
+    "rare": "Rare",
+    "epic": "Epic",
+    "legendary": "Legendary"
+  },
+  "personalityTypes": {
+    "おっとり系": "Gentle",
+    "元気系": "Energetic",
+    "クール系": "Cool",
+    "真面目系": "Serious",
+    "セクシー系": "Sexy",
+    "天然系": "Natural",
+    "ボーイッシュ系": "Boyish",
+    "お姉さん系": "Big Sister",
+    "ツンデレ": "Tsundere"
+  },
+  "personalityTags": {
+    "優しい": "Kind",
+    "明るい": "Cheerful",
+    "クール": "Cool",
+    "真面目": "Serious",
+    "おっとり": "Gentle",
+    "元気": "Energetic",
+    "ツンデレ": "Tsundere",
+    "天然": "Airhead",
+    "甘えん坊": "Affectionate",
+    "恥ずかしがり屋": "Shy",
+    "ミステリアス": "Mysterious",
+    "世話好き": "Caring",
+    "いたずら好き": "Mischievous",
+    "頑張り屋": "Hardworking",
+    "のんびり": "Easygoing",
+    "敬語": "Polite",
+    "タメ口": "Casual",
+    "方言": "Dialect",
+    "お嬢様口調": "Ladylike",
+    "ポジティブ": "Positive",
+    "積極的": "Proactive",
+    "癒し系": "Healing",
+    "おしゃべり": "Talkative",
+    "控えめ": "Modest",
+    "知的": "Intellectual",
+    "ロマンチスト": "Romantic",
+    "素直": "Honest",
+    "面倒見がいい": "Nurturing",
+    "さっぱり": "Straightforward"
+  },
   "analytics": {
+    "title": "Analytics",
+    "period": {
+      "past7Days": "Past 7 Days",
+      "past30Days": "Past 30 Days",
+      "pastYear": "Past Year"
+    },
+    "charts": {
+      "dailyChats": "Daily Chat Count",
+      "chatCount": "Chat Count",
+      "tokenUsage": "Token Usage",
+      "characterInteraction": "Affinity"
+    },
+    "summary": {
+      "totalChats": "Total Chats",
+      "totalTokens": "Total Tokens Used",
+      "interactedCharacters": "Characters Interacted",
+      "averageDaily": "Daily Average",
+      "weeklyTotal": "Weekly Total",
+      "monthlyTotal": "Monthly Total",
+      "totalCharacters": "Characters Raised"
+    },
+    "insights": {
+      "mostActiveDay": "Most Active Day",
+      "favoriteCharacter": "Favorite Character",
+      "chatStreak": "Chat Streak Days",
+      "tokenEfficiency": "Token Efficiency"
+    },
     "tokens": {
       "title": "Token Analytics",
       "subtitle": "Analyze token usage patterns and efficiency",
       "usage": "Usage",
       "efficiency": "Efficiency",
-      "pattern": "Pattern"
+      "pattern": "Pattern",
+      "dailyUsage": "Daily Token Usage",
+      "perDay": "tokens/day"
     },
     "chats": {
       "title": "Chat Analytics", 
       "subtitle": "Analyze conversation patterns and activity",
       "conversations": "Conversations",
       "activity": "Activity",
-      "insights": "Insights"
+      "insights": "Insights",
+      "perDay": "{count} chats per day"
     },
     "affinity": {
       "title": "Affinity Analytics",
       "subtitle": "Analyze relationship and emotional development",
       "relationships": "Relationships",
       "emotional": "Emotional",
-      "progress": "Progress"
+      "progress": "Progress",
+      "characterLevels": "Character Affinity Levels",
+      "highestLevel": "Highest Level"
     },
     "common": {
       "loading": "Loading data...",
@@ -231,6 +845,66 @@
         "week": "1 Week",
         "month": "1 Month",
         "quarter": "3 Months"
+      }
+    }
+  },
+  "footer": {
+    "commercialTransaction": "Commercial Transaction Act",
+    "commercialTransactionModal": {
+      "title": "Specified Commercial Transaction Act",
+      "lastUpdated": "Last updated: July 1, 2025",
+      "close": "Close",
+      "tableHeaders": {
+        "item": "Item",
+        "content": "Content"
+      },
+      "items": {
+        "businessName": {
+          "label": "Business Name",
+          "content": "Charactier Operations Office",
+          "note": "*The business operator's name will be disclosed via email without delay upon request."
+        },
+        "address": {
+          "label": "Address",
+          "content": "<Virtual office address (to be listed after confirmation)>"
+        },
+        "phone": {
+          "label": "Phone Number",
+          "note": "*Will be disclosed via email without delay upon request."
+        },
+        "contact": {
+          "label": "Contact",
+          "content": "Contact Form: ",
+          "url": "https://forms.gle/ZkYUQSmpqxrQaa4m8"
+        },
+        "price": {
+          "label": "Sales Price",
+          "content": "Amount displayed within the service (including consumption tax)"
+        },
+        "payment": {
+          "label": "Payment Method",
+          "content": "Credit card payment (using Stripe)"
+        },
+        "paymentTiming": {
+          "label": "Payment Timing",
+          "content": "Charged upon payment confirmation"
+        },
+        "delivery": {
+          "label": "Product Delivery",
+          "content": "Talk Tickets granted immediately after payment completion"
+        },
+        "returns": {
+          "label": "Returns/Cancellations",
+          "content": "Due to the nature of digital goods, returns and cancellations after purchase are not available."
+        },
+        "subscription": {
+          "label": "Monthly Subscription Cancellation",
+          "content": "Can be cancelled from My Page up to 24 hours before the next renewal date"
+        },
+        "support": {
+          "label": "Handling of Issues",
+          "content": "If the service is unavailable, we will respond appropriately based on the Terms of Service and Privacy Policy."
+        }
       }
     }
   }

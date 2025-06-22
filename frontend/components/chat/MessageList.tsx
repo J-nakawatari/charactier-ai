@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import Image from 'next/image';
 import { MessageItem } from './MessageItem';
 import { Loader2, ChevronUp } from 'lucide-react';
 import { Message } from '@/types/common';
+import { useTranslations } from 'next-intl';
 
 // ChatLayout向けの文字列ベースCharacter型
 interface Character {
@@ -32,7 +33,7 @@ interface MessageListProps {
   affinityLevel?: number; // 親密度レベル（ムード情報のため）
 }
 
-export function MessageList({ 
+export const MessageList = memo(function MessageList({ 
   messages, 
   character, 
   isLoading, 
@@ -42,6 +43,7 @@ export function MessageList({
   showAdvanced = false,
   affinityLevel = 0
 }: MessageListProps) {
+  const t = useTranslations('chat');
   const [isNearTop, setIsNearTop] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -100,13 +102,6 @@ export function MessageList({
   const userMessageCount = messages.filter(msg => msg.role === 'user').length;
   const shouldShowWelcome = userMessageCount === 0;
 
-  // デバッグログ
-  console.log('🔍 MessageList Debug:', {
-    totalMessages: messages.length,
-    userMessages: userMessageCount,
-    character: character?.name,
-    showWelcome: shouldShowWelcome
-  });
 
   return (
     <div className="relative h-full">
@@ -120,7 +115,7 @@ export function MessageList({
           <div className="flex justify-center py-4">
             <div className="flex items-center space-x-2 text-gray-500 text-sm bg-white/70 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>過去のメッセージを読み込み中...</span>
+              <span>{t('loadingPastMessages')}</span>
             </div>
           </div>
         )}
@@ -130,7 +125,7 @@ export function MessageList({
           <div className="text-center py-12 bg-white/85 backdrop-blur-sm rounded-2xl mx-auto max-w-md shadow-lg border border-white/50 relative z-30">
             <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-lg">
               <Image 
-                src={character.imageChatAvatar} 
+                src={character.imageChatAvatar || '/images/default-character.png'} 
                 alt={character.name}
                 width={80}
                 height={80}
@@ -138,7 +133,7 @@ export function MessageList({
               />
             </div>
             <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              {character.name}との会話を始めよう
+              {t('startConversation', { characterName: character.name })}
             </h3>
             <p className="text-gray-600 text-sm">
               {character.description}
@@ -160,7 +155,7 @@ export function MessageList({
           <div className="flex items-start space-x-2 sm:space-x-3">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
               <Image 
-                src={character.imageChatAvatar} 
+                src={character.imageChatAvatar || '/images/default-character.png'} 
                 alt={character.name}
                 width={40}
                 height={40}
@@ -189,11 +184,11 @@ export function MessageList({
         <button
           onClick={scrollToTop}
           className="absolute top-4 right-4 z-30 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full p-2 shadow-lg hover:bg-white hover:shadow-xl transition-all duration-200"
-          aria-label="トップにスクロール"
+          aria-label={t('scrollToTop')}
         >
           <ChevronUp className="w-5 h-5 text-gray-600" />
         </button>
       )}
     </div>
   );
-}
+});

@@ -64,13 +64,19 @@ TokenPackSchema.index({ isActive: 1, createdAt: -1 });
 
 // バリデーション
 TokenPackSchema.pre('save', function(next) {
-  // GPT-4原価モデルに基づく計算
-  const TOKEN_COST_PER_UNIT = 0.003;
-  
-  // 自動計算フィールドを更新
-  const totalCost = (this.tokens as number) * TOKEN_COST_PER_UNIT;
-  this.profitMargin = (((this.price as number) - totalCost) / (this.price as number)) * 100;
-  this.tokenPerYen = (this.tokens as number) / (this.price as number);
+  // tokenPerYenとprofitMarginのみ計算（tokensは管理画面の設定値を保持）
+  if (this.tokens && this.price) {
+    this.tokenPerYen = (this.tokens as number) / (this.price as number);
+    
+    // gpt-4o-mini原価モデルに基づく計算（参考値）
+    // 平均原価: ($0.00000015 + 2 × $0.0000006) / 3 = $0.00000045/token
+    // 円換算（150円/USD）: $0.00000045 × 150 = 0.0000675円/token
+    const TOKEN_COST_PER_UNIT = 0.0000675;
+    
+    // 実際の利益率を計算
+    const totalCost = (this.tokens as number) * TOKEN_COST_PER_UNIT;
+    this.profitMargin = (((this.price as number) - totalCost) / (this.price as number)) * 100;
+  }
   
   next();
 });

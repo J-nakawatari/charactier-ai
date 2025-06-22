@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import Image from 'next/image';
@@ -13,8 +14,8 @@ interface Character {
   _id: string;
   name: string; // すでに多言語処理済み文字列
   description: string; // すでに多言語処理済み文字列
-  imageChatAvatar: string;
-  imageChatBackground: string;
+  imageChatAvatar?: string;
+  imageChatBackground?: string;
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
 }
@@ -26,7 +27,7 @@ interface MessageItemProps {
   affinityLevel?: number; // 親密度レベル（ムード情報のため）
 }
 
-export function MessageItem({ message, character, showAdvanced = false, affinityLevel = 0 }: MessageItemProps) {
+export const MessageItem = memo(function MessageItem({ message, character, showAdvanced = false, affinityLevel = 0 }: MessageItemProps) {
   const isUser = message.role === 'user';
   const timeAgo = formatDistanceToNow(message.timestamp, { 
     addSuffix: true, 
@@ -44,12 +45,6 @@ export function MessageItem({ message, character, showAdvanced = false, affinity
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
           </div>
           <div className="flex items-center space-x-2 mt-1">
-            {message.tokens && (
-              <div className="flex items-center space-x-1 text-xs text-gray-500">
-                <Coins className="w-3 h-3" />
-                <span>{message.tokens}</span>
-              </div>
-            )}
             <span className="text-xs text-gray-500">{timeAgo}</span>
           </div>
         </div>
@@ -62,7 +57,7 @@ export function MessageItem({ message, character, showAdvanced = false, affinity
       {/* キャラアイコン - モバイルでも表示 */}
       <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
         <Image 
-          src={character.imageChatAvatar} 
+          src={character.imageChatAvatar || '/images/default-character.png'} 
           alt={character.name}
           width={40}
           height={40}
@@ -73,7 +68,7 @@ export function MessageItem({ message, character, showAdvanced = false, affinity
       <div className="flex-1 min-w-0">
         {/* 名前とタイムスタンプ - モバイルでも表示 */}
         <div className="flex items-center space-x-2 mb-1">
-          <span className="text-xs sm:text-sm font-medium text-gray-800">{character.name}</span>
+          <span className="text-sm font-medium text-gray-800">{character.name}</span>
           <span className="text-xs text-gray-500">{timeAgo}</span>
         </div>
         
@@ -82,7 +77,7 @@ export function MessageItem({ message, character, showAdvanced = false, affinity
           className="inline-block bg-white/70 backdrop-blur-md rounded-2xl rounded-tl-sm px-3 sm:px-4 py-2 sm:py-3 shadow-sm border border-gray-200/30 max-w-xs sm:max-w-sm lg:max-w-md"
           style={{ borderLeftColor: character.themeColor, borderLeftWidth: '3px' }}
         >
-          <p className="text-xs sm:text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">{message.content}</p>
+          <p className="text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">{message.content}</p>
         </div>
         
         {/* トークン消費情報と高度情報 - モバイルでも表示 */}
@@ -98,18 +93,6 @@ export function MessageItem({ message, character, showAdvanced = false, affinity
             {/* 🎯 高度情報表示 */}
             {showAdvanced && characterState && (
               <>
-                {/* ムード状態 */}
-                <div className="flex items-center space-x-1">
-                  {(() => {
-                    const IconComponent = getMoodIcon(characterState.mood);
-                    const colorClass = getMoodIconColor(characterState.mood);
-                    return <IconComponent className={`w-3 h-3 ${colorClass}`} />;
-                  })()}
-                  <span className="text-xs">
-                    {getMoodLabel(characterState.mood)}
-                  </span>
-                </div>
-                
                 {/* キャッシュ状態 */}
                 <div className="flex items-center space-x-1">
                   <Database className={`w-3 h-3 ${characterState.cacheStatus.isHit ? 'text-green-500' : 'text-red-500'}`} />
@@ -131,4 +114,4 @@ export function MessageItem({ message, character, showAdvanced = false, affinity
       </div>
     </div>
   );
-}
+});

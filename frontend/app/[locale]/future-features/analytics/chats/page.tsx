@@ -69,7 +69,7 @@ export default function ChatAnalyticsPage() {
         conversations: 45, 
         averageLength: 18.5, 
         emotionalState: 'happy',
-        color: '#E91E63' 
+        color: '#E95295' 
       },
       { 
         characterName: 'ミコ', 
@@ -166,13 +166,13 @@ export default function ChatAnalyticsPage() {
   const EMOTION_COLORS = {
     happiness: '#FFC107',
     excitement: '#FF5722',
-    affection: '#E91E63'
+    affection: '#E95295'
   };
 
   const DEPTH_COLORS = ['#81C784', '#64B5F6', '#FFB74D', '#F06292'];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-dvh bg-gray-50 flex">
       <UserSidebar locale={locale} />
       
       <div className="flex-1 lg:ml-64">

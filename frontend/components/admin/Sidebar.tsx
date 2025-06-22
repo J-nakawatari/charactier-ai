@@ -11,7 +11,9 @@ import {
   Menu,
   X,
   UserCog,
-  Cpu
+  Cpu,
+  BarChart3,
+  AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -23,9 +25,11 @@ const sidebarItems = [
   { href: '/admin/characters', icon: MessageSquare, label: 'キャラクター管理' },
   { href: '/admin/tokens', icon: Coins, label: 'トークチケット管理' },
   { href: '/admin/models', icon: Cpu, label: 'AIモデル管理' },
-  { href: '/admin/admins', icon: UserCog, label: '管理者管理' },
+  { href: '/admin/admins', icon: UserCog, label: '管理者設定' },
   { href: '/admin/notifications', icon: Bell, label: '通知管理' },
   { href: '/admin/security', icon: Shield, label: 'セキュリティ' },
+  { href: '/admin/errors', icon: AlertTriangle, label: 'エラー統計' },
+  { href: '/admin/settings/analytics', icon: BarChart3, label: 'Google Analytics' },
 ];
 
 interface AdminUser {
@@ -78,7 +82,8 @@ export default function Sidebar() {
       {/* ハンバーガーメニューボタン（モバイル用） */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 right-4 z-50 p-3 bg-purple-600 text-white rounded-lg shadow-lg lg:hidden hover:bg-purple-700 transition-colors"
+        className="fixed right-4 z-50 p-3 bg-purple-600 text-white rounded-lg shadow-lg lg:hidden hover:bg-purple-700 transition-colors"
+        style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
       >
         {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -93,12 +98,15 @@ export default function Sidebar() {
 
       {/* サイドバー */}
       <div className={`
-        fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-100 
-        flex flex-col shadow-sm overflow-y-auto transform transition-transform duration-300 ease-in-out
+        fixed inset-0 z-50 w-64 bg-white border-r border-gray-100 
+        flex flex-col shadow-sm transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
       `}>
+      {/* Safe area top padding */}
+      <div className="h-[env(safe-area-inset-top,0px)]" />
+      
       {/* ヘッダー */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
             <MessageSquare className="w-5 h-5 text-white" />
@@ -109,7 +117,7 @@ export default function Sidebar() {
       </div>
 
       {/* ナビゲーション */}
-      <nav className="flex-1 p-4 space-y-1 min-h-0">
+      <nav className="flex-1 p-4 space-y-1 min-h-0 overflow-y-auto">
         <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
           一般
         </div>
@@ -156,7 +164,7 @@ export default function Sidebar() {
       </nav>
 
       {/* フッター */}
-      <div className="p-4 border-t border-gray-200 space-y-3">
+      <div className="flex-shrink-0 p-4 border-t border-gray-200 space-y-3">
         {/* 管理者情報 */}
         {adminUser && (
           <div className="px-3 py-2 bg-gray-50 rounded-lg">
@@ -185,6 +193,9 @@ export default function Sidebar() {
           <span>ログアウト</span>
         </button>
       </div>
+      
+      {/* Safe area bottom padding */}
+      <div className="h-[env(safe-area-inset-bottom,20px)]" />
     </div>
     </>
   );

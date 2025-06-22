@@ -2,6 +2,8 @@
  * バックエンド用コンテンツフィルター（TypeScript版）
  */
 
+import { createBlockedWordNotification } from './adminNotificationCreator';
+
 // 禁止用語リスト
 const BLOCKED_WORDS = {
   japanese: [
@@ -40,12 +42,19 @@ export interface ContentFilterResult {
 /**
  * 禁止用語チェック
  */
-export function checkBlockedWords(message: string): ContentFilterResult {
+export function checkBlockedWords(message: string, userId?: string, username?: string): ContentFilterResult {
   const normalizedMessage = message.toLowerCase();
   const allWords = [...BLOCKED_WORDS.japanese, ...BLOCKED_WORDS.english];
   
   for (let word of allWords) {
     if (normalizedMessage.includes(word.toLowerCase())) {
+      // 管理者向け通知を作成（非同期で実行、エラーは無視）
+      if (userId && username) {
+        createBlockedWordNotification(userId, username, word).catch(error => {
+          console.error('管理者通知作成エラー:', error);
+        });
+      }
+      
       return {
         isBlocked: true,
         detectedWord: word,
@@ -61,7 +70,7 @@ export function checkBlockedWords(message: string): ContentFilterResult {
 /**
  * メッセージバリデーション（統合チェック）
  */
-export function validateMessage(message: string): {
+export function validateMessage(message: string, userId?: string, username?: string): {
   allowed: boolean;
   reason?: string;
   violationType?: string;
@@ -83,7 +92,7 @@ export function validateMessage(message: string): {
   }
 
   // 2. 禁止用語チェック
-  const blockedCheck = checkBlockedWords(message);
+  const blockedCheck = checkBlockedWords(message, userId, username);
   if (blockedCheck.isBlocked) {
     return {
       allowed: false,

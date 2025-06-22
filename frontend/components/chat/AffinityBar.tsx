@@ -2,6 +2,7 @@
 
 import { Heart, Star } from 'lucide-react';
 import { useMemo, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { getMoodIcon, getMoodIconColor, getMoodLabel, getMoodAccentColor } from '@/utils/moodUtils';
 
 interface AffinityBarProps {
@@ -23,6 +24,8 @@ export function AffinityBar({
   characterId,
   onAffinityUpdate
 }: AffinityBarProps) {
+  const t = useTranslations('affinity');
+  const moodT = useTranslations('moods');
   const [animatingIncrease, setAnimatingIncrease] = useState(false);
   const [lastLevel, setLastLevel] = useState(level);
   const [lastExp, setLastExp] = useState(currentExp);
@@ -57,12 +60,21 @@ export function AffinityBar({
   const expPercentage = Math.min((currentExp / nextLevelExp) * 100, 100);
   const expNeeded = Math.max(nextLevelExp - currentExp, 0);
   
+  // 親密度ランクの取得
+  const getAffinityRank = () => {
+    if (level >= 80) return 'master';
+    if (level >= 60) return 'expert';
+    if (level >= 40) return 'closeFriend';
+    if (level >= 20) return 'friend';
+    return 'acquaintance';
+  };
+  
   // レベルアップ特效の判定
   const isLevelingUp = animatingIncrease && level > lastLevel;
   const isExpGaining = animatingIncrease && currentExp > lastExp;
 
   const moodConfig = useMemo(() => {
-    const moodLabel = getMoodLabel(mood);
+    const moodLabel = getMoodLabel(mood, (key: string) => moodT(key));
     const accentColor = getMoodAccentColor(mood);
     
     switch (mood) {
@@ -115,7 +127,7 @@ export function AffinityBar({
           speed: 2000
         };
     }
-  }, [mood]);
+  }, [mood, moodT]);
 
   return (
     <div className="flex items-center space-x-4">
@@ -128,7 +140,7 @@ export function AffinityBar({
           }`}
           style={{ backgroundColor: themeColor }}
         >
-          {level}
+          {Math.floor(level)}
         </div>
         
         {/* デスクトップ: ハートアイコン + Lv.12 */}
@@ -138,9 +150,9 @@ export function AffinityBar({
           }`} />
           <span className={`text-sm font-medium text-gray-700 transition-all duration-300 ${
             isLevelingUp ? 'text-yellow-600 font-bold' : ''
-          }`}>Lv.{level}</span>
+          }`}>{t('levelUp', { level: Math.floor(level) })}</span>
           {isLevelingUp && (
-            <span className="text-xs text-yellow-600 animate-bounce">UP!</span>
+            <span className="text-xs text-yellow-600 animate-bounce">{t('levelUpNotification')}</span>
           )}
         </div>
       </div>
@@ -148,9 +160,9 @@ export function AffinityBar({
       {/* 経験値バー */}
       <div className="flex-1 max-w-md">
         <div className="hidden sm:flex items-center justify-between mb-1">
-          <span className="text-xs text-gray-600">親密度</span>
+          <span className="text-xs text-gray-600">{t('intimacyWithRank', { rank: t(`ranks.${getAffinityRank()}`) })}</span>
           <span className="text-xs text-gray-600">
-            あと{expNeeded}EXP
+            {t('expNeeded', { needed: expNeeded })}
           </span>
         </div>
         
@@ -249,7 +261,7 @@ export function AffinityBar({
       {level % 10 === 9 && (
         <div className="flex items-center space-x-1 text-xs text-yellow-600 bg-yellow-50 px-2 py-1 rounded-full">
           <Star className="w-3 h-3" />
-          <span>特典解放まであと少し！</span>
+          <span>{t('specialRewardSoon')}</span>
         </div>
       )}
     </div>

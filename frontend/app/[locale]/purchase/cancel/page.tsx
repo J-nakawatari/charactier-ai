@@ -15,7 +15,7 @@ export default function PurchaseCancelPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8 text-center">
         <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <XCircle className="w-8 h-8 text-yellow-600" />

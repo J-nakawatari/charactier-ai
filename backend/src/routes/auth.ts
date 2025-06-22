@@ -1,16 +1,19 @@
 import type { AuthRequest } from '../types/express';
 import { Router, Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { UserModel } from '../models/UserModel';
 import { AdminModel } from '../models/AdminModel';
-import { generateAccessToken, generateRefreshToken } from '../middleware/auth';
+import { generateAccessToken, generateRefreshToken, authenticateToken } from '../middleware/auth';
+import { sendVerificationEmail, generateVerificationToken, isDisposableEmail } from '../utils/sendEmail';
+import { registrationRateLimit } from '../middleware/registrationLimit';
 
 const router: Router = Router();
 
-// ユーザー登録
-router.post('/register', async (req: Request, res: Response): Promise<void> => {
+// ユーザー登録（メール認証付き）
+router.post('/register', registrationRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    const { email, password, locale = 'ja' } = req.body;
 
     // バリデーション
     if (!email || !password) {
@@ -25,6 +28,15 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({
         error: 'Password too short',
         message: 'パスワードは6文字以上で入力してください'
+      });
+      return;
+    }
+
+    // 使い捨てメールアドレスのチェック
+    if (isDisposableEmail(email)) {
+      res.status(400).json({
+        error: 'Invalid email',
+        message: '使い捨てメールアドレスは使用できません'
       });
       return;
     }
@@ -46,37 +58,47 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // 新規ユーザーを作成（名前は後でセットアップ画面で設定）
+    // メール認証トークンを生成
+    const verificationToken = generateVerificationToken();
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24時間後
+
+    // 新規ユーザーを作成（メール未認証状態）
     const newUser = new UserModel({
       name: '', // セットアップ画面で設定予定
       email,
       password: hashedPassword,
-      tokenBalance: 10000, // 新規ユーザーには10,000トークンを付与
+      preferredLanguage: locale,
+      tokenBalance: 0, // メール認証後に付与
+      emailVerified: false,
+      emailVerificationToken: verificationToken,
+      emailVerificationExpires: verificationExpires,
       isActive: true,
       isSetupComplete: false // 初回セットアップ未完了
     });
 
     const savedUser = await newUser.save();
-    console.log('✅ New user registered:', { id: savedUser._id, email: savedUser.email });
+    console.log('✅ New user registered (pending verification):', { id: savedUser._id, email: savedUser.email });
 
-    // JWTトークンを生成
-    const accessToken = generateAccessToken(savedUser._id.toString());
-    const refreshToken = generateRefreshToken(savedUser._id.toString());
-
-    // パスワードを除いてレスポンス
-    res.status(201).json({
-      message: 'ユーザー登録が完了しました',
-      user: {
-        _id: savedUser._id,
-        name: savedUser.name,
-        email: savedUser.email,
-        tokenBalance: savedUser.tokenBalance,
-        isSetupComplete: savedUser.isSetupComplete
-      },
-      tokens: {
-        accessToken,
-        refreshToken
+    // 認証メールを送信
+    try {
+      await sendVerificationEmail(email, verificationToken, locale as 'ja' | 'en');
+      console.log('✅ Verification email sent successfully to:', email);
+    } catch (emailError) {
+      console.error('❌ Failed to send verification email:', emailError);
+      // エラーの詳細をログに出力
+      if (emailError instanceof Error) {
+        console.error('Error details:', emailError.message);
+        console.error('Stack trace:', emailError.stack);
       }
+      // メール送信に失敗してもユーザー登録は続行（セキュリティのため）
+    }
+
+    // レスポンス（トークンは返さない）
+    res.status(201).json({
+      message: locale === 'ja' 
+        ? '確認メールを送信しました。メールをご確認ください。' 
+        : 'Verification email sent. Please check your email.',
+      emailSent: true
     });
 
   } catch (error) {
@@ -127,6 +149,16 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       res.status(403).json({
         error: 'Account deactivated',
         message: 'アカウントが無効化されています'
+      });
+      return;
+    }
+
+    // メール認証チェック
+    if (!user.emailVerified) {
+      res.status(403).json({
+        error: 'Email not verified',
+        message: 'メールアドレスが認証されていません。確認メールをご確認ください。',
+        emailNotVerified: true
       });
       return;
     }
@@ -193,10 +225,20 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const jwt = require('jsonwebtoken');
     const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId: string };
 
-    // ユーザーの存在確認
+    // まず管理者として検索
+    const admin = await AdminModel.findById(decoded.userId);
+    if (admin && admin.isActive) {
+      // 管理者用の新しいアクセストークンを生成
+      const newAccessToken = generateAccessToken(admin._id.toString());
+      res.json({
+        accessToken: newAccessToken
+      });
+      return;
+    }
+
+    // 管理者で見つからない場合は一般ユーザーとして検索
     const user = await UserModel.findById(decoded.userId);
     if (!user || !user.isActive) {
       res.status(401).json({
@@ -215,10 +257,30 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
 
   } catch (error) {
     console.error('❌ Token refresh error:', error);
-    res.status(401).json({
-      error: 'Token refresh failed',
-      message: 'トークンの更新に失敗しました'
-    });
+    
+    if (error instanceof jwt.TokenExpiredError) {
+      console.error('⏰ Refresh token expired:', {
+        expiredAt: error.expiredAt,
+        message: error.message
+      });
+      res.status(401).json({
+        error: 'Refresh token expired',
+        message: 'リフレッシュトークンの有効期限が切れています。再度ログインしてください。',
+        requireRelogin: true
+      });
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      console.error('🔴 Invalid refresh token:', error.message);
+      res.status(401).json({
+        error: 'Invalid refresh token',
+        message: '無効なリフレッシュトークンです',
+        requireRelogin: true
+      });
+    } else {
+      res.status(500).json({
+        error: 'Token refresh failed',
+        message: 'トークンの更新に失敗しました'
+      });
+    }
   }
 });
 
@@ -286,7 +348,7 @@ router.put('/user/profile', async (req: Request, res: Response): Promise<void> =
 });
 
 // 初回セットアップ完了
-router.post('/user/setup-complete', async (req: Request, res: Response): Promise<void> => {
+router.post('/user/setup-complete', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, selectedCharacterId } = req.body;
 
@@ -324,7 +386,8 @@ router.post('/user/setup-complete', async (req: Request, res: Response): Promise
       { 
         name: name.trim(),
         selectedCharacter: selectedCharacterId,
-        isSetupComplete: true
+        isSetupComplete: true,
+        tokenBalance: 10000 // 初回セットアップ完了ボーナス
       },
       { new: true, select: '-password' }
     );
@@ -340,7 +403,8 @@ router.post('/user/setup-complete', async (req: Request, res: Response): Promise
     console.log('✅ Setup completed:', { 
       id: updatedUser._id, 
       name: updatedUser.name,
-      selectedCharacter: selectedCharacterId 
+      selectedCharacter: selectedCharacterId,
+      tokenBonus: 10000
     });
 
     res.json({
@@ -361,6 +425,138 @@ router.post('/user/setup-complete', async (req: Request, res: Response): Promise
     res.status(500).json({
       error: 'Setup completion failed',
       message: 'セットアップ完了中にエラーが発生しました'
+    });
+  }
+});
+
+// メールアドレス認証
+router.get('/verify-email', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token } = req.query;
+
+    if (!token || typeof token !== 'string') {
+      res.status(400).json({
+        error: 'Invalid token',
+        message: '無効なトークンです'
+      });
+      return;
+    }
+
+    // トークンでユーザーを検索（selectでトークンフィールドを含める）
+    const user = await UserModel.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: new Date() }
+    }).select('+emailVerificationToken +emailVerificationExpires');
+
+    if (!user) {
+      res.status(404).json({
+        error: 'Token not found or expired',
+        message: 'トークンが見つからないか、有効期限が切れています'
+      });
+      return;
+    }
+
+    // 既に認証済みの場合
+    if (user.emailVerified) {
+      res.status(400).json({
+        error: 'Already verified',
+        message: 'このメールアドレスは既に認証されています'
+      });
+      return;
+    }
+
+    // メールアドレスを認証済みに更新
+    user.emailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    
+    // メール認証時のトークン付与を削除（セットアップ完了時に付与するため）
+
+    await user.save();
+
+    // JWTトークンを生成
+    const accessToken = generateAccessToken(user._id.toString());
+    const refreshToken = generateRefreshToken(user._id.toString());
+
+    console.log('✅ Email verified:', user.email);
+
+    res.json({
+      message: 'メールアドレスが確認されました',
+      tokens: {
+        accessToken,
+        refreshToken
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Email verification error:', error);
+    res.status(500).json({
+      error: 'Verification failed',
+      message: 'メール認証中にエラーが発生しました'
+    });
+  }
+});
+
+// 認証メール再送信
+router.post('/resend-verification', registrationRateLimit, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, locale = 'ja' } = req.body;
+
+    if (!email) {
+      res.status(400).json({
+        error: 'Email required',
+        message: 'メールアドレスを入力してください'
+      });
+      return;
+    }
+
+    const user = await UserModel.findOne({ email }).select('+emailVerificationToken +emailVerificationExpires');
+    
+    if (!user) {
+      // セキュリティ上、ユーザーが存在しない場合も成功したように見せる
+      res.json({
+        message: locale === 'ja' 
+          ? '確認メールを再送信しました' 
+          : 'Verification email resent'
+      });
+      return;
+    }
+
+    if (user.emailVerified) {
+      res.status(400).json({
+        error: 'Already verified',
+        message: 'このメールアドレスは既に認証されています'
+      });
+      return;
+    }
+
+    // 新しいトークンを生成
+    const newToken = generateVerificationToken();
+    const newExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    user.emailVerificationToken = newToken;
+    user.emailVerificationExpires = newExpires;
+    await user.save();
+
+    // メール送信
+    try {
+      await sendVerificationEmail(email, newToken, locale as 'ja' | 'en');
+      console.log('✅ Verification email resent:', email);
+    } catch (emailError) {
+      console.error('❌ Failed to resend verification email:', emailError);
+    }
+
+    res.json({
+      message: locale === 'ja' 
+        ? '確認メールを再送信しました' 
+        : 'Verification email resent'
+    });
+
+  } catch (error) {
+    console.error('❌ Resend verification error:', error);
+    res.status(500).json({
+      error: 'Resend failed',
+      message: '再送信中にエラーが発生しました'
     });
   }
 });
@@ -430,7 +626,6 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
         name: admin.name,
         email: admin.email,
         role: admin.role,
-        permissions: admin.permissions,
         isAdmin: true // フロントエンド互換性のため
       }
     });
@@ -471,17 +666,7 @@ router.post('/create-admin', async (req: Request, res: Response): Promise<void> 
       name: '新しい管理者',
       email: adminEmail,
       password: hashedPassword,
-      role: 'admin',
-      permissions: [
-        'users.read',
-        'users.write',
-        'characters.read',
-        'characters.write',
-        'tokens.read',
-        'tokens.write',
-        'system.read',
-        'system.write'
-      ],
+      role: 'super_admin',
       isActive: true
     });
 

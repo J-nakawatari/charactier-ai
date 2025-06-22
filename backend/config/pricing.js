@@ -11,7 +11,7 @@ const getPricingConfig = () => {
   // 環境変数から設定を取得（デフォルト値あり）
   const usdToJpyRate = parseFloat(process.env.USD_TO_JPY_RATE || '150');
   const gpt4CostUsd = parseFloat(process.env.GPT4_COST_PER_TOKEN_USD || '0.00144');
-  const profitMargin = parseFloat(process.env.PROFIT_MARGIN || '0.5');
+  const profitMargin = parseFloat(process.env.PROFIT_MARGIN || '0.99'); // 99%利益率システム
   
   // 日本円でのGPT-4コスト計算
   const gpt4CostPerTokenYen = gpt4CostUsd * usdToJpyRate;

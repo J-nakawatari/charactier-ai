@@ -13,7 +13,7 @@ const getPurchaseHistoryModel = () => {
   if (!PurchaseHistoryModel) {
     try {
       // TypeScriptコンパイル後のモジュールパスで試行
-      const modelModule = require('../src/models/PurchaseHistoryModel');
+      const modelModule = require('../dist/src/models/PurchaseHistoryModel');
       PurchaseHistoryModel = modelModule.PurchaseHistoryModel;
       console.log('✅ PurchaseHistoryModel インポート成功');
       return PurchaseHistoryModel;
@@ -202,7 +202,7 @@ async function handleCheckoutSessionCompleted(event) {
     });
     
     // 価格IDからキャラクター購入かトークン購入かを判別
-    const CharacterModel = require('../src/models/CharacterModel');
+    const CharacterModel = require('../dist/src/models/CharacterModel').CharacterModel;
     const character = await CharacterModel.findOne({ stripeProductId: priceId });
     
     let purchaseType, characterId;
@@ -246,15 +246,96 @@ async function handleCheckoutSessionCompleted(event) {
       await handleCharacterPurchase(userId, characterId, sessionId, purchaseAmountYen);
       
     } else {
-      // トークン購入処理（従来の処理）
+      // トークン購入処理
       console.log('🎁 トークン付与処理...');
       
-      // 🎯 自動計算でトークン付与（50%利益保証）
-      const grantResult = await TokenService.grantTokens(
-        userId,
-        sessionId,
-        purchaseAmountYen
-      );
+      let grantResult;
+      
+      // まず価格IDからTokenPackModelを検索
+      try {
+        const { TokenPackModel } = require('../dist/src/models/TokenPackModel');
+        const tokenPack = await TokenPackModel.findOne({ priceId, isActive: true }).lean();
+        
+        if (tokenPack) {
+          // 管理画面で設定されたトークン数を使用
+          const tokensToGrant = tokenPack.tokens;
+          console.log(`📦 TokenPack設定を使用:`);
+          console.log(`  - 価格ID: ${priceId}`);
+          console.log(`  - パック名: ${tokenPack.name}`);
+          console.log(`  - 付与トークン数: ${tokensToGrant}`);
+          console.log(`  - 価格: ￥${tokenPack.price}`);
+          
+          // 重複チェック
+          const UserTokenPack = require('../models/UserTokenPack');
+          const existingPack = await UserTokenPack.findOne({ stripeSessionId: sessionId });
+          if (existingPack) {
+            console.log(`⚠️ 重複付与防止: セッション ${sessionId} は既に処理済み`);
+            grantResult = {
+              success: false,
+              reason: 'Already processed',
+              tokensGranted: 0,
+              newBalance: await TokenService.getUserTokenBalance(userId)
+            };
+          } else {
+            // UserTokenPack レコード作成
+            const newTokenPack = new UserTokenPack({
+              userId,
+              stripeSessionId: sessionId,
+              purchaseAmountYen,
+              tokensPurchased: tokensToGrant,
+              tokensRemaining: tokensToGrant,
+              isActive: true,
+              purchaseDate: new Date()
+            });
+            await newTokenPack.save();
+            
+            // User.tokenBalance を更新
+            const { UserModel } = require('../dist/src/models/UserModel');
+            await UserModel.findByIdAndUpdate(userId, {
+              $inc: { tokenBalance: tokensToGrant }
+            });
+            
+            grantResult = {
+              success: true,
+              tokensGranted: tokensToGrant,
+              newBalance: await TokenService.getUserTokenBalance(userId),
+              purchaseAmountYen,
+              profitMargin: tokenPack.profitMargin / 100 || 0.90,
+              model: 'admin-configured'
+            };
+            
+            console.log(`✅ TokenPack設定でトークン付与完了`);
+          }
+        } else {
+          // TokenPackが見つからない場合は従来の計算方式にフォールバック
+          console.log(`⚠️ 価格ID ${priceId} のTokenPackが見つかりません`);
+          console.log(`📊 計算方式にフォールバック`);
+          
+          const currentModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+          console.log(`🤖 Webhook使用モデル: ${currentModel}`);
+          
+          grantResult = await TokenService.grantTokens(
+            userId,
+            sessionId,
+            purchaseAmountYen,
+            currentModel
+          );
+        }
+      } catch (tokenPackError) {
+        // TokenPackModel検索エラーの場合も計算方式にフォールバック
+        console.error('❌ TokenPackModel検索エラー:', tokenPackError.message);
+        console.log(`📊 計算方式にフォールバック`);
+        
+        const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+        console.log(`🤖 Webhook使用モデル: ${currentModel}`);
+        
+        grantResult = await TokenService.grantTokens(
+          userId,
+          sessionId,
+          purchaseAmountYen,
+          currentModel
+        );
+      }
     
       if (grantResult.success) {
         console.log('✅ トークン付与成功:', {
@@ -473,7 +554,7 @@ router.get('/test', async (req, res) => {
     
     // テスト用の設定検証
     const configValidation = validatePricingConfig();
-    const tokenPlans = TokenService.getTokenPlans();
+    const tokenPlans = await TokenService.getTokenPlans();
     
     res.json({
       message: 'Stripe Webhook Test Endpoint',

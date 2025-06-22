@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { adminAuthenticatedFetch } from '@/utils/auth';
 import StatsCards from '@/components/admin/StatsCards';
 import UserChart from '@/components/admin/UserChart';
 import TokenChart from '@/components/admin/TokenChart';
@@ -8,6 +9,9 @@ import NotificationList from '@/components/admin/NotificationList';
 import SecurityAlerts from '@/components/admin/SecurityAlerts';
 import QuickStats from '@/components/admin/QuickStats';
 import CharacterTable from '@/components/admin/CharacterTable';
+import CronJobMonitor from '@/components/admin/CronJobMonitor';
+import ExchangeRateWidget from '@/components/admin/ExchangeRateWidget';
+import ServerHealthWidget from '@/components/admin/ServerHealthWidget';
 import type { DashboardStats, UserStats, TokenUsage, Character, SecurityEvent, Notification } from '@/types/common';
 
 export default function AdminDashboard() {
@@ -24,32 +28,143 @@ export default function AdminDashboard() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API calls
-        // const [statsRes, userRes, tokenRes, notifRes, securityRes, charRes] = await Promise.all([
-        //   fetch('/api/admin/stats'),
-        //   fetch('/api/admin/user-stats'),
-        //   fetch('/api/admin/token-usage'),
-        //   fetch('/api/admin/notifications'),
-        //   fetch('/api/admin/security-events'),
-        //   fetch('/api/admin/characters')
-        // ]);
+        console.log('🚀 Admin Dashboard - データ取得開始');
         
-        // For now, using empty data until APIs are implemented
-        setDashboardStats({
-          totalUsers: 0,
-          activeUsers: 0,
-          totalTokensUsed: 0,
-          totalCharacters: 0,
-          apiErrors: 0
+        // 既存の管理者用APIエンドポイントを呼び出し
+        const [overviewRes, usersRes, charactersRes, errorStatsRes, dashboardStatsRes] = await Promise.all([
+          adminAuthenticatedFetch('/api/admin/token-analytics/overview'),
+          adminAuthenticatedFetch('/api/admin/users'),
+          adminAuthenticatedFetch('/api/characters'), // 公開キャラクター一覧API
+          adminAuthenticatedFetch('/api/admin/error-stats?range=24h'), // APIエラー統計
+          adminAuthenticatedFetch('/api/admin/dashboard/stats') // 新しい統合ダッシュボード統計API
+        ]);
+        
+        console.log('📡 API responses received:', {
+          overviewStatus: overviewRes.status,
+          usersStatus: usersRes.status,
+          charactersStatus: charactersRes.status,
+          errorStatsStatus: errorStatsRes.status,
+          dashboardStatsStatus: dashboardStatsRes.status
         });
+
+        // エラーチェック
+        if (!overviewRes.ok) {
+          const errorText = await overviewRes.text();
+          console.error('❌ Overview API error:', {
+            status: overviewRes.status,
+            statusText: overviewRes.statusText,
+            errorResponse: errorText
+          });
+          throw new Error(`統計データの取得に失敗しました (${overviewRes.status})`);
+        }
+
+        if (!usersRes.ok) {
+          const errorText = await usersRes.text();
+          console.error('❌ Users API error:', {
+            status: usersRes.status,
+            statusText: usersRes.statusText,
+            errorResponse: errorText
+          });
+          throw new Error(`ユーザーデータの取得に失敗しました (${usersRes.status})`);
+        }
+
+        // キャラクターAPIはエラーでも続行（統計表示用）
+        let charactersData = { characters: [] };
+        if (charactersRes.ok) {
+          charactersData = await charactersRes.json();
+        } else {
+          console.warn('⚠️ Characters API not available, proceeding with 0 characters');
+        }
+
+        // エラー統計APIもエラーでも続行
+        let errorStatsData = { data: { stats: { totalErrors: 0 } } };
+        if (errorStatsRes.ok) {
+          errorStatsData = await errorStatsRes.json();
+        } else {
+          console.warn('⚠️ Error stats API not available, proceeding with 0 errors');
+        }
+
+        // レスポンスをパース
+        const overviewData = await overviewRes.json();
+        const usersData = await usersRes.json();
+        
+        // 新しいダッシュボード統計APIのレスポンスをパース
+        let dashboardData = null;
+        if (dashboardStatsRes.ok) {
+          dashboardData = await dashboardStatsRes.json();
+          console.log('📊 Dashboard Stats API data:', dashboardData);
+        } else {
+          console.warn('⚠️ Dashboard Stats API not available, using fallback');
+        }
+
+        console.log('📊 Admin Dashboard - Overview data:', overviewData);
+        console.log('👥 Admin Dashboard - Users data:', usersData);
+        console.log('🎭 Admin Dashboard - Characters data:', charactersData);
+
+        // 🔍 デバッグ: APIレスポンス構造を詳細確認
+        console.log('🔎 Overview API full response:', JSON.stringify(overviewData, null, 2));
+        console.log('🔎 Users API full response:', JSON.stringify(usersData, null, 2));
+        console.log('🔎 Characters API full response:', JSON.stringify(charactersData, null, 2));
+        
+        // 既存のトークン分析APIから統計データを抽出
+        const dailyBreakdown = overviewData.breakdown?.daily || [];
+        const uniqueUsersToday = dailyBreakdown.length > 0 ? dailyBreakdown[dailyBreakdown.length - 1]?.uniqueUsers || 0 : 0;
+        
+        // ユーザーAPIから総ユーザー数を取得
+        const totalUsers = usersData.pagination?.total || usersData.users?.length || 0;
+        
+        // キャラクター数を取得
+        const totalCharacters = charactersData.characters?.length || 0;
+        
+        // 新しい統合APIが利用可能な場合はそちらを使用、なければフォールバック
+        if (dashboardData && dashboardData.stats) {
+          setDashboardStats({
+            totalUsers: dashboardData.stats.totalUsers,
+            activeUsers: dashboardData.stats.activeUsers,
+            totalTokensUsed: dashboardData.stats.totalTokensUsed,
+            totalCharacters: dashboardData.stats.totalCharacters,
+            apiErrors: dashboardData.stats.apiErrors,
+            // トレンドデータも含める
+            trends: dashboardData.trends,
+            financial: dashboardData.financial,
+            evaluation: dashboardData.evaluation
+          });
+        } else {
+          // フォールバック: 既存のAPIから集計
+          setDashboardStats({
+            totalUsers: totalUsers,
+            activeUsers: uniqueUsersToday,
+            totalTokensUsed: overviewData.overview?.totalTokensUsed || 0,
+            totalCharacters: totalCharacters,
+            apiErrors: errorStatsData.data?.stats?.totalErrors || 0
+          });
+        }
+        
+        console.log('📊 Calculated dashboard stats:', {
+          totalUsers: totalUsers,
+          activeUsers: uniqueUsersToday,
+          totalTokensUsed: overviewData.overview?.totalTokensUsed || 0,
+          totalCharacters: totalCharacters,
+          apiErrors: errorStatsData.data?.stats?.totalErrors || 0
+        });
+
+        // キャラクターデータを設定
+        setCharacters(charactersData.characters || []);
+
+        // TODO: 以下のAPIが実装されたら有効化
         setUserStats([]);
         setTokenUsage([]);
         setNotifications([]);
         setSecurityEvents([]);
-        setCharacters([]);
       } catch (err) {
-        setError('ダッシュボードデータの読み込みに失敗しました');
-        console.error('Dashboard data fetch error:', err);
+        console.error('💥 Dashboard data fetch error:', err);
+        const errorMessage = err instanceof Error ? err.message : 'ダッシュボードデータの読み込みに失敗しました';
+        setError(errorMessage);
+        console.log('🔍 Error details:', {
+          errorType: typeof err,
+          errorMessage: errorMessage,
+          errorStack: err instanceof Error ? err.stack : 'No stack trace'
+        });
       } finally {
         setLoading(false);
       }
@@ -111,18 +226,30 @@ export default function AdminDashboard() {
                 
                 {/* キャラクターテーブル */}
                 <CharacterTable characters={characters} />
+                
+                {/* クーロンジョブ監視 */}
+                <CronJobMonitor />
               </div>
               
               {/* 右エリア - サイドウィジェット */}
               <div className="xl:col-span-1 space-y-4 md:space-y-6">
+                {/* サーバー状態監視 */}
+                <ServerHealthWidget />
+                
                 {/* セキュリティアラート */}
                 <SecurityAlerts events={securityEvents} />
+                
+                {/* 為替レート表示 */}
+                <ExchangeRateWidget />
                 
                 {/* 通知リスト */}
                 <NotificationList notifications={notifications} />
                 
                 {/* クイック統計 */}
-                <QuickStats />
+                <QuickStats 
+                  financial={dashboardStats?.financial}
+                  evaluation={dashboardStats?.evaluation}
+                />
               </div>
             </div>
           </div>

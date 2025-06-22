@@ -17,6 +17,7 @@ interface ImageCropperProps {
   onCancel: () => void;
   onSave: () => void;
   isLoading?: boolean;
+  imageType?: string; // 画像タイプを追加
 }
 
 export default function ImageCropper({ 
@@ -24,11 +25,32 @@ export default function ImageCropper({
   onCropComplete, 
   onCancel, 
   onSave,
-  isLoading = false
+  isLoading = false,
+  imageType = ''
 }: ImageCropperProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
+
+  // 画像タイプに応じて形状とアスペクト比を決定
+  const getCropSettings = (type: string) => {
+    switch (type) {
+      case 'imageCharacterSelect':
+      case 'imageDashboard':
+        return { shape: 'rect' as const, aspect: 1, label: '正方形', cropSize: { width: 400, height: 400 } }; // 四角形（正方形）
+      case 'imageChatBackground':
+        return { shape: 'rect' as const, aspect: 9/16, label: '9:16（縦長）', cropSize: { width: 225, height: 400 } }; // 四角形（9:16 縦長）
+      case 'imageChatAvatar':
+        return { shape: 'round' as const, aspect: 1, label: '円形', cropSize: { width: 400, height: 400 } }; // 円形
+      case 'gallery':
+      case 'galleryImage':
+        return { shape: 'rect' as const, aspect: 1, label: '正方形（ギャラリー）', cropSize: { width: 300, height: 300 } }; // ギャラリー画像用
+      default:
+        return { shape: 'rect' as const, aspect: 1, label: '正方形', cropSize: { width: 400, height: 400 } }; // デフォルト
+    }
+  };
+
+  const cropSettings = getCropSettings(imageType);
 
   const onCropCompleteHandler = useCallback(
     (croppedArea: Area, croppedAreaPixels: Area) => {
@@ -47,12 +69,15 @@ export default function ImageCropper({
       onClick={onCancel}
     >
       <div 
-        className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col"
+        className="bg-white rounded-lg max-w-5xl w-full max-h-[95vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">画像をトリミング</h3>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">画像をトリミング</h3>
+            <p className="text-sm text-gray-500 mt-1">形状: {cropSettings.label}</p>
+          </div>
           <div className="flex items-center space-x-2">
             <button
               onClick={handleRotate}
@@ -71,19 +96,20 @@ export default function ImageCropper({
         </div>
 
         {/* クロッパー */}
-        <div className="flex-1 relative min-h-96">
+        <div className="flex-1 relative min-h-96 h-96 md:h-[500px]">
           <Cropper
             image={imageSrc}
             crop={crop}
             zoom={zoom}
             rotation={rotation}
-            aspect={1} // 正方形にクロップ
+            aspect={cropSettings.aspect}
             onCropChange={setCrop}
             onCropComplete={onCropCompleteHandler}
             onZoomChange={setZoom}
             onRotationChange={setRotation}
-            cropShape="round" // 円形にクロップ
-            showGrid={false}
+            cropShape={cropSettings.shape}
+            showGrid={cropSettings.shape === 'rect'}
+            cropSize={cropSettings.cropSize}
             style={{
               containerStyle: {
                 background: 'transparent',

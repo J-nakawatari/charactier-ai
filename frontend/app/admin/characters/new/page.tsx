@@ -8,56 +8,21 @@ import { compressImage, isImageSizeValid, formatFileSize } from '@/utils/imageCo
 import ImageCropper from '@/components/admin/ImageCropper';
 import { ArrowLeft, Save, X, Upload } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
-
-// 調査したデータから取得した性格プリセット
-const PERSONALITY_PRESETS = [
-  { value: 'おっとり系', label: 'おっとり系', description: 'おっとりとしていて、ゆったりとした話し方をする' },
-  { value: '元気系', label: '元気系', description: '明るくて活発、エネルギッシュな性格' },
-  { value: 'クール系', label: 'クール系', description: 'クールで落ち着いている、知的な印象' },
-  { value: '真面目系', label: '真面目系', description: '真面目で責任感が強い、丁寧な性格' },
-  { value: 'セクシー系', label: 'セクシー系', description: '魅力的で大人の色気がある' },
-  { value: '天然系', label: '天然系', description: '天然でちょっと抜けているところがある' },
-  { value: 'ボーイッシュ系', label: 'ボーイッシュ系', description: 'ボーイッシュで活発、男の子っぽい性格' },
-  { value: 'お姉さん系', label: 'お姉さん系', description: '包容力があり、面倒見が良い大人の女性' }
-];
-
-// 調査したデータから取得した性格タグ
-const PERSONALITY_TAGS = [
-  { value: '明るい', label: '明るい', description: '明るく前向きな雰囲気を持っている' },
-  { value: 'よく笑う', label: 'よく笑う', description: 'よく笑い、楽しい雰囲気を作る' },
-  { value: '甘えん坊', label: '甘えん坊', description: '甘えるのが上手で、可愛らしい一面がある' },
-  { value: '積極的', label: '積極的', description: '積極的で行動力がある' },
-  { value: '大人っぽい', label: '大人っぽい', description: '大人っぽい落ち着きがある' },
-  { value: '静か', label: '静か', description: '静かで落ち着いている' },
-  { value: '天然', label: '天然', description: '天然で純粋な一面がある' },
-  { value: 'ボーイッシュ', label: 'ボーイッシュ', description: 'ボーイッシュで活発' },
-  { value: 'ポジティブ', label: 'ポジティブ', description: '常にポジティブで前向き' },
-  { value: 'やや毒舌', label: 'やや毒舌', description: 'ちょっと毒舌だが愛嬌がある' },
-  { value: '癒し系', label: '癒し系', description: '癒しの雰囲気を持っている' },
-  { value: '元気いっぱい', label: '元気いっぱい', description: 'エネルギッシュで元気いっぱい' },
-  { value: '知的', label: '知的', description: '知的で頭が良い' },
-  { value: '優しい', label: '優しい', description: '優しくて思いやりがある' },
-  { value: '人懐っこい', label: '人懐っこい', description: '人懐っこくて親しみやすい' }
-];
-
-// アクセスタイプ
-const ACCESS_TYPES = [
-  { value: 'free', label: 'ベースキャラ', description: 'トークン消費で利用可能' },
-  { value: 'purchaseOnly', label: 'プレミアムキャラ', description: '購入が必要なキャラクター' }
-];
+import { 
+  PERSONALITY_PRESETS, 
+  PERSONALITY_TAGS, 
+  ACCESS_TYPES,
+  GENDERS,
+  getLocalizedLabel,
+  getLocalizedDescription
+} from '@/constants/personality';
 
 // AIモデル（初期値、APIから動的取得）
 const DEFAULT_AI_MODELS = [
-  { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: '高速で経済的なモデル' },
-  { value: 'o4-mini', label: 'OpenAI o4-mini', description: '本番推奨モデル - 高品質・低コスト' }
+  { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: '開発・テスト用' },
+  { value: 'gpt-4o-mini', label: 'GPT-4o mini', description: '本番環境用 - 推奨' }
 ];
 
-// 性別
-const GENDERS = [
-  { value: 'female', label: '女性' },
-  { value: 'male', label: '男性' },
-  { value: 'neutral', label: '中性' }
-];
 
 
 export default function CharacterNewPage() {
@@ -73,8 +38,8 @@ export default function CharacterNewPage() {
   // フィールドエラーのスタイルを取得する関数
   const getFieldErrorClass = (fieldName: string) => {
     return fieldErrors[fieldName] 
-      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-      : 'border-gray-300 focus:border-gray-400';
+      ? 'border-red-300  focus:ring-red-500' 
+      : 'border-gray-300 ';
   };
 
   // エラーメッセージを表示する関数
@@ -93,7 +58,7 @@ export default function CharacterNewPage() {
   useEffect(() => {
     const fetchAvailableModels = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('adminAccessToken');
         const response = await fetch('/api/admin/models', {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -138,15 +103,13 @@ export default function CharacterNewPage() {
     occupation: '',
     
     // AI設定
-    model: 'o4-mini', // デフォルトを現在の推奨モデルに
+    model: 'gpt-4o-mini', // デフォルトを現在の推奨モデルに
     characterAccessType: 'free',
     stripePriceId: '',
     displayPrice: 0,
     
     // プロンプト・メッセージ
-    adminPrompt: { ja: '', en: '' },
     defaultMessage: { ja: '', en: '' },
-    limitMessage: { ja: '', en: '' },
     
     
     // 画像設定
@@ -216,15 +179,10 @@ export default function CharacterNewPage() {
         gender: formData.gender,
         characterAccessType: formData.characterAccessType,
         aiModel: formData.model,
-        personalityPrompt: formData.adminPrompt, // personalityPromptが必須なので使用
-        adminPrompt: formData.adminPrompt,
+        personalityPrompt: { ja: '', en: '' }, // 空のプロンプトを送信
         defaultMessage: {
           ja: formData.defaultMessage.ja || 'こんにちは！よろしくお願いします。',
           en: formData.defaultMessage.en || 'Hello! Nice to meet you!'
-        },
-        limitMessage: {
-          ja: formData.limitMessage.ja || '今日はたくさんお話ししましたね。また明日お話ししましょう！',
-          en: formData.limitMessage.en || 'We had a great conversation today! Let\'s talk again tomorrow!'
         },
         affinitySettings: {
           maxLevel: 100,
@@ -338,6 +296,14 @@ export default function CharacterNewPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, imageType: string, galleryIndex?: number) => {
     const file = e.target.files?.[0];
     if (file) {
+      // 🔍 デバッグ: 元ファイルの情報を確認
+      console.log('🔍 選択されたファイル:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified
+      });
+      
       if (file.size > 5 * 1024 * 1024) { // 5MB制限
         error('ファイルエラー', '画像ファイルは5MB以下にしてください');
         return;
@@ -351,6 +317,13 @@ export default function CharacterNewPage() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageSrc = e.target?.result as string;
+        console.log('🔍 FileReader結果:', {
+          type: typeof imageSrc,
+          starts: imageSrc.substring(0, 50) + '...',
+          length: imageSrc.length,
+          mimeFromDataUrl: imageSrc.split(';')[0]
+        });
+        
         setCropperImageSrc(imageSrc);
         setCurrentImageType(imageType);
         setCurrentGalleryIndex(galleryIndex ?? -1);
@@ -386,6 +359,18 @@ export default function CharacterNewPage() {
       const croppedFile = new File([croppedImage], `${currentImageType}.png`, {
         type: 'image/png',
       });
+
+      // 🔍 デバッグ: ファイル情報を確認
+      console.log('🔍 クロップ後のファイル情報:', {
+        name: croppedFile.name,
+        type: croppedFile.type,
+        size: croppedFile.size,
+        blobType: croppedImage.type
+      });
+      
+      // 🔍 デバッグ: 元の画像ソース確認
+      console.log('🔍 元の画像ソース:', cropperImageSrc.substring(0, 50) + '...');
+      console.log('🔍 クロップ領域:', croppedAreaPixels);
       
       if (currentImageType === 'gallery' && currentGalleryIndex >= 0) {
         // ギャラリー画像の場合
@@ -680,7 +665,7 @@ export default function CharacterNewPage() {
                     type="text"
                     value={formData.name.en}
                     onChange={(e) => setFormData({ ...formData, name: { ...formData.name, en: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                     placeholder="例: Luna, Miko, Rei"
                   />
                 </div>
@@ -692,7 +677,7 @@ export default function CharacterNewPage() {
                   <textarea
                     value={formData.description.ja}
                     onChange={(e) => setFormData({ ...formData, description: { ...formData.description, ja: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                     rows={3}
                     placeholder="キャラクターの説明を入力してください..."
                   />
@@ -705,7 +690,7 @@ export default function CharacterNewPage() {
                   <textarea
                     value={formData.description.en}
                     onChange={(e) => setFormData({ ...formData, description: { ...formData.description, en: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                     rows={3}
                     placeholder="Character description in English..."
                   />
@@ -718,11 +703,11 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.gender}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none  text-gray-900"
                   >
                     {GENDERS.map(gender => (
                       <option key={gender.value} value={gender.value} className="text-gray-900">
-                        {gender.label}
+                        {getLocalizedLabel(gender, 'ja')}
                       </option>
                     ))}
                   </select>
@@ -736,7 +721,7 @@ export default function CharacterNewPage() {
                     type="text"
                     value={formData.age}
                     onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                     placeholder="例: 18歳、20代前半"
                   />
                 </div>
@@ -749,7 +734,7 @@ export default function CharacterNewPage() {
                     type="text"
                     value={formData.occupation}
                     onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                     placeholder="例: 学生、OL、お嬢様"
                   />
                 </div>
@@ -773,7 +758,7 @@ export default function CharacterNewPage() {
                     <option value="" className="text-gray-500">プリセットを選択してください</option>
                     {PERSONALITY_PRESETS.map(preset => (
                       <option key={preset.value} value={preset.value} className="text-gray-900">
-                        {preset.label} - {preset.description}
+                        {getLocalizedLabel(preset, 'ja')} - {getLocalizedDescription(preset, 'ja')}
                       </option>
                     ))}
                   </select>
@@ -793,8 +778,8 @@ export default function CharacterNewPage() {
                           onChange={() => togglePersonalityTag(tag.value)}
                           className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                         />
-                        <span className="text-sm text-gray-700" title={tag.description}>
-                          {tag.label}
+                        <span className="text-sm text-gray-700" title={getLocalizedDescription(tag, 'ja')}>
+                          {getLocalizedLabel(tag, 'ja')}
                         </span>
                       </label>
                     ))}
@@ -818,7 +803,7 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.model}
                     onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none  text-gray-900"
                   >
                     {availableModels.map(model => (
                       <option key={model.value} value={model.value} className="text-gray-900">
@@ -836,11 +821,11 @@ export default function CharacterNewPage() {
                   <select
                     value={formData.characterAccessType}
                     onChange={(e) => setFormData({ ...formData, characterAccessType: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none  text-gray-900"
                   >
                     {ACCESS_TYPES.map(type => (
                       <option key={type.value} value={type.value} className="text-gray-900">
-                        {type.label} - {type.description}
+                        {getLocalizedLabel(type, 'ja')} - {getLocalizedDescription(type, 'ja')}
                       </option>
                     ))}
                   </select>
@@ -886,31 +871,6 @@ export default function CharacterNewPage() {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">プロンプト・メッセージ設定</h3>
               <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    管理者プロンプト（日本語）
-                  </label>
-                  <textarea
-                    value={formData.adminPrompt.ja}
-                    onChange={(e) => setFormData({ ...formData, adminPrompt: { ...formData.adminPrompt, ja: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
-                    rows={4}
-                    placeholder="例: あなたは明るく元気な女の子のルナです。いつも前向きで、相手を励ましたり元気づけたりするのが得意です。語尾に「だよ」「だね」を使い、親しみやすい口調で話してください。"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    管理者プロンプト（英語）
-                  </label>
-                  <textarea
-                    value={formData.adminPrompt.en}
-                    onChange={(e) => setFormData({ ...formData, adminPrompt: { ...formData.adminPrompt, en: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
-                    rows={4}
-                    placeholder="Example: You are Luna, a bright and energetic girl. You are always positive and good at encouraging and cheering up others. Use a friendly tone."
-                  />
-                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -920,24 +880,12 @@ export default function CharacterNewPage() {
                     <textarea
                       value={formData.defaultMessage.ja}
                       onChange={(e) => setFormData({ ...formData, defaultMessage: { ...formData.defaultMessage, ja: e.target.value } })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                       rows={3}
                       placeholder="例: こんにちは！私はルナだよ✨ 今日はどんなことをお話ししようかな？"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      制限メッセージ（日本語）
-                    </label>
-                    <textarea
-                      value={formData.limitMessage.ja}
-                      onChange={(e) => setFormData({ ...formData, limitMessage: { ...formData.limitMessage, ja: e.target.value } })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
-                      rows={3}
-                      placeholder="例: 今日はたくさんお話しできて楽しかったよ！また明日お話ししようね♪"
-                    />
-                  </div>
                 </div>
               </div>
             </div>
@@ -1011,7 +959,7 @@ export default function CharacterNewPage() {
                               type="text"
                               value={galleryItem?.title || ''}
                               onChange={(e) => updateGalleryInfo(index, 'title', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none "
                               placeholder="画像タイトル"
                             />
                           </div>
@@ -1020,7 +968,7 @@ export default function CharacterNewPage() {
                             <textarea
                               value={galleryItem?.description || ''}
                               onChange={(e) => updateGalleryInfo(index, 'description', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none "
                               rows={2}
                               placeholder="画像説明"
                             />
@@ -1111,6 +1059,7 @@ export default function CharacterNewPage() {
           onCropComplete={handleCropComplete}
           onCancel={handleCropCancel}
           onSave={handleCropSave}
+          imageType={currentImageType}
         />
       )}
     </div>

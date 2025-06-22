@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-// import { useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { ChatLayout } from '@/components/chat/ChatLayout';
 import { getAuthHeaders, getCurrentUser, isDevelopment } from '@/utils/auth';
-import { handleApiError } from '@/utils/errorHandler';
+import { handleApiError, formatViolationMessage, getSanctionSeverity } from '@/utils/errorHandler';
 import { useToast } from '@/contexts/ToastContext';
 import { validateMessageBeforeSend } from '@/utils/contentFilter';
 import { ChatPaginationService, PaginationState } from '@/utils/chatPagination';
@@ -28,6 +28,12 @@ interface ChatLayoutCharacter {
   imageChatBackground: string;
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
+  // 🤖 AIモデル情報
+  aiModel?: string;
+  model?: string;
+  // 💬 プロンプト情報
+  personalityPrompt?: string;
+  adminPrompt?: string;
 }
 
 interface ChatLayoutData {
@@ -39,11 +45,15 @@ interface ChatLayoutData {
 
 export default function ChatPage() {
   const params = useParams();
-  // const t = useTranslations('chat');
-  const { handleApiError: showApiError, success } = useToast();
+  const t = useTranslations('errors');
+  const tChat = useTranslations('chat');
+  const { handleApiError: showApiError, success, error: showError, warning: showWarning } = useToast();
   const [chatData, setChatData] = useState<ChatLayoutData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [tokenStatus, setTokenStatus] = useState<TokenStatus>({ tokensRemaining: 0, lastMessageCost: 0 });
+  const [affinity, setAffinity] = useState<UserCharacterAffinity>({ level: 0, currentExp: 0, nextLevelExp: 100, unlockedIllustrations: [] });
 
   const characterId = params.id as string;
   const locale = params.locale as string;
@@ -67,6 +77,7 @@ export default function ChatPage() {
         
         const apiData = await response.json();
         
+        
         // API レスポンスを ChatLayoutData 形式に変換
         const chatData: ChatLayoutData = {
           character: {
@@ -76,7 +87,13 @@ export default function ChatPage() {
             imageChatAvatar: apiData.character.imageChatAvatar || '/characters/luna.png',
             imageChatBackground: apiData.character.imageChatBackground || apiData.character.imageChatAvatar || '/characters/luna.png',
             currentMood: apiData.userState?.affinity?.mood || 'neutral', // 統一: affinityのmoodを使用
-            themeColor: apiData.character.themeColor || '#8B5CF6'
+            themeColor: apiData.character.themeColor || '#8B5CF6',
+            // 🤖 AIモデル情報を追加
+            aiModel: apiData.character.aiModel,
+            model: apiData.character.model,
+            // 💬 プロンプト情報を追加
+            personalityPrompt: getLocalizedString(apiData.character.personalityPrompt, locale),
+            adminPrompt: getLocalizedString(apiData.character.adminPrompt, locale)
           },
           affinity: {
             level: apiData.userState?.affinity?.level || 0,
@@ -87,7 +104,12 @@ export default function ChatPage() {
           },
           tokenStatus: {
             tokensRemaining: apiData.userState?.tokenBalance || 0,
-            lastMessageCost: 0 // 最後のメッセージコストは別途管理
+            lastMessageCost: (() => {
+              // 最新のAIメッセージからトークン消費数を取得
+              const messages = apiData.chat?.messages || [];
+              const lastAiMessage = [...messages].reverse().find((msg: any) => msg.role === 'assistant');
+              return lastAiMessage?.tokensUsed || 0;
+            })()
           },
           messages: (apiData.chat?.messages || []).map((msg: any) => ({
             id: msg._id,
@@ -99,6 +121,9 @@ export default function ChatPage() {
         };
         
         setChatData(chatData);
+        setMessages(chatData.messages);
+        setTokenStatus(chatData.tokenStatus);
+        setAffinity(chatData.affinity);
         return; // 実API成功時は早期リターン
         
       } catch (apiError) {
@@ -173,27 +198,31 @@ export default function ChatPage() {
         };
         
         setChatData(fallbackData);
+        setMessages(fallbackData.messages);
+        setTokenStatus(fallbackData.tokenStatus);
+        setAffinity(fallbackData.affinity);
       }
     } catch (err) {
       console.error('Chat data loading error:', err);
-      setError('チャットデータの読み込みに失敗しました');
+      setError(t('errors.chatLoadFailed'));
     } finally {
       setLoading(false);
     }
-  }, [characterId, locale]);
+  }, [characterId, locale, t]);
 
   const handleSendMessage = useCallback(async (message: string) => {
     if (!chatData) return;
 
     // フロントエンド側でメッセージバリデーション
     const validation = validateMessageBeforeSend(message);
-    if (!validation.canSend) {
-      showApiError({
-        code: 'CONTENT_VALIDATION_ERROR',
-        message: validation.errorMessage || 'メッセージに問題があります'
-      }, validation.errorMessage || 'メッセージの送信に失敗しました');
-      return;
-    }
+    // バックエンドの制裁システムをテストするため一時的に無効化
+    // if (!validation.canSend) {
+    //   showApiError({
+    //     code: 'CONTENT_VALIDATION_ERROR',
+    //     message: validation.errorMessage || 'メッセージに問題があります'
+    //   }, validation.errorMessage || 'メッセージの送信に失敗しました');
+    //   return;
+    // }
 
     // ユーザーメッセージを即座に表示
     const tempUserMessage: Message = {
@@ -205,10 +234,8 @@ export default function ChatPage() {
 
     try {
 
-      setChatData(prev => prev ? {
-        ...prev,
-        messages: [...prev.messages, tempUserMessage]
-      } : null);
+      // メッセージだけを更新（他のプロパティは更新しない）
+      setMessages(prev => [...prev, tempUserMessage]);
 
       // API呼び出し
       const response = await fetch(`/api/chats/${characterId}/messages`, {
@@ -222,6 +249,18 @@ export default function ChatPage() {
 
       if (!response.ok) {
         const apiError = await handleApiError(response);
+        
+        // トークン不足エラーの場合は購入モーダルを表示
+        if (apiError.code === 'INSUFFICIENT_TOKENS' || response.status === 402) {
+          // トークン購入モーダルを表示するイベントを発火
+          const tokenPurchaseEvent = new CustomEvent('showTokenPurchaseModal', {
+            detail: { reason: 'insufficient_tokens' }
+          });
+          window.dispatchEvent(tokenPurchaseEvent);
+          // トークン不足の場合はトーストを表示しない
+          return;
+        }
+        
         throw apiError;
       }
 
@@ -245,41 +284,77 @@ export default function ChatPage() {
           tokens: responseData.aiResponse.tokensUsed
         };
         
-        setChatData(prev => prev ? {
+        // 各状態を個別に更新
+        setMessages(prev => [
+          ...prev.filter(m => m.id !== tempUserMessage.id),
+          newUserMessage,
+          newAiMessage
+        ]);
+        
+        setTokenStatus(prev => ({
           ...prev,
-          messages: [
-            ...prev.messages.filter(m => m.id !== tempUserMessage.id),
-            newUserMessage,
-            newAiMessage
-          ],
-          tokenStatus: {
-            ...prev.tokenStatus,
-            tokensRemaining: responseData.tokenBalance || prev.tokenStatus.tokensRemaining,
-            lastMessageCost: responseData.aiResponse.tokensUsed || 0
-          },
-          affinity: {
-            ...prev.affinity,
-            level: responseData.affinity?.level || prev.affinity.level,
-            currentExp: responseData.affinity?.increase 
-              ? prev.affinity.currentExp + responseData.affinity.increase 
-              : prev.affinity.currentExp
-          }
-        } : null);
+          tokensRemaining: responseData.tokenBalance || prev.tokensRemaining,
+          lastMessageCost: responseData.aiResponse.tokensUsed || 0
+        }));
+        
+        setAffinity(prev => ({
+          ...prev,
+          level: responseData.affinity?.level || prev.level,
+          currentExp: responseData.affinity?.increase 
+            ? prev.currentExp + responseData.affinity.increase 
+            : prev.currentExp
+        }));
+
+        // レベルアップ情報の処理
+        if (responseData.levelUp) {
+          // レベルアップポップアップの表示トリガーをChatLayoutに送信するためのイベントを発火
+          const levelUpEvent = new CustomEvent('levelUp', {
+            detail: {
+              level: responseData.levelUp.newLevel,
+              illustration: responseData.levelUp.unlockReward,
+              characterName: chatData?.character.name || 'キャラクター'
+            }
+          });
+          window.dispatchEvent(levelUpEvent);
+        }
       }
 
     } catch (error) {
       
-      setChatData(prev => prev ? {
-        ...prev,
-        messages: prev.messages.filter(m => m.id !== tempUserMessage.id)
-      } : null);
+      // エラー時は一時メッセージを削除
+      setMessages(prev => prev.filter(m => m.id !== tempUserMessage.id));
 
       
       if (typeof error === 'object' && error !== null && 'code' in error) {
         const apiError = error as any;
-        // 禁止用語エラーの場合は専用メッセージを表示
+        
+        // トークン不足エラーは既にモーダル表示されるのでスキップ
+        if (apiError.code === 'INSUFFICIENT_TOKENS') {
+          return;
+        }
+        
+        // 禁止用語エラーの場合は制裁情報を含む専用メッセージを表示
         if (apiError.code === 'CONTENT_VIOLATION') {
-          showApiError(apiError, apiError.message || 'メッセージが利用規約に違反しています');
+          const violationMessage = formatViolationMessage(apiError);
+          const severity = getSanctionSeverity(apiError);
+          
+          
+          // 制裁レベルに応じてトーストの種類を変更
+          if (severity === 'critical') {
+            showError('重大な違反', violationMessage);
+          } else if (severity === 'high') {
+            showWarning('警告', violationMessage);
+          } else {
+            showApiError(apiError, violationMessage);
+          }
+          
+          // チャット停止またはアカウント停止の場合は追加の処理
+          if (apiError.sanctionAction === 'chat_suspension' || 
+              apiError.sanctionAction === 'account_suspension' || 
+              apiError.sanctionAction === 'ban') {
+            // チャット機能を無効化するロジックを後で実装
+            console.log('Chat suspended due to violation:', apiError);
+          }
         } else {
           showApiError(apiError, 'メッセージの送信に失敗しました');
         }
@@ -290,7 +365,7 @@ export default function ChatPage() {
         }, 'メッセージの送信に失敗しました');
       }
     }
-  }, [chatData?.character?._id, characterId, showApiError]); // chatDataの特定フィールドのみを依存関係にして適切な更新を実現
+  }, [chatData, showError, showWarning, showApiError, characterId]);
 
   useEffect(() => {
     loadChatData();
@@ -298,7 +373,7 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-dvh">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
       </div>
     );
@@ -306,16 +381,16 @@ export default function ChatPage() {
 
   if (error || !chatData) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-dvh">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            {error || 'チャットデータが見つかりません'}
+            {error || t('notFound')}
           </h2>
           <button 
             onClick={loadChatData}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
-            再試行
+            {tChat('retry')}
           </button>
         </div>
       </div>
@@ -327,9 +402,9 @@ export default function ChatPage() {
   return (
     <ChatLayout
       character={chatData.character}
-      affinity={chatData.affinity}
-      tokenStatus={chatData.tokenStatus}
-      messages={chatData.messages}
+      affinity={affinity}
+      tokenStatus={tokenStatus}
+      messages={messages}
       onSendMessage={handleSendMessage}
       onTokenPurchaseSuccess={loadChatData}
     />

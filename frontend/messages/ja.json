@@ -7,7 +7,8 @@
       "placeholder": "キャラクター名や性格で検索...",
       "notFound": "キャラクターが見つかりません",
       "notFoundDesc": "検索条件を変更してもう一度お試しください",
-      "resetFilters": "フィルターをリセット"
+      "resetFilters": "フィルターをリセット",
+      "activeFilter": "検索: {keyword}"
     },
     "filters": {
       "all": "全て表示",
@@ -24,9 +25,11 @@
     },
     "actions": {
       "unlock": "アンロック",
+      "unlockWith": "でアンロック",
       "startChat": "チャット開始",
       "needTokens": "トークチケットが必要",
-      "viewAll": "全部見る"
+      "viewAll": "全部見る",
+      "purchase": "購入する"
     },
     "characterTypes": {
       "free": "ベースキャラ",
@@ -35,7 +38,21 @@
     },
     "loading": "キャラクター一覧を読み込み中...",
     "loadError": "読み込みエラー",
-    "retry": "再試行"
+    "retry": "再試行",
+    "errors": {
+      "loadFailed": "キャラクター一覧の取得に失敗しました",
+      "userInfoFailed": "ユーザー情報取得エラー",
+      "loginRequired": "ログインが必要です",
+      "checkoutFailed": "チェックアウトURLが取得できませんでした",
+      "purchaseError": "キャラクター購入中にエラーが発生しました"
+    },
+    "welcome": {
+      "title": "🎉 ご登録ありがとうございます！",
+      "subtitle": "10,000トークンをプレゼント！",
+      "description": "新しいAIの世界へようこそ！あなただけの特別なキャラクターたちとの会話を始めましょう。初回登録特典として、10,000トークンをプレゼントいたします。",
+      "startButton": "さっそくチャットしてみる！",
+      "tokensGranted": "トークチケットは自動で付与されました"
+    }
   },
   "common": {
     "reset": "リセット",
@@ -69,7 +86,9 @@
       "en": "English"
     },
     "terms": "登録することで、",
-    "termsLink": "利用規約とプライバシーポリシー",
+    "termsOfService": "利用規約",
+    "privacyPolicy": "プライバシーポリシー",
+    "and": "と",
     "termsAccept": "に同意したものとみなします。",
     "registerButton": "利用規約に同意して登録する",
     "hasAccount": "すでにアカウントをお持ちの方は",
@@ -83,11 +102,55 @@
   },
   "library": {
     "title": "キャラクターライブラリ",
-    "subtitle": "親密度レベルに応じて解放される特別な画像をお楽しみください",
-    "noImages": "まだ解放された画像がありません",
-    "unlockedAt": "親密度レベル {level} で解放",
-    "loading": "読み込み中...",
-    "error": "データの読み込みに失敗しました"
+    "subtitle": "親密度で解放した思い出の画像コレクション",
+    "loading": "ライブラリを読み込み中...",
+    "character": {
+      "selectLabel": "キャラクター選択",
+      "selectPlaceholder": "キャラクターを選択",
+      "level": "レベル {level}",
+      "unlockedCount": "解放済み: {count}枚"
+    },
+    "search": {
+      "placeholder": "画像を検索...",
+      "noResults": "検索結果がありません"
+    },
+    "view": {
+      "grid": "グリッド",
+      "list": "リスト"
+    },
+    "unlocked": {
+      "title": "解放済みの思い出",
+      "subtitle": "{count}枚の画像が解放されています",
+      "empty": {
+        "title": "まだ解放された画像がありません",
+        "description": "親密度を上げて新しい思い出を解放しましょう"
+      },
+      "imageTitle": "レベル{level}解放画像",
+      "imageDescription": "親密度解放画像です"
+    },
+    "locked": {
+      "title": "未解放の思い出",
+      "subtitle": "親密度を上げると解放される{count}枚の画像",
+      "hoverMessage": "親密度を上げて解放！",
+      "unlockLevel": "レベル{level}で解放",
+      "imageTitle": "未解放の思い出",
+      "lockedImageTitle": "レベル{level}解放画像"
+    },
+    "rarity": {
+      "common": "コモン",
+      "rare": "レア",
+      "epic": "エピック",
+      "legendary": "レジェンダリー"
+    },
+    "modal": {
+      "imageTitle": "思い出の画像",
+      "imageDescription": "親密度解放画像です",
+      "altText": "Selected image"
+    },
+    "noCharacter": {
+      "title": "キャラクターを選択してください",
+      "description": "上記のドロップダウンから思い出を見たいキャラクターを選択してください"
+    }
   },
   "sidebar": {
     "home": "ホーム",
@@ -101,8 +164,142 @@
     "appDescription": "AIキャラクターチャット",
     "user": "ユーザー",
     "tokenBalance": "トークチケット: {count, number}",
+    "termsModal": {
+      "title": "利用規約",
+      "lastUpdated": "最終更新日: 2025年1月1日",
+      "close": "閉じる",
+      "introduction": "本利用規約（以下「本規約」）は、Charactier（以下「当サービス」）が提供する\nすべての機能の利用条件を定めるものです。ユーザーは本規約に同意のうえ\n当サービスを利用するものとします。",
+      "article1": {
+        "title": "第1条（定義）",
+        "content1": "1. 「トークチケット」とは、キャラクターとのチャット送信に必要なデジタルポイントをいいます。",
+        "content2": "2. 「プレミアムキャラクター」とは、別途代金を支払うことで解放されるキャラクターをいいます。"
+      },
+      "article2": {
+        "title": "第2条（アカウント）",
+        "item1": "登録時は最新かつ正確な情報を入力してください。",
+        "item2": "同一人物による複数アカウントの作成は禁止します。"
+      },
+      "article3": {
+        "title": "第3条（禁止事項）",
+        "item1": "法令・公序良俗に反する行為",
+        "item2": "第三者の権利を侵害する行為",
+        "item3": "生成 AI の応答内容を無断で転載・商用利用する行為",
+        "item4": "リバースエンジニアリング・スクレイピング等の不正アクセス行為"
+      },
+      "article4": {
+        "title": "第4条（トークチケット）",
+        "item1": "ユーザーは Stripe 決済によりトークチケットを購入できます。",
+        "item2": "トークチケットは譲渡・換金・返金できません。",
+        "item3": "トークチケット残高は前払式支払手段（資金決済法）に準拠し管理します。"
+      },
+      "article5": {
+        "title": "第5条（プレミアムキャラクター）",
+        "item1": "ユーザーが定められた代金を支払うことでプレミアムキャラクターを解放できます。",
+        "item2": "解放後は追加料金なくトークチケットを消費して会話可能です。",
+        "item3": "解放権は譲渡・換金・返金できません。"
+      },
+      "article6": {
+        "title": "第6条（生成 AI コンテンツの性質）",
+        "item1": "当サービスの応答は生成 AI により自動生成されるものであり、その正確性・合法性・有用性を保証しません。",
+        "item2": "AI 応答に起因するいかなる損害・トラブル・事件性についても、当サービスは一切の責任を負わないものとします。",
+        "item3": "ユーザーは自己の判断と責任において AI 応答を利用してください。"
+      },
+      "article7": {
+        "title": "第7条（料金・返金）",
+        "item1": "支払方法はクレジットカード決済（Stripe）とします。",
+        "item2": "デジタル商品の特性上、購入済みのトークチケットおよびプレミアムキャラクターの代金は、いかなる理由でも返金いたしません。",
+        "item3": "月額プランが導入された場合、ユーザーは更新日前までにマイページで解約手続きを行うものとします。"
+      },
+      "article8": {
+        "title": "第8条（免責・損害賠償）",
+        "item1": "当サービスは天災・ネットワーク障害その他不可抗力によりサービスを提供できない場合、一切の責任を負いません。",
+        "item2": "当サービスの過失が軽微な場合、当サービスは利用に起因または関連してユーザーが被った損害について責任を負いません。",
+        "item3": "当サービスが責任を負う場合でも、賠償額は当該ユーザーが過去 12 か月に当サービスへ支払った総額を上限とします。"
+      },
+      "article9": {
+        "title": "第9条（本規約の変更）",
+        "content": "当サービスは必要に応じて本規約を変更できます。\n変更後の規約は、本ページに掲示した時点で効力を生じます。"
+      },
+      "article10": {
+        "title": "第10条（準拠法・合意管轄）",
+        "content": "本規約は日本法を準拠法とし、本サービスに関して紛争が生じた場合、\n東京地方裁判所を第一審の専属的合意管轄裁判所とします。"
+      }
+    },
+    "privacyModal": {
+      "title": "プライバシーポリシー",
+      "lastUpdated": "最終改定日：2025-07-01",
+      "close": "閉じる",
+      "introduction": "Charactier（以下「当サービス」）は、ユーザーの個人情報を適切に取り扱うため、\n以下のプライバシーポリシー（以下「本ポリシー」）を定めます。",
+      "section1": {
+        "title": "1. 取得する情報",
+        "item1": "氏名・ニックネーム、メールアドレス",
+        "item2": "決済情報（Stripeを通じて取得。カード番号は当サービスに保存しません）",
+        "item3": "Cookie・端末識別子・アクセスログ",
+        "item4": "チャット内容および生成 AI への入力プロンプト"
+      },
+      "section2": {
+        "title": "2. 利用目的",
+        "item1": "キャラクターとのチャット提供、トークチケット残高管理",
+        "item2": "料金請求・決済処理",
+        "item3": "利用状況の分析によるサービス改善",
+        "item4": "法令・利用規約違反への対応"
+      },
+      "section3": {
+        "title": "3. 外部送信・Cookie 等の取扱い",
+        "description": "当サービスは利便性向上および利用状況の解析のため、\nCookie や類似技術を用いて第三者サービスへ情報を送信します。\nブラウザ設定で Cookie を無効にすると、一部機能が利用できない場合があります。",
+        "tableHeaders": {
+          "destination": "送信先",
+          "information": "送信される情報",
+          "purpose": "利用目的"
+        },
+        "services": {
+          "ga4": {
+            "name": "Google Analytics 4",
+            "info": "Cookie（_ga など）、IPアドレス、閲覧ページURL",
+            "purpose": "アクセス解析"
+          },
+          "stripe": {
+            "name": "Stripe",
+            "info": "決済金額、メールアドレス、決済トークン等",
+            "purpose": "クレジットカード決済処理"
+          },
+          "cloudflare": {
+            "name": "Cloudflare",
+            "info": "IPアドレス、User-Agent 等",
+            "purpose": "サイト保護・パフォーマンス最適化"
+          }
+        },
+        "optOut": {
+          "title": "オプトアウト方法",
+          "description": "GA4 の計測は Google Analytics オプトアウトアドオン を\n利用することで無効化できます。その他 Cookie はブラウザ設定で削除／拒否が可能です。"
+        }
+      },
+      "section4": {
+        "title": "4. 第三者提供",
+        "description": "取得した個人情報は次の場合を除き第三者に提供しません。",
+        "item1": "ユーザーの同意がある場合",
+        "item2": "法令に基づく場合",
+        "item3": "決済業務委託のため Stripe へ提供する場合"
+      },
+      "section5": {
+        "title": "5. 個人情報の安全管理",
+        "item1": "通信は TLS により暗号化",
+        "item2": "重要データはアクセス権限を最小限にした環境で管理",
+        "item3": "社内ポリシーに基づくログ監査を実施"
+      },
+      "section6": {
+        "title": "6. 開示・訂正・削除の請求",
+        "content": "ユーザーは個人情報保護法に基づき、自己の個人情報の開示等を請求できます。",
+        "contactForm": "お問い合わせフォーム："
+      },
+      "section7": {
+        "title": "7. 改定",
+        "content": "法令変更やサービス内容の変更に応じ、本ポリシーを改定することがあります。\n最新の内容は本ページで公表します。"
+      }
+    },
     "menu": "メニュー",
     "account": "アカウント",
+    "preferences": "設定",
     "logout": "ログアウト"
   },
   "chat": {
@@ -111,13 +308,16 @@
     "retry": "再試行",
     "notFound": "チャットが見つかりません",
     "sendMessage": "メッセージを送信",
-    "placeholder": "メッセージを入力..."
+    "placeholder": "メッセージを入力...",
+    "startConversation": "{characterName}との会話を始めよう",
+    "loadingPastMessages": "過去のメッセージを読み込み中...",
+    "scrollToTop": "トップにスクロール"
   },
   "homepage": {
     "title": "キャラクティア",
     "mainTitle": "Charactier",
     "tagline": "会いにきて...あなただけの愛(AI)。",
-    "description": "Charactier（キャラクティア）は、あなた専用のAIキャラクターと、\n毎日話したり気持ちを共有できる体験です。",
+    "description": "Charactier（キャラクティア）は、あなた好みのAIキャラーと\n気持ちを共有しながら過ごす新しいコミュニケーション体験です。",
     "subDescription": "親密度によってキャラのセリフが少しずつ変化。親密度が高まっていく...",
     "loginButton": "ログイン",
     "newUserPromo": "新規登録",
@@ -142,7 +342,8 @@
     "welcome": "今日も素敵な一日をお過ごしください！",
     "loading": "読み込み中...",
     "error": "データの取得に失敗しました",
-    "retry": "再試行"
+    "retry": "再試行",
+    "defaultUser": "ユーザー"
   },
   "purchaseHistory": {
     "title": "購入履歴",
@@ -180,7 +381,7 @@
     },
     "status": {
       "completed": "完了",
-      "pending": "処理中",
+      "pending": "処理中", 
       "failed": "失敗",
       "refunded": "返金済み"
     },
@@ -192,35 +393,442 @@
     },
     "types": {
       "token": "{amount}トークン",
-      "character": "1キャラクター",
-      "subscription": "サブスクリプション"
+      "character": "1キャラクター", 
+      "subscription": "サブスクリプション",
+      "tokenUnit": "トークン",
+      "characterUnit": "キャラクター"
+    },
+    "purchaseTypes": {
+      "tokenPurchase": "トークン購入",
+      "characterPurchase": "キャラクター購入",
+      "subscriptionPurchase": "サブスクリプション購入"
     },
     "empty": {
       "title": "購入履歴がありません",
       "description": "まだ購入が行われていません。"
     }
   },
+  "moods": {
+    "happy": "嬉しい",
+    "sad": "悲しい",
+    "angry": "怒っている",
+    "excited": "わくわく",
+    "melancholic": "憂鬱",
+    "shy": "恥ずかしがり",
+    "neutral": "普通",
+    "unknown": "不明"
+  },
+  "settings": {
+    "title": "設定",
+    "subtitle": "アカウント情報とセキュリティ設定を管理します",
+    "profile": {
+      "title": "プロフィール情報",
+      "username": "ユーザー名",
+      "email": "メールアドレス",
+      "edit": "プロフィールを編集",
+      "save": "プロフィールを保存",
+      "cancel": "キャンセル"
+    },
+    "security": {
+      "title": "パスワード変更",
+      "changePassword": "パスワード変更",
+      "currentPassword": "現在のパスワード",
+      "newPassword": "新しいパスワード",
+      "confirmPassword": "新しいパスワード（確認）",
+      "savePassword": "パスワードを変更"
+    },
+    "account": {
+      "title": "アカウント設定",
+      "deleteAccount": "アカウント削除",
+      "dangerZone": "危険エリア",
+      "deleteWarning": "アカウントを削除すると、全てのデータが永久に失われます。この操作は取り消せません。",
+      "deleteDescription": "アカウントを削除すると、全てのデータが失われ、復元することはできません。",
+      "deletePasswordConfirmation": "アカウント削除を確認するため、パスワードを入力してください。",
+      "deleteConfirmation": "アカウント削除を確認するため、下のテキストボックスに「退会する」と入力してください。",
+      "deleteButton": "アカウントを削除",
+      "deleteInput": "退会する",
+      "deleteModal": {
+        "title": "本当にアカウントを削除しますか？",
+        "description": "以下の内容をよくお読みになり、理解した上で削除を実行してください。",
+        "consequence1": "所持しているトークチケットは全て失われます",
+        "consequence2": "キャラクターとの会話履歴や親密度は全て削除されます",
+        "consequence3": "削除されたアカウントは二度と復元することはできません",
+        "warning": "⚠️ この操作は取り消すことができません。アカウントを削除すると、全てのデータが永久に失われます。",
+        "confirmText": "上記の内容を理解し、アカウントを削除することに同意します",
+        "deleteButton": "アカウントを完全に削除",
+        "cancelButton": "キャンセル"
+      }
+    },
+    "language": {
+      "title": "言語設定",
+      "currentLanguage": "現在の言語",
+      "selectLanguage": "言語を選択",
+      "japanese": "日本語",
+      "english": "English",
+      "saveLanguage": "言語設定を保存",
+      "languageChanged": "言語設定を変更しました"
+    },
+    "errors": {
+      "updateFailed": "更新に失敗しました",
+      "passwordMismatch": "パスワードが一致しません",
+      "passwordTooShort": "パスワードは8文字以上で入力してください",
+      "required": "必須項目です",
+      "usernamePlaceholder": "ユーザー名を入力",
+      "emailPlaceholder": "メールアドレスを入力",
+      "usernameRequired": "ユーザー名を入力してください",
+      "emailRequired": "有効なメールアドレスを入力してください",
+      "currentPasswordRequired": "現在のパスワードを入力してください",
+      "newPasswordTooShort": "新しいパスワードは8文字以上で入力してください",
+      "newPasswordMismatch": "新しいパスワードが一致しません",
+      "confirmTextIncorrect": "確認テキストが正しくありません",
+      "passwordRequired": "パスワードを入力してください",
+      "incorrectPassword": "パスワードが正しくありません",
+      "userDataFetchFailed": "ユーザー情報の取得に失敗しました",
+      "profileUpdateFailed": "プロフィールの更新に失敗しました",
+      "passwordChangeFailed": "パスワードの変更に失敗しました",
+      "accountDeleteFailed": "アカウントの削除に失敗しました"
+    },
+    "success": {
+      "profileUpdated": "プロフィールを更新しました",
+      "passwordChanged": "パスワードを変更しました",
+      "accountDeleted": "アカウントを削除しました"
+    },
+    "placeholders": {
+      "username": "ユーザー名を入力",
+      "email": "メールアドレスを入力",
+      "currentPassword": "現在のパスワード",
+      "newPassword": "新しいパスワード（8文字以上）",
+      "confirmPassword": "新しいパスワード（確認）",
+      "deleteInput": "退会する",
+      "password": "パスワード"
+    },
+    "labels": {
+      "changePassword": "パスワード変更",
+      "currentPassword": "現在のパスワード",
+      "newPassword": "新しいパスワード",
+      "confirmPassword": "新しいパスワード（確認）",
+      "deleteAccount": "アカウント削除"
+    },
+    "buttons": {
+      "saving": "保存中...",
+      "changing": "変更中...",
+      "deleting": "削除中..."
+    },
+    "noData": {
+      "username": "ユーザー名が設定されていません",
+      "email": "メールアドレスが設定されていません"
+    },
+    "confirmDialog": {
+      "deleteAccount": "本当にアカウントを削除しますか？この操作は取り消せません。"
+    }
+  },
+  "setup": {
+    "greeting": "はじめまして",
+    "namePrompt": "あなたのお名前を教えてください",
+    "nameLabel": "お名前",
+    "namePlaceholder": "例：太郎",
+    "next": "次へ",
+    "startChat": "チャットを始める",
+    "characterSelection": "好きなキャラクターを選択してください",
+    "settingUp": "セットアップ中...",
+    "errors": {
+      "nameRequired": "お名前を入力してください",
+      "characterRequired": "キャラクターを選択してください",
+      "charactersFetchFailed": "キャラクター情報の取得に失敗しました",
+      "setupFailed": "セットアップに失敗しました",
+      "setupFailedRetry": "セットアップに失敗しました。もう一度お試しください。"
+    }
+  },
+  "chatLayout": {
+    "advancedOn": "高度表示オン",
+    "advancedOff": "高度表示オフ",
+    "tokens": "枚",
+    "shiftEnterHint": "Shift+エンターで改行できます",
+    "messagePlaceholder": "{characterName}にメッセージを送る...",
+    "cost": "約{cost}枚"
+  },
+  "errors": {
+    "loadFailed": "データの読み込みに失敗しました",
+    "chatLoadFailed": "チャットデータの読み込みに失敗しました",
+    "notFound": "データが見つかりません",
+    "loginInProgress": "ログイン中...",
+    "registrationFailed": "登録に失敗しました",
+    "networkError": "ネットワークエラーが発生しました"
+  },
+  "affinity": {
+    "title": "親密度",
+    "expNeeded": "あと{needed}EXP",
+    "levelUp": "Lv.{level}",
+    "levelUpNotification": "UP!",
+    "levelUpTitle": "レベルアップ！",
+    "unlockedImages": "解放済み: {count}枚",
+    "newImagesAvailable": "新しい画像が利用可能！",
+    "unlocksAt": "Lv.{level}で解放",
+    "newImageUnlocked": "新しい画像がアンロックされました！",
+    "newImageUnlockedTitle": "新しいイラストが解放されました！",
+    "viewImages": "画像を確認する",
+    "continueChat": "会話を続ける",
+    "galleryView": "ギャラリーで確認する",
+    "improvesByChat": "キャラクターとの会話で親密度がアップします",
+    "learnMore": "親密度について詳しく見る",
+    "specialRewardSoon": "特典解放まであと少し！",
+    "intimacy": "親密度",
+    "currentLevel": "現在のレベル: {level}",
+    "unlockedCount": "解放済み: {count}枚",
+    "lockedCount": "未解放: {count}枚",
+    "loading": "画像を読み込み中...",
+    "unlockedSection": "解放済み画像",
+    "lockedSection": "未解放画像",
+    "experienceProgress": "EXP: {current} / {max}",
+    "experienceToNext": "次のレベルまで: {exp}EXP",
+    "systemTitle": "親密度システムについて",
+    "levelRewards": "レベル特典",
+    "encourageChat": "キャラクターとたくさん話して親密度を上げましょう！",
+    "unlockByLevel": "親密度を上げて新しい画像を解放しましょう！",
+    "characterAffinityImage": "{characterName} の親密度画像",
+    "ranks": {
+      "acquaintance": "知り合い",
+      "friend": "友達",
+      "closeFriend": "親友",
+      "expert": "エキスパート",
+      "master": "マスター"
+    },
+    "intimacyWithRank": "親密度（{rank}）",
+    "modalTitle": "親密度詳細",
+    "modalSubtitle": "キャラクターとの関係性を詳しく確認",
+    "expGainMethods": "経験値の獲得方法",
+    "expGainMessage": "メッセージ送信: +10 EXP",
+    "expGainLongChat": "長い会話: +20 EXP",
+    "expGainDaily": "連続ログイン: +5 EXP",
+    "expGainEvent": "特別イベント: +50 EXP",
+    "rewardLv20": "Lv.20毎: 新しい話題追加",
+    "rewardLv50": "Lv.50毎: 限定コンテンツ",
+    "rewardLv100": "Lv.100: 専用エンディング"
+  },
+  "tokens": {
+    "balance": "トークン残高",
+    "unit": "枚",
+    "remainingMessages": "（あと約{count}メッセージ）",
+    "noTokensLeft": "（トークンがありません）",
+    "purchase": "トークチケット購入",
+    "loading": "読み込み中...",
+    "consumed": "消費: {amount}枚",
+    "lowBalanceWarning": "残量警告",
+    "totalPurchased": "総購入数",
+    "used": "使用済み",
+    "dailyAverage": "日平均使用量",
+    "estimatedDaysLeft": "予想残り日数",
+    "aboutDays": "約{days}日",
+    "lowBalanceTitle": "トークン残量が少ってくださいいます",
+    "lowBalanceDesc": "継続してチャットを楽しむために、トークンの補充をお忘れなく！",
+    "refill": "トークンを補充する",
+    "buy": "トークンを購入",
+    "remaining": "残量",
+    "tokenUnit": "枚"
+  },
+  "general": {
+    "logout": "ログアウト",
+    "logoutConfirm": "ログアウトしますか？",
+    "viewAll": "すべて見る",
+    "markAllRead": "すべて既読",
+    "read": "既読",
+    "unread": "未読",
+    "close": "閉じる",
+    "ago": "前",
+    "minutes": "分",
+    "hours": "時間", 
+    "days": "日",
+    "items": "件",
+    "times": "回",
+    "unit": {
+      "times": "回"
+    }
+  },
+  "badges": {
+    "title": "バッジコレクション",
+    "acquired": "獲得済み",
+    "achievementRate": "達成率",
+    "progress": "進捗",
+    "all": "すべて",
+    "unlocked": "獲得済み",
+    "locked": "未獲得",
+    "preparing": "バッジシステムを準備中です...",
+    "noAcquired": "獲得済みのバッジがありません",
+    "allCompleted": "すべてのバッジを獲得済みです！",
+    "noBadges": "バッジがありません",
+    "encouragement": "アクティビティを通じて新しいバッジを獲得しよう！",
+    "learnMore": "バッジについて詳しく見る",
+    "badgeDetail": "バッジ詳細",
+    "description": "説明",
+    "acquiredDate": "獲得日時:",
+    "acquireCondition": "獲得条件",
+    "completed": "% 完了",
+    "autoAcquire": "条件を満たすと自動的に獲得されます",
+    "hint": "達成のヒント",
+    "categories": {
+      "beginner": "初心者向け",
+      "chat": "チャット系",
+      "affinity": "親密度系",
+      "general": "一般"
+    },
+    "hints": {
+      "startChat": "キャラクターとの初回チャットから始めましょう",
+      "continueChat": "毎日コツコツとチャットを続けることが大切です",
+      "buildAffinity": "親密度を上げるには時間をかけてキャラクターと交流しましょう",
+      "general": "様々なアクティビティに参加してみてください"
+    },
+    "modalTitle": "バッジシステムについて",
+    "modalSubtitle": "活動や達成を記録する称号システム",
+    "whatIsBadge": "バッジシステムとは？",
+    "badgeDescription": "バッジは、Charactierでのあなたの活動や達成を記録する特別な称号です。キャラクターとの会話、親密度の向上、サービスの利用を通じて様々なバッジを獲得できます。",
+    "badgeTypes": "バッジの種類",
+    "beginnerBadgeTitle": "初心者向けバッジ",
+    "beginnerBadgeDesc": "サービスを始めたばかりの方向けのバッジです。基本的な機能の利用や初回のアクションで獲得できます。",
+    "chatBadgeTitle": "チャット系バッジ",
+    "chatBadgeDesc": "キャラクターとの会話に関連するバッジです。メッセージ数や会話の継続日数などで獲得できます。",
+    "affinityBadgeTitle": "親密度系バッジ",
+    "affinityBadgeDesc": "キャラクターとの親密度向上に関するバッジです。特定のレベル到達や複数キャラクターとの関係構築で獲得できます。",
+    "specialBadgeTitle": "特別バッジ",
+    "specialBadgeDesc": "特定の条件や期間限定イベントで獲得できる特別なバッジです。希少価値の高いバッジも含まれます。",
+    "howToAcquire": "バッジの獲得方法",
+    "autoAcquireTitle": "自動獲得",
+    "autoAcquireDesc": "条件を満たすと自動的にバッジが獲得されます。獲得時には通知でお知らせします。",
+    "progressTrackTitle": "進捗追跡",
+    "progressTrackDesc": "未獲得のバッジでは進捗状況を確認できます。どのくらい達成に近づいているかが分かります。",
+    "rewardTitle": "特典",
+    "rewardDesc": "一部のバッジには特別な特典が付いている場合があります。（今後実装予定）",
+    "tipsTitle": "バッジ獲得のコツ",
+    "tip1": "毎日キャラクターと会話を続けることで、継続関連のバッジを獲得できます",
+    "tip2": "複数のキャラクターと交流することで、幅広いバッジを獲得できます",
+    "tip3": "親密度を計画的に上げることで、親密度関連のバッジを効率よく獲得できます",
+    "tip4": "プロフィール設定やサービス機能の活用でも初心者バッジを獲得できます",
+    "noticeTitle": "ご注意",
+    "notice1": "バッジは一度獲得すると削除されることはありません",
+    "notice2": "一部のバッジは期間限定で獲得可能な場合があります",
+    "notice3": "バッジの条件や種類は今後のアップデートで追加される可能性があります"
+  },
+  "notifications": {
+    "title": "お知らせ",
+    "loading": "お知らせを読み込み中...",
+    "unreadCount": "件未読",
+    "important": "重要",
+    "viewAll": "すべてのお知らせを表示 ({count}件)"
+  },
+  "recentChats": {
+    "title": "最近のチャット",
+    "noHistory": "まだチャット履歴がありません",
+    "startChatting": "キャラクターと話してみる",
+    "messagesCount": "件のメッセージ",
+    "continueReading": "続きを読む"
+  },
+  "purchaseHistorySummary": {
+    "title": "購入履歴",
+    "totalSpent": "総購入額",
+    "purchasedTokens": "購入トークン",
+    "noHistory": "まだ購入履歴がありません",
+    "buyTokens": "トークンを購入する",
+    "types": {
+      "token": "{amount}トークン",
+      "tokenUnit": "トークン",
+      "character": "キャラクター",
+      "characterUnit": "キャラクター"
+    }
+  },
+  "rarity": {
+    "common": "コモン",
+    "rare": "レア",
+    "epic": "エピック",
+    "legendary": "レジェンダリー"
+  },
+  "personalityTypes": {
+    "おっとり系": "おっとり系",
+    "元気系": "元気系",
+    "クール系": "クール系",
+    "真面目系": "真面目系",
+    "セクシー系": "セクシー系",
+    "天然系": "天然系",
+    "ボーイッシュ系": "ボーイッシュ系",
+    "お姉さん系": "お姉さん系",
+    "ツンデレ": "ツンデレ"
+  },
+  "personalityTags": {
+    "優しい": "優しい",
+    "明るい": "明るい",
+    "クール": "クール",
+    "真面目": "真面目",
+    "おっとり": "おっとり",
+    "元気": "元気",
+    "ツンデレ": "ツンデレ",
+    "天然": "天然",
+    "甘えん坊": "甘えん坊",
+    "恥ずかしがり屋": "恥ずかしがり屋",
+    "ミステリアス": "ミステリアス",
+    "世話好き": "世話好き",
+    "いたずら好き": "いたずら好き",
+    "頑張り屋": "頑張り屋",
+    "のんびり": "のんびり",
+    "敬語": "敬語",
+    "タメ口": "タメ口",
+    "方言": "方言",
+    "お嬢様口調": "お嬢様口調",
+    "ポジティブ": "ポジティブ",
+    "積極的": "積極的",
+    "癒し系": "癒し系",
+    "おしゃべり": "おしゃべり",
+    "控えめ": "控えめ",
+    "知的": "知的",
+    "ロマンチスト": "ロマンチスト",
+    "素直": "素直",
+    "面倒見がいい": "面倒見がいい",
+    "さっぱり": "さっぱり"
+  },
   "analytics": {
+    "title": "アクティビティ分析",
+    "period": {
+      "past7Days": "過去7日間",
+      "past30Days": "過去30日間",
+      "pastYear": "過去1年間"
+    },
+    "charts": {
+      "dailyChats": "日別チャット数",
+      "chatCount": "チャット数",
+      "tokenUsage": "トークン使用量",
+      "characterInteraction": "キャラクター交流"
+    },
+    "summary": {
+      "totalChats": "総チャット数",
+      "totalTokens": "総使用トークン",
+      "interactedCharacters": "交流キャラ数",
+      "averageDaily": "1日平均",
+      "weeklyTotal": "週間合計",
+      "monthlyTotal": "月間合計",
+      "totalCharacters": "育成キャラ数"
+    },
     "tokens": {
       "title": "トークン分析",
       "subtitle": "トークンの使用パターンと効率性を分析",
       "usage": "使用量",
       "efficiency": "効率性",
-      "pattern": "パターン"
+      "pattern": "パターン",
+      "dailyUsage": "日別トークン使用量",
+      "perDay": "トークン/日"
     },
     "chats": {
       "title": "チャット分析",
       "subtitle": "会話パターンと活動の分析",
       "conversations": "会話",
       "activity": "活動",
-      "insights": "インサイト"
+      "insights": "インサイト",
+      "perDay": "1日あたり {count} 回のチャット"
     },
     "affinity": {
       "title": "親密度分析",
       "subtitle": "関係性と感情の深化の分析",
       "relationships": "関係性",
       "emotional": "感情",
-      "progress": "進捗"
+      "progress": "進捗",
+      "characterLevels": "キャラクター別親密度",
+      "highestLevel": "最高レベル"
     },
     "common": {
       "loading": "データを読み込み中...",
@@ -231,6 +839,72 @@
         "week": "1週間",
         "month": "1ヶ月",
         "quarter": "3ヶ月"
+      }
+    },
+    "insights": {
+      "mostActiveDay": "最も活発な曜日",
+      "favoriteCharacter": "お気に入りキャラクター",
+      "chatStreak": "連続チャット日数",
+      "tokenEfficiency": "トークン効率"
+    }
+  },
+  "footer": {
+    "commercialTransaction": "特定商取引法に基づく表記",
+    "commercialTransactionModal": {
+      "title": "特定商取引法に基づく表記",
+      "lastUpdated": "最終改定日：2025-07-01",
+      "close": "閉じる",
+      "tableHeaders": {
+        "item": "項目",
+        "content": "内容"
+      },
+      "items": {
+        "businessName": {
+          "label": "事業者名",
+          "content": "Charactier 運営事務局",
+          "note": "※事業者の氏名は、請求があれば遅滞なく電子メールにより開示いたします。"
+        },
+        "address": {
+          "label": "所在地",
+          "content": "〈バーチャルオフィス住所（確定後に記載）〉"
+        },
+        "phone": {
+          "label": "電話番号",
+          "note": "※請求があれば遅滞なく電子メールにより開示いたします。"
+        },
+        "contact": {
+          "label": "お問い合わせ窓口",
+          "content": "お問い合わせフォーム：",
+          "url": "https://forms.gle/ZkYUQSmpqxrQaa4m8"
+        },
+        "price": {
+          "label": "販売価格",
+          "content": "サービス内で表示された金額（消費税込）"
+        },
+        "payment": {
+          "label": "支払方法",
+          "content": "クレジットカード決済（Stripe を使用）"
+        },
+        "paymentTiming": {
+          "label": "代金の支払時期",
+          "content": "決済確定時に課金"
+        },
+        "delivery": {
+          "label": "商品の引渡時期",
+          "content": "決済完了後、直ちにトークチケットを付与"
+        },
+        "returns": {
+          "label": "返品・キャンセル",
+          "content": "デジタル商品の特性上、購入後の返品・キャンセルはできません。"
+        },
+        "subscription": {
+          "label": "月額課金の解約",
+          "content": "次回更新日の24時間前までにマイページから解約可能"
+        },
+        "support": {
+          "label": "不具合の対応",
+          "content": "サービスが利用できない場合は、利用規約・プライバシーポリシーに基づき適切に対応します。"
+        }
       }
     }
   }

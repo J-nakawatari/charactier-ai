@@ -11,57 +11,21 @@ import ImageCropper from '@/components/admin/ImageCropper';
 import TranslationEditor from '@/components/admin/TranslationEditor';
 import { ArrowLeft, Save, X, Upload } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
-
-// 調査したデータから取得した性格プリセット
-const PERSONALITY_PRESETS = [
-  { value: 'おっとり系', label: 'おっとり系', description: 'おっとりとしていて、ゆったりとした話し方をする' },
-  { value: '元気系', label: '元気系', description: '明るくて活発、エネルギッシュな性格' },
-  { value: 'クール系', label: 'クール系', description: 'クールで落ち着いている、知的な印象' },
-  { value: '真面目系', label: '真面目系', description: '真面目で責任感が強い、丁寧な性格' },
-  { value: 'セクシー系', label: 'セクシー系', description: '魅力的で大人の色気がある' },
-  { value: '天然系', label: '天然系', description: '天然でちょっと抜けているところがある' },
-  { value: 'ボーイッシュ系', label: 'ボーイッシュ系', description: 'ボーイッシュで活発、男の子っぽい性格' },
-  { value: 'お姉さん系', label: 'お姉さん系', description: '包容力があり、面倒見が良い大人の女性' }
-];
-
-// 調査したデータから取得した性格タグ
-const PERSONALITY_TAGS = [
-  { value: '明るい', label: '明るい', description: '明るく前向きな雰囲気を持っている' },
-  { value: 'よく笑う', label: 'よく笑う', description: 'よく笑い、楽しい雰囲気を作る' },
-  { value: '甘えん坊', label: '甘えん坊', description: '甘えるのが上手で、可愛らしい一面がある' },
-  { value: '積極的', label: '積極的', description: '積極的で行動力がある' },
-  { value: '大人っぽい', label: '大人っぽい', description: '大人っぽい落ち着きがある' },
-  { value: '静か', label: '静か', description: '静かで落ち着いている' },
-  { value: '天然', label: '天然', description: '天然で純粋な一面がある' },
-  { value: 'ボーイッシュ', label: 'ボーイッシュ', description: 'ボーイッシュで活発' },
-  { value: 'ポジティブ', label: 'ポジティブ', description: '常にポジティブで前向き' },
-  { value: 'やや毒舌', label: 'やや毒舌', description: 'ちょっと毒舌だが愛嬌がある' },
-  { value: '癒し系', label: '癒し系', description: '癒しの雰囲気を持っている' },
-  { value: '元気いっぱい', label: '元気いっぱい', description: 'エネルギッシュで元気いっぱい' },
-  { value: '知的', label: '知的', description: '知的で頭が良い' },
-  { value: '優しい', label: '優しい', description: '優しくて思いやりがある' },
-  { value: '人懐っこい', label: '人懐っこい', description: '人懐っこくて親しみやすい' }
-];
-
-// アクセスタイプ
-const ACCESS_TYPES = [
-  { value: 'free', label: 'ベースキャラ', description: 'トークン消費で利用可能' },
-  { value: 'purchaseOnly', label: 'プレミアムキャラ', description: '購入が必要なキャラクター' }
-];
+import { 
+  PERSONALITY_PRESETS, 
+  PERSONALITY_TAGS, 
+  ACCESS_TYPES,
+  GENDERS,
+  getLocalizedLabel,
+  getLocalizedDescription
+} from '@/constants/personality';
 
 // AIモデル（初期値、APIから動的取得）
 const DEFAULT_AI_MODELS = [
-  { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: '高速で経済的なモデル' },
-  { value: 'o4-mini', label: 'OpenAI o4-mini', description: '本番推奨モデル - 高品質・低コスト' },
-  { value: 'gpt-4o-mini', label: 'GPT-4o Mini', description: 'バランス型 - 中コスト' }
+  { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: '開発・テスト用' },
+  { value: 'gpt-4o-mini', label: 'GPT-4o mini', description: '本番環境用 - 推奨' }
 ];
 
-// 性別
-const GENDERS = [
-  { value: 'female', label: '女性' },
-  { value: 'male', label: '男性' },
-  { value: 'other', label: 'その他' }
-];
 
 export default function CharacterEditPage() {
   const params = useParams();
@@ -79,11 +43,7 @@ export default function CharacterEditPage() {
   const [translationData, setTranslationData] = useState({
     name: { ja: '', en: '' },
     description: { ja: '', en: '' },
-    personalityPreset: { ja: '', en: '' },
-    personalityTags: { ja: [] as string[], en: [] as string[] },
-    adminPrompt: { ja: '', en: '' },
-    defaultMessage: { ja: '', en: '' },
-    limitMessage: { ja: '', en: '' }
+    defaultMessage: { ja: '', en: '' }
   });
 
   // 基本フォームデータ（新規登録画面から統合）
@@ -102,9 +62,7 @@ export default function CharacterEditPage() {
     purchasePrice: 0,
     
     // プロンプト・メッセージ
-    adminPrompt: { ja: '', en: '' },
     defaultMessage: { ja: '', en: '' },
-    limitMessage: { ja: '', en: '' },
     
     // 画像設定
     imageCharacterSelect: null as File | null,
@@ -184,6 +142,8 @@ export default function CharacterEditPage() {
             personalityPreset: character.personalityPreset || '',
             personalityTags: character.personalityTags || [],
             gender: character.gender || 'female',
+            age: character.age || '',
+            occupation: character.occupation || '',
             model: character.model || character.aiModel || 'o4-mini',
             characterAccessType: character.characterAccessType || 'free',
             stripeProductId: character.stripeProductId || '',
@@ -487,6 +447,18 @@ export default function CharacterEditPage() {
       let croppedFile = new File([croppedImage], `${currentImageType}.png`, {
         type: 'image/png',
       });
+
+      // 🔍 デバッグ: ファイル情報を確認
+      console.log('🔍 クロップ後のファイル情報:', {
+        name: croppedFile.name,
+        type: croppedFile.type,
+        size: croppedFile.size,
+        blobType: croppedImage.type
+      });
+      
+      // 🔍 デバッグ: 元の画像ソース確認
+      console.log('🔍 元の画像ソース:', cropperImageSrc.substring(0, 50) + '...');
+      console.log('🔍 クロップ領域:', croppedAreaPixels);
       
       // 画像サイズが500KB以上の場合は圧縮
       if (!isImageSizeValid(croppedFile, 500)) {
@@ -714,11 +686,11 @@ export default function CharacterEditPage() {
                     <select
                       value={formData.gender}
                       onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                     >
                       {GENDERS.map(gender => (
                         <option key={gender.value} value={gender.value} className="text-gray-900">
-                          {gender.label}
+                          {getLocalizedLabel(gender, 'ja')}
                         </option>
                       ))}
                     </select>
@@ -732,7 +704,7 @@ export default function CharacterEditPage() {
                       type="text"
                       value={formData.age}
                       onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                       placeholder="例: 18歳、20代前半"
                     />
                   </div>
@@ -758,7 +730,7 @@ export default function CharacterEditPage() {
                     type="text"
                     value={formData.occupation}
                     onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                     placeholder="例: 学生、OL、お嬢様"
                   />
                 </div>
@@ -776,11 +748,11 @@ export default function CharacterEditPage() {
                       <select
                         value={formData.characterAccessType}
                         onChange={(e) => setFormData({ ...formData, characterAccessType: e.target.value as 'free' | 'purchaseOnly' })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                       >
                         {ACCESS_TYPES.map(type => (
                           <option key={type.value} value={type.value} className="text-gray-900">
-                            {type.label} - {type.description}
+                            {getLocalizedLabel(type, 'ja')} - {getLocalizedDescription(type, 'ja')}
                           </option>
                         ))}
                       </select>
@@ -810,7 +782,7 @@ export default function CharacterEditPage() {
                           type="text"
                           value={formData.stripeProductId}
                           onChange={(e) => setFormData({ ...formData, stripeProductId: e.target.value })}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                           placeholder="price_xxxxxxxxx または prod_xxxxxxxxx"
                         />
                         <button
@@ -845,12 +817,12 @@ export default function CharacterEditPage() {
                   <select
                     value={formData.personalityPreset}
                     onChange={(e) => setFormData({ ...formData, personalityPreset: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                   >
                     <option value="" className="text-gray-500">プリセットを選択してください</option>
                     {PERSONALITY_PRESETS.map(preset => (
                       <option key={preset.value} value={preset.value} className="text-gray-900">
-                        {preset.label} - {preset.description}
+                        {getLocalizedLabel(preset, 'ja')} - {getLocalizedDescription(preset, 'ja')}
                       </option>
                     ))}
                   </select>
@@ -869,8 +841,8 @@ export default function CharacterEditPage() {
                           onChange={() => togglePersonalityTag(tag.value)}
                           className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                         />
-                        <span className="text-sm text-gray-700" title={tag.description}>
-                          {tag.label}
+                        <span className="text-sm text-gray-700" title={getLocalizedDescription(tag, 'ja')}>
+                          {getLocalizedLabel(tag, 'ja')}
                         </span>
                       </label>
                     ))}
@@ -893,7 +865,7 @@ export default function CharacterEditPage() {
                   <select
                     value={formData.model}
                     onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none  transition-colors text-gray-900"
                   >
                     {availableModels.map(model => (
                       <option key={model.value} value={model.value} className="text-gray-900">
@@ -1169,7 +1141,7 @@ export default function CharacterEditPage() {
                               type="text"
                               value={galleryItem?.title || ''}
                               onChange={(e) => updateGalleryInfo(unlockLevel, 'title', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none  transition-colors text-gray-900"
                               placeholder="画像タイトル"
                             />
                           </div>
@@ -1178,7 +1150,7 @@ export default function CharacterEditPage() {
                             <textarea
                               value={galleryItem?.description || ''}
                               onChange={(e) => updateGalleryInfo(unlockLevel, 'description', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-purple-500 transition-colors text-gray-900"
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none  transition-colors text-gray-900"
                               rows={2}
                               placeholder="画像説明"
                             />
@@ -1226,6 +1198,7 @@ export default function CharacterEditPage() {
           onCancel={handleCropCancel}
           onSave={handleCropSave}
           isLoading={isUploading}
+          imageType={currentImageType}
         />
       )}
     </div>

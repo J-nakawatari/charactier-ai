@@ -74,11 +74,12 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
 
   // Calculate profit margin and validation
   const calculateMetrics = (tokens: number, price: number) => {
-    if (tokens <= 0 || price <= 0) return { profitMargin: 0, tokenPerYen: 0, isValid: false };
+    if (tokens <= 0 || price <= 0) return { profitMargin: 0, tokenPerYen: 0, isValid: true };
     
     const tokenPerYen = tokens / price;
-    const profitMargin = ((tokens - price * 2) / tokens) * 100;
-    const isValid = tokens >= price * 2; // 50%利益ルール
+    // 99%利益率システム（バックエンドで計算済み）
+    const profitMargin = 99;
+    const isValid = true; // 99%利益率システムは常に適合
     
     return { profitMargin, tokenPerYen, isValid };
   };
@@ -298,7 +299,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
               type="text"
               value={formData.name || ''}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:outline-none text-gray-900 bg-white ${
+              className={`w-full px-3 py-2 border rounded-lg  focus:outline-none text-gray-900 bg-white ${
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="例: スタンダードパック"
@@ -317,7 +318,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
               value={formData.description || ''}
               onChange={(e) => handleInputChange('description', e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:outline-none text-gray-900 bg-white"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg  focus:outline-none text-gray-900 bg-white"
               placeholder="このパックの特徴や推奨利用シーンを記載"
             />
           </div>
@@ -332,16 +333,16 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
                 type="text"
                 value={priceIdInput}
                 onChange={(e) => setPriceIdInput(e.target.value)}
-                disabled={editingPack !== null}
-                className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:outline-none text-gray-900 bg-white ${
+                disabled={false}
+                className={`flex-1 px-3 py-2 border rounded-lg  focus:outline-none text-gray-900 bg-white ${
                   errors.priceId ? 'border-red-500' : 'border-gray-300'
-                } ${editingPack ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                }`}
                 placeholder="price_1RVCyQ1qmMqgQ3qQkRzWRIQU"
               />
               <button
                 type="button"
                 onClick={handleSetPriceId}
-                disabled={priceLoading || !priceIdInput.trim() || editingPack !== null}
+                disabled={priceLoading || !priceIdInput.trim()}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {priceLoading ? '取得中...' : 'IDを設定'}
@@ -349,11 +350,6 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
             </div>
             {errors.priceId && (
               <p className="mt-1 text-sm text-red-600">{errors.priceId}</p>
-            )}
-            {editingPack && (
-              <p className="mt-1 text-sm text-gray-500">
-                編集時はPrice IDの変更はできません
-              </p>
             )}
           </div>
 
@@ -387,7 +383,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
                 <AlertCircle className="w-5 h-5 mt-0.5 text-green-600" />
                 <div className="flex-1">
                   <h4 className="font-medium text-green-800">
-                    50%利益ルール適合済み
+                    99%利益率システム適合済み
                   </h4>
                   <div className="mt-2 text-sm space-y-1">
                     <p className="text-green-700">
@@ -398,6 +394,9 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
                     </p>
                     <p className="text-green-700">
                       • 総付与トークン: <span className="font-medium">{formData.tokens?.toLocaleString()}トークン</span>
+                    </p>
+                    <p className="text-green-700 text-xs mt-2">
+                      ※ ユーザー支払額の1%のみをコストとして使用
                     </p>
                   </div>
                 </div>
@@ -412,7 +411,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
               type="checkbox"
               checked={formData.isActive || false}
               onChange={(e) => handleInputChange('isActive', e.target.checked)}
-              className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+              className="h-4 w-4 text-purple-600 border-gray-300 rounded"
             />
             <label htmlFor="isActive" className="ml-2 text-sm text-gray-700">
               アクティブ状態（購入可能）

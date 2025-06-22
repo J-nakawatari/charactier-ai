@@ -8,9 +8,11 @@ import { useTranslations } from 'next-intl';
 import { MessageSquare, User, Sparkles, Unlock } from 'lucide-react';
 import AffinityBar from './AffinityBar';
 import LockBadge from './LockBadge';
+import { PriceDisplay } from '../common/PriceDisplay';
 import { BaseCharacter } from '../../types/common';
 import { API_BASE_URL } from '@/lib/api-config';
 import { getSafeImageUrl } from '@/utils/imageUtils';
+import { getPersonalityPresetLabel, getPersonalityTagLabel } from '@/lib/characterConstants';
 
 interface Character extends BaseCharacter {
   affinityStats?: {
@@ -44,7 +46,8 @@ export default function CharacterCard({
   // 多言語対応のテキスト取得関数
   const getLocalizedText = (text: { ja: string; en: string } | string): string => {
     if (typeof text === 'string') return text;
-    return text[locale as 'ja' | 'en'] || text.ja || '';
+    // ロケールに応じて適切な言語を返す
+    return locale === 'en' ? (text.en || text.ja) : text.ja;
   };
 
   const handleClick = async () => {
@@ -62,7 +65,7 @@ export default function CharacterCard({
       
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        alert('ログインが必要です');
+        alert(t('errors.loginRequired'));
         return;
       }
 
@@ -86,19 +89,21 @@ export default function CharacterCard({
         const data = await response.json();
         console.log('✅ チェックアウトセッション作成成功:', data);
         if (data.url) {
+          // 購入中のキャラクター名をlocalStorageに保存
+          localStorage.setItem('purchasingCharacterName', getLocalizedText(character.name));
           // Stripeチェックアウトページにリダイレクト
           window.location.href = data.url;
         } else {
-          alert('チェックアウトURLが取得できませんでした');
+          alert(t('errors.checkoutFailed'));
         }
       } else {
         const errorData = await response.json();
         console.error('❌ チェックアウトセッション作成失敗:', errorData);
-        alert(errorData.message || 'チェックアウトセッションの作成に失敗しました');
+        alert(errorData.message || t('errors.checkoutFailed'));
       }
     } catch (error) {
       console.error('キャラクター購入エラー:', error);
-      alert('キャラクター購入中にエラーが発生しました');
+      alert(t('errors.purchaseError'));
     } finally {
       setIsUpdating(false);
     }
@@ -270,7 +275,7 @@ export default function CharacterCard({
           {character.personalityPreset && (
             <div className="mt-1">
               <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${getPersonalityColor(character.personalityPreset)}`}>
-                {character.personalityPreset}
+                {getPersonalityPresetLabel(character.personalityPreset as any, locale as 'ja' | 'en')}
               </span>
             </div>
           )}
@@ -289,7 +294,7 @@ export default function CharacterCard({
                 key={index}
                 className="inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded"
               >
-                {tag}
+                {getPersonalityTagLabel(tag, locale as 'ja' | 'en')}
               </span>
             ))}
             {character.personalityTags.length > 3 && (
@@ -302,7 +307,7 @@ export default function CharacterCard({
                   <div className="flex flex-wrap gap-1 justify-center">
                     {character.personalityTags.map((tag, index) => (
                       <span key={index} className="bg-gray-700 px-1.5 py-0.5 rounded text-xs whitespace-nowrap">
-                        {tag}
+                        {getPersonalityTagLabel(tag, locale as 'ja' | 'en')}
                       </span>
                     ))}
                   </div>
@@ -329,7 +334,7 @@ export default function CharacterCard({
           {isLocked ? (
             <button
               onClick={handleClick}
-              className={`w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg transition-colors font-medium ${
+              className={`w-full flex items-center justify-center space-x-2 py-4 sm:py-2.5 px-4 rounded-lg transition-colors font-medium ${
                 character.characterAccessType === 'purchaseOnly' 
                   ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white hover:from-amber-500 hover:to-yellow-600 shadow-md' 
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -338,7 +343,18 @@ export default function CharacterCard({
               {character.characterAccessType === 'purchaseOnly' ? (
                 <>
                   <Unlock className="w-4 h-4" />
-                  <span>{price ? `¥${price.toLocaleString()}でアンロック` : t('actions.unlock')}</span>
+                  <span>
+                    {price ? (
+                      <PriceDisplay 
+                        priceJpy={price} 
+                        locale={locale} 
+                        className="inline text-base" 
+                      />
+                    ) : (
+                      t('actions.unlock')
+                    )}
+                    {price && t('actions.unlockWith')}
+                  </span>
                 </>
               ) : (
                 <span>{t('actions.needTokens')}</span>
@@ -348,7 +364,7 @@ export default function CharacterCard({
             <button
               onClick={handleChatStart}
               disabled={isUpdating}
-              className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center space-x-2 py-4 sm:py-2.5 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <MessageSquare className="w-4 h-4" />
               <span>{isUpdating ? 'Loading...' : t('actions.startChat')}</span>

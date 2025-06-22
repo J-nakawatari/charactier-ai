@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { adminAuthenticatedFetch } from '@/utils/auth';
 import { 
   Bell, 
   Plus, 
@@ -20,7 +21,9 @@ import {
   AlertCircle,
   Wrench,
   Star,
-  Gift
+  Gift,
+  Check,
+  CheckCheck
 } from 'lucide-react';
 
 // 型定義
@@ -45,6 +48,8 @@ interface Notification {
   message: LocalizedString;
   type: 'info' | 'warning' | 'success' | 'urgent' | 'maintenance' | 'feature' | 'event';
   isActive: boolean;
+  isRead?: boolean;
+  readAt?: string;
   isPinned: boolean;
   priority: number;
   targetCondition: TargetCondition;
@@ -91,30 +96,6 @@ export default function NotificationsManagementPage() {
   const fetchNotifications = useCallback(async () => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('adminAccessToken');
-      
-      // デバッグ：トークンの存在確認
-      console.log('🔍 認証トークン確認:', token ? 'あり' : 'なし');
-      if (token) {
-        console.log('🔍 トークンの長さ:', token.length);
-        
-        // 現在のユーザー情報を確認
-        try {
-          const userResponse = await fetch('/api/debug/current-user', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          if (userResponse.ok) {
-            const userData = await userResponse.json();
-            console.log('🔍 現在のユーザー情報:', userData);
-          }
-        } catch (userError) {
-          console.log('⚠️ ユーザー情報取得エラー:', userError);
-        }
-      }
       
       const queryParams = new URLSearchParams();
       queryParams.append('page', filters.page.toString());
@@ -123,12 +104,7 @@ export default function NotificationsManagementPage() {
       if (filters.isActive !== '') queryParams.append('isActive', filters.isActive);
       if (filters.search) queryParams.append('search', filters.search);
 
-      const response = await fetch(`/api/notifications/admin?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await adminAuthenticatedFetch(`/api/notifications/admin?${queryParams}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -152,13 +128,8 @@ export default function NotificationsManagementPage() {
     if (!confirm('このお知らせを削除しますか？')) return;
 
     try {
-      const token = localStorage.getItem('adminAccessToken');
-      const response = await fetch(`/api/notifications/admin/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await adminAuthenticatedFetch(`/api/notifications/admin/${id}`, {
+        method: 'DELETE'
       });
 
       if (!response.ok) {
@@ -176,6 +147,54 @@ export default function NotificationsManagementPage() {
   useEffect(() => {
     fetchNotifications();
   }, [filters, fetchNotifications]);
+
+  // 通知を既読にする
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const response = await adminAuthenticatedFetch(`/api/notifications/admin/${notificationId}/read`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        // ローカル状態を更新
+        setNotifications(prev => 
+          prev.map(n => 
+            n._id === notificationId 
+              ? { ...n, isRead: true, readAt: new Date().toISOString() } 
+              : n
+          )
+        );
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '既読マークに失敗しました');
+      }
+    } catch (error) {
+      console.error('既読マークエラー:', error);
+      setError('既読マークに失敗しました');
+    }
+  };
+
+  // 一括既読
+  const markAllAsRead = async () => {
+    try {
+      const response = await adminAuthenticatedFetch('/api/notifications/admin/read-all', {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        // 全ての通知を既読に更新
+        setNotifications(prev => 
+          prev.map(n => ({ ...n, isRead: true, readAt: new Date().toISOString() }))
+        );
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '一括既読に失敗しました');
+      }
+    } catch (error) {
+      console.error('一括既読エラー:', error);
+      setError('一括既読に失敗しました');
+    }
+  };
 
   // タイプアイコン取得
   const getTypeIcon = (type: string) => {
@@ -224,7 +243,7 @@ export default function NotificationsManagementPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-dvh bg-gray-50 flex">
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
@@ -236,7 +255,7 @@ export default function NotificationsManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-dvh bg-gray-50">
       <div className="max-w-7xl mx-auto p-8">
         {/* ヘッダー */}
         <div className="mb-8">
@@ -263,13 +282,24 @@ export default function NotificationsManagementPage() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => router.push('/admin/notifications/new')}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              <span>新規作成</span>
-            </button>
+            <div className="flex items-center space-x-3">
+              {notifications.some(n => !n.isRead) && (
+                <button
+                  onClick={markAllAsRead}
+                  className="flex items-center space-x-2 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  <CheckCheck className="w-5 h-5" />
+                  <span>すべて既読</span>
+                </button>
+              )}
+              <button
+                onClick={() => router.push('/admin/notifications/new')}
+                className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+                <span>新規作成</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -295,7 +325,7 @@ export default function NotificationsManagementPage() {
                   placeholder="タイトル・メッセージで検索"
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none"
                 />
               </div>
             </div>
@@ -304,7 +334,7 @@ export default function NotificationsManagementPage() {
               <select
                 value={filters.type}
                 onChange={(e) => setFilters({ ...filters, type: e.target.value, page: 1 })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none"
               >
                 <option value="">すべて</option>
                 <option value="info">お知らせ</option>
@@ -321,7 +351,7 @@ export default function NotificationsManagementPage() {
               <select
                 value={filters.isActive}
                 onChange={(e) => setFilters({ ...filters, isActive: e.target.value, page: 1 })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none"
               >
                 <option value="">すべて</option>
                 <option value="true">公開中</option>
@@ -333,7 +363,7 @@ export default function NotificationsManagementPage() {
               <select
                 value={filters.limit}
                 onChange={(e) => setFilters({ ...filters, limit: parseInt(e.target.value), page: 1 })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none"
               >
                 <option value={10}>10件</option>
                 <option value={20}>20件</option>
@@ -386,7 +416,7 @@ export default function NotificationsManagementPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {notifications.map((notification) => (
-                    <tr key={notification._id} className="hover:bg-gray-50">
+                    <tr key={notification._id} className={`hover:bg-gray-50 ${notification.isRead ? 'opacity-70' : ''}`}>
                       <td className="px-6 py-4">
                         <div className="flex items-start space-x-3">
                           <div className="flex-shrink-0">
@@ -398,8 +428,13 @@ export default function NotificationsManagementPage() {
                                 {notification.title.ja}
                               </p>
                               {notification.isPinned && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                   重要
+                                </span>
+                              )}
+                              {!notification.isRead && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  未読
                                 </span>
                               )}
                             </div>
@@ -465,13 +500,15 @@ export default function NotificationsManagementPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end space-x-2">
-                          <button
-                            onClick={() => router.push(`/admin/notifications/${notification._id}/stats`)}
-                            className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
-                            title="統計を見る"
-                          >
-                            <BarChart3 className="w-4 h-4" />
-                          </button>
+                          {!notification.isRead && (
+                            <button
+                              onClick={() => markAsRead(notification._id)}
+                              className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
+                              title="既読にする"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => router.push(`/admin/notifications/${notification._id}`)}
                             className="p-2 text-gray-600 hover:text-blue-600 transition-colors"

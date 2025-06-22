@@ -44,7 +44,11 @@ export default function AdminLoginPage() {
       localStorage.setItem('adminRefreshToken', data.tokens.refreshToken);
       localStorage.setItem('adminUser', JSON.stringify(data.user));
 
+      // デバッグ: トークンが正しく保存されたか確認
       console.log('✅ 管理者ログイン成功');
+      console.log('🔑 Access Token 保存確認:', localStorage.getItem('adminAccessToken') ? '成功' : '失敗');
+      console.log('🔑 Refresh Token 保存確認:', localStorage.getItem('adminRefreshToken') ? '成功' : '失敗');
+      
       router.push('/admin/dashboard');
 
     } catch (err: any) {
@@ -56,7 +60,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* タイトル */}
         <div className="text-center mb-8">
@@ -84,7 +88,7 @@ export default function AdminLoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                 placeholder="admin@example.com"
                 disabled={isLoading}
               />
@@ -101,7 +105,7 @@ export default function AdminLoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
                   placeholder="パスワードを入力"
                   disabled={isLoading}
                 />

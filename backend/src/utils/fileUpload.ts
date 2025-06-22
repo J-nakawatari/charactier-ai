@@ -48,21 +48,42 @@ export const optimizeImage = (width: number = 800, height: number = 800, quality
 
       const tmpPath = req.file.path + '.tmp';
       
+      // 入力画像の形式を確認
+      const inputMeta = await sharp(req.file.path).metadata();
+      console.log('🔍 Input image metadata:', {
+        format: inputMeta.format,
+        channels: inputMeta.channels,
+        hasAlpha: inputMeta.hasAlpha,
+        space: inputMeta.space
+      });
+
       // 透過情報を保持しつつ全ての画像を処理
-      await sharp(req.file.path)
+      const sharpInstance = sharp(req.file.path)
         .ensureAlpha() // アルファチャンネルを確実に保持
         .resize(width, height, { 
           fit: 'inside',
           withoutEnlargement: true,
           background: { r: 0, g: 0, b: 0, alpha: 0 } // 透明な背景を明示的に設定
-        })
+        });
+
+      // PNGオプション: 最も保守的な設定
+      await sharpInstance
         .png({ 
-          compressionLevel: 6,
-          adaptiveFiltering: true,
-          force: true,
-          palette: false // パレットモードを無効化してフルカラー+アルファチャンネルを使用
+          force: true, // 強制的にPNG形式で出力
+          palette: false, // パレットモードを無効化
+          compressionLevel: 0, // 圧縮なし（透過情報保持最優先）
+          effort: 1 // 互換性重視
         })
         .toFile(tmpPath);
+
+      // 出力画像の形式を確認
+      const outputMeta = await sharp(tmpPath).metadata();
+      console.log('🔍 Output image metadata:', {
+        format: outputMeta.format,
+        channels: outputMeta.channels,
+        hasAlpha: outputMeta.hasAlpha,
+        space: outputMeta.space
+      });
         
       await fs.promises.rename(tmpPath, req.file.path);
       next();

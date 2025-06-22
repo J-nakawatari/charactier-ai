@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, Heart, Calendar } from 'lucide-react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 interface LocalizedString {
   ja: string;
@@ -37,6 +38,20 @@ export default function AffinityDetailModal({
   affinities, 
   locale 
 }: AffinityDetailModalProps) {
+  const t = useTranslations('affinity');
+  const tCommon = useTranslations('common');
+  
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
   
   if (!isOpen) return null;
 
@@ -45,11 +60,11 @@ export default function AffinityDetailModal({
   };
 
   const getAffinityRank = (level: number) => {
-    if (level >= 80) return { rank: 'マスター', color: 'text-purple-600', bgColor: 'bg-purple-100' };
-    if (level >= 60) return { rank: 'エキスパート', color: 'text-blue-600', bgColor: 'bg-blue-100' };
-    if (level >= 40) return { rank: '親友', color: 'text-green-600', bgColor: 'bg-green-100' };
-    if (level >= 20) return { rank: '友達', color: 'text-yellow-600', bgColor: 'bg-yellow-100' };
-    return { rank: '知り合い', color: 'text-gray-600', bgColor: 'bg-gray-100' };
+    if (level >= 80) return { rankKey: 'master', color: 'text-purple-600', bgColor: 'bg-purple-100' };
+    if (level >= 60) return { rankKey: 'expert', color: 'text-blue-600', bgColor: 'bg-blue-100' };
+    if (level >= 40) return { rankKey: 'closeFriend', color: 'text-green-600', bgColor: 'bg-green-100' };
+    if (level >= 20) return { rankKey: 'friend', color: 'text-yellow-600', bgColor: 'bg-yellow-100' };
+    return { rankKey: 'acquaintance', color: 'text-gray-600', bgColor: 'bg-gray-100' };
   };
 
 
@@ -70,8 +85,8 @@ export default function AffinityDetailModal({
                 <Heart className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">親密度詳細</h2>
-                <p className="text-pink-100">キャラクターとの関係性を詳しく確認</p>
+                <h2 className="text-2xl font-bold">{t('modalTitle')}</h2>
+                <p className="text-pink-100">{t('modalSubtitle')}</p>
               </div>
             </div>
             <button
@@ -115,7 +130,7 @@ export default function AffinityDetailModal({
                         className="absolute -bottom-2 -right-2 text-sm font-bold px-2 py-1 rounded-full text-white shadow-lg"
                         style={{ backgroundColor: affinity.character.themeColor }}
                       >
-                        Lv.{affinity.level}
+                        {t('levelUp', { level: Math.floor(affinity.level) })}
                       </div>
                     </div>
 
@@ -129,15 +144,15 @@ export default function AffinityDetailModal({
                         <span 
                           className={`px-3 py-1 rounded-full text-sm font-medium ${rank.color} ${rank.bgColor}`}
                         >
-                          {rank.rank}
+                          {t(`ranks.${rank.rankKey}`)}
                         </span>
                       </div>
 
                       {/* 経験値詳細 */}
                       <div className="mb-4">
                         <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-                          <span>経験値: {affinity.experience} / {affinity.maxExperience}</span>
-                          <span className="font-medium">次のレベルまで: {affinity.experienceToNext}EXP</span>
+                          <span>{t('experienceProgress', { current: affinity.experience, max: affinity.maxExperience })}</span>
+                          <span className="font-medium">{t('experienceToNext', { exp: affinity.experienceToNext })}</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
                           <div 
@@ -159,23 +174,23 @@ export default function AffinityDetailModal({
 
           {/* 親密度システム説明 */}
           <div className="mt-8 bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">親密度システムについて</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('systemTitle')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">経験値の獲得方法</h4>
+                <h4 className="font-medium text-gray-900 mb-2">{t('expGainMethods')}</h4>
                 <ul className="space-y-1">
-                  <li>• メッセージ送信: +10 EXP</li>
-                  <li>• 長い会話: +20 EXP</li>
-                  <li>• 連続ログイン: +5 EXP</li>
-                  <li>• 特別イベント: +50 EXP</li>
+                  <li>• {t('expGainMessage')}</li>
+                  <li>• {t('expGainLongChat')}</li>
+                  <li>• {t('expGainDaily')}</li>
+                  <li>• {t('expGainEvent')}</li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">レベル特典</h4>
+                <h4 className="font-medium text-gray-900 mb-2">{t('levelRewards')}</h4>
                 <ul className="space-y-1">
-                  <li>• Lv.20毎: 新しい話題追加</li>
-                  <li>• Lv.50毎: 限定コンテンツ</li>
-                  <li>• Lv.100: 専用エンディング</li>
+                  <li>• {t('rewardLv20')}</li>
+                  <li>• {t('rewardLv50')}</li>
+                  <li>• {t('rewardLv100')}</li>
                 </ul>
               </div>
             </div>
@@ -186,13 +201,13 @@ export default function AffinityDetailModal({
         <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-600">
-              キャラクターとたくさん話して親密度を上げましょう！
+              {t('encourageChat')}
             </p>
             <button
               onClick={onClose}
               className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
             >
-              閉じる
+              {tCommon('close')}
             </button>
           </div>
         </div>

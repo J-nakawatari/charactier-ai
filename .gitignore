@@ -67,5 +67,13 @@ next-env.d.ts
 # Data folder - デーモンローカル情報
 data/
 
-# Documentation logs - ログファイル
-docs/logs/
+# Documentation - ドキュメントフォルダ全体
+docs/
+
+# Upload files - アップロードされた画像ファイル
+uploads/*
+!uploads/.gitkeep
+uploads/images/*
+
+# Archived files
+_archived/

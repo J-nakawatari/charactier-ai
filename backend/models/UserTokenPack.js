@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 /**
  * UserTokenPack Schema（簡素化版）
- * 50%利益保証を実現するシンプルなトークンパック管理
+ * 99%利益率システムを実現するシンプルなトークンパック管理
  */
 const userTokenPackSchema = new mongoose.Schema({
   // ユーザー情報
@@ -66,7 +66,7 @@ const userTokenPackSchema = new mongoose.Schema({
   // 利益管理（参考情報）
   profitMarginUsed: {
     type: Number,
-    default: 0.5,
+    default: 0.99, // 99%利益率システム
     min: 0,
     max: 1
   },
@@ -128,6 +128,25 @@ userTokenPackSchema.statics.calculateUserTokenBalance = async function(userId) {
   ]);
   
   return result.length > 0 ? result[0].totalRemaining : 0;
+};
+
+// 静的メソッド：ユーザーの総購入トークン数計算
+userTokenPackSchema.statics.calculateTotalPurchasedTokens = async function(userId) {
+  const result = await this.aggregate([
+    {
+      $match: {
+        userId: new mongoose.Types.ObjectId(userId)
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalPurchased: { $sum: '$tokensPurchased' }
+      }
+    }
+  ]);
+  
+  return result.length > 0 ? result[0].totalPurchased : 0;
 };
 
 // 静的メソッド：システム全体の統計取得

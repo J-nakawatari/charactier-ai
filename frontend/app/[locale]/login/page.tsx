@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
 import { API_BASE_URL } from '@/lib/api-config';
+import * as gtag from '@/lib/gtag';
+import { CommercialTransactionModal } from '@/components/CommercialTransactionModal';
 
 const orbitron = Orbitron({ 
   weight: ['400', '700'], 
@@ -18,14 +20,16 @@ export default function LoginPage() {
   const params = useParams();
   const locale = params.locale as string || 'ja';
   const t = useTranslations('login');
+  const tFooter = useTranslations('footer');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | React.ReactNode>('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [showCommercialModal, setShowCommercialModal] = useState(false);
   
   const videoSources = [
     '/video/hero-videos_01.mp4',
@@ -34,9 +38,9 @@ export default function LoginPage() {
   ];
 
   const fallbackImages = [
-    '/images/hero/hero-fallback_01.jpg',
-    '/images/hero/hero-fallback_02.jpg', 
-    '/images/hero/hero-fallback_03.jpg'
+    '/images/hero/hero-fallback_01.png',
+    '/images/hero/hero-fallback_02.png', 
+    '/images/hero/hero-fallback_03.png'
   ];
 
   // Language switcher
@@ -137,6 +141,23 @@ export default function LoginPage() {
       const data = await response.json();
       
       if (!response.ok) {
+        // メール未認証エラーの場合
+        if (response.status === 403 && data.emailNotVerified) {
+          // メールアドレスを保存（再送信用）
+          sessionStorage.setItem('pendingEmail', email);
+          setError(
+            <div className="space-y-2">
+              <p>{data.message}</p>
+              <button
+                onClick={() => router.push(`/${locale}/resend-verification`)}
+                className="text-purple-600 hover:text-purple-700 underline text-sm"
+              >
+                確認メールを再送信
+              </button>
+            </div>
+          );
+          return;
+        }
         throw new Error(data.message || 'ログインに失敗しました');
       }
       
@@ -157,6 +178,13 @@ export default function LoginPage() {
       
       console.log('✅ ログイン成功:', typeof data.user.name === 'string' ? data.user.name : (typeof data.user.name === 'object' && data.user.name?.name ? data.user.name.name : 'ユーザー'));
       
+      // Google Analytics: ログインイベントとユーザーID設定
+      gtag.setUserId(data.user._id);
+      gtag.setUserProperties({
+        user_type: 'registered',
+        has_setup_complete: data.user.isSetupComplete || false,
+      });
+      
       // 初回セットアップが完了していない場合のみセットアップ画面へ
       // 厳密にtrueかどうかをチェック
       if (data.user.isSetupComplete !== true) {
@@ -176,7 +204,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-dvh overflow-hidden">
       {/* Background Video/Image Container */}
       <div className="absolute inset-0 w-full h-full">
         {/* Desktop: Video Background */}
@@ -244,14 +272,14 @@ export default function LoginPage() {
       </div>
       
       {/* Main Content */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
+      <div className="relative z-10 flex items-center justify-center min-h-dvh px-4">
         <div className="w-full max-w-md">
           {/* Login Card */}
           <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
             {/* Title */}
             <h1 
               className={`${orbitron.className} text-center text-2xl md:text-3xl font-bold mb-8`}
-              style={{ color: '#E91E63' }}
+              style={{ color: '#E95295' }}
             >
               {t('title')}
             </h1>
@@ -299,8 +327,8 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 px-4 rounded-lg text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                style={{ backgroundColor: '#E91E63' }}
+                className="w-full py-4 sm:py-3 px-4 rounded-lg text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                style={{ backgroundColor: '#E95295' }}
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
@@ -321,7 +349,7 @@ export default function LoginPage() {
               <button
                 onClick={() => router.push(`/${locale}/register`)}
                 className="ml-1 font-bold text-sm hover:opacity-80 transition-colors"
-                style={{ color: '#E91E63' }}
+                style={{ color: '#E95295' }}
               >
                 {t('register')}
               </button>
@@ -339,6 +367,22 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      
+      {/* Footer with Commercial Transaction Act link */}
+      <div className="absolute bottom-4 left-0 right-0 text-center z-20">
+        <button
+          onClick={() => setShowCommercialModal(true)}
+          className="text-white text-sm hover:opacity-80 transition-opacity underline"
+        >
+          {tFooter('commercialTransaction')}
+        </button>
+      </div>
+      
+      {/* Modals */}
+      <CommercialTransactionModal 
+        isOpen={showCommercialModal} 
+        onClose={() => setShowCommercialModal(false)} 
+      />
     </div>
   );
 }

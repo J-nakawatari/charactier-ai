@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, Award, Calendar, Target, CheckCircle, Clock } from 'lucide-react';
 import Image from 'next/image';
 
@@ -33,6 +33,18 @@ export default function BadgeDetailModal({
   badge, 
   locale 
 }: BadgeDetailModalProps) {
+  
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
   
   if (!isOpen || !badge) return null;
 

@@ -11,8 +11,9 @@ interface Character {
   characterAccessType: 'free' | 'purchaseOnly';
   isActive: boolean;
   imageCharacterSelect?: string;
-  totalConversations?: number;
-  averageAffinity?: number;
+  totalMessages?: number;
+  totalUsers?: number;
+  averageAffinityLevel?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -26,8 +27,9 @@ export default function CharacterStats({ characters }: CharacterStatsProps) {
     total: characters.length,
     active: characters.filter(c => c.isActive).length,
     free: characters.filter(c => c.characterAccessType === 'free').length,
-    totalChats: characters.reduce((sum, c) => sum + (c.totalConversations || 0), 0),
-    avgIntimacy: characters.length > 0 ? characters.reduce((sum, c) => sum + (c.averageAffinity || 0), 0) / characters.length : 0,
+    totalChats: characters.reduce((sum, c) => sum + (c.totalMessages || 0), 0),
+    totalUsers: characters.reduce((sum, c) => sum + (c.totalUsers || 0), 0),
+    avgIntimacy: characters.length > 0 ? characters.reduce((sum, c) => sum + (c.averageAffinityLevel || 0), 0) / characters.length : 0,
     premium: characters.filter(c => c.characterAccessType === 'purchaseOnly').length
   };
 
@@ -57,17 +59,25 @@ export default function CharacterStats({ characters }: CharacterStatsProps) {
       textColor: 'text-blue-700'
     },
     {
-      title: '総チャット数',
+      title: '総メッセージ数',
       value: stats.totalChats.toLocaleString(),
       icon: MessageSquare,
       color: 'bg-orange-500',
       bgColor: 'bg-orange-50',
       textColor: 'text-orange-700'
+    },
+    {
+      title: '総ユーザー数',
+      value: stats.totalUsers.toLocaleString(),
+      icon: Users,
+      color: 'bg-indigo-500',
+      bgColor: 'bg-indigo-50',
+      textColor: 'text-indigo-700'
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
       {cards.map((card, index) => (
         <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">

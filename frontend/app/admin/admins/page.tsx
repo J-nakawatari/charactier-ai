@@ -10,8 +10,7 @@ interface Admin {
   _id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'moderator';
-  permissions: string[];
+  role: 'super_admin' | 'moderator';
   isActive: boolean;
   lastLogin?: string;
   createdAt: string;
@@ -70,9 +69,8 @@ export default function AdminListPage() {
 
   const getRoleText = (role: string) => {
     const roleMap = {
-      'super_admin': 'スーパー管理者',
-      'admin': '管理者',
-      'moderator': 'モデレーター'
+      'super_admin': 'スーパー管理者（全権限）',
+      'moderator': 'モデレーター（閲覧のみ）'
     };
     return roleMap[role as keyof typeof roleMap] || role;
   };
@@ -80,7 +78,6 @@ export default function AdminListPage() {
   const getRoleBadgeColor = (role: string) => {
     const colorMap = {
       'super_admin': 'bg-red-100 text-red-800',
-      'admin': 'bg-purple-100 text-purple-800',
       'moderator': 'bg-blue-100 text-blue-800'
     };
     return colorMap[role as keyof typeof colorMap] || 'bg-gray-100 text-gray-800';
@@ -94,6 +91,41 @@ export default function AdminListPage() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleEdit = (adminId: string) => {
+    router.push(`/admin/admins/${adminId}/edit`);
+  };
+
+  const handleDelete = async (adminId: string, adminName: string) => {
+    if (!confirm(`管理者「${adminName}」を削除しますか？この操作は取り消せません。`)) {
+      return;
+    }
+
+    try {
+      const adminToken = localStorage.getItem('adminAccessToken');
+      if (!adminToken) {
+        throw new Error('管理者認証が必要です');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/admin/admins/${adminId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`削除エラー: ${response.status}`);
+      }
+
+      success('削除完了', `管理者「${adminName}」を削除しました`);
+      fetchAdmins(); // リストを再取得
+    } catch (err: any) {
+      console.error('✖ 管理者削除エラー:', err);
+      error('削除失敗', err.message || '管理者の削除に失敗しました');
+    }
   };
 
   if (loading) {
@@ -113,9 +145,9 @@ export default function AdminListPage() {
       <header className="bg-white border-b border-gray-200 p-4 md:p-6 pr-16 lg:pr-6">
         <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">管理者管理</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">管理者設定</h1>
             <p className="text-sm text-gray-500 mt-1">
-              システム管理者の追加・編集・権限管理
+              システム管理者の追加・編集・役割管理
             </p>
           </div>
           
@@ -208,9 +240,6 @@ export default function AdminListPage() {
                     役割
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    権限数
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     最終ログイン
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -248,9 +277,6 @@ export default function AdminListPage() {
                         {getRoleText(admin.role)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {admin.permissions.length}個
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {admin.lastLogin ? formatDate(admin.lastLogin) : '未ログイン'}
                     </td>
@@ -268,10 +294,18 @@ export default function AdminListPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
-                        <button className="text-indigo-600 hover:text-indigo-900">
+                        <button 
+                          onClick={() => handleEdit(admin._id)}
+                          className="text-indigo-600 hover:text-indigo-900 p-1 rounded hover:bg-indigo-50 transition-colors"
+                          title="編集"
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button className="text-red-600 hover:text-red-900">
+                        <button 
+                          onClick={() => handleDelete(admin._id, admin.name || '名前未設定')}
+                          className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
+                          title="削除"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>

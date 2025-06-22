@@ -8,47 +8,40 @@ const router: Router = Router();
 // 利用可能なモデル一覧
 const AVAILABLE_MODELS = [
   {
-    id: 'o4-mini',
-    name: 'OpenAI o4-mini',
-    description: '本番推奨モデル - 高品質・低コスト',
-    cost: '$1.1/$4.4 per 1M tokens',
-    recommended: true
-  },
-  {
     id: 'gpt-3.5-turbo', 
     name: 'GPT-3.5 Turbo',
-    description: '開発・テスト用 - 最低コスト',
+    description: '開発・テスト用',
     cost: '$0.5/$1.5 per 1M tokens',
     recommended: false
   },
   {
     id: 'gpt-4o-mini',
-    name: 'GPT-4o Mini', 
-    description: 'バランス型 - 中コスト',
+    name: 'GPT-4o mini',
+    description: '本番環境用 - 推奨',
     cost: '$0.15/$0.6 per 1M tokens',
-    recommended: false
+    recommended: true
   }
 ];
 
 /**
  * 利用可能なモデル一覧取得
  */
-router.get('/models', async (req: AuthRequest, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
-    const modelsWithCalc = AVAILABLE_MODELS.map(model => ({
+    const modelsWithCalc = await Promise.all(AVAILABLE_MODELS.map(async model => ({
       ...model,
-      tokensPerYen: calcTokensToGive(1, model.id),
+      tokensPerYen: await calcTokensToGive(1, model.id),
       sampleTokens: {
-        500: calcTokensToGive(500, model.id),
-        1000: calcTokensToGive(1000, model.id),
-        2000: calcTokensToGive(2000, model.id)
+        500: await calcTokensToGive(500, model.id),
+        1000: await calcTokensToGive(1000, model.id),
+        2000: await calcTokensToGive(2000, model.id)
       }
-    }));
+    })));
 
     res.json({
       success: true,
       models: modelsWithCalc,
-      currentModel: process.env.OPENAI_MODEL || 'o4-mini'
+      currentModel: process.env.OPENAI_MODEL || 'gpt-4o-mini'
     });
   } catch (error) {
     console.error('❌ Models取得エラー:', error);
@@ -61,18 +54,18 @@ router.get('/models', async (req: AuthRequest, res: Response) => {
  */
 router.get('/current', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const currentModel = process.env.OPENAI_MODEL || 'o4-mini';
+    const currentModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
     const modelInfo = AVAILABLE_MODELS.find(m => m.id === currentModel);
     
     res.json({
       success: true,
       currentModel,
       modelInfo,
-      tokensPerYen: calcTokensToGive(1, currentModel),
+      tokensPerYen: await calcTokensToGive(1, currentModel),
       sampleCalculation: {
-        500: calcTokensToGive(500, currentModel),
-        1000: calcTokensToGive(1000, currentModel),
-        2000: calcTokensToGive(2000, currentModel)
+        500: await calcTokensToGive(500, currentModel),
+        1000: await calcTokensToGive(1000, currentModel),
+        2000: await calcTokensToGive(2000, currentModel)
       }
     });
   } catch (error) {
@@ -107,7 +100,7 @@ router.post('/set-model', authenticateToken, async (req: AuthRequest, res: Respo
       success: true,
       message: `Model changed to ${model}`,
       newModel: model,
-      tokensPerYen: calcTokensToGive(1, model),
+      tokensPerYen: await calcTokensToGive(1, model),
       note: 'アプリケーションの再起動が推奨されます'
     });
   } catch (error) {
@@ -133,7 +126,7 @@ router.post('/simulate', authenticateToken, async (req: AuthRequest, res: Respon
       return;
     }
     
-    const tokensToGive = calcTokensToGive(purchaseAmount, model);
+    const tokensToGive = await calcTokensToGive(purchaseAmount, model);
     const modelInfo = AVAILABLE_MODELS.find(m => m.id === model);
     
     res.json({
@@ -143,8 +136,8 @@ router.post('/simulate', authenticateToken, async (req: AuthRequest, res: Respon
         modelInfo,
         purchaseAmount,
         tokensToGive,
-        profitMargin: 0.90,
-        costRatio: 0.10
+        profitMargin: 0.99, // 99%利益率システム
+        costRatio: 0.01 // 1%コスト
       }
     });
   } catch (error) {

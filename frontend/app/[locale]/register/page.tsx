@@ -6,6 +6,9 @@ import { useTranslations } from 'next-intl';
 import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
 import { API_BASE_URL } from '@/lib/api-config';
+import { TermsModal } from '@/components/TermsModal';
+import { PrivacyModal } from '@/components/PrivacyModal';
+import { CommercialTransactionModal } from '@/components/CommercialTransactionModal';
 
 const orbitron = Orbitron({ 
   weight: ['400', '700'], 
@@ -18,6 +21,7 @@ export default function RegisterPage() {
   const params = useParams();
   const locale = params.locale as string || 'ja';
   const t = useTranslations('register');
+  const tFooter = useTranslations('footer');
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -32,6 +36,9 @@ export default function RegisterPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showCommercialModal, setShowCommercialModal] = useState(false);
   
   const videoSources = [
     '/video/hero-videos_01.mp4',
@@ -40,9 +47,9 @@ export default function RegisterPage() {
   ];
 
   const fallbackImages = [
-    '/images/hero/hero-fallback_01.jpg',
-    '/images/hero/hero-fallback_02.jpg', 
-    '/images/hero/hero-fallback_03.jpg'
+    '/images/hero/hero-fallback_01.png',
+    '/images/hero/hero-fallback_02.png', 
+    '/images/hero/hero-fallback_03.png'
   ];
 
   // Language switcher
@@ -189,29 +196,37 @@ export default function RegisterPage() {
     try {
       console.log('🔐 新規登録実行中...');
       
-      // バックエンドの登録APIを呼び出し（名前は一時的に空文字で登録）
+      // バックエンドの登録APIを呼び出し（メール認証付き）
       const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ 
+          email, 
+          password,
+          locale // 言語設定を送信
+        }),
       });
       
       const data = await response.json();
       
       if (!response.ok) {
+        // エラーハンドリング
+        if (response.status === 429) {
+          throw new Error(data.message || '登録制限に達しました。しばらくしてから再試行してください。');
+        } else if (response.status === 400 && data.error === 'Invalid email') {
+          throw new Error('使い捨てメールアドレスは使用できません。');
+        }
         throw new Error(data.message || '登録に失敗しました');
       }
       
-      // JWTトークンを保存
-      localStorage.setItem('accessToken', data.tokens.accessToken);
-      localStorage.setItem('refreshToken', data.tokens.refreshToken);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // メール送信成功 - 登録メールアドレスを保存（再送信用）
+      sessionStorage.setItem('pendingEmail', email);
       
-      console.log('✅ 新規登録成功');
-      // 初回セットアップ画面に遷移
-      router.push(`/${locale}/setup`);
+      console.log('✅ 確認メール送信成功');
+      // メール確認画面に遷移
+      router.push(`/${locale}/register-complete`);
       
     } catch (err: any) {
       console.error('❌ 新規登録エラー:', err);
@@ -222,7 +237,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-dvh overflow-hidden">
       {/* Background Video/Image Container */}
       <div className="absolute inset-0 w-full h-full">
         {/* Desktop: Video Background */}
@@ -290,14 +305,14 @@ export default function RegisterPage() {
       </div>
       
       {/* Main Content */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-8">
+      <div className="relative z-10 flex items-center justify-center min-h-dvh px-4 py-8">
         <div className="w-full max-w-md">
           {/* Register Card */}
           <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
             {/* Title */}
             <h1 
               className={`${orbitron.className} text-center text-2xl md:text-3xl font-bold mb-4`}
-              style={{ color: '#E91E63' }}
+              style={{ color: '#E95295' }}
             >
               {t('title')}
             </h1>
@@ -305,7 +320,7 @@ export default function RegisterPage() {
             {/* Subtitle */}
             <p 
               className="text-center text-sm mb-6 font-medium"
-              style={{ color: '#E91E63' }}
+              style={{ color: '#E95295' }}
             >
               {t('subtitle')}
             </p>
@@ -335,14 +350,14 @@ export default function RegisterPage() {
                   }`}
                 />
                 {fieldErrors.email && (
-                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E91E63' }}>
+                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E95295' }}>
                     <p className="text-white text-sm font-medium">{fieldErrors.email}</p>
                     <div 
                       className="absolute left-4 -top-2 w-0 h-0"
                       style={{
                         borderLeft: '8px solid transparent',
                         borderRight: '8px solid transparent',
-                        borderBottom: '8px solid #E91E63'
+                        borderBottom: '8px solid #E95295'
                       }}
                     />
                   </div>
@@ -365,14 +380,14 @@ export default function RegisterPage() {
                   }`}
                 />
                 {fieldErrors.password && (
-                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E91E63' }}>
+                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E95295' }}>
                     <p className="text-white text-sm font-medium">{fieldErrors.password}</p>
                     <div 
                       className="absolute left-4 -top-2 w-0 h-0"
                       style={{
                         borderLeft: '8px solid transparent',
                         borderRight: '8px solid transparent',
-                        borderBottom: '8px solid #E91E63'
+                        borderBottom: '8px solid #E95295'
                       }}
                     />
                   </div>
@@ -395,14 +410,14 @@ export default function RegisterPage() {
                   }`}
                 />
                 {fieldErrors.confirmPassword && (
-                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E91E63' }}>
+                  <div className="mt-2 p-3 rounded-lg shadow-lg relative" style={{ backgroundColor: '#E95295' }}>
                     <p className="text-white text-sm font-medium">{fieldErrors.confirmPassword}</p>
                     <div 
                       className="absolute left-4 -top-2 w-0 h-0"
                       style={{
                         borderLeft: '8px solid transparent',
                         borderRight: '8px solid transparent',
-                        borderBottom: '8px solid #E91E63'
+                        borderBottom: '8px solid #E95295'
                       }}
                     />
                   </div>
@@ -416,13 +431,19 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   className="underline hover:opacity-80 transition-colors"
-                  style={{ color: '#E91E63' }}
-                  onClick={() => {
-                    // TODO: 利用規約・プライバシーポリシーページを開く
-                    console.log('利用規約・プライバシーポリシーを開く');
-                  }}
+                  style={{ color: '#E95295' }}
+                  onClick={() => setShowTermsModal(true)}
                 >
-                  {t('termsLink')}
+                  {t('termsOfService')}
+                </button>
+                {t('and')}
+                <button
+                  type="button"
+                  className="underline hover:opacity-80 transition-colors ml-1"
+                  style={{ color: '#E95295' }}
+                  onClick={() => setShowPrivacyModal(true)}
+                >
+                  {t('privacyPolicy')}
                 </button>
                 {t('termsAccept')}
               </div>
@@ -431,8 +452,8 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 px-4 rounded-lg text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-6"
-                style={{ backgroundColor: '#E91E63' }}
+                className="w-full py-4 sm:py-3 px-4 rounded-lg text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-6"
+                style={{ backgroundColor: '#E95295' }}
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
@@ -453,7 +474,7 @@ export default function RegisterPage() {
               <button
                 onClick={() => router.push(`/${locale}/login`)}
                 className="ml-1 font-bold text-sm hover:opacity-80 transition-colors"
-                style={{ color: '#E91E63' }}
+                style={{ color: '#E95295' }}
               >
                 {t('login')}
               </button>
@@ -471,6 +492,24 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+      
+      {/* Footer with Commercial Transaction Act link */}
+      <div className="absolute bottom-4 left-0 right-0 text-center z-20">
+        <button
+          onClick={() => setShowCommercialModal(true)}
+          className="text-white text-sm hover:opacity-80 transition-opacity underline"
+        >
+          {tFooter('commercialTransaction')}
+        </button>
+      </div>
+      
+      {/* Modals */}
+      <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
+      <PrivacyModal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
+      <CommercialTransactionModal 
+        isOpen={showCommercialModal} 
+        onClose={() => setShowCommercialModal(false)} 
+      />
     </div>
   );
 }

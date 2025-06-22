@@ -128,7 +128,7 @@ export default function NewNotificationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-dvh bg-gray-50">
       <div className="max-w-4xl mx-auto p-8">
         {/* ヘッダー */}
         <div className="mb-8">
@@ -185,7 +185,7 @@ export default function NewNotificationPage() {
                     ...form,
                     title: { ...form.title, ja: e.target.value }
                   })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                   placeholder="お知らせのタイトルを入力"
                 />
               </div>
@@ -203,7 +203,7 @@ export default function NewNotificationPage() {
                     ...form,
                     title: { ...form.title, en: e.target.value }
                   })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                   placeholder="Enter notification title"
                 />
               </div>
@@ -223,7 +223,7 @@ export default function NewNotificationPage() {
                     ...form,
                     message: { ...form.message, ja: e.target.value }
                   })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                   placeholder="お知らせの内容を入力"
                 />
               </div>
@@ -241,7 +241,7 @@ export default function NewNotificationPage() {
                     ...form,
                     message: { ...form.message, en: e.target.value }
                   })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                   placeholder="Enter notification content"
                 />
               </div>
@@ -261,7 +261,7 @@ export default function NewNotificationPage() {
                 <select
                   value={form.type}
                   onChange={(e) => setForm({ ...form, type: e.target.value as any })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                 >
                   <option value="info">お知らせ</option>
                   <option value="warning">警告</option>
@@ -288,7 +288,7 @@ export default function NewNotificationPage() {
                   max="100"
                   value={form.priority}
                   onChange={(e) => setForm({ ...form, priority: parseInt(e.target.value) || 0 })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   数値が大きいほど上部に表示されます
@@ -332,7 +332,7 @@ export default function NewNotificationPage() {
                 <select
                   value={form.targetCondition.type}
                   onChange={(e) => updateTargetCondition({ type: e.target.value as any })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                 >
                   <option value="all">全ユーザー</option>
                   <option value="user_level">ユーザーレベル指定</option>
@@ -356,7 +356,7 @@ export default function NewNotificationPage() {
                       onChange={(e) => updateTargetCondition({ 
                         minLevel: parseInt(e.target.value) || undefined 
                       })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -371,7 +371,7 @@ export default function NewNotificationPage() {
                       onChange={(e) => updateTargetCondition({ 
                         maxLevel: parseInt(e.target.value) || undefined 
                       })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -388,7 +388,7 @@ export default function NewNotificationPage() {
                     onChange={(e) => updateTargetCondition({ 
                       hasPurchases: e.target.value === 'true' ? true : e.target.value === 'false' ? false : undefined 
                     })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                   >
                     <option value="">指定なし</option>
                     <option value="true">購入済みユーザー</option>
@@ -410,7 +410,7 @@ export default function NewNotificationPage() {
                       onChange={(e) => updateTargetCondition({ 
                         registeredAfter: e.target.value || undefined 
                       })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -423,7 +423,7 @@ export default function NewNotificationPage() {
                       onChange={(e) => updateTargetCondition({ 
                         registeredBefore: e.target.value || undefined 
                       })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -448,7 +448,7 @@ export default function NewNotificationPage() {
                   required
                   value={form.validFrom}
                   onChange={(e) => setForm({ ...form, validFrom: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                 />
               </div>
               <div>
@@ -459,7 +459,7 @@ export default function NewNotificationPage() {
                   type="datetime-local"
                   value={form.validUntil}
                   onChange={(e) => setForm({ ...form, validUntil: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   未設定の場合は無期限で表示されます

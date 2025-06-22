@@ -2,13 +2,50 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
-const evaluationData = [
-  { name: '優秀', value: 65, color: '#10b981' },
-  { name: '良好', value: 25, color: '#f59e0b' },
-  { name: '要改善', value: 10, color: '#ef4444' }
-];
+interface QuickStatsProps {
+  financial?: {
+    totalRevenue?: number;
+    availableBalance?: number;
+    creditLimit?: number;
+    outstandingDebt?: number;
+    projectedBalance14Days?: number;
+  };
+  evaluation?: {
+    overallScore?: number;
+    breakdown?: {
+      excellent?: number;
+      good?: number;
+      needsImprovement?: number;
+    };
+  };
+}
 
-export default function QuickStats() {
+export default function QuickStats({ financial, evaluation }: QuickStatsProps = {}) {
+  // デフォルト値
+  const defaultFinancial = {
+    availableBalance: 1768,
+    creditLimit: 3000,
+    outstandingDebt: -1232,
+    projectedBalance14Days: 1543
+  };
+
+  const defaultEvaluation = {
+    overallScore: 85,
+    breakdown: {
+      excellent: 65,
+      good: 25,
+      needsImprovement: 10
+    }
+  };
+
+  const actualFinancial = { ...defaultFinancial, ...financial };
+  const actualEvaluation = { ...defaultEvaluation, ...evaluation };
+
+  const evaluationData = [
+    { name: '優秀', value: actualEvaluation.breakdown.excellent || 0, color: '#10b981' },
+    { name: '良好', value: actualEvaluation.breakdown.good || 0, color: '#f59e0b' },
+    { name: '要改善', value: actualEvaluation.breakdown.needsImprovement || 0, color: '#ef4444' }
+  ];
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
       <div className="mb-6">
@@ -46,27 +83,27 @@ export default function QuickStats() {
       </div>
 
       <div className="text-center mb-4">
-        <div className="text-3xl font-bold text-gray-900">85%</div>
+        <div className="text-3xl font-bold text-gray-900">{actualEvaluation.overallScore}%</div>
         <div className="text-sm text-gray-500">総合スコア</div>
       </div>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">利用可能</span>
-          <span className="font-semibold">¥1,768</span>
+          <span className="font-semibold">¥{actualFinancial.availableBalance.toLocaleString()}</span>
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">制限</span>
-          <span className="font-semibold">¥3,000</span>
+          <span className="font-semibold">¥{actualFinancial.creditLimit.toLocaleString()}</span>
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">負債</span>
-          <span className="font-semibold text-red-600">-¥1,232</span>
+          <span className="font-semibold text-red-600">¥{actualFinancial.outstandingDebt.toLocaleString()}</span>
         </div>
       </div>
 
       <div className="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
-        今後14日間で¥1,543の残高があります
+        今後14日間で¥{actualFinancial.projectedBalance14Days.toLocaleString()}の残高があります
         <button className="block text-purple-600 hover:text-purple-700 mt-1">
           詳細を表示 →
         </button>

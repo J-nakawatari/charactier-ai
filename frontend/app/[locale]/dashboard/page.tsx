@@ -100,19 +100,6 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [locale, router]);
 
-  // モック切り替え用（開発時のみ）
-  const toggleLowTokens = () => {
-    if (dashboardData) {
-      const newBalance = isLowTokenWarning() ? 2500 : 800;
-      setDashboardData({
-        ...dashboardData,
-        tokens: {
-          ...dashboardData.tokens,
-          balance: newBalance
-        }
-      });
-    }
-  };
 
   // トークン残高更新ハンドラー
   const handleTokensUpdated = (newBalance: number) => {
@@ -127,15 +114,9 @@ export default function DashboardPage() {
     }
   };
 
-  const isLowTokenWarning = () => {
-    if (!dashboardData || !dashboardData.tokens) return false;
-    const totalPurchased = dashboardData.tokens.totalPurchased || 0;
-    const balance = dashboardData.tokens.balance || 0;
-    return totalPurchased > 0 && balance <= (totalPurchased * 0.2);
-  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-dvh bg-gray-50 flex">
       {/* サイドバー */}
       <UserSidebar locale={locale} />
       
@@ -158,21 +139,11 @@ export default function DashboardPage() {
                 <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                   <div className="min-w-0">
                     <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2 leading-tight">
-                      {t('title', { name: dashboardData.user.name || 'ユーザー' })}
+                      {t('title', { name: dashboardData.user.name || t('defaultUser') })}
                     </h1>
                     <p className="text-sm md:text-base text-gray-600">
                       {t('welcome')}
                     </p>
-                  </div>
-                  
-                  {/* 開発用：トークン切り替えボタン */}
-                  <div className="flex-shrink-0">
-                    <button
-                      onClick={toggleLowTokens}
-                      className="w-full md:w-auto px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs md:text-sm hover:bg-gray-300 transition-colors"
-                    >
-                      {isLowTokenWarning() ? 'Normal Tokens' : 'Low Tokens'}
-                    </button>
                   </div>
                 </div>
               </div>
@@ -201,7 +172,6 @@ export default function DashboardPage() {
                     balance={dashboardData.tokens.balance}
                     totalPurchased={dashboardData.tokens.totalPurchased}
                     recentUsage={dashboardData.tokens.recentUsage}
-                    isLowWarning={isLowTokenWarning()}
                     onTokensUpdated={handleTokensUpdated}
                   />
                 </div>

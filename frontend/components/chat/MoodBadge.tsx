@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAffinityStore, getMoodStyles, MoodState } from '@/store/affinityStore';
 
 interface MoodBadgeProps {
@@ -22,6 +23,7 @@ export function MoodBadge({
   className = ''
 }: MoodBadgeProps) {
   const { mood: storeMood, setMood } = useAffinityStore();
+  const t = useTranslations('moods');
   
   // propsで渡された気分があればストアを更新
   useEffect(() => {
@@ -63,7 +65,7 @@ export function MoodBadge({
       
       {showLabel && (
         <span className="font-medium select-none">
-          {moodStyles.label}
+          {t(currentMood)}
         </span>
       )}
     </div>

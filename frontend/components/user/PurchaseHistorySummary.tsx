@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ShoppingCart, Coins, Users, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface PurchaseHistoryItem {
   type: 'token' | 'character';
@@ -16,6 +17,8 @@ interface PurchaseHistorySummaryProps {
 }
 
 export default function PurchaseHistorySummary({ purchaseHistory, locale }: PurchaseHistorySummaryProps) {
+  const t = useTranslations('purchaseHistorySummary');
+  const tGeneral = useTranslations('general');
   const [isExpanded, setIsExpanded] = useState(false);
   
   // 最新3件を表示（展開時は全件）
@@ -31,7 +34,7 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
 
   const formatAmount = (amount: number, type: string) => {
     if (type === 'token') {
-      return `${amount.toLocaleString()}トークン`;
+      return t('types.token', { amount: amount.toLocaleString() });
     } else {
       return `¥${amount.toLocaleString()}`;
     }
@@ -65,13 +68,13 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
           <div className="p-2 bg-green-100 rounded-lg">
             <ShoppingCart className="w-5 h-5 text-green-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">購入履歴</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
         </div>
         <div className="text-center py-8">
           <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-3">まだ購入履歴がありません</p>
+          <p className="text-gray-500 mb-3">{t('noHistory')}</p>
           <button className="text-sm text-green-600 hover:text-green-700 font-medium transition-colors">
-            トークンを購入する
+            {t('buyTokens')}
           </button>
         </div>
       </div>
@@ -86,7 +89,7 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
           <div className="p-2 bg-green-100 rounded-lg">
             <ShoppingCart className="w-5 h-5 text-green-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">購入履歴</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
         </div>
         
         {purchaseHistory.length > 3 && (
@@ -94,7 +97,7 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
             onClick={() => setIsExpanded(!isExpanded)}
             className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-700 transition-colors"
           >
-            <span>{isExpanded ? '閉じる' : 'すべて見る'}</span>
+            <span>{isExpanded ? tGeneral('close') : tGeneral('viewAll')}</span>
             {isExpanded ? (
               <ChevronUp className="w-4 h-4" />
             ) : (
@@ -107,13 +110,13 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
       {/* 統計サマリ */}
       <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
         <div className="text-center">
-          <p className="text-sm text-gray-600">総購入額</p>
+          <p className="text-sm text-gray-600">{t('totalSpent')}</p>
           <p className="text-lg font-bold text-gray-900">
             ¥{totalSpent.toLocaleString()}
           </p>
         </div>
         <div className="text-center">
-          <p className="text-sm text-gray-600">購入トークン</p>
+          <p className="text-sm text-gray-600">{t('purchasedTokens')}</p>
           <p className="text-lg font-bold text-gray-900">
             {totalTokensPurchased.toLocaleString()}
           </p>
@@ -139,7 +142,7 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center space-x-2 mb-1">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(item.type)}`}>
-                      {item.type === 'token' ? 'トークン' : 'キャラクター'}
+{item.type === 'token' ? t('types.tokenUnit') : t('types.characterUnit')}
                     </span>
                   </div>
                   <p className="text-sm text-gray-900 font-medium truncate">

@@ -53,13 +53,29 @@ router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, r
       .limit(limit)
       .lean();
 
+    // 現在の為替レートを取得して実際の利益率を計算
+    const { calcTokensToGive } = require('../config/tokenConfig');
+    const currentModel = 'gpt-4o-mini'; // デフォルトモデルを指定
+    
+    // 各パックの実際の利益率を計算（99%利益率システム）
+    const tokenPacksWithProfitMargin = await Promise.all(tokenPacks.map(async (pack) => {
+      const expectedTokens = await calcTokensToGive(pack.price, currentModel);
+      
+      return {
+        ...pack,
+        profitMargin: 99, // 99%利益率システム
+        tokenPerYen: pack.tokens / pack.price,
+        expectedTokens: expectedTokens // 参考値として期待トークン数も含める
+      };
+    }));
+
     const total = await TokenPackModel.countDocuments(query);
     const totalPages = Math.ceil(total / limit);
 
-    console.log(`✅ Fetched ${tokenPacks.length} token packs for admin`);
+    console.log(`✅ Fetched ${tokenPacks.length} token packs for admin with actual profit margins`);
 
     res.json({
-      tokenPacks,
+      tokenPacks: tokenPacksWithProfitMargin,
       pagination: {
         total,
         page,
@@ -84,7 +100,7 @@ router.post('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, 
       price,
       priceId,
       isActive = true,
-      profitMargin = 50,
+      profitMargin = 99,
       bonusTokens = 0,
       popularTag = false,
       limitedTime = false,
@@ -145,6 +161,9 @@ router.put('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest
     // tokenPerYenを再計算
     if (updateData.tokens && updateData.price) {
       updateData.tokenPerYen = updateData.tokens / updateData.price;
+      
+      // 99%利益率システム
+      updateData.profitMargin = 99;
     }
 
     if (updateData.validUntil) {

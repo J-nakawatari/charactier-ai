@@ -80,6 +80,11 @@ export interface IUser extends Document {
   preferredLanguage: 'ja' | 'en';
   isAdmin: boolean;
   
+  // メール認証
+  emailVerified: boolean;
+  emailVerificationToken?: string;
+  emailVerificationExpires?: Date;
+  
   // キャラクター関連
   selectedCharacter?: string; // ObjectId
   purchasedCharacters: string[]; // ObjectId[]
@@ -91,7 +96,8 @@ export interface IUser extends Document {
   
   // セキュリティ・制裁
   violationCount: number;
-  accountStatus: 'active' | 'inactive' | 'suspended' | 'banned';
+  warningCount: number;
+  accountStatus: 'active' | 'inactive' | 'suspended' | 'banned' | 'warned' | 'chat_suspended' | 'account_suspended';
   suspensionEndDate?: Date;
   banReason?: string;
   lastViolationDate?: Date;
@@ -322,6 +328,20 @@ const UserSchema: Schema = new Schema({
     default: false
   },
   
+  // メール認証
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationToken: {
+    type: String,
+    select: false // セキュリティのため通常のクエリでは取得しない
+  },
+  emailVerificationExpires: {
+    type: Date,
+    select: false
+  },
+  
   // キャラクター関連
   selectedCharacter: {
     type: Schema.Types.ObjectId,
@@ -354,9 +374,14 @@ const UserSchema: Schema = new Schema({
     default: 0,
     min: 0
   },
+  warningCount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
   accountStatus: {
     type: String,
-    enum: ['active', 'inactive', 'suspended', 'banned'],
+    enum: ['active', 'inactive', 'suspended', 'banned', 'warned', 'chat_suspended', 'account_suspended'],
     default: 'active'
   },
   suspensionEndDate: Date,

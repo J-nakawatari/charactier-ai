@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
 import { getCurrentUser, authenticatedFetch } from '../../../utils/auth';
 import { API_BASE_URL } from '@/lib/api-config';
+import { getPersonalityPresetLabel } from '@/lib/characterConstants';
 
 const orbitron = Orbitron({ 
   weight: ['400', '700'], 
@@ -17,6 +19,7 @@ export default function SetupPage() {
   const router = useRouter();
   const params = useParams();
   const locale = params.locale as string || 'ja';
+  const t = useTranslations('setup');
   
   const [step, setStep] = useState(1); // 1: 名前入力, 2: キャラ選択
   const [name, setName] = useState('');
@@ -34,9 +37,9 @@ export default function SetupPage() {
   ], []);
 
   const fallbackImages = [
-    '/images/hero/hero-fallback_01.jpg',
-    '/images/hero/hero-fallback_02.jpg', 
-    '/images/hero/hero-fallback_03.jpg'
+    '/images/hero/hero-fallback_01.png',
+    '/images/hero/hero-fallback_02.png', 
+    '/images/hero/hero-fallback_03.png'
   ];
 
   // 認証チェック
@@ -141,13 +144,13 @@ export default function SetupPage() {
         setCharacters(freeCharacters);
         console.log('✅ セットアップ用キャラクター取得:', freeCharacters.length, '個');
       } else {
-        setError('キャラクター情報の取得に失敗しました');
+        setError(t('errors.charactersFetchFailed'));
       }
     } catch (error) {
       console.error('❌ Characters fetch error:', error);
-      setError('キャラクター情報の取得に失敗しました');
+      setError(t('errors.charactersFetchFailed'));
     }
-  }, [locale]);
+  }, [locale, t]);
 
   useEffect(() => {
     if (step === 2) {
@@ -159,7 +162,7 @@ export default function SetupPage() {
     e.preventDefault();
     
     if (!name.trim()) {
-      setError('お名前を入力してください');
+      setError(t('errors.nameRequired'));
       return;
     }
 
@@ -173,7 +176,7 @@ export default function SetupPage() {
 
   const handleSetupComplete = async () => {
     if (!selectedCharacter) {
-      setError('キャラクターを選択してください');
+      setError(t('errors.characterRequired'));
       return;
     }
 
@@ -181,7 +184,7 @@ export default function SetupPage() {
     setError('');
 
     try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/api/user/setup-complete`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/api/auth/user/setup-complete`, {
         method: 'POST',
         body: JSON.stringify({ 
           name: name.trim(), 
@@ -199,18 +202,18 @@ export default function SetupPage() {
         router.push(`/${locale}/characters?newUser=true`);
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'セットアップに失敗しました');
+        setError(errorData.message || t('errors.setupFailed'));
       }
     } catch (error) {
       console.error('❌ Setup completion error:', error);
-      setError('セットアップに失敗しました。もう一度お試しください。');
+      setError(t('errors.setupFailedRetry'));
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-dvh overflow-hidden">
       {/* Background Video/Image Container */}
       <div className="absolute inset-0 w-full h-full">
         {/* Desktop: Video Background */}
@@ -255,7 +258,7 @@ export default function SetupPage() {
       </div>
       
       {/* Main Content */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
+      <div className="relative z-10 flex items-center justify-center min-h-dvh px-4">
         <div className="w-full max-w-md">
           {/* Setup Card */}
           <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
@@ -264,13 +267,13 @@ export default function SetupPage() {
                 {/* Step 1: 名前入力 */}
                 <h1 
                   className={`${orbitron.className} text-center text-2xl md:text-3xl font-bold mb-4`}
-                  style={{ color: '#E91E63' }}
+                  style={{ color: '#E95295' }}
                 >
-                  はじめまして！
+                  {t('greeting')}
                 </h1>
                 
                 <p className="text-center text-gray-600 mb-8">
-                  あなたのお名前を教えてください
+                  {t('namePrompt')}
                 </p>
                 
                 {/* Error Message */}
@@ -284,16 +287,16 @@ export default function SetupPage() {
                 <form onSubmit={handleNameSubmit} className="space-y-6">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                      お名前
+                      {t('nameLabel')}
                     </label>
                     <input
                       id="name"
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="例：太郎"
+                      placeholder={t('namePlaceholder')}
                       className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg outline-none text-gray-900 focus:ring-2"
-                      style={{ '--tw-ring-color': '#E91E63' } as React.CSSProperties}
+                      style={{ '--tw-ring-color': '#E95295' } as React.CSSProperties}
                       autoFocus
                     />
                   </div>
@@ -301,9 +304,9 @@ export default function SetupPage() {
                   <button
                     type="submit"
                     className="w-full py-3 px-4 rounded-lg text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                    style={{ backgroundColor: '#E91E63' }}
+                    style={{ backgroundColor: '#E95295' }}
                   >
-                    次へ
+                    {t('next')}
                   </button>
                 </form>
               </>
@@ -312,13 +315,13 @@ export default function SetupPage() {
                 {/* Step 2: キャラ選択 */}
                 <h1 
                   className="text-center text-2xl md:text-3xl font-bold mb-4"
-                  style={{ color: '#E91E63' }}
+                  style={{ color: '#E95295' }}
                 >
-                  こんにちは、{name}さん！
+                  {t('greeting')}, {name}{locale === 'ja' ? 'さん' : ''}!
                 </h1>
                 
                 <p className="text-center text-gray-600 mb-8">
-                  チャットで会話したいキャラクターを選択してください
+                  {t('characterSelection')}
                 </p>
                 
                 {/* Error Message */}
@@ -373,7 +376,7 @@ export default function SetupPage() {
                           {character.name[locale] || character.name.ja}
                         </h3>
                         <p className="text-sm text-pink-600 font-medium">
-                          {character.personalityPreset}
+                          {getPersonalityPresetLabel(character.personalityPreset, locale as 'ja' | 'en')}
                         </p>
                         {character.description && (
                           <p className="text-xs text-gray-500 mt-2 line-clamp-2">
@@ -390,15 +393,15 @@ export default function SetupPage() {
                   onClick={handleSetupComplete}
                   disabled={!selectedCharacter || isLoading}
                   className="w-full py-3 px-4 rounded-lg text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                  style={{ backgroundColor: '#E91E63' }}
+                  style={{ backgroundColor: '#E95295' }}
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      セットアップ中...
+                      {t('settingUp')}
                     </div>
                   ) : (
-                    'チャットを始める'
+                    t('startChat')
                   )}
                 </button>
               </>

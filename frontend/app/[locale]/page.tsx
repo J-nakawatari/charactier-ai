@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
+import { CommercialTransactionModal } from '@/components/CommercialTransactionModal';
 
 const orbitron = Orbitron({ 
   weight: ['400', '700'], 
@@ -17,6 +18,7 @@ export default function HomePage() {
   const router = useRouter();
   const locale = (params?.locale as string) || 'ja';
   const t = useTranslations('homepage');
+  const tFooter = useTranslations('footer');
   
   // Video state
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -29,20 +31,21 @@ export default function HomePage() {
   const [rightText, setRightText] = useState('');
   const [leftVisible, setLeftVisible] = useState(false);
   const [rightVisible, setRightVisible] = useState(false);
+  const [showCommercialModal, setShowCommercialModal] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   
-  const videoSources = [
+  const videoSources = useMemo(() => [
     '/video/hero-videos_01.mp4',
     '/video/hero-videos_02.mp4',
     '/video/hero-videos_03.mp4'
-  ];
+  ], []);
 
   // Fallback images for mobile
-  const fallbackImages = [
-    '/images/hero/hero-fallback_01.jpg',
-    '/images/hero/hero-fallback_02.jpg', 
-    '/images/hero/hero-fallback_03.jpg'
-  ];
+  const fallbackImages = useMemo(() => [
+    '/images/hero/hero-fallback_01.png',
+    '/images/hero/hero-fallback_02.png', 
+    '/images/hero/hero-fallback_03.png'
+  ], []);
   
   const chatMessages = t.raw('chatMessages') as string[];
   
@@ -73,20 +76,78 @@ export default function HomePage() {
     
     if (!video1 || !video2) return;
     
-    // Simple video setup - just play the first video
-    video1.src = videoSources[0];
-    video1.style.opacity = '1';
-    video1.style.zIndex = '1';
-    video1.load();
-    video1.play().catch(() => {
+    let currentIndex = 0;
+    let activeVideo = video1;
+    let nextVideo = video2;
+    
+    activeVideo.src = videoSources[0];
+    activeVideo.style.opacity = '1';
+    activeVideo.style.zIndex = '1';
+    activeVideo.load();
+    activeVideo.play().catch(() => {
       // Ignore play errors
     });
     
-    // Don't do switching for now - just show first video
+    const switchVideo = () => {
+      currentIndex = (currentIndex + 1) % videoSources.length;
+      
+      nextVideo.src = videoSources[currentIndex];
+      nextVideo.style.opacity = '0';
+      nextVideo.style.zIndex = '2';
+      nextVideo.load();
+      
+      nextVideo.addEventListener('canplay', () => {
+        nextVideo.play().catch(() => {
+          // Ignore play errors
+        });
+        nextVideo.style.opacity = '1';
+        activeVideo.style.opacity = '0';
+        
+        setTimeout(() => {
+          const temp = activeVideo;
+          activeVideo = nextVideo;
+          nextVideo = temp;
+          
+          activeVideo.style.zIndex = '1';
+          nextVideo.style.zIndex = '0';
+        }, 2000);
+      }, { once: true });
+    };
+    
+    const interval = setInterval(switchVideo, 7000);
+    
+    return () => {
+      clearInterval(interval);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted, isMobile]); // Add dependencies
+  }, [mounted, isMobile]);
 
-  // Mobile uses static image - no switching needed
+  // Mobile image switching effect
+  useEffect(() => {
+    if (!mounted || !isMobile) return;
+    
+    let currentIndex = 0;
+    
+    const switchImage = () => {
+      currentIndex = (currentIndex + 1) % fallbackImages.length;
+      const heroImage = document.getElementById('hero-image') as HTMLImageElement;
+      
+      if (heroImage) {
+        heroImage.style.opacity = '0';
+        setTimeout(() => {
+          heroImage.src = fallbackImages[currentIndex];
+          heroImage.style.opacity = '1';
+        }, 1000);
+      }
+    };
+    
+    // Set up image switching interval (6 seconds)
+    const interval = setInterval(switchImage, 6000);
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, [mounted, isMobile, fallbackImages]);
   
   // Chat bubble animation
   useEffect(() => {
@@ -165,7 +226,7 @@ export default function HomePage() {
   }, [chatMessages]);
   
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-dvh overflow-hidden">
       {/* Background Video/Image Container */}
       <div className="absolute inset-0 w-full h-full">
         {/* Desktop: Video Background */}
@@ -207,7 +268,6 @@ export default function HomePage() {
         {!mounted && (
           <>
             <video
-              id="video1"
               className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-in-out"
               style={{ opacity: 0, zIndex: 0 }}
               muted
@@ -215,7 +275,6 @@ export default function HomePage() {
               playsInline
             />
             <video
-              id="video2"
               className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-in-out"
               style={{ opacity: 0, zIndex: 0 }}
               muted
@@ -256,7 +315,7 @@ export default function HomePage() {
       </div>
       
       {/* Main Content */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
+      <div className="relative z-10 flex items-center justify-center min-h-dvh px-4">
         <div className="relative text-center w-full max-w-4xl">
           {/* Small Title */}
           <p className="text-white text-sm sm:text-base md:text-lg font-medium mb-4 tracking-wide">
@@ -267,8 +326,8 @@ export default function HomePage() {
           <h1 
             className={`${orbitron.className} text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold mb-6`}
             style={{
-              color: '#E91E63',
-              textShadow: '0 0 20px rgba(233, 30, 99, 0.5), 0 0 40px rgba(233, 30, 99, 0.3)'
+              color: '#E95295',
+              textShadow: '0 0 20px rgba(233, 82, 149, 0.5), 0 0 40px rgba(233, 82, 149, 0.3)'
             }}
           >
             {t('mainTitle')}
@@ -291,9 +350,9 @@ export default function HomePage() {
           {/* Login Button */}
           <button
             onClick={() => router.push(`/${locale}/login`)}
-            className="flex items-center justify-center gap-3 text-white font-bold py-3 md:py-4 px-6 rounded-lg text-base md:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl mb-6 mx-auto w-full max-w-xs"
+            className="flex items-center justify-center gap-3 text-white font-bold py-4 md:py-4 px-6 rounded-lg text-base md:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl mb-6 mx-auto w-full max-w-xs"
             style={{
-              backgroundColor: '#E91E63',
+              backgroundColor: '#E95295',
               borderRadius: '8px'
             }}
           >
@@ -312,7 +371,7 @@ export default function HomePage() {
             <button
               onClick={() => router.push(`/${locale}/register`)}
               className="text-base md:text-lg font-bold mb-1 hover:opacity-80 transition-colors underline cursor-pointer"
-              style={{ color: '#E91E63' }}
+              style={{ color: '#E95295' }}
             >
               {t('newUserPromo')}
             </button>
@@ -320,8 +379,8 @@ export default function HomePage() {
               <div 
                 className="px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm md:text-base font-semibold"
                 style={{ 
-                  color: '#E91E63',
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  color: '#E95295',
+                  backgroundColor: 'rgba(255, 255, 255, 0.5)',
                   backdropFilter: 'blur(4px)'
                 }}
               >
@@ -338,7 +397,7 @@ export default function HomePage() {
                   height: 0,
                   borderLeft: '6px solid transparent',
                   borderRight: '6px solid transparent',
-                  borderBottom: '6px solid rgba(255, 255, 255, 0.2)'
+                  borderBottom: '6px solid rgba(255, 255, 255, 0.5)'
                 }}
               />
             </div>
@@ -410,6 +469,22 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+      
+      {/* Footer with Commercial Transaction Act link */}
+      <div className="absolute bottom-4 left-0 right-0 text-center z-20">
+        <button
+          onClick={() => setShowCommercialModal(true)}
+          className="text-white text-sm hover:opacity-80 transition-opacity underline"
+        >
+          {tFooter('commercialTransaction')}
+        </button>
+      </div>
+      
+      {/* Modals */}
+      <CommercialTransactionModal 
+        isOpen={showCommercialModal} 
+        onClose={() => setShowCommercialModal(false)} 
+      />
     </div>
   );
 }

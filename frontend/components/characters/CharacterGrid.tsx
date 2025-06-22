@@ -3,26 +3,15 @@
 import React from 'react';
 import CharacterCard from './CharacterCard';
 import { User, Search } from 'lucide-react';
-import type { BaseCharacter } from '@/types/common';
+import type { BaseCharacter, LocalizedString } from '@/types/common';
 
-// CharacterGrid用の型定義（ユーザー向け表示用）
-interface GridCharacter {
-  _id: string;
-  name: string;
-  description: string;
-  characterAccessType?: 'free' | 'purchaseOnly';
-  personalityPreset?: string;
-  personalityTags?: string[];
-  gender?: string;
-  themeColor?: string;
-  imageCharacterSelect?: string;
-  imageChatAvatar?: string;
-  imageChatBackground?: string;
-  currentMood?: string;
+// CharacterGrid用の型定義（BaseCharacterを拡張）
+interface GridCharacter extends Omit<BaseCharacter, 'isActive' | 'createdAt' | 'updatedAt'> {
   affinityStats?: {
     totalUsers: number;
     averageLevel: number;
   };
+  currentMood?: string;
 }
 
 interface UserAffinity {
@@ -115,22 +104,7 @@ export default function CharacterGrid({
             }}
           >
             <CharacterCard
-              character={{
-                ...character,
-                name: typeof character.name === 'string' 
-                  ? { ja: character.name, en: character.name }
-                  : character.name,
-                description: typeof character.description === 'string'
-                  ? { ja: character.description, en: character.description }
-                  : character.description,
-                personalityPreset: character.personalityPreset || '',
-                personalityTags: character.personalityTags || [],
-                gender: 'unknown',
-                characterAccessType: character.characterAccessType || 'free',
-                aiModel: 'gpt-4o-mini',
-                isActive: true,
-                createdAt: new Date().toISOString()
-              }}
+              character={character as BaseCharacter}
               currentAffinity={currentAffinity}
               isLocked={isLocked}
               price={price}

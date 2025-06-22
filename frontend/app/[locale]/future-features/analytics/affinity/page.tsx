@@ -66,7 +66,7 @@ export default function AffinityAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-dvh bg-gray-50 flex">
         <UserSidebar locale={locale} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -79,7 +79,7 @@ export default function AffinityAnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-dvh bg-gray-50 flex">
       <UserSidebar locale={locale} />
       
       <div className="flex-1 lg:ml-64 p-8">
@@ -120,7 +120,7 @@ export default function AffinityAnalyticsPage() {
                 <select
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 bg-white"
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none text-gray-900 bg-white"
                 >
                   <option value="7d" className="text-gray-900">過去7日</option>
                   <option value="30d" className="text-gray-900">過去30日</option>
@@ -133,7 +133,7 @@ export default function AffinityAnalyticsPage() {
                 <select
                   value={selectedCharacter}
                   onChange={(e) => setSelectedCharacter(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 bg-white"
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none text-gray-900 bg-white"
                 >
                   <option value="all" className="text-gray-900">全キャラクター</option>
                 </select>

@@ -52,7 +52,7 @@ const TokenUsageSchema = new mongoose_1.Schema({
         type: String,
         required: true,
         index: true,
-        maxlength: 64
+        maxlength: 128
     },
     // 使用量詳細
     tokensUsed: {
@@ -81,7 +81,7 @@ const TokenUsageSchema = new mongoose_1.Schema({
     aiModel: {
         type: String,
         required: true,
-        enum: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o'],
+        enum: ['gpt-3.5-turbo', 'gpt-4o-mini'],
         index: true
     },
     inputTokens: {
@@ -124,10 +124,10 @@ const TokenUsageSchema = new mongoose_1.Schema({
         required: true,
         validate: {
             validator: function (v) {
-                // 50%利益ルールチェック
-                return v >= (this.apiCostYen * 0.5);
+                // 99%利益率システムチェック
+                return v >= (this.apiCostYen * 99);
             },
-            message: 'Profit margin below 50% rule'
+            message: 'Profit margin below 99% rule'
         }
     },
     profitMargin: {
@@ -137,9 +137,9 @@ const TokenUsageSchema = new mongoose_1.Schema({
         max: 1,
         validate: {
             validator: function (v) {
-                return v >= 0.5; // 50%利益ルール強制
+                return v >= 0.99; // 99%利益率システム
             },
-            message: 'Profit margin must be at least 50%'
+            message: 'Profit margin must be at least 99%'
         }
     },
     // 親密度変化
@@ -348,7 +348,7 @@ TokenUsageSchema.statics.getProfitAnalysis = async function (startDate, endDate)
 TokenUsageSchema.pre('save', function (next) {
     // 利益率計算
     if (this.apiCostYen > 0) {
-        this.profitMargin = Math.max(0, (this.grossProfit - this.apiCostYen) / this.grossProfit);
+        this.profitMargin = Math.max(0, Math.min(1, (this.grossProfit - this.apiCostYen) / this.grossProfit));
     }
     // 親密度変化計算
     this.affinityChange = this.intimacyAfter - this.intimacyBefore;
@@ -363,8 +363,9 @@ TokenUsageSchema.post('save', async function (doc) {
         console.warn(`High API cost detected: ${doc.apiCostYen} yen for user ${doc.userId}`);
     }
     // 利益率違反アラート
-    if (doc.profitMargin < 0.5) {
+    if (doc.profitMargin < 0.99) {
         console.error(`Profit margin violation: ${doc.profitMargin} for user ${doc.userId}`);
     }
 });
-exports.default = mongoose_1.default.model('TokenUsage', TokenUsageSchema);
+// モデルが既に存在する場合は再利用
+exports.default = mongoose_1.default.models.TokenUsage || mongoose_1.default.model('TokenUsage', TokenUsageSchema);

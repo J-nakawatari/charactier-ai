@@ -30,20 +30,32 @@ export class BackendClient {
     console.log('🔗 BackendClient fetch:', url);
     
     try {
+      // タイムアウトを設定（10秒）
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      
       const response = await fetch(url, {
         ...options,
         headers: {
           'Content-Type': 'application/json',
           ...options?.headers,
-        }
+        },
+        signal: controller.signal
       });
+      
+      clearTimeout(timeout);
       
       if (!response.ok) {
         console.error('❌ BackendClient error:', response.status, response.statusText);
       }
       
       return response;
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.error('❌ BackendClient timeout error: Request took too long');
+        // タイムアウトエラーを502として返す
+        return new Response('Backend timeout', { status: 502 });
+      }
       console.error('❌ BackendClient network error:', error);
       throw error;
     }

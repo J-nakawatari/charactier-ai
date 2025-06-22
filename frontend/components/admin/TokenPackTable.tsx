@@ -17,6 +17,7 @@ interface TokenPack {
   updatedAt: string;
   profitMargin?: number;
   tokenPerYen?: number;
+  expectedTokens?: number;
 }
 
 interface TokenPackTableProps {
@@ -238,6 +239,9 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
                 単価
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                期待トークン数
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 利益率
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -267,6 +271,18 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {pack.tokenPerYen?.toFixed(1)}/円
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {pack.expectedTokens ? (
+                    <div className="text-sm">
+                      <div className="text-gray-900">{formatNumber(pack.expectedTokens)}</div>
+                      <div className={`text-xs ${pack.tokens < pack.expectedTokens ? 'text-red-600' : 'text-green-600'}`}>
+                        {pack.tokens < pack.expectedTokens ? '▼' : '▲'} {Math.abs(pack.tokens - pack.expectedTokens).toLocaleString('ja-JP')}
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`text-sm font-medium ${getProfitMarginColor(pack.profitMargin)}`}>

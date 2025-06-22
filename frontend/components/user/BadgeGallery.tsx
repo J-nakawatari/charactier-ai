@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Award, Lock, CheckCircle, Star, Target, TrendingUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import BadgeSystemModal from './BadgeSystemModal';
 
 interface LocalizedString {
@@ -26,6 +27,8 @@ interface BadgeGalleryProps {
 }
 
 export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
+  const t = useTranslations('badges');
+  const tGeneral = useTranslations('general');
   const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
   const [isSystemModalOpen, setIsSystemModalOpen] = useState(false);
   
@@ -87,9 +90,9 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
             <Award className="w-5 h-5 text-yellow-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">バッジコレクション</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
             <p className="text-sm text-gray-600">
-              {unlockedCount} / {(badges || []).length} 獲得済み
+              {unlockedCount} / {(badges || []).length} {t('acquired')}
             </p>
           </div>
         </div>
@@ -99,7 +102,7 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
           <div className="text-2xl font-bold text-gray-900">
             {(badges || []).length === 0 ? '0' : Math.round((unlockedCount / (badges || []).length) * 100)}%
           </div>
-          <div className="text-sm text-gray-500">達成率</div>
+          <div className="text-sm text-gray-500">{t('achievementRate')}</div>
         </div>
       </div>
 
@@ -118,9 +121,9 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
       {/* フィルター */}
       <div className="flex space-x-2 mb-4">
         {[
-          { key: 'all', label: 'すべて' },
-          { key: 'unlocked', label: '獲得済み' },
-          { key: 'locked', label: '未獲得' }
+          { key: 'all', label: t('all') },
+          { key: 'unlocked', label: t('unlocked') },
+          { key: 'locked', label: t('locked') }
         ].map((item) => (
           <button
             key={item.key}
@@ -189,7 +192,7 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
             {!badge.isUnlocked && badge.progress !== undefined && badge.maxProgress !== undefined && (
               <div className="mt-3">
                 <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                  <span>進捗</span>
+                  <span>{t('progress')}</span>
                   <span>{badge.progress} / {badge.maxProgress}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -218,10 +221,10 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
         <div className="text-center py-8">
           <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500">
-            {(badges || []).length === 0 ? 'バッジシステムを準備中です...' : 
-             filter === 'unlocked' ? '獲得済みのバッジがありません' : 
-             filter === 'locked' ? 'すべてのバッジを獲得済みです！' : 
-             'バッジがありません'}
+            {(badges || []).length === 0 ? t('preparing') : 
+             filter === 'unlocked' ? t('noAcquired') : 
+             filter === 'locked' ? t('allCompleted') : 
+             t('noBadges')}
           </p>
         </div>
       )}
@@ -230,13 +233,13 @@ export default function BadgeGallery({ badges, locale }: BadgeGalleryProps) {
       <div className="mt-6 pt-4 border-t border-gray-100">
         <div className="text-center">
           <p className="text-sm text-gray-600 mb-2">
-            アクティビティを通じて新しいバッジを獲得しよう！
+            {t('encouragement')}
           </p>
           <button 
             onClick={handleSystemModalOpen}
             className="text-sm text-yellow-600 hover:text-yellow-700 font-medium transition-colors"
           >
-            バッジについて詳しく見る
+{t('learnMore')}
           </button>
         </div>
       </div>

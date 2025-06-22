@@ -11,11 +11,12 @@ import {
   Home,
   ShoppingCart,
   History,
-  Images
+  Images,
+  Settings
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useTranslations } from 'next-intl';
 import { logout } from '../../utils/auth';
 import { TokenPurchaseModal } from '../chat/TokenPurchaseModal';
@@ -33,10 +34,20 @@ interface User {
   isSetupComplete?: boolean;
 }
 
-export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
+const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
   const pathname = usePathname();
   const params = useParams();
-  const currentLocale = locale || params?.locale || 'ja';
+  
+  // パラメータから実際のロケールを取得し、保存する
+  const actualLocale = (params?.locale as string) || locale || 'ja';
+  const currentLocale = actualLocale;
+  
+  // ロケールが変更された時にlocalStorageも更新
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (actualLocale === 'ja' || actualLocale === 'en')) {
+      localStorage.setItem('user-locale', actualLocale);
+    }
+  }, [actualLocale]);
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,7 +82,6 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
               tokenBalance: userData.tokenBalance || user.tokenBalance || 0
             };
             
-            console.log('🔍 UserSidebar - setting user data:', { selectedCharacter: userWithTokenBalance.selectedCharacter });
             setUser(userWithTokenBalance);
             setLoading(false);
             return;
@@ -87,7 +97,6 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           return;
         }
         
-        console.log('❌ No user data found');
         setLoading(false);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -96,7 +105,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
     };
 
     fetchUserData();
-  }, [pathname]); // pathnameの変更を監視
+  }, []); // 初回のみ実行、パス変更での再取得は不要
 
   // ログアウト処理
   const handleLogout = () => {
@@ -105,30 +114,39 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
     }
   };
 
+  // 現在のチャットキャラクターIDを取得
+  const getCurrentCharacterId = () => {
+    // URLからキャラクターIDを抽出
+    const match = pathname.match(/\/characters\/([^\/]+)\/chat/);
+    if (match && match[1]) {
+      return match[1];
+    }
+    
+    // URLにない場合はselectedCharacterを使用
+    return user?.selectedCharacter;
+  };
+
   // selectedCharacterに基づく動的なチャットリンク
   const getChatHref = () => {
-    console.log('🔍 UserSidebar getChatHref - user.selectedCharacter:', user?.selectedCharacter);
-    if (user?.selectedCharacter) {
-      const chatUrl = `/${currentLocale}/characters/${user.selectedCharacter}/chat`;
-      console.log('🔍 UserSidebar generating chat URL:', chatUrl);
+    const currentCharacterId = getCurrentCharacterId();
+    
+    if (currentCharacterId) {
+      const chatUrl = `/${currentLocale}/characters/${currentCharacterId}/chat`;
       return chatUrl;
     }
     
     // キャラクター未選択の場合は一覧へ
-    console.log('🔍 UserSidebar - no selectedCharacter, redirecting to character list');
     return `/${currentLocale}/characters?from=chat`;
   };
 
   const sidebarItems = [
     { id: 'home', href: `/${currentLocale}/dashboard`, icon: Home, label: t('home') },
     { id: 'characters', href: `/${currentLocale}/characters`, icon: Users, label: t('characters') },
-    { id: 'chat', href: null, icon: MessageSquare, label: t('chatHistory'), onClick: () => {
-      const chatUrl = getChatHref();
-      window.location.href = chatUrl;
-    }},
+    { id: 'chat', href: getChatHref(), icon: MessageSquare, label: t('chatHistory') },
     { id: 'library', href: `/${currentLocale}/library`, icon: Images, label: t('library') },
     { id: 'tokens', href: null, icon: Coins, label: t('tokens'), onClick: () => setShowPurchaseModal(true) },
     { id: 'purchase-history', href: `/${currentLocale}/purchase-history`, icon: ShoppingCart, label: t('purchaseHistory') },
+    { id: 'settings', href: `/${currentLocale}/settings`, icon: Settings, label: t('settings') },
   ];
 
   return (
@@ -136,7 +154,8 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
       {/* ハンバーガーメニューボタン（モバイル用） */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 right-4 z-50 p-3 bg-purple-600 text-white rounded-lg shadow-lg lg:hidden hover:bg-purple-700 transition-colors"
+        className="fixed right-4 z-50 p-3 bg-purple-600 text-white rounded-lg shadow-lg lg:hidden hover:bg-purple-700 transition-colors"
+        style={{ top: 'calc(1rem + env(safe-area-inset-top, 20px))' }}
       >
         {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -151,12 +170,15 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
 
       {/* サイドバー */}
       <div className={`
-        fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-100 
-        flex flex-col shadow-sm overflow-y-auto transform transition-transform duration-300 ease-in-out
+        fixed inset-0 z-50 w-64 bg-white border-r border-gray-100 
+        flex flex-col shadow-sm transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
       `}>
+        {/* Safe area top padding */}
+        <div className="h-[env(safe-area-inset-top,0px)]" />
+        
         {/* ヘッダー */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
               <MessageSquare className="w-5 h-5 text-white" />
@@ -167,7 +189,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
         </div>
 
         {/* ユーザー情報 */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
               <span className="text-sm font-medium text-purple-600">
@@ -186,7 +208,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
         </div>
 
         {/* ナビゲーション */}
-        <nav className="flex-1 p-4 space-y-1 min-h-0">
+        <nav className="flex-1 p-4 space-y-1 min-h-0 overflow-y-auto">
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
             {t('menu')}
           </div>
@@ -247,7 +269,7 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 mt-6">
             {t('account')}
           </div>
-          {sidebarItems.slice(4).map((item) => {
+          {sidebarItems.slice(4, 6).map((item) => {
             const isActive = pathname === item.href;
             
             if (item.onClick) {
@@ -286,10 +308,39 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
               </Link>
             );
           })}
+
+          {/* 設定セクション */}
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 mt-6">
+            {t('preferences')}
+          </div>
+          {sidebarItems.slice(6).map((item) => {
+            const isActive = pathname === item.href;
+            
+            // hrefがnullの場合はスキップ（設定セクションには該当なし）
+            if (!item.href) {
+              return null;
+            }
+            
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                onClick={() => setIsOpen(false)}
+                className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  isActive
+                    ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <item.icon className={`w-5 h-5 ${isActive ? 'text-purple-700' : 'text-gray-400'}`} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         {/* フッター */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="flex-shrink-0 p-4 border-t border-gray-200">
           <button 
             onClick={handleLogout}
             className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 w-full transition-colors hover:bg-red-50 hover:text-red-600"
@@ -298,6 +349,9 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
             <span>{t('logout')}</span>
           </button>
         </div>
+        
+        {/* Safe area bottom padding */}
+        <div className="h-[env(safe-area-inset-bottom,20px)]" />
       </div>
 
       {/* トークン購入モーダル */}
@@ -312,4 +366,6 @@ export default function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
       />
     </>
   );
-}
+});
+
+export default UserSidebar;

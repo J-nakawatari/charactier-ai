@@ -7,7 +7,7 @@ import mongoose, { Schema, Document } from 'mongoose';
  * - 全トークン使用状況の詳細トラッキング
  * - API費用・利益率の正確な計算
  * - 異常使用検知・セキュリティ監視
- * - 経済モデル（50%利益ルール）の維持
+ * - 経済モデル（99%利益率システム）の維持
  * - ユーザー行動分析・最適化判断
  * 
  * パフォーマンス考慮:
@@ -75,7 +75,7 @@ const TokenUsageSchema = new Schema<ITokenUsage>({
     type: String,
     required: true,
     index: true,
-    maxlength: 64
+    maxlength: 128
   },
 
   // 使用量詳細
@@ -106,7 +106,7 @@ const TokenUsageSchema = new Schema<ITokenUsage>({
   aiModel: {
     type: String,
     required: true,
-    enum: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o'],
+    enum: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4o-mini'],
     index: true
   },
   inputTokens: {
@@ -150,10 +150,10 @@ const TokenUsageSchema = new Schema<ITokenUsage>({
     required: true,
     validate: {
       validator: function(v: number) {
-        // 50%利益ルールチェック
-        return v >= (this.apiCostYen * 0.5);
+        // 94%利益ルールチェック
+        return v >= (this.apiCostYen * 0.06); // 6%原価率
       },
-      message: 'Profit margin below 50% rule'
+      message: 'Profit margin below 94% rule'
     }
   },
   profitMargin: {
@@ -163,9 +163,9 @@ const TokenUsageSchema = new Schema<ITokenUsage>({
     max: 1,
     validate: {
       validator: function(v: number) {
-        return v >= 0.5; // 50%利益ルール強制
+        return v >= 0.9; // 90%利益ルール（安全マージン）
       },
-      message: 'Profit margin must be at least 50%'
+      message: 'Profit margin must be at least 90%'
     }
   },
 
@@ -394,9 +394,12 @@ TokenUsageSchema.statics.getProfitAnalysis = async function(startDate: Date, end
 
 // 保存前バリデーション
 TokenUsageSchema.pre('save', function(next) {
-  // 利益率計算
-  if (this.apiCostYen > 0) {
-    this.profitMargin = Math.max(0, (this.grossProfit - this.apiCostYen) / this.grossProfit);
+  // 利益率計算（0-1の範囲に収める）
+  if (this.apiCostYen > 0 && this.grossProfit > 0) {
+    const margin = (this.grossProfit - this.apiCostYen) / this.grossProfit;
+    this.profitMargin = Math.max(0, Math.min(1, margin));
+  } else {
+    this.profitMargin = 0;
   }
   
   // 親密度変化計算
@@ -416,7 +419,7 @@ TokenUsageSchema.post('save', async function(doc) {
   }
   
   // 利益率違反アラート
-  if (doc.profitMargin < 0.5) {
+  if (doc.profitMargin < 0.9) {
     console.error(`Profit margin violation: ${doc.profitMargin} for user ${doc.userId}`);
   }
 });

@@ -51,7 +51,7 @@ export default function AdminLayout({
   if (isLoginPage) {
     // ログインページではサイドバーなし
     return (
-      <main className="min-h-screen bg-white">
+      <main className="min-h-dvh bg-white">
         {children}
       </main>
     );
@@ -60,7 +60,7 @@ export default function AdminLayout({
   if (isLoading) {
     // 認証チェック中
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-dvh bg-white flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     );
@@ -75,7 +75,7 @@ export default function AdminLayout({
   return (
     <>
       <Sidebar />
-      <div className="lg:ml-64 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="lg:ml-64 min-h-dvh bg-gradient-to-br from-gray-50 to-gray-100">
         <TopBar />
         <main className="p-6">
           {children}

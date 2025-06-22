@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Bell, Info, AlertTriangle, CheckCircle, X, Eye, EyeOff, AlertCircle, Wrench, Star, Gift } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface LocalizedString {
   ja: string;
@@ -29,6 +30,8 @@ interface NotificationSectionProps {
 }
 
 export default function NotificationSection({ locale }: NotificationSectionProps) {
+  const t = useTranslations('notifications');
+  const tGeneral = useTranslations('general');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,35 +93,9 @@ export default function NotificationSection({ locale }: NotificationSectionProps
 
   const getNotificationBgColor = (type: string, isRead: boolean, isPinned: boolean) => {
     const baseClasses = isRead ? 'bg-gray-50' : 'bg-white';
-    const borderClasses = isPinned ? 'border-yellow-300' : 'border-gray-200';
-    let typeClasses = '';
+    const borderClasses = 'border-gray-200';
     
-    if (!isRead) {
-      switch (type) {
-        case 'warning':
-          typeClasses = 'border-l-orange-400';
-          break;
-        case 'success':
-          typeClasses = 'border-l-green-400';
-          break;
-        case 'urgent':
-          typeClasses = 'border-l-red-400';
-          break;
-        case 'maintenance':
-          typeClasses = 'border-l-gray-400';
-          break;
-        case 'feature':
-          typeClasses = 'border-l-purple-400';
-          break;
-        case 'event':
-          typeClasses = 'border-l-pink-400';
-          break;
-        default:
-          typeClasses = 'border-l-blue-400';
-      }
-    }
-    
-    return `${baseClasses} ${borderClasses} ${typeClasses}`;
+    return `${baseClasses} ${borderClasses}`;
   };
 
   const markAsRead = async (notificationId: string) => {
@@ -195,11 +172,11 @@ export default function NotificationSection({ locale }: NotificationSectionProps
           <div className="p-2 bg-gray-100 rounded-lg">
             <Bell className="w-5 h-5 text-gray-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">お知らせ</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
         </div>
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-          <p className="text-gray-500">お知らせを読み込み中...</p>
+          <p className="text-gray-500">{t('loading', {ns: 'general'}) || '読み込み中...'}</p>
         </div>
       </div>
     );
@@ -213,7 +190,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
           <div className="p-2 bg-gray-100 rounded-lg">
             <Bell className="w-5 h-5 text-gray-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">お知らせ</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
         </div>
         <div className="text-center py-8">
           <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-3" />
@@ -237,7 +214,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
           <div className="p-2 bg-gray-100 rounded-lg">
             <Bell className="w-5 h-5 text-gray-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">お知らせ</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
         </div>
         <div className="text-center py-8">
           <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -261,10 +238,10 @@ export default function NotificationSection({ locale }: NotificationSectionProps
             )}
           </div>
           <h3 className="text-lg font-semibold text-gray-900">
-            お知らせ
+            {t('title')}
             {unreadCount > 0 && (
               <span className="ml-2 text-sm text-gray-500">
-                ({unreadCount}件未読)
+                ({unreadCount}{t('unreadCount')})
               </span>
             )}
           </h3>
@@ -276,7 +253,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
             className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
           >
             <Eye className="w-4 h-4" />
-            <span>すべて既読</span>
+            <span>{tGeneral('markAllRead')}</span>
           </button>
         )}
       </div>
@@ -295,7 +272,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
               key={notification._id}
               className={`p-4 rounded-lg border transition-all duration-200 ${
                 getNotificationBgColor(notification.type, notification.isRead, notification.isPinned)
-              } ${!notification.isRead ? 'border-l-4' : ''}`}
+              }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-3 flex-1">
@@ -308,8 +285,8 @@ export default function NotificationSection({ locale }: NotificationSectionProps
                         {notification.title[locale as keyof LocalizedString]}
                       </h4>
                       {notification.isPinned && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          重要
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+  {t('important')}
                         </span>
                       )}
                       {!notification.isRead && (
@@ -331,7 +308,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
                           className="text-xs text-blue-600 hover:text-blue-700 flex items-center space-x-1 transition-colors"
                         >
                           <EyeOff className="w-3 h-3" />
-                          <span>既読</span>
+                          <span>{tGeneral('read')}</span>
                         </button>
                       )}
                     </div>
@@ -349,7 +326,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
             onClick={() => {/* TODO: 全お知らせページへの遷移 */}}
             className="w-full text-center text-sm text-gray-600 hover:text-gray-700 transition-colors"
           >
-            すべてのお知らせを表示 ({notifications.length}件)
+{t('viewAll', { count: notifications.length })}
           </button>
         </div>
       )}

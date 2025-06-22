@@ -1,0 +1,31 @@
+[Unit]
+Description=Charactier AI Backend
+After=network.target mongodb.service
+Requires=mongodb.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/charactier-ai/backend
+Environment="NODE_ENV=production"
+Environment="PATH=/usr/bin:/usr/local/bin:/root/.nvm/versions/node/v22.16.0/bin"
+ExecStart=/root/.nvm/versions/node/v22.16.0/bin/node dist/src/index.js
+Restart=always
+RestartSec=10
+
+# セキュリティ設定
+NoNewPrivileges=true
+PrivateTmp=true
+
+# リソース制限
+CPUQuota=200%
+MemoryLimit=2G
+TasksMax=100
+
+# ログ設定
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=charactier-backend
+
+[Install]
+WantedBy=multi-user.target

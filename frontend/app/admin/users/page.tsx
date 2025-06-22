@@ -15,7 +15,6 @@ interface UserData {
   tokenBalance: number;
   totalSpent: number;
   chatCount: number;
-  avgIntimacy: number;
   lastLogin: string;
   status: string;
   isTrialUser: boolean;
@@ -106,6 +105,25 @@ export default function UsersPage() {
     fetchUsers();
   }, [pagination.page, searchTerm, statusFilter, fetchUsers]);
 
+  // ページがフォーカスされた時に再読み込み（ユーザー詳細から戻った時など）
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchUsers();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        fetchUsers();
+      }
+    });
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', () => {});
+    };
+  }, [fetchUsers]);
+
   // 検索処理
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +160,7 @@ export default function UsersPage() {
                 placeholder="ユーザー検索..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:w-auto"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg  text-sm sm:w-auto"
               />
             </form>
             

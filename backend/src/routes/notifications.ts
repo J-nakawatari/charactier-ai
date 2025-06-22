@@ -5,6 +5,7 @@ import { authenticateToken } from '../middleware/auth';
 import { NotificationModel, INotification } from '../models/NotificationModel';
 import { UserNotificationReadStatusModel } from '../models/UserNotificationReadStatusModel';
 import { UserModel } from '../models/UserModel';
+import { AdminNotificationReadStatusModel } from '../models/AdminNotificationReadStatusModel';
 
 const router: Router = Router();
 
@@ -291,6 +292,38 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
   next();
 };
 
+// 管理者用未読通知数取得
+router.get('/admin/unread-count', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const adminId = req.user?._id;
+    if (!adminId) {
+      res.status(401).json({ error: '管理者IDが取得できません' });
+      return;
+    }
+
+    // 全ての有効な通知を取得
+    const activeNotifications = await NotificationModel.find({ isActive: true });
+    
+    // 管理者の既読状態を取得
+    const readStatuses = await AdminNotificationReadStatusModel.find({
+      adminId,
+      isRead: true
+    });
+    
+    const readNotificationIds = new Set(readStatuses.map(status => status.notificationId.toString()));
+    
+    // 未読通知数をカウント
+    const unreadCount = activeNotifications.filter(notification => 
+      !readNotificationIds.has(notification._id.toString())
+    ).length;
+
+    res.json({ unreadCount });
+  } catch (error) {
+    console.error('未読通知数取得エラー:', error);
+    res.status(500).json({ error: '未読通知数の取得に失敗しました' });
+  }
+});
+
 // 管理者用お知らせ一覧取得
 router.get('/admin', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -302,7 +335,15 @@ router.get('/admin', authenticateToken, authenticateAdmin, async (req: AuthReque
 
     const query: any = {};
 
-    if (type) query.type = type;
+    // カンマ区切りで複数のタイプを指定可能にする
+    if (type) {
+      const types = type.split(',').map(t => t.trim());
+      if (types.length === 1) {
+        query.type = types[0];
+      } else {
+        query.type = { $in: types };
+      }
+    }
     if (isActive !== undefined) query.isActive = isActive === 'true';
     if (search) {
       query.$or = [
@@ -321,11 +362,27 @@ router.get('/admin', authenticateToken, authenticateAdmin, async (req: AuthReque
       .populate('createdBy', 'name email')
       .lean();
 
-    // createdByが存在しない場合のフォールバック処理
-    const safeNotifications = notifications.map(notification => ({
-      ...notification,
-      createdBy: notification.createdBy || { name: 'システム', email: 'system@charactier.ai' }
-    }));
+    // 管理者の既読状態を取得
+    const adminId = req.user?._id;
+    const readStatuses = adminId ? await AdminNotificationReadStatusModel.find({
+      adminId,
+      notificationId: { $in: notifications.map(n => n._id) }
+    }) : [];
+    
+    const readStatusMap = new Map(
+      readStatuses.map(status => [status.notificationId.toString(), status])
+    );
+
+    // createdByが存在しない場合のフォールバック処理と既読状態の追加
+    const safeNotifications = notifications.map(notification => {
+      const readStatus = readStatusMap.get(notification._id.toString());
+      return {
+        ...notification,
+        createdBy: notification.createdBy || { name: 'システム', email: 'system@charactier.ai' },
+        isRead: readStatus?.isRead || false,
+        readAt: readStatus?.readAt || null
+      };
+    });
 
     const total = await NotificationModel.countDocuments(query);
     const totalPages = Math.ceil(total / limit);
@@ -565,6 +622,77 @@ router.get('/admin/:id/stats', authenticateToken, authenticateAdmin, async (req:
   } catch (error) {
     console.error('❌ Error fetching notification stats:', error);
     res.status(500).json({ error: '統計の取得に失敗しました' });
+  }
+});
+
+// 管理者用通知既読マーク
+router.post('/admin/:id/read', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const notificationId = req.params.id;
+    const adminId = req.user?._id;
+
+    if (!adminId) {
+      res.status(401).json({ error: '管理者IDが取得できません' });
+      return;
+    }
+
+    // 通知の存在確認
+    const notification = await NotificationModel.findById(notificationId);
+    if (!notification) {
+      res.status(404).json({ error: '通知が見つかりません' });
+      return;
+    }
+
+    // 既読状態を更新または作成
+    await AdminNotificationReadStatusModel.findOneAndUpdate(
+      { adminId, notificationId },
+      { 
+        isRead: true,
+        readAt: new Date()
+      },
+      { upsert: true, new: true }
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('管理者通知既読マークエラー:', error);
+    res.status(500).json({ error: '既読状態の更新に失敗しました' });
+  }
+});
+
+// 管理者用通知一括既読マーク
+router.post('/admin/read-all', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const adminId = req.user?._id;
+
+    if (!adminId) {
+      res.status(401).json({ error: '管理者IDが取得できません' });
+      return;
+    }
+
+    // 全ての有効な通知を取得
+    const activeNotifications = await NotificationModel.find({ isActive: true });
+    
+    // 既読状態を一括作成/更新
+    const bulkOperations = activeNotifications.map(notification => ({
+      updateOne: {
+        filter: { adminId, notificationId: notification._id },
+        update: { 
+          isRead: true,
+          readAt: new Date()
+        },
+        upsert: true
+      }
+    }));
+
+    if (bulkOperations.length > 0) {
+      await AdminNotificationReadStatusModel.bulkWrite(bulkOperations);
+    }
+
+    res.json({ success: true, markedCount: bulkOperations.length });
+  } catch (error) {
+    console.error('管理者通知一括既読マークエラー:', error);
+    res.status(500).json({ error: '一括既読の更新に失敗しました' });
   }
 });
 

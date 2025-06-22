@@ -9,14 +9,13 @@ interface UserData {
   tokenBalance: number;
   totalSpent: number;
   chatCount: number;
-  avgIntimacy: number;
   lastLogin: string;
   status: string;
   isTrialUser: boolean;
   createdAt: string;
 }
 import { useToast } from '@/contexts/ToastContext';
-import { Eye, Ban, Unlock, Trash2 } from 'lucide-react';
+import { Eye, Ban, Unlock } from 'lucide-react';
 import { ensureUserNameString } from '@/utils/userUtils';
 import { API_BASE_URL } from '@/lib/api-config';
 
@@ -54,8 +53,8 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
     return new Date(dateString).toLocaleDateString('ja-JP');
   };
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString('ja-JP');
+  const formatNumber = (num: number | undefined) => {
+    return (num || 0).toLocaleString('ja-JP');
   };
 
   const handleViewUser = (user: UserData) => {
@@ -109,43 +108,6 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
     }
   };
 
-  // ⚠️ 一時的機能：トークンリセット
-  const handleResetTokens = async (user: UserData) => {
-    if (!confirm(`⚠️ ${ensureUserNameString(user.name)}のトークン残高(${formatNumber(user.tokenBalance)}枚)を0にリセットしますか？\n\n※これは開発用の一時的機能です`)) {
-      return;
-    }
-
-    try {
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
-      if (!adminToken) {
-        error('認証エラー', '管理者認証が必要です');
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/admin/users/${user.id}/reset-tokens`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Token reset failed');
-      }
-
-      const result = await response.json();
-      success('トークンリセット完了', `${ensureUserNameString(user.name)}のトークン残高を${formatNumber(result.previousBalance)}から0にリセットしました`);
-      
-      // ユーザー一覧を更新
-      onUserUpdate?.();
-      
-    } catch (err) {
-      error('リセットエラー', 'トークンのリセットに失敗しました');
-      console.error('Token reset error:', err);
-    }
-  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -214,18 +176,6 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
                 <div className="text-xs text-gray-500">チャット数</div>
                 <div className="text-sm font-medium text-gray-900">{formatNumber(user.chatCount)}</div>
               </div>
-              <div>
-                <div className="text-xs text-gray-500">平均親密度</div>
-                <div className="flex items-center">
-                  <div className="text-sm font-medium text-gray-900 mr-2">{user.avgIntimacy.toFixed(1)}</div>
-                  <div className="flex-1 bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-purple-600 h-2 rounded-full" 
-                      style={{ width: `${user.avgIntimacy}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
             </div>
             
             <div className="text-xs text-gray-500">
@@ -254,9 +204,6 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 チャット数
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                平均親密度
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 最終ログイン
@@ -299,17 +246,6 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {formatNumber(user.chatCount)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="text-sm text-gray-900 mr-2">{user.avgIntimacy.toFixed(1)}</div>
-                    <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-purple-600 h-2 rounded-full" 
-                        style={{ width: `${user.avgIntimacy}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatDate(user.lastLogin)}
                 </td>
@@ -321,15 +257,6 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
                       title="ユーザー詳細"
                     >
                       <Eye className="w-4 h-4" />
-                    </button>
-                    
-                    {/* ⚠️ 一時的機能：トークンリセット */}
-                    <button 
-                      onClick={() => handleResetTokens(user)}
-                      className="text-gray-400 hover:text-orange-600 transition-colors"
-                      title="⚠️ 開発用：トークンを0にリセット"
-                    >
-                      <Trash2 className="w-4 h-4" />
                     </button>
                     
                     {user.status === 'suspended' ? (

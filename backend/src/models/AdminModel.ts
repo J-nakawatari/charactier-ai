@@ -4,8 +4,7 @@ export interface IAdmin extends Document {
   name: string;
   email: string;
   password: string;
-  role: 'super_admin' | 'admin' | 'moderator';
-  permissions: string[];
+  role: 'super_admin' | 'moderator';
   isActive: boolean;
   lastLogin?: Date;
   createdAt: Date;
@@ -35,22 +34,9 @@ const AdminSchema: Schema = new Schema(
     },
     role: {
       type: String,
-      enum: ['super_admin', 'admin', 'moderator'],
-      default: 'admin'
+      enum: ['super_admin', 'moderator'],
+      default: 'moderator'
     },
-    permissions: [{
-      type: String,
-      enum: [
-        'users.read',
-        'users.write',
-        'characters.read', 
-        'characters.write',
-        'tokens.read',
-        'tokens.write',
-        'system.read',
-        'system.write'
-      ]
-    }],
     isActive: {
       type: Boolean,
       default: true
