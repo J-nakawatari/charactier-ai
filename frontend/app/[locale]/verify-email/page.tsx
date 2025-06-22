@@ -176,20 +176,28 @@ function VerifyEmailContent({ locale }: { locale: string }) {
   );
 }
 
-export default async function VerifyEmailPage({ 
+export default function VerifyEmailPage({ 
   params
 }: { 
   params: Promise<{ locale: string }>
 }) {
-  const { locale } = await params;
-
   return (
     <Suspense fallback={
       <div className="min-h-dvh bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
         <Loader2 className="w-10 h-10 text-purple-600 animate-spin" />
       </div>
     }>
-      <VerifyEmailContent locale={locale} />
+      <VerifyEmailWrapper params={params} />
     </Suspense>
   );
+}
+
+function VerifyEmailWrapper({ params }: { params: Promise<{ locale: string }> }) {
+  const [locale, setLocale] = useState<string>('ja');
+  
+  useEffect(() => {
+    params.then(p => setLocale(p.locale));
+  }, [params]);
+  
+  return <VerifyEmailContent locale={locale} />;
 }
