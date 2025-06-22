@@ -221,7 +221,7 @@ router.get('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest
     // UserTokenPackから正確なトークン残高を計算
     let actualTokenBalance = user.tokenBalance; // fallback
     try {
-      const UserTokenPack = require('../../models/UserTokenPack');
+      const UserTokenPack = require('../../../models/UserTokenPack');
       actualTokenBalance = await UserTokenPack.calculateUserTokenBalance(user._id);
     } catch (error) {
       console.error('TokenPack calculation error:', error);
