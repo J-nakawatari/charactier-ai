@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
+import { ClientErrorCode, getSafeValidationMessage } from '../utils/errorResponse';
+import log from '../utils/logger';
 
 export interface ValidationOptions {
   body?: Joi.Schema;
@@ -24,15 +26,20 @@ export function validate(schemas: ValidationOptions) {
         });
 
         if (error) {
-          const errors = error.details.map(detail => ({
-            field: detail.path.join('.'),
-            message: detail.message
-          }));
+          // Log detailed validation errors internally
+          log.debug('Body validation error', {
+            errors: error.details.map(detail => ({
+              field: detail.path.join('.'),
+              message: detail.message
+            })),
+            path: req.path
+          });
 
+          // Send safe error message to client
+          const safeMessage = getSafeValidationMessage(error.details);
           res.status(400).json({
-            error: 'Validation failed',
-            message: '入力内容に誤りがあります',
-            errors
+            error: ClientErrorCode.INVALID_INPUT,
+            message: safeMessage
           });
           return;
         }
@@ -49,15 +56,20 @@ export function validate(schemas: ValidationOptions) {
         });
 
         if (error) {
-          const errors = error.details.map(detail => ({
-            field: detail.path.join('.'),
-            message: detail.message
-          }));
+          // Log detailed validation errors internally
+          log.debug('Query validation error', {
+            errors: error.details.map(detail => ({
+              field: detail.path.join('.'),
+              message: detail.message
+            })),
+            path: req.path
+          });
 
+          // Send safe error message to client
+          const safeMessage = getSafeValidationMessage(error.details);
           res.status(400).json({
-            error: 'Validation failed',
-            message: 'クエリパラメータに誤りがあります',
-            errors
+            error: ClientErrorCode.INVALID_INPUT,
+            message: safeMessage
           });
           return;
         }
@@ -74,15 +86,20 @@ export function validate(schemas: ValidationOptions) {
         });
 
         if (error) {
-          const errors = error.details.map(detail => ({
-            field: detail.path.join('.'),
-            message: detail.message
-          }));
+          // Log detailed validation errors internally
+          log.debug('Params validation error', {
+            errors: error.details.map(detail => ({
+              field: detail.path.join('.'),
+              message: detail.message
+            })),
+            path: req.path
+          });
 
+          // Send safe error message to client
+          const safeMessage = getSafeValidationMessage(error.details);
           res.status(400).json({
-            error: 'Validation failed',
-            message: 'パラメータに誤りがあります',
-            errors
+            error: ClientErrorCode.INVALID_INPUT,
+            message: safeMessage
           });
           return;
         }
@@ -110,8 +127,9 @@ export function validateObjectId(paramName: string = 'id') {
     const id = req.params[paramName];
     
     if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
+      log.debug('Invalid ObjectId', { id, param: paramName });
       res.status(400).json({
-        error: 'Invalid ID',
+        error: ClientErrorCode.INVALID_INPUT,
         message: '無効なIDが指定されました'
       });
       return;

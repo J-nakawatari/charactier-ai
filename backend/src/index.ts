@@ -64,6 +64,7 @@ import Joi from 'joi';
 import { configureSecurityHeaders } from './middleware/securityHeaders';
 import log from './utils/logger';
 import { requestLoggingMiddleware, securityAuditMiddleware } from './middleware/requestLogger';
+import { sendErrorResponse, ClientErrorCode } from './utils/errorResponse';
 
 // PM2が環境変数を注入するため、dotenv.config()は不要
 // 開発環境の場合のみdotenvを使用（PM2を使わない場合）
@@ -418,8 +419,8 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
     });
     
     if (!stripe || !webhookSecret) {
-      log.error('[Stripe Webhook] Configuration error', undefined);
-      res.status(500).json({ error: 'Stripe not configured' });
+      log.error('[Stripe Webhook] Configuration error', null);
+      sendErrorResponse(res, 500, ClientErrorCode.SERVICE_UNAVAILABLE, 'Stripe not configured');
       return;
     }
     
@@ -753,10 +754,11 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
     res.status(200).json({ received: true });
     
   } catch (error) {
-    console.error('[Stripe Webhook] Error:', error);
-    console.error('[Stripe Webhook] Error message:', (error as any).message);
-    console.error('[Stripe Webhook] Error type:', (error as any).type);
-    res.status(400).json({ error: 'Webhook processing failed' });
+    log.error('[Stripe Webhook] Error processing webhook', error, {
+      hasSignature: !!sig,
+      bodyLength: req.body?.length || 0
+    });
+    sendErrorResponse(res, 400, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -3441,16 +3443,13 @@ try {
 app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   
   if (!req.user || !(req.user as any).isAdmin) {
-    res.status(401).json({ error: 'Admin access required' });
+    sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED, 'Admin access required');
     return;
   }
 
   // Check if user has write permission (only super_admin can create admins)
   if (!hasWritePermission(req)) {
-    res.status(403).json({ 
-      error: 'Permission denied',
-      message: 'モデレーターは管理者を作成できません' 
-    });
+    sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Moderator cannot create admins');
     return;
   }
 
@@ -3458,18 +3457,12 @@ app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, 
 
   // バリデーション
   if (!name || !email || !password) {
-    res.status(400).json({
-      error: 'Missing required fields',
-      message: '名前、メールアドレス、パスワードは必須です'
-    });
+    sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD, 'Missing required fields: name, email, password');
     return;
   }
 
   if (password.length < 6) {
-    res.status(400).json({
-      error: 'Password too short',
-      message: 'パスワードは6文字以上で入力してください'
-    });
+    sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Password must be at least 6 characters');
     return;
   }
 
@@ -3478,10 +3471,7 @@ app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, 
       // 既存の管理者をチェック
       const existingAdmin = await AdminModel.findOne({ email });
       if (existingAdmin) {
-        res.status(409).json({
-          error: 'Email already exists',
-          message: 'このメールアドレスは既に登録されています'
-        });
+        sendErrorResponse(res, 409, ClientErrorCode.ALREADY_EXISTS, 'Email already exists');
         return;
       }
 
@@ -3529,10 +3519,12 @@ app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, 
       });
     }
   } catch (error) {
-    res.status(500).json({
-      error: 'Internal server error',
-      message: '管理者の作成に失敗しました'
+    log.error('Admin creation error', error, {
+      adminId: req.user?._id,
+      email,
+      role
     });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -3540,7 +3532,7 @@ app.post('/api/admin/create-admin', authenticateToken, async (req: AuthRequest, 
 app.get('/api/admin/admins', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   
   if (!req.user || !(req.user as any).isAdmin) {
-    res.status(401).json({ error: 'Admin access required' });
+    sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED, 'Admin access required');
     return;
   }
 
@@ -3595,10 +3587,11 @@ app.get('/api/admin/admins', authenticateToken, async (req: AuthRequest, res: Re
       });
     }
   } catch (error) {
-    res.status(500).json({
-      error: 'Internal server error',
-      message: '管理者一覧の取得に失敗しました'
+    log.error('Admin list fetch error', error, {
+      adminId: req.user?._id,
+      query: req.query
     });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 

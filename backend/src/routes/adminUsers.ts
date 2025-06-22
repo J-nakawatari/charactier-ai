@@ -6,6 +6,7 @@ import { UserModel } from '../models/UserModel';
 import { validate, validateObjectId } from '../middleware/validation';
 import { adminSchemas } from '../validation/schemas';
 import log from '../utils/logger';
+import { sendErrorResponse, ClientErrorCode } from '../utils/errorResponse';
 
 const router: Router = Router();
 
@@ -19,13 +20,7 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
 
   if (!req.user?.isAdmin) {
     log.warn('Admin access denied - user is not admin', { userId: req.user?._id?.toString() });
-    res.status(403).json({ 
-      error: '管理者権限が必要です',
-      debug: {
-        hasUser: !!req.user,
-        isAdmin: req.user?.isAdmin
-      }
-    });
+    sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'User is not admin');
     return;
   }
   
@@ -115,8 +110,11 @@ router.get('/',
     });
 
   } catch (error) {
-    console.error('❌ Error fetching admin users:', error);
-    res.status(500).json({ error: 'ユーザー一覧の取得に失敗しました' });
+    log.error('Error fetching admin users', error, {
+      adminId: req.user?._id,
+      query: req.query
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -133,19 +131,24 @@ router.post('/:userId/reset-tokens',
 
     const user = await UserModel.findById(userId);
     if (!user) {
-      res.status(404).json({ error: 'ユーザーが見つかりません' });
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'User not found');
       return;
     }
 
     const previousBalance = user.tokenBalance || 0;
 
     await UserModel.findByIdAndUpdate(
-      userId,
+      req.params.userId,
       { tokenBalance: newBalance },
       { new: true }
     );
 
-    console.log(`✅ Token balance reset for user ${userId}: ${previousBalance} -> ${newBalance}`);
+    log.info('Token balance reset', { 
+      userId: req.params.userId, 
+      previousBalance, 
+      newBalance,
+      adminId: req.user?._id 
+    });
 
     res.json({
       success: true,
@@ -155,8 +158,12 @@ router.post('/:userId/reset-tokens',
     });
 
   } catch (error) {
-    console.error('❌ Error resetting user tokens:', error);
-    res.status(500).json({ error: 'トークン残高のリセットに失敗しました' });
+    log.error('Error resetting user tokens', error, {
+      adminId: req.user?._id,
+      userId: req.params.userId,
+      newBalance: req.body.newBalance
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -167,13 +174,13 @@ router.put('/:userId/status', authenticateToken, authenticateAdmin, async (req: 
     const { status } = req.body;
 
     if (!['active', 'inactive', 'suspended'].includes(status)) {
-      res.status(400).json({ error: '有効なステータスを指定してください' });
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Invalid status value');
       return;
     }
 
     const user = await UserModel.findById(userId);
     if (!user) {
-      res.status(404).json({ error: 'ユーザーが見つかりません' });
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'User not found');
       return;
     }
 
@@ -189,9 +196,9 @@ router.put('/:userId/status', authenticateToken, authenticateAdmin, async (req: 
       updateData.accountStatus = 'suspended';
     }
 
-    await UserModel.findByIdAndUpdate(userId, updateData);
+    await UserModel.findByIdAndUpdate(req.params.userId, updateData);
 
-    console.log(`✅ User status updated: ${userId} -> ${status}`);
+    log.info('User status updated', { userId: req.params.userId, status, adminId: req.user?._id });
 
     res.json({
       success: true,
@@ -200,8 +207,12 @@ router.put('/:userId/status', authenticateToken, authenticateAdmin, async (req: 
     });
 
   } catch (error) {
-    console.error('❌ Error updating user status:', error);
-    res.status(500).json({ error: 'ユーザーステータスの更新に失敗しました' });
+    log.error('Error updating user status', error, {
+      adminId: req.user?._id,
+      userId: req.params.userId,
+      status: req.body.status
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -217,10 +228,7 @@ router.get('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest
       .populate('affinities.character', 'name');
 
     if (!user) {
-      res.status(404).json({
-        error: 'User not found',
-        message: 'ユーザーが見つかりません'
-      });
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'User not found');
       return;
     }
 
@@ -277,11 +285,11 @@ router.get('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest
     });
 
   } catch (error) {
-    console.error('❌ Error fetching user details:', error);
-    res.status(500).json({
-      error: 'Server error',
-      message: 'ユーザー詳細の取得に失敗しました'
+    log.error('Error fetching user details', error, {
+      adminId: req.user?._id,
+      userId: req.params.id
     });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 

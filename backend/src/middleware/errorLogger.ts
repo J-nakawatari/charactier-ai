@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { APIErrorModel } from '../models/APIError';
 import log from '../utils/logger';
+import { sendErrorResponse, mapErrorToClientCode } from '../utils/errorResponse';
 
 // 拡張されたRequestインターフェース
 interface ErrorRequest extends Request {
@@ -32,7 +33,7 @@ export const errorLoggingMiddleware = (
   else if (statusCode >= 500) errorType = 'server_error';
 
   // MongoDB関連エラーの検出
-  if (err.message.includes('MongoError') || err.message.includes('ValidationError')) {
+  if (err.name === 'MongoError' || err.name === 'ValidationError' || err.message.includes('E11000')) {
     errorType = 'database_error';
   }
 
@@ -52,20 +53,16 @@ export const errorLoggingMiddleware = (
     userAgent: req.get('User-Agent'),
     ipAddress: req.ip || req.connection?.remoteAddress,
     requestBody: undefined, // Don't log request body for security
-    stackTrace: err.stack,
+    stackTrace: process.env.NODE_ENV === 'production' ? undefined : err.stack,
     responseTime
   }).catch(logError => {
     log.error('Failed to log API error to database', logError);
   });
 
-  // エラーレスポンスの送信
+  // エラーレスポンスの送信（安全なメッセージのみ）
   if (!res.headersSent) {
-    res.status(statusCode).json({
-      success: false,
-      error: err.name || 'Error',
-      message: err.message || 'An error occurred',
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    });
+    const clientErrorCode = mapErrorToClientCode(err);
+    sendErrorResponse(res, statusCode, clientErrorCode, err, req.headers['x-request-id'] as string);
   }
 };
 

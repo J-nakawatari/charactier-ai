@@ -6,6 +6,8 @@ import { authenticateToken, hasWritePermission } from '../middleware/auth';
 import { uploadImage, optimizeImage } from '../utils/fileUpload';
 import { validate, validateObjectId } from '../middleware/validation';
 import { characterSchemas } from '../validation/schemas';
+import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
+import log from '../utils/logger';
 
 const router: Router = Router();
 
@@ -13,10 +15,7 @@ const router: Router = Router();
 router.post('/test-upload/image', uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.file) {
-      res.status(400).json({
-        error: 'No image file',
-        message: '画像ファイルがアップロードされていません'
-      });
+      sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD, 'No image file provided');
       return;
     }
     
@@ -42,11 +41,8 @@ router.post('/test-upload/image', uploadImage.single('image'), optimizeImage(800
       }
     });
   } catch (error) {
-    console.error('❌ Test image upload error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: '画像のアップロードに失敗しました'
-    });
+    log.error('Test image upload error', error);
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -58,10 +54,7 @@ router.post('/',
   try {
     // Check if user has write permission (only super_admin can create characters)
     if (!hasWritePermission(req)) {
-      res.status(403).json({ 
-        error: 'Permission denied',
-        message: 'モデレーターはキャラクターを作成できません' 
-      });
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Moderator cannot create characters');
       return;
     }
 
@@ -120,35 +113,13 @@ router.post('/',
     });
 
   } catch (error) {
-    console.error('❌ Character creation error:', error);
-    
-    if (error instanceof Error && error.name === 'ValidationError') {
-      // Mongooseのバリデーションエラーの詳細を解析
-      const validationError = error as Error & { errors?: Record<string, { message: string }> };
-      const fieldErrors: string[] = [];
-      
-      if (validationError.errors) {
-        Object.keys(validationError.errors).forEach(field => {
-          const fieldError = validationError.errors?.[field];
-          if (fieldError) {
-            fieldErrors.push(`${field}: ${fieldError.message}`);
-          }
-        });
-      }
-      
-      res.status(400).json({
-        error: 'Validation error',
-        message: '入力データに問題があります',
-        details: fieldErrors.length > 0 ? fieldErrors.join(', ') : error.message,
-        fieldErrors: fieldErrors
-      });
-    } else {
-      res.status(500).json({
-        error: 'Character creation failed',
-        message: 'キャラクターの作成に失敗しました',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
+    const errorCode = mapErrorToClientCode(error);
+    const statusCode = errorCode === ClientErrorCode.INVALID_INPUT ? 400 : 500;
+    log.error('Character creation error', error, {
+      userId: req.user?._id,
+      body: req.body
+    });
+    sendErrorResponse(res, statusCode, errorCode, error);
   }
 });
 
@@ -260,11 +231,11 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
     });
 
   } catch (error) {
-    console.error('❌ Error fetching characters:', error);
-    res.status(500).json({
-      error: 'Database error',
-      message: 'キャラクター一覧の取得に失敗しました'
+    log.error('Error fetching characters', error, {
+      userId: req.user?._id,
+      query: req.query
     });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -279,10 +250,7 @@ router.get('/:id/affinity-images', authenticateToken, async (req: AuthRequest, r
     const character = await CharacterModel.findById(req.params.id);
     
     if (!character || !character.isActive) {
-      res.status(404).json({
-        error: 'Character not found',
-        message: 'キャラクターが見つかりません'
-      });
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'Character not found or inactive');
       return;
     }
 
@@ -346,11 +314,11 @@ router.get('/:id/affinity-images', authenticateToken, async (req: AuthRequest, r
     });
 
   } catch (error) {
-    console.error('❌ Error fetching affinity images:', error);
-    res.status(500).json({
-      error: 'Database error',
-      message: '親密度画像の取得に失敗しました'
+    log.error('Error fetching affinity images', error, {
+      characterId: req.params.id,
+      userId: req.user?._id
     });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -360,10 +328,7 @@ router.get('/:id/translations', authenticateToken, async (req: AuthRequest, res:
     const character = await CharacterModel.findById(req.params.id);
     
     if (!character || !character.isActive) {
-      res.status(404).json({
-        error: 'Character not found',
-        message: 'キャラクターが見つかりません'
-      });
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'Character not found or inactive');
       return;
     }
     
@@ -385,11 +350,11 @@ router.get('/:id/translations', authenticateToken, async (req: AuthRequest, res:
     res.json(translationData);
 
   } catch (error) {
-    console.error('❌ Error fetching character translations:', error);
-    res.status(500).json({
-      error: 'Database error',
-      message: '翻訳データの取得に失敗しました'
+    log.error('Error fetching character translations', error, {
+      characterId: req.params.id,
+      userId: req.user?._id
     });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -398,10 +363,7 @@ router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res:
   try {
     // Check if user has write permission (only super_admin can update character translations)
     if (!hasWritePermission(req)) {
-      res.status(403).json({ 
-        error: 'Permission denied',
-        message: 'モデレーターはキャラクターの翻訳を編集できません' 
-      });
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Moderator cannot edit character translations');
       return;
     }
 
@@ -409,28 +371,19 @@ router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res:
     
     // バリデーション（オブジェクト構造のみチェック、空文字列は許可）
     if (!name || typeof name.ja !== 'string' || typeof name.en !== 'string') {
-      res.status(400).json({
-        error: 'Name structure is invalid',
-        message: 'キャラクター名の構造が正しくありません'
-      });
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Invalid name structure');
       return;
     }
     
     if (!description || typeof description.ja !== 'string' || typeof description.en !== 'string') {
-      res.status(400).json({
-        error: 'Description structure is invalid',
-        message: '説明の構造が正しくありません'
-      });
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Invalid description structure');
       return;
     }
     
     // キャラクターの存在確認
     const character = await CharacterModel.findById(req.params.id);
     if (!character) {
-      res.status(404).json({
-        error: 'Character not found',
-        message: 'キャラクターが見つかりません'
-      });
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'Character not found');
       return;
     }
     
@@ -484,11 +437,11 @@ router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res:
     });
 
   } catch (error) {
-    console.error('❌ Character translation update error:', error);
-    res.status(500).json({
-      error: 'Update failed',
-      message: '翻訳データの更新に失敗しました'
+    log.error('Character translation update error', error, {
+      characterId: req.params.id,
+      userId: req.user?._id
     });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -498,10 +451,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
     const character = await CharacterModel.findById(req.params.id);
     
     if (!character || !character.isActive) {
-      res.status(404).json({
-        error: 'Character not found',
-        message: 'キャラクターが見つかりません'
-      });
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'Character not found or inactive');
       return;
     }
     
@@ -518,11 +468,11 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
     res.json(character);
 
   } catch (error) {
-    console.error('❌ Error fetching character:', error);
-    res.status(500).json({
-      error: 'Database error',
-      message: 'キャラクターの取得に失敗しました'
+    log.error('Error fetching character', error, {
+      characterId: req.params.id,
+      userId: req.user?._id
     });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -535,10 +485,7 @@ router.put('/:id',
   try {
     // Check if user has write permission (only super_admin can update characters)
     if (!hasWritePermission(req)) {
-      res.status(403).json({ 
-        error: 'Permission denied',
-        message: 'モデレーターはキャラクターを編集できません' 
-      });
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Moderator cannot edit characters');
       return;
     }
 
@@ -554,11 +501,8 @@ router.put('/:id',
     );
     
     if (!updatedCharacter) {
-      console.error('❌ Character not found:', req.params.id);
-      res.status(404).json({
-        error: 'Character not found',
-        message: 'キャラクターが見つかりません'
-      });
+      log.error('Character not found for update', null, { characterId: req.params.id });
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'Character not found');
       return;
     }
     
@@ -569,16 +513,12 @@ router.put('/:id',
     });
 
   } catch (error) {
-    console.error('❌ Character update error details:', {
-      id: req.params.id,
-      body: req.body,
-      error: error instanceof Error ? error.message : error,
-      stack: error instanceof Error ? error.stack : undefined
+    log.error('Character update error', error, {
+      characterId: req.params.id,
+      userId: req.user?._id,
+      body: req.body
     });
-    res.status(500).json({
-      error: 'Update failed',
-      message: 'キャラクターの更新に失敗しました'
-    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -587,10 +527,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
   try {
     // Check if user has write permission (only super_admin can delete characters)
     if (!hasWritePermission(req)) {
-      res.status(403).json({ 
-        error: 'Permission denied',
-        message: 'モデレーターはキャラクターを削除できません' 
-      });
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Moderator cannot delete characters');
       return;
     }
 
@@ -601,10 +538,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
     );
     
     if (!updatedCharacter) {
-      res.status(404).json({
-        error: 'Character not found',
-        message: 'キャラクターが見つかりません'
-      });
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'Character not found');
       return;
     }
     
@@ -614,11 +548,11 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
     });
 
   } catch (error) {
-    console.error('❌ Character deletion error:', error);
-    res.status(500).json({
-      error: 'Deletion failed',
-      message: 'キャラクターの削除に失敗しました'
+    log.error('Character deletion error', error, {
+      characterId: req.params.id,
+      userId: req.user?._id
     });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -627,28 +561,19 @@ router.post('/upload/image', authenticateToken, uploadImage.single('image'), opt
   try {
     // Check if user has write permission (only super_admin can upload images)
     if (!hasWritePermission(req)) {
-      res.status(403).json({ 
-        error: 'Permission denied',
-        message: 'モデレーターは画像をアップロードできません' 
-      });
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Moderator cannot upload images');
       return;
     }
 
     if (!req.file) {
-      res.status(400).json({
-        error: 'No image file',
-        message: '画像ファイルがアップロードされていません'
-      });
+      sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD, 'No image file provided');
       return;
     }
     
     // 管理者権限チェック
     const authReq = req as AuthRequest;
     if (!authReq.user?.isAdmin) {
-      res.status(403).json({
-        error: 'Admin access required',
-        message: '管理者権限が必要です'
-      });
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
       return;
     }
     
@@ -663,11 +588,11 @@ router.post('/upload/image', authenticateToken, uploadImage.single('image'), opt
     });
     
   } catch (error) {
-    console.error('❌ Image upload error:', error);
-    res.status(500).json({
-      error: 'Upload failed',
-      message: '画像アップロードに失敗しました'
+    log.error('Image upload error', error, {
+      userId: req.user?._id,
+      fileName: req.file?.filename
     });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 

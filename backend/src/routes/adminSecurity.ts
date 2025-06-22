@@ -4,13 +4,15 @@ import { ViolationRecordModel } from '../models/ViolationRecord';
 import { UserModel } from '../models/UserModel';
 import { liftSanction, getViolationHistory, getViolationStats } from '../utils/sanctionSystem';
 import mongoose from 'mongoose';
+import { sendErrorResponse, ClientErrorCode } from '../utils/errorResponse';
+import log from '../utils/logger';
 
 const router: Router = Router();
 
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {
   if (!req.user?.isAdmin) {
-    res.status(403).json({ error: '管理者権限が必要です' });
+    sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'User is not admin');
     return;
   }
   next();
@@ -80,8 +82,11 @@ router.get('/violation-stats', authenticateToken, authenticateAdmin, async (req:
     });
     
   } catch (error) {
-    console.error('❌ Error fetching violation stats:', error);
-    res.status(500).json({ error: '統計データの取得に失敗しました' });
+    log.error('Error fetching violation stats', error, {
+      adminId: req.user?._id,
+      timeframe: req.query.timeframe
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -102,8 +107,11 @@ router.get('/recent-violations', authenticateToken, authenticateAdmin, async (re
     });
     
   } catch (error) {
-    console.error('❌ Error fetching recent violations:', error);
-    res.status(500).json({ error: '違反記録の取得に失敗しました' });
+    log.error('Error fetching recent violations', error, {
+      adminId: req.user?._id,
+      limit: req.query.limit
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -125,8 +133,10 @@ router.get('/sanctioned-users', authenticateToken, authenticateAdmin, async (req
     });
     
   } catch (error) {
-    console.error('❌ Error fetching sanctioned users:', error);
-    res.status(500).json({ error: '制裁中ユーザーの取得に失敗しました' });
+    log.error('Error fetching sanctioned users', error, {
+      adminId: req.user?._id
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -137,7 +147,7 @@ router.get('/user/:userId/violations', authenticateToken, authenticateAdmin, asy
     const limit = parseInt(req.query.limit as string) || 20;
     
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      res.status(400).json({ error: '無効なユーザーIDです' });
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Invalid user ID');
       return;
     }
     
@@ -151,8 +161,12 @@ router.get('/user/:userId/violations', authenticateToken, authenticateAdmin, asy
     });
     
   } catch (error) {
-    console.error('❌ Error fetching user violations:', error);
-    res.status(500).json({ error: 'ユーザー違反履歴の取得に失敗しました' });
+    log.error('Error fetching user violations', error, {
+      adminId: req.user?._id,
+      userId: req.params.userId,
+      limit: req.query.limit
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -162,7 +176,7 @@ router.post('/lift-sanction/:userId', authenticateToken, authenticateAdmin, asyn
     const { userId } = req.params;
     
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      res.status(400).json({ error: '無効なユーザーIDです' });
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Invalid user ID');
       return;
     }
     
@@ -178,8 +192,11 @@ router.post('/lift-sanction/:userId', authenticateToken, authenticateAdmin, asyn
     });
     
   } catch (error) {
-    console.error('❌ Error lifting sanction:', error);
-    res.status(500).json({ error: '制裁解除に失敗しました' });
+    log.error('Error lifting sanction', error, {
+      adminId: req.user?._id,
+      userId: req.params.userId
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 
@@ -240,8 +257,11 @@ router.get('/violations/search', authenticateToken, authenticateAdmin, async (re
     });
     
   } catch (error) {
-    console.error('❌ Error searching violations:', error);
-    res.status(500).json({ error: '違反記録の検索に失敗しました' });
+    log.error('Error searching violations', error, {
+      adminId: req.user?._id,
+      query: req.query
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
 

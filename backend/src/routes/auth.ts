@@ -1,5 +1,5 @@
 import type { AuthRequest } from '../types/express';
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { UserModel } from '../models/UserModel';
@@ -10,6 +10,7 @@ import { registrationRateLimit } from '../middleware/registrationLimit';
 import { validate } from '../middleware/validation';
 import { authSchemas } from '../validation/schemas';
 import log from '../utils/logger';
+import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
 
 const router: Router = Router();
 
@@ -19,14 +20,11 @@ router.post('/register',
   validate({ body: authSchemas.register }),
   async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, locale = 'ja' } = req.body;
+    const { email, password, locale = 'ja' } = req.body;
 
     // 使い捨てメールアドレスのチェック
     if (isDisposableEmail(email)) {
-      res.status(400).json({
-        error: 'Invalid email',
-        message: '使い捨てメールアドレスは使用できません'
-      });
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT);
       return;
     }
 
@@ -36,10 +34,8 @@ router.post('/register',
       isActive: { $ne: false } 
     });
     if (existingUser) {
-      res.status(409).json({
-        error: 'Email already exists',
-        message: 'このメールアドレスは既に登録されています'
-      });
+      log.warn('Registration attempt with existing email', { email });
+      sendErrorResponse(res, 409, ClientErrorCode.ALREADY_EXISTS);
       return;
     }
 
@@ -93,11 +89,8 @@ router.post('/register',
     });
 
   } catch (error) {
-    log.error('User registration error', error);
-    res.status(500).json({
-      error: 'Registration failed',
-      message: 'ユーザー登録中にエラーが発生しました'
-    });
+    const errorCode = mapErrorToClientCode(error);
+    sendErrorResponse(res, 500, errorCode, error);
   }
 });
 
@@ -111,36 +104,32 @@ router.post('/login',
     // ユーザーを検索
     const user = await UserModel.findOne({ email });
     if (!user) {
-      res.status(401).json({
-        error: 'Invalid credentials',
-        message: 'メールアドレスまたはパスワードが正しくありません'
-      });
+      log.warn('Login attempt with non-existent email', { email });
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
       return;
     }
 
     // パスワードを確認
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      res.status(401).json({
-        error: 'Invalid credentials',
-        message: 'メールアドレスまたはパスワードが正しくありません'
-      });
+      log.warn('Login attempt with invalid password', { email, userId: user._id.toString() });
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
       return;
     }
 
     // アクティブユーザーかチェック
     if (!user.isActive) {
-      res.status(403).json({
-        error: 'Account deactivated',
-        message: 'アカウントが無効化されています'
-      });
+      log.warn('Login attempt with deactivated account', { email, userId: user._id.toString() });
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS);
       return;
     }
 
     // メール認証チェック
     if (!user.emailVerified) {
+      log.warn('Login attempt with unverified email', { email, userId: user._id.toString() });
+      // Special response for email verification status
       res.status(403).json({
-        error: 'Email not verified',
+        error: ClientErrorCode.AUTH_FAILED,
         message: 'メールアドレスが認証されていません。確認メールをご確認ください。',
         emailNotVerified: true
       });
@@ -200,11 +189,8 @@ router.post('/login',
     });
 
   } catch (error) {
-    log.error('User login error', error);
-    res.status(500).json({
-      error: 'Login failed',
-      message: 'ログイン中にエラーが発生しました'
-    });
+    const errorCode = mapErrorToClientCode(error);
+    sendErrorResponse(res, 500, errorCode, error);
   }
 });
 
@@ -219,10 +205,8 @@ router.post('/refresh',
     // リフレッシュトークンを検証
     const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
     if (!JWT_REFRESH_SECRET) {
-      res.status(500).json({
-        error: 'Configuration error',
-        message: '認証設定エラー'
-      });
+      log.error('JWT secret not configured');
+      sendErrorResponse(res, 500, ClientErrorCode.SERVICE_UNAVAILABLE);
       return;
     }
 
@@ -255,10 +239,8 @@ router.post('/refresh',
     // 管理者で見つからない場合は一般ユーザーとして検索
     const user = await UserModel.findById(decoded.userId);
     if (!user || !user.isActive) {
-      res.status(401).json({
-        error: 'Invalid refresh token',
-        message: '無効なリフレッシュトークンです'
-      });
+      log.warn('Token refresh failed - user not found or inactive', { userId: decoded.userId });
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
       return;
     }
 
@@ -290,22 +272,20 @@ router.post('/refresh',
         message: error.message
       });
       res.status(401).json({
-        error: 'Refresh token expired',
+        error: ClientErrorCode.TOKEN_EXPIRED,
         message: 'リフレッシュトークンの有効期限が切れています。再度ログインしてください。',
         requireRelogin: true
       });
     } else if (error instanceof jwt.JsonWebTokenError) {
       log.warn('Invalid refresh token', { message: error.message });
       res.status(401).json({
-        error: 'Invalid refresh token',
+        error: ClientErrorCode.AUTH_FAILED,
         message: '無効なリフレッシュトークンです',
         requireRelogin: true
       });
     } else {
-      res.status(500).json({
-        error: 'Token refresh failed',
-        message: 'トークンの更新に失敗しました'
-      });
+      const errorCode = mapErrorToClientCode(error);
+      sendErrorResponse(res, 500, errorCode, error);
     }
   }
 });
@@ -323,10 +303,7 @@ router.put('/user/profile',
     const userId = authReq.user?._id;
 
     if (!userId) {
-      res.status(401).json({
-        error: 'Authentication required',
-        message: '認証が必要です'
-      });
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
       return;
     }
 
@@ -338,10 +315,8 @@ router.put('/user/profile',
     );
 
     if (!updatedUser) {
-      res.status(404).json({
-        error: 'User not found',
-        message: 'ユーザーが見つかりません'
-      });
+      log.warn('Profile update failed - user not found', { userId });
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND);
       return;
     }
 
@@ -360,11 +335,8 @@ router.put('/user/profile',
     });
 
   } catch (error) {
-    log.error('Profile update error', error);
-    res.status(500).json({
-      error: 'Profile update failed',
-      message: 'プロフィール更新中にエラーが発生しました'
-    });
+    const errorCode = mapErrorToClientCode(error);
+    sendErrorResponse(res, 500, errorCode, error);
   }
 });
 
@@ -374,18 +346,12 @@ router.post('/user/setup-complete', authenticateToken, async (req: Request, res:
     const { name, selectedCharacterId } = req.body;
 
     if (!name || name.trim().length === 0) {
-      res.status(400).json({
-        error: 'Name required',
-        message: '名前を入力してください'
-      });
+      sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD);
       return;
     }
 
     if (!selectedCharacterId) {
-      res.status(400).json({
-        error: 'Character selection required',
-        message: 'キャラクターを選択してください'
-      });
+      sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD);
       return;
     }
 
@@ -394,10 +360,7 @@ router.post('/user/setup-complete', authenticateToken, async (req: Request, res:
     const userId = authReq.user?._id;
 
     if (!userId) {
-      res.status(401).json({
-        error: 'Authentication required',
-        message: '認証が必要です'
-      });
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
       return;
     }
 
@@ -414,10 +377,8 @@ router.post('/user/setup-complete', authenticateToken, async (req: Request, res:
     );
 
     if (!updatedUser) {
-      res.status(404).json({
-        error: 'User not found',
-        message: 'ユーザーが見つかりません'
-      });
+      log.warn('Setup completion failed - user not found', { userId });
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND);
       return;
     }
 
@@ -442,11 +403,8 @@ router.post('/user/setup-complete', authenticateToken, async (req: Request, res:
     });
 
   } catch (error) {
-    log.error('Setup completion error', error);
-    res.status(500).json({
-      error: 'Setup completion failed',
-      message: 'セットアップ完了中にエラーが発生しました'
-    });
+    const errorCode = mapErrorToClientCode(error);
+    sendErrorResponse(res, 500, errorCode, error);
   }
 });
 
@@ -456,10 +414,7 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
     const { token } = req.query;
 
     if (!token || typeof token !== 'string') {
-      res.status(400).json({
-        error: 'Invalid token',
-        message: '無効なトークンです'
-      });
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT);
       return;
     }
 
@@ -470,19 +425,15 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
     }).select('+emailVerificationToken +emailVerificationExpires');
 
     if (!user) {
-      res.status(404).json({
-        error: 'Token not found or expired',
-        message: 'トークンが見つからないか、有効期限が切れています'
-      });
+      log.warn('Email verification failed - invalid or expired token', { token });
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND);
       return;
     }
 
     // 既に認証済みの場合
     if (user.emailVerified) {
-      res.status(400).json({
-        error: 'Already verified',
-        message: 'このメールアドレスは既に認証されています'
-      });
+      log.info('Email verification attempt for already verified user', { userId: user._id.toString() });
+      sendErrorResponse(res, 400, ClientErrorCode.ALREADY_EXISTS);
       return;
     }
 
@@ -519,7 +470,7 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
     res.cookie('accessToken', accessToken, cookieOptions);
     res.cookie('refreshToken', refreshToken, refreshCookieOptions);
 
-    console.log('✅ Email verified:', user.email);
+    log.info('Email verified successfully', { email: user.email, userId: user._id.toString() });
 
     res.json({
       message: 'メールアドレスが確認されました',
@@ -530,11 +481,8 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
     });
 
   } catch (error) {
-    console.error('❌ Email verification error:', error);
-    res.status(500).json({
-      error: 'Verification failed',
-      message: 'メール認証中にエラーが発生しました'
-    });
+    const errorCode = mapErrorToClientCode(error);
+    sendErrorResponse(res, 500, errorCode, error);
   }
 });
 
@@ -544,10 +492,7 @@ router.post('/resend-verification', registrationRateLimit, async (req: Request, 
     const { email, locale = 'ja' } = req.body;
 
     if (!email) {
-      res.status(400).json({
-        error: 'Email required',
-        message: 'メールアドレスを入力してください'
-      });
+      sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD);
       return;
     }
 
@@ -564,10 +509,8 @@ router.post('/resend-verification', registrationRateLimit, async (req: Request, 
     }
 
     if (user.emailVerified) {
-      res.status(400).json({
-        error: 'Already verified',
-        message: 'このメールアドレスは既に認証されています'
-      });
+      log.info('Verification resend attempt for already verified user', { email });
+      sendErrorResponse(res, 400, ClientErrorCode.ALREADY_EXISTS);
       return;
     }
 
@@ -582,9 +525,9 @@ router.post('/resend-verification', registrationRateLimit, async (req: Request, 
     // メール送信
     try {
       await sendVerificationEmail(email, newToken, locale as 'ja' | 'en');
-      console.log('✅ Verification email resent:', email);
+      log.info('Verification email resent successfully', { email });
     } catch (emailError) {
-      console.error('❌ Failed to resend verification email:', emailError);
+      log.error('Failed to resend verification email', emailError, { email });
     }
 
     res.json({
@@ -594,11 +537,8 @@ router.post('/resend-verification', registrationRateLimit, async (req: Request, 
     });
 
   } catch (error) {
-    console.error('❌ Resend verification error:', error);
-    res.status(500).json({
-      error: 'Resend failed',
-      message: '再送信中にエラーが発生しました'
-    });
+    const errorCode = mapErrorToClientCode(error);
+    sendErrorResponse(res, 500, errorCode, error);
   }
 });
 
@@ -609,39 +549,30 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
 
     // バリデーション
     if (!email || !password) {
-      res.status(400).json({
-        error: 'Missing required fields',
-        message: 'メールアドレスとパスワードを入力してください'
-      });
+      sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD);
       return;
     }
 
     // AdminModelから管理者を検索
     const admin = await AdminModel.findOne({ email });
     if (!admin) {
-      res.status(401).json({
-        error: 'Invalid credentials',
-        message: 'メールアドレスまたはパスワードが正しくありません'
-      });
+      log.warn('Admin login attempt with non-existent email', { email });
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
       return;
     }
 
     // アクティブ管理者かチェック
     if (!admin.isActive) {
-      res.status(403).json({
-        error: 'Account deactivated',
-        message: '管理者アカウントが無効化されています'
-      });
+      log.warn('Admin login attempt with deactivated account', { email, adminId: admin._id.toString() });
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS);
       return;
     }
 
     // パスワード検証
     const isValidPassword = await bcrypt.compare(password, admin.password);
     if (!isValidPassword) {
-      res.status(401).json({
-        error: 'Invalid credentials',
-        message: 'メールアドレスまたはパスワードが正しくありません'
-      });
+      log.warn('Admin login attempt with invalid password', { email, adminId: admin._id.toString() });
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
       return;
     }
 
@@ -674,7 +605,7 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
     res.cookie('accessToken', accessToken, cookieOptions);
     res.cookie('refreshToken', refreshToken, refreshCookieOptions);
 
-    console.log('✅ Admin login successful:', { id: admin._id, email: admin.email, role: admin.role });
+    log.info('Admin login successful', { adminId: admin._id.toString(), email: admin.email, role: admin.role });
 
     res.status(200).json({
       message: '管理者ログインが成功しました',
@@ -692,11 +623,8 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
     });
 
   } catch (error) {
-    console.error('❌ Admin login error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'サーバーエラーが発生しました'
-    });
+    const errorCode = mapErrorToClientCode(error);
+    sendErrorResponse(res, 500, errorCode, error);
   }
 });
 
@@ -704,10 +632,7 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
 router.get('/verify-token', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
-      res.status(401).json({
-        error: 'Invalid token',
-        message: '無効なトークンです'
-      });
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
       return;
     }
     
@@ -723,11 +648,8 @@ router.get('/verify-token', authenticateToken, async (req: AuthRequest, res: Res
       }
     });
   } catch (error) {
-    console.error('❌ Token verification error:', error);
-    res.status(500).json({
-      error: 'Verification failed',
-      message: 'トークン検証に失敗しました'
-    });
+    const errorCode = mapErrorToClientCode(error);
+    sendErrorResponse(res, 500, errorCode, error);
   }
 });
 
@@ -743,11 +665,8 @@ router.post('/logout', async (req: Request, res: Response): Promise<void> => {
       message: 'ログアウトしました'
     });
   } catch (error) {
-    console.error('❌ Logout error:', error);
-    res.status(500).json({
-      error: 'Logout failed',
-      message: 'ログアウトに失敗しました'
-    });
+    const errorCode = mapErrorToClientCode(error);
+    sendErrorResponse(res, 500, errorCode, error);
   }
 });
 
@@ -783,7 +702,7 @@ router.post('/create-admin', async (req: Request, res: Response): Promise<void> 
     });
 
     await adminUser.save();
-    console.log('✅ 管理者を作成しました');
+    log.info('Admin user created successfully', { email: adminEmail });
 
     res.status(201).json({
       message: '管理者を作成しました',
@@ -793,11 +712,8 @@ router.post('/create-admin', async (req: Request, res: Response): Promise<void> 
     });
 
   } catch (error) {
-    console.error('❌ 管理者作成エラー:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: '管理者の作成に失敗しました'
-    });
+    const errorCode = mapErrorToClientCode(error);
+    sendErrorResponse(res, 500, errorCode, error);
   }
 });
 
