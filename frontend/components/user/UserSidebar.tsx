@@ -60,36 +60,9 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // 最新のユーザー情報をAPIから取得
-        // HttpOnly Cookieを使用するため、credentialsを含める
-        const response = await fetch('/api/user/dashboard', {
-          method: 'GET',
-          credentials: 'include', // Cookieを送信
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-          
-          if (response.ok) {
-            const userData = await response.json();
-            // APIレスポンスからユーザー情報を取得
-            let user = userData.user || userData;
-            
-            // selectedCharacterがない場合は空のままにする（自動選択しない）
-            // ユーザーが明示的にキャラクターを選択するまで待つ
-            
-            // トークン残高を明示的に設定（ChatSidebarと同じロジック）
-            const userWithTokenBalance = {
-              ...user,
-              tokenBalance: userData.tokenBalance || user.tokenBalance || 0
-            };
-            
-            setUser(userWithTokenBalance);
-            setLoading(false);
-            return;
-          }
-        
-        // APIから取得できない場合はlocalStorageのデータを使用
+        // 一時的にlocalStorageのデータのみを使用
+        // TODO: バックエンドの/api/user/dashboardまたは/api/user/profileが
+        // 正しくデプロイされたら、API呼び出しを復活させる
         const userStr = localStorage.getItem('user');
         if (userStr) {
           const userData = JSON.parse(userStr);
