@@ -6,6 +6,7 @@ import { NotificationModel, INotification } from '../models/NotificationModel';
 import { UserNotificationReadStatusModel } from '../models/UserNotificationReadStatusModel';
 import { UserModel } from '../models/UserModel';
 import { AdminNotificationReadStatusModel } from '../models/AdminNotificationReadStatusModel';
+import { getRedisPublisher } from '../../lib/redis';
 
 const router: Router = Router();
 
@@ -169,6 +170,26 @@ router.post('/:id/read', authenticateToken, async (req: AuthRequest, res: Respon
       success: true,
       message: '既読マークが完了しました'
     });
+
+    // リアルタイム通知のため、Redisにイベントを発行
+    try {
+      const publisher = getRedisPublisher();
+      const unreadCount = await UserNotificationReadStatusModel.countDocuments({
+        userId: new mongoose.Types.ObjectId(userId),
+        isRead: false
+      });
+      
+      publisher.publish(
+        `notifications:user:${userId}`,
+        JSON.stringify({
+          type: 'markAsRead',
+          notificationId,
+          unreadCount
+        })
+      );
+    } catch (error) {
+      console.error('❌ Error publishing notification event:', error);
+    }
 
   } catch (error) {
     console.error('❌ Error marking notification as read:', error);
@@ -451,6 +472,45 @@ router.post('/admin', authenticateToken, authenticateAdmin, async (req: AuthRequ
     const savedNotification = await notification.save();
 
     res.status(201).json({ notification: savedNotification });
+
+    // 対象ユーザーにリアルタイム通知を送信
+    try {
+      const publisher = getRedisPublisher();
+      
+      // 全ユーザーまたは特定ユーザーへの通知
+      if (targetCondition.type === 'all') {
+        // 全ユーザーへの通知の場合、個別に通知する必要があるため
+        // ここでは新規通知の存在だけを通知
+        publisher.publish(
+          'notifications:broadcast',
+          JSON.stringify({
+            type: 'newNotification',
+            notification: {
+              id: savedNotification._id,
+              title: savedNotification.title,
+              type: savedNotification.type
+            }
+          })
+        );
+      } else if (targetCondition.type === 'specific_users' && targetCondition.userIds) {
+        // 特定ユーザーへの通知
+        for (const userId of targetCondition.userIds) {
+          publisher.publish(
+            `notifications:user:${userId}`,
+            JSON.stringify({
+              type: 'newNotification',
+              notification: {
+                id: savedNotification._id,
+                title: savedNotification.title,
+                type: savedNotification.type
+              }
+            })
+          );
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error publishing new notification event:', error);
+    }
 
   } catch (error) {
     console.error('❌ Error creating notification:', error);

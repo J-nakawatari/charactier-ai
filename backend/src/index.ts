@@ -845,6 +845,88 @@ routeRegistry.mount('/api/characters', characterRoutes);
 // お知らせルート（ユーザー用 + 管理者用）
 routeRegistry.mount('/api/notifications', notificationRoutes);
 
+// リアルタイム通知SSEエンドポイント
+routeRegistry.define('GET', '/api/notifications/stream', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  const userId = req.user?.id || req.user?._id;
+  if (!userId) {
+    res.status(401).json({ error: '認証が必要です' });
+    return;
+  }
+
+  // SSEヘッダー設定
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no'
+  });
+
+  // 初回の未読数を送信
+  try {
+    const { NotificationModel } = require('./models/NotificationModel');
+    const { UserNotificationReadStatusModel } = require('./models/UserNotificationReadStatusModel');
+    
+    const now = new Date();
+    const activeNotifications = await NotificationModel.find({
+      isActive: true,
+      validFrom: { $lte: now },
+      $or: [
+        { validUntil: { $exists: false } },
+        { validUntil: { $gte: now } }
+      ]
+    }).lean();
+
+    // ユーザーが対象のお知らせをフィルタリング
+    const targetNotifications = activeNotifications.filter((notification: any) =>
+      NotificationModel.prototype.isTargetUser.call(notification, req.user!)
+    );
+
+    // 既読状況を取得
+    const notificationIds = targetNotifications.map((n: any) => n._id);
+    const readStatuses = await UserNotificationReadStatusModel.find({
+      userId: new mongoose.Types.ObjectId(userId),
+      notificationId: { $in: notificationIds },
+      isRead: true
+    }).lean();
+
+    const unreadCount = notificationIds.length - readStatuses.length;
+    
+    res.write(`data: ${JSON.stringify({ type: 'unreadCount', count: unreadCount })}\n\n`);
+  } catch (error) {
+    console.error('❌ Error getting initial unread count:', error);
+  }
+
+  // ハートビート設定（30秒ごと）
+  const heartbeatInterval = setInterval(() => {
+    res.write(':heartbeat\n\n');
+  }, 30000);
+
+  // Redis Pub/Sub設定（通知の変更を監視）
+  const redisSubscriber = getRedisSubscriber();
+  const notificationChannel = `notifications:user:${userId}`;
+  
+  const handleNotificationUpdate = async (channel: string, message: string) => {
+    try {
+      const data = JSON.parse(message);
+      // 新しい通知または既読状態の変更を通知
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    } catch (error) {
+      console.error('❌ Error handling notification update:', error);
+    }
+  };
+
+  redisSubscriber.subscribe(notificationChannel);
+  redisSubscriber.on('message', handleNotificationUpdate);
+
+  // クライアント切断時のクリーンアップ
+  req.on('close', () => {
+    clearInterval(heartbeatInterval);
+    redisSubscriber.unsubscribe(notificationChannel);
+    redisSubscriber.removeListener('message', handleNotificationUpdate);
+    console.log(`📭 Notification stream closed for user ${userId}`);
+  });
+});
+
 // Dashboard API
 // routeRegistry.mount('/api/user/dashboard', dashboardRoutes);
 
@@ -5751,22 +5833,48 @@ app.get('/api/admin/dashboard/stats', authenticateToken, async (req: AuthRequest
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
 
-    // 評価スコアの計算（シンプルな実装）
+    // システム健全性スコアの計算
     const calculateEvaluationScore = () => {
-      let score = 50; // 基本スコア
+      let score = 0;
+      let breakdown = { excellent: 0, good: 0, needsImprovement: 0 };
       
-      // アクティブユーザー率で加点
+      // 1. アクティブユーザー率（40点満点）
       const activeUserRate = totalUsers > 0 ? (activeUsers / totalUsers) : 0;
-      score += activeUserRate * 30; // 最大30点
+      const activeUserScore = activeUserRate * 40;
       
-      // エラー率で減点
-      const errorRate = recentErrors / Math.max(activeUsers, 1);
-      score -= Math.min(errorRate * 10, 20); // 最大-20点
+      // 2. エラー率（30点満点 - エラーが多いほど減点）
+      const serverMonitor = ServerMonitor.getInstance();
+      const performanceStats = serverMonitor.getPerformanceStats();
+      const errorRate = performanceStats.totalRequests > 0 
+        ? (performanceStats.totalErrors / performanceStats.totalRequests) 
+        : 0;
+      const errorScore = Math.max(0, 30 - (errorRate * 300)); // エラー率10%で0点
       
-      return Math.max(0, Math.min(100, Math.round(score)));
+      // 3. キャラクター利用率（30点満点）
+      const characterUsageRate = totalCharacters > 0 ? (activeCharacters / totalCharacters) : 0;
+      const characterScore = characterUsageRate * 30;
+      
+      score = Math.round(activeUserScore + errorScore + characterScore);
+      
+      // ブレークダウンの計算
+      if (score >= 80) {
+        breakdown.excellent = score - 60;
+        breakdown.good = 40;
+        breakdown.needsImprovement = 0;
+      } else if (score >= 50) {
+        breakdown.excellent = 0;
+        breakdown.good = score - 30;
+        breakdown.needsImprovement = 0;
+      } else {
+        breakdown.excellent = 0;
+        breakdown.good = 0;
+        breakdown.needsImprovement = 50 - score;
+      }
+      
+      return { score: Math.max(0, Math.min(100, score)), breakdown };
     };
 
-    const evaluationScore = calculateEvaluationScore();
+    const evaluation = calculateEvaluationScore();
 
     // デバッグログを追加
     console.log('🔍 Admin Dashboard Stats Debug:', {
@@ -5803,12 +5911,8 @@ app.get('/api/admin/dashboard/stats', authenticateToken, async (req: AuthRequest
         projectedBalance14Days: 1543 // TODO: 予測計算を実装
       },
       evaluation: {
-        overallScore: evaluationScore,
-        breakdown: {
-          excellent: evaluationScore >= 80 ? evaluationScore - 80 : 0,
-          good: evaluationScore >= 50 && evaluationScore < 80 ? evaluationScore - 50 : 0,
-          needsImprovement: evaluationScore < 50 ? 50 - evaluationScore : 0
-        }
+        overallScore: evaluation.score,
+        breakdown: evaluation.breakdown
       }
     });
 

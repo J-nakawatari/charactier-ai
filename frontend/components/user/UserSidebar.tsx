@@ -20,6 +20,7 @@ import { useState, useEffect, memo } from 'react';
 import { useTranslations } from 'next-intl';
 import { logout } from '../../utils/auth';
 import { TokenPurchaseModal } from '../chat/TokenPurchaseModal';
+import NotificationBell from '@/components/NotificationBell';
 
 interface UserSidebarProps {
   locale?: string;
@@ -179,11 +180,15 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
         
         {/* ヘッダー */}
         <div className="p-6 border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <MessageSquare className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <MessageSquare className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-xl font-semibold text-gray-900">Charactier</h1>
             </div>
-            <h1 className="text-xl font-semibold text-gray-900">Charactier</h1>
+            {/* 通知ベル */}
+            <NotificationBell className="ml-auto" />
           </div>
           <p className="text-sm text-gray-400 mt-1">{t('appDescription')}</p>
         </div>

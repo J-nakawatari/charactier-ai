@@ -6,6 +6,7 @@ declare global {
   namespace Express {
     interface Request {
       startTime?: number;
+      monitoringRecorded?: boolean;
     }
   }
 }
@@ -14,18 +15,40 @@ export const monitoringMiddleware = (req: Request, res: Response, next: NextFunc
   // リクエスト開始時刻を記録
   req.startTime = Date.now();
   
-  // レスポンス送信時に監視データを記録
+  // 監視記録用の共通関数
+  const recordMonitoring = () => {
+    // 既に記録済みの場合はスキップ（重複カウント防止）
+    if (!req.monitoringRecorded) {
+      const responseTime = req.startTime ? Date.now() - req.startTime : 0;
+      const monitor = ServerMonitor.getInstance();
+      
+      // 監視データを記録（ヘルスチェックAPIは除外）
+      if (!req.path.includes('/health') && !req.path.includes('/monitoring')) {
+        monitor.recordRequest(req, responseTime, res.statusCode);
+        req.monitoringRecorded = true;
+      }
+    }
+  };
+  
+  // res.sendをオーバーライド
   const originalSend = res.send;
   res.send = function(data: any) {
-    const responseTime = req.startTime ? Date.now() - req.startTime : 0;
-    const monitor = ServerMonitor.getInstance();
-    
-    // 監視データを記録（ヘルスチェックAPIは除外）
-    if (!req.path.includes('/health') && !req.path.includes('/monitoring')) {
-      monitor.recordRequest(req, responseTime, res.statusCode);
-    }
-    
+    recordMonitoring();
     return originalSend.call(this, data);
+  };
+  
+  // res.jsonをオーバーライド
+  const originalJson = res.json;
+  res.json = function(data: any) {
+    recordMonitoring();
+    return originalJson.call(this, data);
+  };
+  
+  // res.endをオーバーライド
+  const originalEnd = res.end;
+  res.end = function(...args: any[]) {
+    recordMonitoring();
+    return originalEnd.apply(this, args);
   };
   
   next();

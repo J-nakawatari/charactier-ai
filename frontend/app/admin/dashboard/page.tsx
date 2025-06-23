@@ -5,9 +5,7 @@ import { adminAuthenticatedFetch } from '@/utils/auth';
 import StatsCards from '@/components/admin/StatsCards';
 import UserChart from '@/components/admin/UserChart';
 import TokenChart from '@/components/admin/TokenChart';
-import NotificationList from '@/components/admin/NotificationList';
 import SecurityAlerts from '@/components/admin/SecurityAlerts';
-import QuickStats from '@/components/admin/QuickStats';
 import CharacterTable from '@/components/admin/CharacterTable';
 import CronJobMonitor from '@/components/admin/CronJobMonitor';
 import ExchangeRateWidget from '@/components/admin/ExchangeRateWidget';
@@ -31,12 +29,13 @@ export default function AdminDashboard() {
         console.log('🚀 Admin Dashboard - データ取得開始');
         
         // 既存の管理者用APIエンドポイントを呼び出し
-        const [overviewRes, usersRes, charactersRes, errorStatsRes, dashboardStatsRes] = await Promise.all([
+        const [overviewRes, usersRes, charactersRes, errorStatsRes, dashboardStatsRes, notificationsRes] = await Promise.all([
           adminAuthenticatedFetch('/api/admin/token-analytics/overview'),
           adminAuthenticatedFetch('/api/admin/users'),
           adminAuthenticatedFetch('/api/characters'), // 公開キャラクター一覧API
           adminAuthenticatedFetch('/api/admin/error-stats?range=24h'), // APIエラー統計
-          adminAuthenticatedFetch('/api/admin/dashboard/stats') // 新しい統合ダッシュボード統計API
+          adminAuthenticatedFetch('/api/admin/dashboard/stats'), // 新しい統合ダッシュボード統計API
+          adminAuthenticatedFetch('/api/notifications?limit=5') // 最新の通知5件
         ]);
         
         console.log('📡 API responses received:', {
@@ -151,10 +150,20 @@ export default function AdminDashboard() {
         // キャラクターデータを設定
         setCharacters(charactersData.characters || []);
 
+        // 通知データをパース
+        let notificationsData: any[] = [];
+        if (notificationsRes.ok) {
+          const notifData = await notificationsRes.json();
+          notificationsData = notifData.notifications || [];
+          console.log('🔔 Notifications data:', notificationsData);
+        } else {
+          console.warn('⚠️ Notifications API not available');
+        }
+        
         // TODO: 以下のAPIが実装されたら有効化
         setUserStats([]);
         setTokenUsage([]);
-        setNotifications([]);
+        setNotifications(notificationsData);
         setSecurityEvents([]);
       } catch (err) {
         console.error('💥 Dashboard data fetch error:', err);
@@ -242,14 +251,6 @@ export default function AdminDashboard() {
                 {/* 為替レート表示 */}
                 <ExchangeRateWidget />
                 
-                {/* 通知リスト */}
-                <NotificationList notifications={notifications} />
-                
-                {/* クイック統計 */}
-                <QuickStats 
-                  financial={dashboardStats?.financial}
-                  evaluation={dashboardStats?.evaluation}
-                />
               </div>
             </div>
           </div>

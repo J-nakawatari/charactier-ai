@@ -49,8 +49,8 @@ export default function QuickStats({ financial, evaluation }: QuickStatsProps = 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">評価スコア</h3>
-        <p className="text-sm text-gray-500">システム全体の健全性</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">システム健全性スコア</h3>
+        <p className="text-sm text-gray-500">アクティブ率とエラー率から算出</p>
       </div>
 
       <div className="h-48 mb-4">

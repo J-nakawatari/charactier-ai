@@ -304,6 +304,23 @@ export class ServerMonitor {
     };
   }
 
+  // 統計をリセット（デバッグ用）
+  resetStats() {
+    this.performanceStats = {
+      totalRequests: 0,
+      totalResponseTime: 0,
+      slowRequests: 0
+    };
+    
+    this.errorStats = {
+      total: 0,
+      errors5xx: 0,
+      errors4xx: 0
+    };
+    
+    console.log('📊 ServerMonitor stats reset');
+  }
+
   getHealthStatus() {
     const memoryUsage = this.getMemoryUsage();
     const errorRate = this.getErrorRate();
