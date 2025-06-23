@@ -180,7 +180,7 @@ export class ServerMonitor {
     
     this.requestCounts.set(ip, current);
     
-    // パフォーマンス統計更新
+    // パフォーマンス統計更新（リクエストを先にカウント）
     this.performanceStats.totalRequests++;
     this.performanceStats.totalResponseTime += responseTime;
     if (responseTime > 1000) {
@@ -188,12 +188,19 @@ export class ServerMonitor {
     }
     
     // エラー統計更新（エラーの場合のみカウント）
+    // エラー数がリクエスト総数を超えないようにチェック
     if (statusCode >= 400) {
-      this.errorStats.total++;
-      if (statusCode >= 500) {
-        this.errorStats.errors5xx++;
+      // エラー総数がリクエスト総数を超えないように制限
+      if (this.errorStats.total < this.performanceStats.totalRequests) {
+        this.errorStats.total++;
+        if (statusCode >= 500) {
+          this.errorStats.errors5xx++;
+        } else {
+          this.errorStats.errors4xx++;
+        }
       } else {
-        this.errorStats.errors4xx++;
+        // エラーカウントの不整合を検出した場合はログに記録
+        console.warn(`⚠️ ServerMonitor: Error count would exceed request count. Skipping error increment. Status: ${statusCode}, Current errors: ${this.errorStats.total}, Total requests: ${this.performanceStats.totalRequests}`);
       }
     }
   }

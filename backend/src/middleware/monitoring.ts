@@ -8,12 +8,21 @@ declare global {
       startTime?: number;
       monitoringRecorded?: boolean;
     }
+    interface Response {
+      _monitoringWrapped?: boolean;
+    }
   }
 }
 
 export const monitoringMiddleware = (req: Request, res: Response, next: NextFunction) => {
   // リクエスト開始時刻を記録
   req.startTime = Date.now();
+  
+  // すでにラップされている場合はスキップ（他のミドルウェアとの競合防止）
+  if (res._monitoringWrapped) {
+    next();
+    return;
+  }
   
   // 監視記録用の共通関数
   const recordMonitoring = () => {
@@ -50,6 +59,9 @@ export const monitoringMiddleware = (req: Request, res: Response, next: NextFunc
     recordMonitoring();
     return originalEnd.apply(this, args);
   };
+  
+  // このResponseオブジェクトが監視用にラップされたことを記録
+  res._monitoringWrapped = true;
   
   next();
 };
