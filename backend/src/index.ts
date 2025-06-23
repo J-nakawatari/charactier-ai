@@ -458,7 +458,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
         
         
         // セッションのmetadataから購入タイプとキャラクターIDを取得
-        const purchaseType = session.metadata?.purchaseType || 'token';
+        let purchaseType = session.metadata?.purchaseType || 'token';
         let characterId = session.metadata?.characterId;
         let character = null;
         
