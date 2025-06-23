@@ -24,36 +24,17 @@ export interface AuthState {
  * 認証ヘッダーを取得
  */
 export function getAuthHeaders(): HeadersInit {
-  // 管理画面では専用のトークンキーを使用
-  const isAdminPage = typeof window !== 'undefined' && window.location.pathname.includes('/admin');
-  const tokenKey = isAdminPage ? 'adminAccessToken' : 'accessToken';
-  const token = localStorage.getItem(tokenKey);
-  
-  if (token) {
-    return {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    };
-  }
-
+  // HttpOnlyクッキーで認証するため、Authorizationヘッダーは不要
   return {
     'Content-Type': 'application/json'
   };
 }
 
 /**
- * 管理画面専用の認証ヘッダーを取得（確実にadminAccessTokenを使用）
+ * 管理画面専用の認証ヘッダーを取得（HttpOnlyクッキー使用のため、Authorizationヘッダーは不要）
  */
 export function getAdminAuthHeaders(): HeadersInit {
-  const adminToken = localStorage.getItem('adminAccessToken');
-  
-  if (adminToken) {
-    return {
-      'Authorization': `Bearer ${adminToken}`,
-      'Content-Type': 'application/json'
-    };
-  }
-
+  // HttpOnlyクッキーで認証するため、Authorizationヘッダーは不要
   return {
     'Content-Type': 'application/json'
   };
@@ -97,21 +78,17 @@ export function setAdminRefreshToken(token: string): void {
  * 管理者用トークンリフレッシュ
  */
 export async function refreshAdminToken(): Promise<boolean> {
-  const refresh = getAdminRefreshToken();
-  if (!refresh) return false;
-
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/admin/refresh`, {
       method: 'POST',
+      credentials: 'include', // クッキーを送信
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ refreshToken: refresh }),
     });
 
     if (response.ok) {
-      const data = await response.json();
-      setAdminAccessToken(data.accessToken);
+      // HttpOnlyクッキーで新しいトークンが自動的に設定される
       return true;
     }
   } catch (error) {
@@ -204,24 +181,20 @@ export function isAuthenticated(): boolean {
 }
 
 /**
- * トークンリフレッシュ
+ * トークンリフレッシュ（HttpOnlyクッキー使用）
  */
 export async function refreshToken(): Promise<boolean> {
-  const refresh = getRefreshToken();
-  if (!refresh) return false;
-
   try {
     const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
       method: 'POST',
+      credentials: 'include', // クッキーを送信
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ refreshToken: refresh }),
     });
 
     if (response.ok) {
-      const data = await response.json();
-      setAccessToken(data.accessToken);
+      // HttpOnlyクッキーで新しいトークンが自動的に設定される
       return true;
     }
   } catch (error) {

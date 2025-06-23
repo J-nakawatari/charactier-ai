@@ -27,6 +27,7 @@ export default function AdminLoginPage() {
 
       const response = await fetch(`${API_BASE_URL}/api/auth/admin/login`, {
         method: 'POST',
+        credentials: 'include', // クッキーを受信
         headers: {
           'Content-Type': 'application/json',
         },
@@ -39,15 +40,13 @@ export default function AdminLoginPage() {
         throw new Error(data.message || 'ログインに失敗しました');
       }
 
-      // JWTトークンを保存
-      localStorage.setItem('adminAccessToken', data.tokens.accessToken);
-      localStorage.setItem('adminRefreshToken', data.tokens.refreshToken);
+      // HttpOnlyクッキーでトークンが自動的に設定される
+      // 管理者情報のみlocalStorageに保存
       localStorage.setItem('adminUser', JSON.stringify(data.user));
 
-      // デバッグ: トークンが正しく保存されたか確認
+      // デバッグ: ログイン成功
       console.log('✅ 管理者ログイン成功');
-      console.log('🔑 Access Token 保存確認:', localStorage.getItem('adminAccessToken') ? '成功' : '失敗');
-      console.log('🔑 Refresh Token 保存確認:', localStorage.getItem('adminRefreshToken') ? '成功' : '失敗');
+      console.log('👤 管理者情報:', data.user);
       
       router.push('/admin/dashboard');
 

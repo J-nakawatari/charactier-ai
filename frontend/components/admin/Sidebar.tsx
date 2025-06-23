@@ -59,10 +59,21 @@ export default function Sidebar() {
     }
   }, []);
 
-  const handleLogout = () => {
-    // ローカルストレージから管理者認証情報をクリア
-    localStorage.removeItem('adminAccessToken');
-    localStorage.removeItem('adminRefreshToken');
+  const handleLogout = async () => {
+    try {
+      // APIを呼び出してクッキーをクリア
+      await fetch('/api/auth/admin/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+    
+    // ローカルストレージから管理者情報をクリア
     localStorage.removeItem('adminUser');
     
     // ログインページにリダイレクト
