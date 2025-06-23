@@ -108,9 +108,11 @@ export default function Sidebar() {
       {/* ヘッダー */}
       <div className="p-6 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-            <MessageSquare className="w-5 h-5 text-white" />
-          </div>
+          <img 
+            src="/uploads/logo.png" 
+            alt="Charactier" 
+            className="w-8 h-8 rounded-lg object-cover"
+          />
           <h1 className="text-xl font-semibold text-gray-900">Charactier</h1>
         </div>
         <p className="text-sm text-gray-400 mt-1">管理者ダッシュボード</p>
