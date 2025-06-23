@@ -897,10 +897,10 @@ routeRegistry.define('GET', '/api/notifications/stream', authenticateToken, asyn
     console.error('❌ Error getting initial unread count:', error);
   }
 
-  // ハートビート設定（30秒ごと）
+  // ハートビート設定（20秒ごと - Nginxのデフォルトタイムアウト30分より前に送信）
   const heartbeatInterval = setInterval(() => {
     res.write(':heartbeat\n\n');
-  }, 30000);
+  }, 20000);
 
   // Redis Pub/Sub設定（通知の変更を監視）
   let redisSubscriber: any = null;
@@ -1186,17 +1186,36 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
 // ユーザープロファイルエンドポイント
 routeRegistry.define('GET', '/api/user/profile', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id || req.user?._id;
+    // Debug logging
+    log.debug('GET /api/user/profile - req.user:', {
+      hasUser: !!req.user,
+      userId: req.user?._id,
+      userIdType: typeof req.user?._id,
+      userKeys: req.user ? Object.keys(req.user) : []
+    });
+
+    const userId = req.user?._id;
     if (!userId) {
+      log.error('No userId found in authenticated request', { 
+        user: req.user,
+        headers: req.headers 
+      });
       sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
       return;
     }
 
+    log.debug('Searching for user with ID:', { userId, userIdString: userId.toString() });
+    
     const user = await UserModel.findById(userId)
       .select('-password -emailVerificationToken -createdAt -updatedAt -__v')
       .populate('purchasedCharacters', 'id name profileImage');
     
     if (!user) {
+      log.error('User not found in database', { 
+        userId,
+        userIdString: userId.toString(),
+        searchedId: userId
+      });
       sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'User not found');
       return;
     }

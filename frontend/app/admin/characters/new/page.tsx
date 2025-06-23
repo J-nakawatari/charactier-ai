@@ -177,9 +177,14 @@ export default function CharacterNewPage() {
         personalityPreset: formData.personalityPreset,
         personalityTags: formData.personalityTags,
         gender: formData.gender,
+        age: formData.age || '',
+        occupation: formData.occupation || '',
         characterAccessType: formData.characterAccessType,
         aiModel: formData.model,
-        personalityPrompt: { ja: '', en: '' }, // 空のプロンプトを送信
+        personalityPrompt: { 
+          ja: formData.personalityPreset ? `${formData.personalityPreset}な性格のキャラクターです。` : 'フレンドリーで親しみやすいキャラクターです。',
+          en: formData.personalityPreset ? `A character with ${formData.personalityPreset} personality.` : 'A friendly and approachable character.'
+        }, // デフォルトプロンプトを設定
         defaultMessage: {
           ja: formData.defaultMessage.ja || 'こんにちは！よろしくお願いします。',
           en: formData.defaultMessage.en || 'Hello! Nice to meet you!'
@@ -265,7 +270,12 @@ export default function CharacterNewPage() {
       try {
         // 実際の実装ではStripe APIを呼び出して価格を取得
         // ここでは仮の実装
-        const response = await fetch(`/api/admin/stripe/prices/${priceId}`);
+        const response = await fetch(`/api/admin/stripe/price/${priceId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('adminAccessToken')}`,
+            'Content-Type': 'application/json'
+          }
+        });
         if (response.ok) {
           const priceData = await response.json();
           setFormData(prev => ({
@@ -886,6 +896,18 @@ export default function CharacterNewPage() {
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      デフォルトメッセージ（英語）
+                    </label>
+                    <textarea
+                      value={formData.defaultMessage.en}
+                      onChange={(e) => setFormData({ ...formData, defaultMessage: { ...formData.defaultMessage, en: e.target.value } })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none "
+                      rows={3}
+                      placeholder="例: Hello! I'm Luna ✨ What shall we talk about today?"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

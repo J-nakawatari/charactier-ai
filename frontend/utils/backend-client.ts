@@ -40,6 +40,7 @@ export class BackendClient {
           'Content-Type': 'application/json',
           ...options?.headers,
         },
+        credentials: 'include', // Always include credentials for cookie support
         signal: controller.signal
       });
       
@@ -76,6 +77,13 @@ export class BackendClient {
     const mockAuthHeader = request.headers.get('x-auth-token');
     if (mockAuthHeader) {
       headers['x-auth-token'] = mockAuthHeader;
+    }
+    
+    // Cookieヘッダーも転送（HttpOnly Cookieのため重要）
+    const cookieHeader = request.headers.get('Cookie');
+    if (cookieHeader) {
+      headers['Cookie'] = cookieHeader;
+      console.log('🍪 Forwarding cookies to backend');
     }
     
     return this.fetch(backendPath, {

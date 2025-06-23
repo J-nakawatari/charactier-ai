@@ -99,6 +99,12 @@ export const authenticateToken = async (
       
       // 一般ユーザーとして認証成功
       req.user = user;
+      log.debug('User authenticated successfully', { 
+        userId: user._id.toString(), 
+        email: user.email,
+        hasUser: !!req.user,
+        userKeys: Object.keys(user.toObject())
+      });
       next();
       return;
     }

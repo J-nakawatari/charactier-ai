@@ -60,14 +60,14 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
     const fetchUserData = async () => {
       try {
         // 最新のユーザー情報をAPIから取得
-        const token = localStorage.getItem('accessToken');
-        if (token) {
-          const response = await fetch('/api/user/profile', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
+        // HttpOnly Cookieを使用するため、credentialsを含める
+        const response = await fetch('/api/user/profile', {
+          method: 'GET',
+          credentials: 'include', // Cookieを送信
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
           
           if (response.ok) {
             const userData = await response.json();
