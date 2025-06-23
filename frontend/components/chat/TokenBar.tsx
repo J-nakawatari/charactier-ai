@@ -33,21 +33,16 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
     
     try {
       isRefreshingRef.current = true;
-      const response = await fetch('/api/user/profile', {
-        headers: getAuthHeaders()
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        const newTokens = userData.tokenBalance || userData.user?.tokenBalance || 0;
+      // TODO: バックエンドの/api/user/profileが正しくデプロイされたら、API呼び出しを復活させる
+      // 一時的にlocalStorageから取得
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const userData = JSON.parse(userStr);
+        const newTokens = userData.tokenBalance || 0;
         setCurrentTokens(newTokens);
         onTokenUpdate?.(newTokens);
         errorCountRef.current = 0; // 成功したらエラーカウントをリセット
         lastErrorTimeRef.current = 0; // エラー時刻もリセット
-      } else {
-        errorCountRef.current += 1;
-        lastErrorTimeRef.current = now;
-        console.warn(`Token balance API returned ${response.status}`);
       }
     } catch (error) {
       console.error('Token balance refresh failed:', error);

@@ -45,30 +45,14 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // 最新のユーザー情報をAPIから取得
-        const token = localStorage.getItem('accessToken');
-        if (token) {
-          const response = await fetch('/api/user/profile', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          if (response.ok) {
-            const userData = await response.json();
-            
-            // ユーザー情報を正しく取得（UserSidebarと同じロジック）
-            const user = userData.user || userData;
-            const userWithTokenBalance = {
-              ...user,
-              tokenBalance: userData.tokenBalance || user.tokenBalance || 0
-            };
-            
-            setUser(userWithTokenBalance);
-            setLoading(false);
-            return;
-          }
+        // TODO: バックエンドの/api/user/profileが正しくデプロイされたら、API呼び出しを復活させる
+        // 一時的にlocalStorageから取得
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const userData = JSON.parse(userStr);
+          setUser(userData);
+          setLoading(false);
+          return;
         }
         
         setLoading(false);

@@ -60,26 +60,17 @@ function CharactersPageContent({
   // ユーザー情報取得関数
   const fetchUserData = useCallback(async () => {
     try {
-      const response = await fetch('/api/user/profile', {
-        headers: {
-          ...getAuthHeaders(),
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        },
-        cache: 'no-store',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        console.log('👤 取得したユーザーデータ:', {
+      // TODO: バックエンドの/api/user/profileが正しくデプロイされたら、API呼び出しを復活させる
+      // 一時的にlocalStorageから取得
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const userData = JSON.parse(userStr);
+        console.log('👤 取得したユーザーデータ (localStorage):', {
           purchasedCharacters: userData.purchasedCharacters,
           affinities: userData.affinities?.length || 0
         });
         setUserAffinities(userData.affinities || []);
         setUserPurchasedCharacters(userData.purchasedCharacters?.map((id: string) => id.toString()) || []);
-      } else {
-        await handleFetchError(response);
       }
     } catch (err) {
       console.error('User info fetch error:', err);
