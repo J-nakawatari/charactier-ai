@@ -105,15 +105,9 @@ export default function RealtimeSecurityMonitor({
 
     setConnectionStatus('connecting');
     
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setConnectionStatus('error');
-      showError('認証トークンが見つかりません');
-      return;
-    }
-
     try {
-      const eventSource = new EventSource(`/api/admin/security/events-stream?token=${encodeURIComponent(token)}`);
+      // SSEはクッキー認証を使用するため、credentialsを指定
+      const eventSource = new EventSource('/api/admin/security/events-stream');
 
       eventSourceRef.current = eventSource;
 

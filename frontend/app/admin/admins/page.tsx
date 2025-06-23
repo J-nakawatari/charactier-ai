@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { Plus, Shield, User, Mail, Calendar, MoreVertical, Edit, Trash2 } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api-config';
+import { adminFetch } from '@/utils/admin-fetch';
 
 interface Admin {
   _id: string;
@@ -28,17 +28,7 @@ export default function AdminListPage() {
     try {
       setLoading(true);
       
-      const adminToken = localStorage.getItem('adminAccessToken');
-      if (!adminToken) {
-        throw new Error('管理者認証が必要です');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/admins`, {
-        headers: { 
-          'Authorization': `Bearer ${adminToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await adminFetch('/api/admin/admins');
 
       if (!response.ok) {
         throw new Error(`API Error: ${response.status}`);
@@ -103,17 +93,8 @@ export default function AdminListPage() {
     }
 
     try {
-      const adminToken = localStorage.getItem('adminAccessToken');
-      if (!adminToken) {
-        throw new Error('管理者認証が必要です');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/admins/${adminId}`, {
-        method: 'DELETE',
-        headers: { 
-          'Authorization': `Bearer ${adminToken}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await adminFetch(`/api/admin/admins/${adminId}`, {
+        method: 'DELETE'
       });
 
       if (!response.ok) {

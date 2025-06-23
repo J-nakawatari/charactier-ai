@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Shield, AlertTriangle, CheckCircle, Activity, Users, Clock, Eye, UserX } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api-config';
+import { adminFetch } from '@/utils/admin-fetch';
 
 interface ViolationStats {
   totalViolations: number;
@@ -52,21 +52,11 @@ export default function SecurityPage() {
   const fetchSecurityData = async () => {
     try {
       setLoading(true);
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
-      if (!adminToken) {
-        throw new Error('管理者認証が必要です');
-      }
-
-      const headers = {
-        'Authorization': `Bearer ${adminToken}`,
-        'Content-Type': 'application/json'
-      };
 
       const [statsRes, usersRes, violationsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/admin/security/violation-stats`, { headers }),
-        fetch(`${API_BASE_URL}/api/admin/security/sanctioned-users`, { headers }),
-        fetch(`${API_BASE_URL}/api/admin/security/recent-violations?limit=10`, { headers })
+        adminFetch('/api/admin/security/violation-stats'),
+        adminFetch('/api/admin/security/sanctioned-users'),
+        adminFetch('/api/admin/security/recent-violations?limit=10')
       ]);
 
       if (statsRes.ok) {
@@ -97,13 +87,8 @@ export default function SecurityPage() {
     }
 
     try {
-      const adminToken = localStorage.getItem('adminAccessToken');
-      const response = await fetch(`${API_BASE_URL}/api/admin/security/lift-sanction/${userId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${adminToken}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await adminFetch(`/api/admin/security/lift-sanction/${userId}`, {
+        method: 'POST'
       });
 
       if (response.ok) {
