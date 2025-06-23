@@ -132,6 +132,12 @@ export function getSafeValidationMessage(errors: any[]): string {
   // Count errors by type
   const fieldCount = errors.filter(e => e.path).length;
   
+  // 一時的に詳細なエラー情報を返す（デバッグ用）
+  if (process.env.NODE_ENV !== 'production' && errors.length > 0) {
+    const fieldErrors = errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+    return `バリデーションエラー: ${fieldErrors}`;
+  }
+  
   if (fieldCount > 0) {
     return `${fieldCount}個の項目に問題があります`;
   }

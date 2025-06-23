@@ -90,10 +90,10 @@ export const characterSchemas = {
     age: Joi.string().optional(), // Added age field
     occupation: Joi.string().optional(), // Added occupation field
     aiModel: Joi.string().valid('gpt-3.5-turbo', 'gpt-4o-mini').default('gpt-3.5-turbo'),
-    imageCharacterSelect: Joi.string().uri().optional(),
-    imageDashboard: Joi.string().uri().optional(),
-    imageChatBackground: Joi.string().uri().optional(),
-    imageChatAvatar: Joi.string().uri().optional(),
+    imageCharacterSelect: Joi.string().optional(),
+    imageDashboard: Joi.string().optional(),
+    imageChatBackground: Joi.string().optional(),
+    imageChatAvatar: Joi.string().optional(),
     sampleVoiceUrl: Joi.string().uri().optional(),
     themeColor: Joi.string().pattern(/^#[0-9A-Fa-f]{6}$/).optional().messages({
       'string.pattern.base': 'テーマカラーは#RRGGBBの形式で入力してください'
@@ -114,7 +114,7 @@ export const characterSchemas = {
       })).optional()
     }).required(),
     galleryImages: Joi.array().items(Joi.object({
-      imageUrl: Joi.string().uri().required(),
+      imageUrl: Joi.string().required(),
       caption: localizedString.optional(),
       unlockLevel: Joi.number().integer().min(0).max(100).required()
     })).optional()
@@ -132,10 +132,10 @@ export const characterSchemas = {
     age: Joi.string().allow('').optional(), // Added age field
     occupation: Joi.string().allow('').optional(), // Added occupation field
     aiModel: Joi.string().valid('gpt-3.5-turbo', 'gpt-4o-mini').optional(),
-    imageCharacterSelect: Joi.string().uri().allow('').optional(),
-    imageDashboard: Joi.string().uri().allow('').optional(),
-    imageChatBackground: Joi.string().uri().allow('').optional(),
-    imageChatAvatar: Joi.string().uri().allow('').optional(),
+    imageCharacterSelect: Joi.string().allow('').optional(),
+    imageDashboard: Joi.string().allow('').optional(),
+    imageChatBackground: Joi.string().allow('').optional(),
+    imageChatAvatar: Joi.string().allow('').optional(),
     sampleVoiceUrl: Joi.string().uri().allow('').optional(),
     themeColor: Joi.string().pattern(/^#[0-9A-Fa-f]{6}$/).allow('').optional(),
     displayOrder: Joi.number().integer().min(0).optional(),
@@ -154,8 +154,8 @@ export const characterSchemas = {
       })).optional()
     }).optional(),
     galleryImages: Joi.array().items(Joi.object({
-      url: Joi.string().uri().optional(), // Changed from imageUrl to url
-      imageUrl: Joi.string().uri().optional(), // Support both url and imageUrl
+      url: Joi.string().optional(), // Changed from imageUrl to url
+      imageUrl: Joi.string().optional(), // Support both url and imageUrl
       caption: localizedString.optional(),
       title: localizedString.optional(), // Added title support
       description: localizedString.optional(), // Added description support
