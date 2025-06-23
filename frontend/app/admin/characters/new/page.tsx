@@ -107,6 +107,7 @@ export default function CharacterNewPage() {
     characterAccessType: 'free',
     stripePriceId: '',
     displayPrice: 0,
+    purchasePrice: 0,
     
     // プロンプト・メッセージ
     defaultMessage: { ja: '', en: '' },
@@ -268,25 +269,42 @@ export default function CharacterNewPage() {
     if (priceId && priceId.startsWith('price_') && priceId.length > 10) {
       setIsLoadingPrice(true);
       try {
-        // 実際の実装ではStripe APIを呼び出して価格を取得
-        // ここでは仮の実装
+        const adminToken = localStorage.getItem('adminAccessToken');
+        if (!adminToken) {
+          error('認証エラー', '管理者トークンが見つかりません');
+          setIsLoadingPrice(false);
+          return;
+        }
+
         const response = await fetch(`/api/admin/stripe/price/${priceId}`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('adminAccessToken')}`,
+            'Authorization': `Bearer ${adminToken}`,
             'Content-Type': 'application/json'
           }
         });
-        if (response.ok) {
-          const priceData = await response.json();
+        
+        const responseData = await response.json();
+        
+        if (response.ok && responseData.success) {
+          // 日本円の場合はそのまま、他の通貨の場合は100で割る
+          const displayPrice = responseData.price.currency === 'jpy' 
+            ? responseData.price.unit_amount 
+            : responseData.price.unit_amount / 100;
+            
           setFormData(prev => ({
             ...prev,
-            displayPrice: priceData.unit_amount / 100 // centから円に変換
+            displayPrice: displayPrice,
+            purchasePrice: displayPrice // purchasePriceも更新
           }));
-          success('価格取得完了', `価格: ¥${(priceData.unit_amount / 100).toLocaleString()}`);
+          
+          success('価格取得完了', `価格: ¥${displayPrice.toLocaleString()}`);
         } else {
-          error('価格取得エラー', '指定されたStripe価格IDが見つかりません');
+          const errorMessage = responseData.message || responseData.error || '指定されたStripe価格IDが見つかりません';
+          error('価格取得エラー', errorMessage);
+          console.error('Stripe Price API Error:', responseData);
         }
       } catch (err) {
+        console.error('Stripe Price Fetch Error:', err);
         error('価格取得エラー', 'Stripe価格の取得に失敗しました');
       } finally {
         setIsLoadingPrice(false);
@@ -841,39 +859,37 @@ export default function CharacterNewPage() {
                   </select>
                 </div>
 
-                {formData.characterAccessType === 'purchaseOnly' && (
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Stripe価格ID
-                    </label>
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={formData.stripePriceId}
-                        onChange={handlePriceIdChange}
-                        className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none ${getFieldErrorClass('stripePriceId')}`}
-                        placeholder="price_1234567890abcdef"
-                        disabled={isLoadingPrice}
-                      />
-                      {renderFieldError('stripePriceId')}
-                      <p className="text-sm text-gray-500">
-                        例: price_1234567890abcdef（Stripeダッシュボードから価格IDをコピー）
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Stripe価格ID {formData.characterAccessType === 'free' && <span className="text-gray-400">（無料キャラクターでは任意）</span>}
+                  </label>
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={formData.stripePriceId}
+                      onChange={handlePriceIdChange}
+                      className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none ${getFieldErrorClass('stripePriceId')}`}
+                      placeholder="price_1234567890abcdef"
+                      disabled={isLoadingPrice}
+                    />
+                    {renderFieldError('stripePriceId')}
+                    <p className="text-sm text-gray-500">
+                      例: price_1234567890abcdef（Stripeダッシュボードから価格IDをコピー）
+                    </p>
+                    {isLoadingPrice && (
+                      <p className="text-sm text-blue-500">
+                        価格情報を取得中...
                       </p>
-                      {isLoadingPrice && (
-                        <p className="text-sm text-blue-500">
-                          価格情報を取得中...
+                    )}
+                    {formData.displayPrice > 0 && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <p className="text-sm text-green-800">
+                          取得した価格: <span className="font-semibold">¥{formData.displayPrice.toLocaleString()}</span>
                         </p>
-                      )}
-                      {formData.displayPrice > 0 && (
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                          <p className="text-sm text-green-800">
-                            取得した価格: <span className="font-semibold">¥{formData.displayPrice.toLocaleString()}</span>
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </div>
 
