@@ -87,6 +87,8 @@ export const characterSchemas = {
     personalityPreset: Joi.string().optional(),
     personalityTags: Joi.array().items(Joi.string()).optional(),
     gender: Joi.string().valid('male', 'female', 'neutral').optional(),
+    age: Joi.string().optional(), // Added age field
+    occupation: Joi.string().optional(), // Added occupation field
     aiModel: Joi.string().valid('gpt-3.5-turbo', 'gpt-4o-mini').default('gpt-3.5-turbo'),
     imageCharacterSelect: Joi.string().uri().optional(),
     imageDashboard: Joi.string().uri().optional(),
@@ -127,6 +129,8 @@ export const characterSchemas = {
     personalityPreset: Joi.string().optional(),
     personalityTags: Joi.array().items(Joi.string()).optional(),
     gender: Joi.string().valid('male', 'female', 'neutral').optional(),
+    age: Joi.string().allow('').optional(), // Added age field
+    occupation: Joi.string().allow('').optional(), // Added occupation field
     aiModel: Joi.string().valid('gpt-3.5-turbo', 'gpt-4o-mini').optional(),
     imageCharacterSelect: Joi.string().uri().allow('').optional(),
     imageDashboard: Joi.string().uri().allow('').optional(),
@@ -150,9 +154,16 @@ export const characterSchemas = {
       })).optional()
     }).optional(),
     galleryImages: Joi.array().items(Joi.object({
-      imageUrl: Joi.string().uri().required(),
+      url: Joi.string().uri().optional(), // Changed from imageUrl to url
+      imageUrl: Joi.string().uri().optional(), // Support both url and imageUrl
       caption: localizedString.optional(),
-      unlockLevel: Joi.number().integer().min(0).max(100).required()
+      title: localizedString.optional(), // Added title support
+      description: localizedString.optional(), // Added description support
+      unlockLevel: Joi.number().integer().min(0).max(100).required(),
+      rarity: Joi.string().valid('common', 'rare', 'epic', 'legendary').optional(),
+      tags: Joi.array().items(Joi.string()).optional(),
+      isDefault: Joi.boolean().optional(),
+      order: Joi.number().optional()
     })).optional()
   })
 };

@@ -27,12 +27,16 @@ export function validate(schemas: ValidationOptions) {
 
         if (error) {
           // Log detailed validation errors internally
-          log.debug('Body validation error', {
+          log.warn('Body validation error', {
             errors: error.details.map(detail => ({
               field: detail.path.join('.'),
-              message: detail.message
+              message: detail.message,
+              type: detail.type,
+              value: detail.context?.value
             })),
-            path: req.path
+            path: req.path,
+            method: req.method,
+            body: req.body
           });
 
           // Send safe error message to client
