@@ -237,7 +237,10 @@ export function isDevelopment(): boolean {
 export async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const headers = getAuthHeaders();
   
-  const response = await fetch(url, {
+  // 相対URLの場合は API_BASE_URL を付加
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  
+  const response = await fetch(fullUrl, {
     ...options,
     credentials: 'include', // クッキーを送信
     headers: {
@@ -252,7 +255,7 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
     if (refreshed) {
       // リフレッシュ成功時は再リクエスト
       const newHeaders = getAuthHeaders();
-      return fetch(url, {
+      return fetch(fullUrl, {
         ...options,
         credentials: 'include', // クッキーを送信
         headers: {
@@ -276,7 +279,10 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
 export async function adminAuthenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const headers = getAdminAuthHeaders();
   
-  const response = await fetch(url, {
+  // 相対URLの場合は API_BASE_URL を付加
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  
+  const response = await fetch(fullUrl, {
     ...options,
     credentials: 'include', // クッキーを送信
     headers: {
@@ -291,7 +297,7 @@ export async function adminAuthenticatedFetch(url: string, options: RequestInit 
     if (refreshed) {
       // リフレッシュ成功時は再リクエスト
       const newHeaders = getAdminAuthHeaders();
-      return fetch(url, {
+      return fetch(fullUrl, {
         ...options,
         credentials: 'include', // クッキーを送信
         headers: {

@@ -150,18 +150,23 @@ router.post('/login',
 
     // Cookie設定（本番環境では secure: true にする）
     const isProduction = process.env.NODE_ENV === 'production';
+    const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
     const cookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'strict' as const,
-      maxAge: 24 * 60 * 60 * 1000 // 24時間
+      sameSite: isProduction ? 'lax' as const : 'strict' as const,
+      maxAge: 24 * 60 * 60 * 1000, // 24時間
+      domain: cookieDomain,
+      path: '/'
     };
     
     const refreshCookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'strict' as const,
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7日間
+      sameSite: isProduction ? 'lax' as const : 'strict' as const,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
+      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
+      path: '/'
     };
     
     // Cookieにトークンを設定（ユーザー用）
@@ -199,8 +204,8 @@ router.post('/refresh',
   validate({ body: authSchemas.refreshToken }),
   async (req: Request, res: Response): Promise<void> => {
   try {
-    // Cookieまたはボディからリフレッシュトークンを取得
-    const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
+    // Cookieまたはボディからリフレッシュトークンを取得（ユーザー用と管理者用の両方をチェック）
+    const refreshToken = req.cookies?.refreshToken || req.cookies?.userRefreshToken || req.cookies?.adminRefreshToken || req.body.refreshToken;
 
     // リフレッシュトークンを検証
     const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
@@ -220,10 +225,11 @@ router.post('/refresh',
       
       // Cookie設定
       const isProduction = process.env.NODE_ENV === 'production';
+      const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
       const cookieOptions = {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'strict' as const,
+        sameSite: isProduction ? 'lax' as const : 'strict' as const,
         maxAge: 24 * 60 * 60 * 1000 // 24時間
       };
       
@@ -252,8 +258,10 @@ router.post('/refresh',
     const cookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'strict' as const,
-      maxAge: 24 * 60 * 60 * 1000 // 24時間
+      sameSite: isProduction ? 'lax' as const : 'strict' as const,
+      maxAge: 24 * 60 * 60 * 1000, // 24時間
+      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
+      path: '/'
     };
     
     // Cookieに新しいアクセストークンを設定
@@ -455,15 +463,19 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
     const cookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'strict' as const,
-      maxAge: 24 * 60 * 60 * 1000 // 24時間
+      sameSite: isProduction ? 'lax' as const : 'strict' as const,
+      maxAge: 24 * 60 * 60 * 1000, // 24時間
+      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
+      path: '/'
     };
     
     const refreshCookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'strict' as const,
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7日間
+      sameSite: isProduction ? 'lax' as const : 'strict' as const,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
+      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
+      path: '/'
     };
     
     // Cookieにトークンを設定（ユーザー用）
@@ -590,15 +602,19 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
     const cookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'strict' as const,
-      maxAge: 24 * 60 * 60 * 1000 // 24時間
+      sameSite: isProduction ? 'lax' as const : 'strict' as const,
+      maxAge: 24 * 60 * 60 * 1000, // 24時間
+      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
+      path: '/'
     };
     
     const refreshCookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'strict' as const,
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7日間
+      sameSite: isProduction ? 'lax' as const : 'strict' as const,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
+      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
+      path: '/'
     };
     
     // Cookieにトークンを設定（管理者用）
@@ -656,13 +672,50 @@ router.get('/verify-token', authenticateToken, async (req: AuthRequest, res: Res
 // ログアウト
 router.post('/logout', async (req: Request, res: Response): Promise<void> => {
   try {
-    // Cookieをクリア
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
+    // すべての認証関連Cookieをクリア（ユーザー用と管理者用の両方）
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
+    const clearOptions = {
+      domain: cookieDomain,
+      path: '/'
+    };
+    
+    res.clearCookie('accessToken', clearOptions);
+    res.clearCookie('refreshToken', clearOptions);
+    res.clearCookie('userAccessToken', clearOptions);
+    res.clearCookie('userRefreshToken', clearOptions);
+    res.clearCookie('adminAccessToken', clearOptions);
+    res.clearCookie('adminRefreshToken', clearOptions);
     
     res.json({
       success: true,
       message: 'ログアウトしました'
+    });
+  } catch (error) {
+    const errorCode = mapErrorToClientCode(error);
+    sendErrorResponse(res, 500, errorCode, error);
+  }
+});
+
+// 管理者ログアウト
+router.post('/admin/logout', async (req: Request, res: Response): Promise<void> => {
+  try {
+    // 管理者用Cookieをクリア
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
+    const clearOptions = {
+      domain: cookieDomain,
+      path: '/'
+    };
+    
+    res.clearCookie('adminAccessToken', clearOptions);
+    res.clearCookie('adminRefreshToken', clearOptions);
+    
+    log.info('Admin logout successful');
+    
+    res.json({
+      success: true,
+      message: '管理者ログアウトしました'
     });
   } catch (error) {
     const errorCode = mapErrorToClientCode(error);
@@ -714,6 +767,90 @@ router.post('/create-admin', async (req: Request, res: Response): Promise<void> 
   } catch (error) {
     const errorCode = mapErrorToClientCode(error);
     sendErrorResponse(res, 500, errorCode, error);
+  }
+});
+
+// 管理者トークンリフレッシュ
+router.post('/admin/refresh', async (req: Request, res: Response): Promise<void> => {
+  try {
+    // 管理者用リフレッシュトークンをCookieから取得
+    const refreshToken = req.cookies?.adminRefreshToken;
+
+    if (!refreshToken) {
+      log.warn('Admin refresh token missing');
+      res.status(401).json({
+        error: ClientErrorCode.AUTH_FAILED,
+        message: 'リフレッシュトークンが必要です'
+      });
+      return;
+    }
+
+    // リフレッシュトークンを検証
+    const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+    if (!JWT_REFRESH_SECRET) {
+      log.error('JWT secret not configured');
+      sendErrorResponse(res, 500, ClientErrorCode.SERVICE_UNAVAILABLE);
+      return;
+    }
+
+    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId: string };
+
+    // 管理者として検索
+    const admin = await AdminModel.findById(decoded.userId);
+    if (!admin || !admin.isActive) {
+      log.warn('Admin token refresh failed - admin not found or inactive', { userId: decoded.userId });
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
+      return;
+    }
+
+    // 新しいアクセストークンを生成
+    const newAccessToken = generateAccessToken(admin._id.toString());
+    
+    // Cookie設定
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'lax' as const : 'strict' as const,
+      maxAge: 24 * 60 * 60 * 1000, // 24時間
+      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
+      path: '/'
+    };
+    
+    // Cookieに新しいアクセストークンを設定（管理者用）
+    res.cookie('adminAccessToken', newAccessToken, cookieOptions);
+    
+    log.info('Admin token refreshed successfully', { adminId: admin._id.toString() });
+    
+    res.json({
+      accessToken: newAccessToken,
+      message: '管理者トークンが更新されました'
+    });
+
+  } catch (error) {
+    log.error('Admin token refresh error', error);
+    
+    if (error instanceof jwt.TokenExpiredError) {
+      log.warn('Admin refresh token expired', {
+        expiredAt: error.expiredAt,
+        message: error.message
+      });
+      res.status(401).json({
+        error: ClientErrorCode.TOKEN_EXPIRED,
+        message: 'リフレッシュトークンの有効期限が切れています。再度ログインしてください。',
+        requireRelogin: true
+      });
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      log.warn('Invalid admin refresh token', { message: error.message });
+      res.status(401).json({
+        error: ClientErrorCode.AUTH_FAILED,
+        message: '無効なリフレッシュトークンです',
+        requireRelogin: true
+      });
+    } else {
+      const errorCode = mapErrorToClientCode(error);
+      sendErrorResponse(res, 500, errorCode, error);
+    }
   }
 });
 

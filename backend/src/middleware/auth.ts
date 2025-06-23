@@ -47,7 +47,9 @@ export const authenticateToken = async (
       hasUserToken: !!req.cookies?.userAccessToken,
       hasAdminToken: !!req.cookies?.adminAccessToken,
       hasAuthHeader: !!req.headers.authorization,
-      tokenSource: token ? (req.headers.authorization ? 'bearer' : 'cookie') : 'none'
+      tokenSource: token ? (req.headers.authorization ? 'bearer' : 'cookie') : 'none',
+      cookies: Object.keys(req.cookies || {}),
+      cookieNames: Object.keys(req.cookies || {}).join(', ')
     });
 
     if (!token) {
