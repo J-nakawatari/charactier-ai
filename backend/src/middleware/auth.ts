@@ -22,6 +22,7 @@ export const authenticateToken = async (
     let token: string | undefined;
     
     // 管理者パスの場合は管理者用クッキー、それ以外はユーザー用クッキーを確認
+    // レガシーサポート: 古いaccessTokenも確認
     if (isAdminPath) {
       token = req.cookies?.adminAccessToken || req.cookies?.accessToken;
     } else {
