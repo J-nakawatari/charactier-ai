@@ -16,6 +16,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
@@ -108,10 +109,12 @@ export default function Sidebar() {
       {/* ヘッダー */}
       <div className="p-6 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center space-x-3">
-          <img 
+          <Image 
             src="/uploads/logo.png" 
             alt="Charactier" 
-            className="w-8 h-8 rounded-lg object-cover"
+            width={32}
+            height={32}
+            className="rounded-lg object-cover"
           />
           <h1 className="text-xl font-semibold text-gray-900">Charactier</h1>
         </div>
