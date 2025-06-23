@@ -7,9 +7,11 @@ info:
     トークンベースのAIキャラクターチャットサービスのAPIを定義しています。
     
     ## 認証
-    - JWT Bearer Token認証を使用
+    - HttpOnly Cookie認証（推奨）
+      - ユーザー: userAccessToken, userRefreshToken
+      - 管理者: adminAccessToken, adminRefreshToken
+    - JWT Bearer Token認証（後方互換）
     - アクセストークンとリフレッシュトークンのペアで管理
-    - HttpOnly Cookieにも対応
     
     ## レート制限
     - 一般API: 100リクエスト/分
@@ -412,6 +414,45 @@ paths:
           $ref: '#/components/responses/AuthenticationError'
         '403':
           $ref: '#/components/responses/Forbidden'
+
+  /api/auth/admin/refresh:
+    post:
+      summary: 管理者トークンリフレッシュ
+      tags: [Authentication]
+      description: HttpOnly Cookieに保存されたリフレッシュトークンを使用して新しいアクセストークンを取得
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: トークンリフレッシュ成功
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                description: 新しいアクセストークンとリフレッシュトークン
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  /api/auth/admin/logout:
+    post:
+      summary: 管理者ログアウト
+      tags: [Authentication]
+      description: HttpOnly Cookieから認証トークンをクリア
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: ログアウト成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "ログアウトしました"
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
 
   # ===================
   # User APIs
@@ -3019,7 +3060,14 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-    CookieAuth:
+      description: JWT Bearer Token認証（後方互換のため残存）
+    cookieAuth:
       type: apiKey
       in: cookie
-      name: accessToken
+      name: userAccessToken
+      description: ユーザー用HttpOnly Cookie認証
+    adminCookieAuth:
+      type: apiKey
+      in: cookie
+      name: adminAccessToken
+      description: 管理者用HttpOnly Cookie認証
