@@ -17,8 +17,16 @@ export const authenticateToken = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // 1. Cookieからトークン取得を試みる
-    let token: string | undefined = req.cookies?.accessToken;
+    // 1. パスに基づいて適切なクッキーを選択
+    const isAdminPath = req.path.includes('/admin/');
+    let token: string | undefined;
+    
+    // 管理者パスの場合は管理者用クッキー、それ以外はユーザー用クッキーを確認
+    if (isAdminPath) {
+      token = req.cookies?.adminAccessToken || req.cookies?.accessToken;
+    } else {
+      token = req.cookies?.userAccessToken || req.cookies?.accessToken;
+    }
     
     // 2. Cookieになければ、Authorization ヘッダーまたは x-auth-token ヘッダーから JWT を取得
     if (!token) {
@@ -35,9 +43,12 @@ export const authenticateToken = async (
     log.debug('authenticateToken middleware', {
       path: req.path,
       method: req.method,
-      hasCookieToken: !!req.cookies?.accessToken,
+      isAdminPath,
+      hasUserToken: !!req.cookies?.userAccessToken,
+      hasAdminToken: !!req.cookies?.adminAccessToken,
+      hasLegacyToken: !!req.cookies?.accessToken,
       hasAuthHeader: !!req.headers.authorization,
-      tokenSource: req.cookies?.accessToken ? 'cookie' : (req.headers.authorization ? 'bearer' : 'none')
+      tokenSource: token ? (req.headers.authorization ? 'bearer' : 'cookie') : 'none'
     });
 
     if (!token) {

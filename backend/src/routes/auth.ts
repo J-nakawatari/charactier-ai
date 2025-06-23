@@ -164,9 +164,9 @@ router.post('/login',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7日間
     };
     
-    // Cookieにトークンを設定
-    res.cookie('accessToken', accessToken, cookieOptions);
-    res.cookie('refreshToken', refreshToken, refreshCookieOptions);
+    // Cookieにトークンを設定（ユーザー用）
+    res.cookie('userAccessToken', accessToken, cookieOptions);
+    res.cookie('userRefreshToken', refreshToken, refreshCookieOptions);
     
     // ログイン成功レスポンス
     const userResponse = {
@@ -466,9 +466,9 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7日間
     };
     
-    // Cookieにトークンを設定
-    res.cookie('accessToken', accessToken, cookieOptions);
-    res.cookie('refreshToken', refreshToken, refreshCookieOptions);
+    // Cookieにトークンを設定（ユーザー用）
+    res.cookie('userAccessToken', accessToken, cookieOptions);
+    res.cookie('userRefreshToken', refreshToken, refreshCookieOptions);
 
     log.info('Email verified successfully', { email: user.email, userId: user._id.toString() });
 
@@ -601,9 +601,9 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7日間
     };
     
-    // Cookieにトークンを設定
-    res.cookie('accessToken', accessToken, cookieOptions);
-    res.cookie('refreshToken', refreshToken, refreshCookieOptions);
+    // Cookieにトークンを設定（管理者用）
+    res.cookie('adminAccessToken', accessToken, cookieOptions);
+    res.cookie('adminRefreshToken', refreshToken, refreshCookieOptions);
 
     log.info('Admin login successful', { adminId: admin._id.toString(), email: admin.email, role: admin.role });
 
