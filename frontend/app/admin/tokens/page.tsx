@@ -8,6 +8,7 @@ import TokenPackTable, { TokenPackTableRef } from '@/components/admin/TokenPackT
 import TokenPackModal from '@/components/admin/TokenPackModal';
 import { useToast } from '@/contexts/ToastContext';
 import { Search, Filter, Plus, Download, CreditCard, Package, Users, TrendingUp } from 'lucide-react';
+import { adminFetch } from '@/utils/admin-fetch';
 // Mock imports removed - will use actual API data
 
 interface TokenPack {
@@ -64,22 +65,11 @@ export default function TokensPage() {
     const fetchTokenData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('adminAccessToken');
-        
-        if (!token) {
-          setError('認証トークンが見つかりません');
-          return;
-        }
-
-        const headers = {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        };
 
         // 実際のAPIコールを実行（既存の動作しているエンドポイントを使用）
         const [tokenRes, usersRes] = await Promise.all([
-          fetch('/api/admin/token-analytics/overview', { headers }),
-          fetch('/api/admin/users', { headers })
+          adminFetch('/api/admin/token-analytics/overview'),
+          adminFetch('/api/admin/users')
         ]);
 
         if (!tokenRes.ok) {

@@ -15,6 +15,7 @@ import {
   Download,
   RefreshCw
 } from 'lucide-react';
+import { adminFetch } from '@/utils/admin-fetch';
 
 // 🔄 分析データ型定義
 interface AnalyticsOverview {
@@ -138,20 +139,11 @@ export default function TokenAnalyticsDashboard({ defaultDays = 30 }: TokenAnaly
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('認証トークンが見つかりません');
-      }
-
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
 
       const [overviewRes, profitRes, anomalyRes] = await Promise.all([
-        fetch(`/api/admin/token-analytics/overview?days=${selectedDays}`, { headers }),
-        fetch(`/api/admin/token-analytics/profit-analysis?days=${selectedDays}`, { headers }),
-        fetch(`/api/admin/token-analytics/anomaly-detection?hours=24`, { headers })
+        adminFetch(`/api/admin/token-analytics/overview?days=${selectedDays}`),
+        adminFetch(`/api/admin/token-analytics/profit-analysis?days=${selectedDays}`),
+        adminFetch(`/api/admin/token-analytics/anomaly-detection?hours=24`)
       ]);
 
       if (!overviewRes.ok || !profitRes.ok || !anomalyRes.ok) {
