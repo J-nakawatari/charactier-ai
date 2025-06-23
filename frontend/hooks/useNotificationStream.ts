@@ -27,8 +27,8 @@ export function useNotificationStream() {
     const connect = async () => {
       try {
         // EventSourceはCookieを自動的に送るので、認証はCookieベースで行われる
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        eventSource = new EventSource(`${baseUrl}/api/notifications/stream`, {
+        // フロントエンドプロキシ経由で接続（CSP対策）
+        eventSource = new EventSource(`/api/notifications/stream`, {
           withCredentials: true // Cookieを送信
         });
 

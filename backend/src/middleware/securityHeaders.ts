@@ -40,7 +40,10 @@ export function configureSecurityHeaders(app: Express): void {
           "https://api.stripe.com",
           "https://checkout.stripe.com",
           "https://api.openai.com",
+          "https://www.google-analytics.com",
+          "https://www.googletagmanager.com",
           "wss:", // WebSocket connections
+          "https://charactier-ai.com", // 本番環境のドメイン
           process.env.NODE_ENV === 'development' ? 'http://localhost:*' : ''
         ].filter(Boolean),
         frameSrc: [
