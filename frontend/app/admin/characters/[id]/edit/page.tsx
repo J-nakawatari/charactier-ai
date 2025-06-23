@@ -11,6 +11,7 @@ import ImageCropper from '@/components/admin/ImageCropper';
 import TranslationEditor from '@/components/admin/TranslationEditor';
 import { ArrowLeft, Save, X, Upload } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
+import { adminFetch } from '@/utils/admin-fetch';
 import { 
   PERSONALITY_PRESETS, 
   PERSONALITY_TAGS, 
@@ -99,23 +100,12 @@ export default function CharacterEditPage() {
     const loadCharacterData = async () => {
       try {
         setIsLoading(true);
-        const adminToken = localStorage.getItem('adminAccessToken');
         
         // モデル情報を並行して取得
-        const modelPromise = fetch('/api/admin/models', {
-          headers: {
-            'Authorization': `Bearer ${adminToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const modelPromise = adminFetch('/api/admin/models');
         
         // 基本キャラクター情報を取得
-        const characterResponse = await fetch(`${API_BASE_URL}/api/characters/${characterId}`, {
-          headers: {
-            'Authorization': `Bearer ${adminToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const characterResponse = await adminFetch(`${API_BASE_URL}/api/characters/${characterId}`);
         if (characterResponse.ok) {
           const character = await characterResponse.json();
           console.log('✅ キャラクターデータを取得しました:', character);
@@ -185,12 +175,7 @@ export default function CharacterEditPage() {
         
         // 翻訳データを取得
         try {
-          const translationResponse = await fetch(`${API_BASE_URL}/api/characters/${characterId}/translations`, {
-            headers: {
-              'Authorization': `Bearer ${adminToken}`,
-              'Content-Type': 'application/json'
-            }
-          });
+          const translationResponse = await adminFetch(`${API_BASE_URL}/api/characters/${characterId}/translations`);
           if (translationResponse.ok) {
             const translationData = await translationResponse.json();
             setTranslationData(translationData);
@@ -247,21 +232,9 @@ export default function CharacterEditPage() {
     setPriceInfo(null);
     
     try {
-      const adminToken = localStorage.getItem('adminAccessToken');
-      if (!adminToken) {
-        setPriceError('管理者認証が必要です');
-        error('認証エラー', '管理者認証が必要です');
-        return;
-      }
-
       console.log('🔍 価格取得リクエスト:', formData.stripeProductId);
       
-      const response = await fetch(`/api/admin/stripe/product-price/${formData.stripeProductId}`, {
-        headers: {
-          'Authorization': `Bearer ${adminToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await adminFetch(`/api/admin/stripe/product-price/${formData.stripeProductId}`);
       
       console.log('📡 価格取得レスポンス状態:', response.status);
       
@@ -298,14 +271,11 @@ export default function CharacterEditPage() {
     try {
       setIsSaving(true);
       
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
       // 1. 翻訳データを保存
       console.log('🔍 Sending translation data:', translationData);
-      const translationSaveResponse = await fetch(`${API_BASE_URL}/api/characters/${characterId}/translations`, {
+      const translationSaveResponse = await adminFetch(`${API_BASE_URL}/api/characters/${characterId}/translations`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(translationData)
@@ -366,10 +336,9 @@ export default function CharacterEditPage() {
       console.log('  imageChatBackgroundUrl:', formData.imageChatBackgroundUrl);
       console.log('  imageChatAvatarUrl:', formData.imageChatAvatarUrl);
       
-      const basicSaveResponse = await fetch(`${API_BASE_URL}/api/characters/${characterId}`, {
+      const basicSaveResponse = await adminFetch(`${API_BASE_URL}/api/characters/${characterId}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(basicData)
@@ -476,17 +445,8 @@ export default function CharacterEditPage() {
       const formDataForUpload = new FormData();
       formDataForUpload.append('image', croppedFile);
       
-      const adminToken = localStorage.getItem('adminAccessToken');
-      if (!adminToken) {
-        error('認証エラー', '管理者トークンが見つかりません。再ログインしてください。');
-        return;
-      }
-      
-      const uploadResponse = await fetch(`${API_BASE_URL}/api/characters/upload/image`, {
+      const uploadResponse = await adminFetch(`${API_BASE_URL}/api/characters/upload/image`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${adminToken}`
-        },
         body: formDataForUpload
       });
       
@@ -549,10 +509,9 @@ export default function CharacterEditPage() {
         const updateField = imageFieldMap[currentImageType];
         if (updateField) {
           // キャラクターデータを即座に更新
-          const updateResponse = await fetch(`${API_BASE_URL}/api/characters/${characterId}`, {
+          const updateResponse = await adminFetch(`${API_BASE_URL}/api/characters/${characterId}`, {
             method: 'PUT',
             headers: {
-              'Authorization': `Bearer ${adminToken}`,
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({

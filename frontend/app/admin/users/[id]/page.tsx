@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { ensureUserNameString } from '@/utils/userUtils';
 import { API_BASE_URL } from '@/lib/api-config';
+import { adminFetch } from '@/utils/admin-fetch';
 
 // Inline type definitions
 interface User {
@@ -66,19 +67,8 @@ export default function UserDetailPage() {
     const fetchUser = async () => {
       try {
         setLoading(true);
-        const adminToken = localStorage.getItem('adminAccessToken');
         
-        if (!adminToken) {
-          setError('管理者認証が必要です');
-          return;
-        }
-
-        const response = await fetch(`${API_BASE_URL}/api/admin/users/${params.id}`, {
-          headers: {
-            'Authorization': `Bearer ${adminToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await adminFetch(`${API_BASE_URL}/api/admin/users/${params.id}`);
         
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
@@ -166,17 +156,9 @@ export default function UserDetailPage() {
     }
     
     try {
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
-      if (!adminToken) {
-        showError('認証エラー', '管理者認証が必要です');
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/users/${user.id}/status`, {
+      const response = await adminFetch(`${API_BASE_URL}/api/admin/users/${user.id}/status`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -221,17 +203,9 @@ export default function UserDetailPage() {
     }
     
     try {
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
-      if (!adminToken) {
-        showError('認証エラー', '管理者認証が必要です');
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/users/${user.id}`, {
+      const response = await adminFetch(`${API_BASE_URL}/api/admin/users/${user.id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json'
         }
       });

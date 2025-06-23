@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
+import { adminFetch } from '@/utils/admin-fetch';
 import { 
   Edit, 
   Users, 
@@ -71,14 +72,8 @@ export default function NotificationDetailPage() {
   const fetchNotification = useCallback(async () => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('adminAccessToken');
       
-      const response = await fetch(`/api/notifications/admin/${notificationId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await adminFetch(`/api/notifications/admin/${notificationId}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

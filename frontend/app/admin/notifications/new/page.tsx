@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { adminFetch } from '@/utils/admin-fetch';
 import { 
   Save, 
   ArrowLeft, 
@@ -77,11 +78,9 @@ export default function NewNotificationPage() {
         throw new Error('メッセージは日本語・英語両方とも入力してください');
       }
 
-      const token = localStorage.getItem('adminAccessToken');
-      const response = await fetch('/api/notifications/admin', {
+      const response = await adminFetch('/api/notifications/admin', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({

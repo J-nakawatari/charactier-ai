@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import CharacterStats from '@/components/admin/CharacterStats';
 import CharacterManagementTable from '@/components/admin/CharacterManagementTable';
 import { useToast } from '@/contexts/ToastContext';
+import { adminFetch } from '@/utils/admin-fetch';
 import { Search, Filter, Plus, Download, Users, RefreshCw } from 'lucide-react';
 
 interface Character {
@@ -54,15 +55,8 @@ export default function CharactersPage() {
   const fetchCharacters = async () => {
     try {
       setIsLoading(true);
-      // 認証トークンを取得
-      const token = localStorage.getItem('adminAccessToken');
       
-      const response = await fetch('/api/characters?locale=ja', {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
-        },
-      });
+      const response = await adminFetch('/api/characters?locale=ja');
 
       if (response.ok) {
         const data = await response.json();
@@ -82,13 +76,11 @@ export default function CharactersPage() {
   const updateAllCharacterStats = useCallback(async () => {
     try {
       setUpdatingStats(true);
-      const token = localStorage.getItem('adminAccessToken');
       
-      const response = await fetch('/api/admin/characters/update-stats', {
+      const response = await adminFetch('/api/admin/characters/update-stats', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         }
       });
       

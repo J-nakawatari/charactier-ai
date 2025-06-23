@@ -6,6 +6,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { API_BASE_URL } from '@/lib/api-config';
+import { adminFetch } from '@/utils/admin-fetch';
 
 interface AdminForm {
   name: string;
@@ -37,17 +38,7 @@ export default function EditAdminPage() {
 
   const fetchAdminData = async () => {
     try {
-      const adminToken = localStorage.getItem('adminAccessToken');
-      if (!adminToken) {
-        throw new Error('管理者認証が必要です');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/admins/${adminId}`, {
-        headers: { 
-          'Authorization': `Bearer ${adminToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await adminFetch(`${API_BASE_URL}/api/admin/admins/${adminId}`);
 
       if (!response.ok) {
         throw new Error(`API Error: ${response.status}`);
@@ -80,15 +71,9 @@ export default function EditAdminPage() {
     setSaving(true);
 
     try {
-      const adminToken = localStorage.getItem('adminAccessToken');
-      if (!adminToken) {
-        throw new Error('管理者認証が必要です');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/admins/${adminId}`, {
+      const response = await adminFetch(`${API_BASE_URL}/api/admin/admins/${adminId}`, {
         method: 'PUT',
         headers: { 
-          'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData)

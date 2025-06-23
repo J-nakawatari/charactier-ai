@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { adminFetch } from '@/utils/admin-fetch';
 import { 
   ArrowLeft, 
   Save, 
@@ -84,14 +85,8 @@ export default function EditNotificationPage() {
   const fetchNotification = useCallback(async () => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('adminAccessToken');
       
-      const response = await fetch(`/api/notifications/admin/${notificationId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await adminFetch(`/api/notifications/admin/${notificationId}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -143,7 +138,6 @@ export default function EditNotificationPage() {
     
     try {
       setIsSaving(true);
-      const token = localStorage.getItem('adminAccessToken');
       
       // ターゲット条件を構築
       const targetCondition: TargetCondition = {
@@ -190,10 +184,9 @@ export default function EditNotificationPage() {
         validUntil: formData.validUntil ? new Date(formData.validUntil).toISOString() : undefined
       };
       
-      const response = await fetch(`/api/notifications/admin/${notificationId}`, {
+      const response = await adminFetch(`/api/notifications/admin/${notificationId}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(updateData)

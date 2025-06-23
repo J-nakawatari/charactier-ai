@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { ArrowLeft, User, Mail, Lock, Shield } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
+import { adminFetch } from '@/utils/admin-fetch';
 
 export default function CreateAdminPage() {
   const router = useRouter();
@@ -73,16 +74,10 @@ export default function CreateAdminPage() {
     try {
       setIsLoading(true);
       
-      const adminToken = localStorage.getItem('adminAccessToken');
-      if (!adminToken) {
-        throw new Error('管理者認証が必要です');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/create-admin`, {
+      const response = await adminFetch(`${API_BASE_URL}/api/admin/create-admin`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           name: formData.name.trim(),

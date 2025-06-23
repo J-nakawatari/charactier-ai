@@ -8,6 +8,7 @@ import { compressImage, isImageSizeValid, formatFileSize } from '@/utils/imageCo
 import ImageCropper from '@/components/admin/ImageCropper';
 import { ArrowLeft, Save, X, Upload } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
+import { adminFetch } from '@/utils/admin-fetch';
 import { 
   PERSONALITY_PRESETS, 
   PERSONALITY_TAGS, 
@@ -58,13 +59,7 @@ export default function CharacterNewPage() {
   useEffect(() => {
     const fetchAvailableModels = async () => {
       try {
-        const token = localStorage.getItem('adminAccessToken');
-        const response = await fetch('/api/admin/models', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await adminFetch('/api/admin/models');
         
         if (response.ok) {
           const data = await response.json();
@@ -164,14 +159,6 @@ export default function CharacterNewPage() {
     }
 
     try {
-      // 実際のAPI呼び出し
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
-      if (!adminToken) {
-        router.push('/admin/login');
-        return;
-      }
-
       // 画像をアップロード
       const uploadedImages: { [key: string]: string } = {};
       
@@ -182,11 +169,8 @@ export default function CharacterNewPage() {
         uploadFormData.append('fieldname', fieldName);
         
         try {
-          const uploadResponse = await fetch(`${API_BASE_URL}/api/characters/upload/image`, {
+          const uploadResponse = await adminFetch(`${API_BASE_URL}/api/characters/upload/image`, {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${adminToken}`
-            },
             body: uploadFormData
           });
           
@@ -258,15 +242,13 @@ export default function CharacterNewPage() {
 
       console.log('📤 Sending character data:', {
         payload,
-        payloadSize: JSON.stringify(payload).length,
-        adminToken: adminToken ? 'Present' : 'Missing'
+        payloadSize: JSON.stringify(payload).length
       });
 
-      const response = await fetch(`${API_BASE_URL}/api/characters`, {
+      const response = await adminFetch(`${API_BASE_URL}/api/characters`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(payload)
       });
@@ -323,19 +305,7 @@ export default function CharacterNewPage() {
     if (priceId && priceId.startsWith('price_') && priceId.length > 10) {
       setIsLoadingPrice(true);
       try {
-        const adminToken = localStorage.getItem('adminAccessToken');
-        if (!adminToken) {
-          error('認証エラー', '管理者トークンが見つかりません');
-          setIsLoadingPrice(false);
-          return;
-        }
-
-        const response = await fetch(`/api/admin/stripe/price/${priceId}`, {
-          headers: {
-            'Authorization': `Bearer ${adminToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await adminFetch(`/api/admin/stripe/price/${priceId}`);
         
         const responseData = await response.json();
         

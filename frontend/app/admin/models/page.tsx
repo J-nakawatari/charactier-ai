@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/contexts/ToastContext';
+import { adminFetch } from '@/utils/admin-fetch';
 import { Settings, Cpu, DollarSign, RotateCcw, Info } from 'lucide-react';
 
 interface ModelInfo {
@@ -35,13 +36,7 @@ export default function ModelsPage() {
   // モデル情報を取得
   const fetchModels = useCallback(async () => {
     try {
-      const token = localStorage.getItem('adminAccessToken');
-      const response = await fetch('/api/admin/models', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await adminFetch('/api/admin/models');
 
       if (response.ok) {
         const data = await response.json();
@@ -66,11 +61,9 @@ export default function ModelsPage() {
 
     setIsChanging(true);
     try {
-      const token = localStorage.getItem('adminAccessToken');
-      const response = await fetch('/api/admin/models/set-model', {
+      const response = await adminFetch('/api/admin/models/set-model', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ model: selectedModel })
