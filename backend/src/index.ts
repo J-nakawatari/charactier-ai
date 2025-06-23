@@ -902,27 +902,38 @@ routeRegistry.define('GET', '/api/notifications/stream', authenticateToken, asyn
   }, 30000);
 
   // Redis Pub/Sub設定（通知の変更を監視）
-  const redisSubscriber = getRedisSubscriber();
-  const notificationChannel = `notifications:user:${userId}`;
+  let redisSubscriber: any = null;
+  let handleNotificationUpdate: any = null;
   
-  const handleNotificationUpdate = async (channel: string, message: string) => {
-    try {
-      const data = JSON.parse(message);
-      // 新しい通知または既読状態の変更を通知
-      res.write(`data: ${JSON.stringify(data)}\n\n`);
-    } catch (error) {
-      console.error('❌ Error handling notification update:', error);
-    }
-  };
+  try {
+    const { getRedisSubscriber } = require('./lib/redis');
+    redisSubscriber = getRedisSubscriber();
+    const notificationChannel = `notifications:user:${userId}`;
+    
+    handleNotificationUpdate = async (channel: string, message: string) => {
+      try {
+        const data = JSON.parse(message);
+        // 新しい通知または既読状態の変更を通知
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+      } catch (error) {
+        console.error('❌ Error handling notification update:', error);
+      }
+    };
 
-  redisSubscriber.subscribe(notificationChannel);
-  redisSubscriber.on('message', handleNotificationUpdate);
+    redisSubscriber.subscribe(notificationChannel);
+    redisSubscriber.on('message', handleNotificationUpdate);
+  } catch (error) {
+    console.error('❌ Error setting up Redis subscriber:', error);
+  }
 
   // クライアント切断時のクリーンアップ
   req.on('close', () => {
     clearInterval(heartbeatInterval);
-    redisSubscriber.unsubscribe(notificationChannel);
-    redisSubscriber.removeListener('message', handleNotificationUpdate);
+    if (redisSubscriber && handleNotificationUpdate) {
+      const notificationChannel = `notifications:user:${userId}`;
+      redisSubscriber.unsubscribe(notificationChannel);
+      redisSubscriber.removeListener('message', handleNotificationUpdate);
+    }
     console.log(`📭 Notification stream closed for user ${userId}`);
   });
 });

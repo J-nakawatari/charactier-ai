@@ -173,7 +173,7 @@ router.post('/:id/read', authenticateToken, async (req: AuthRequest, res: Respon
 
     // リアルタイム通知のため、Redisにイベントを発行
     try {
-      const publisher = getRedisPublisher();
+      const publisher = await getRedisPublisher();
       const unreadCount = await UserNotificationReadStatusModel.countDocuments({
         userId: new mongoose.Types.ObjectId(userId),
         isRead: false
@@ -475,7 +475,7 @@ router.post('/admin', authenticateToken, authenticateAdmin, async (req: AuthRequ
 
     // 対象ユーザーにリアルタイム通知を送信
     try {
-      const publisher = getRedisPublisher();
+      const publisher = await getRedisPublisher();
       
       // 全ユーザーまたは特定ユーザーへの通知
       if (targetCondition.type === 'all') {
