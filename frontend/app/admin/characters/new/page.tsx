@@ -172,6 +172,58 @@ export default function CharacterNewPage() {
         return;
       }
 
+      // 画像をアップロード
+      const uploadedImages: { [key: string]: string } = {};
+      
+      // 画像アップロード関数
+      const uploadImage = async (file: File, fieldName: string): Promise<string | null> => {
+        const uploadFormData = new FormData();
+        uploadFormData.append('image', file);
+        uploadFormData.append('fieldname', fieldName);
+        
+        try {
+          const uploadResponse = await fetch(`${API_BASE_URL}/api/characters/upload/image`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${adminToken}`
+            },
+            body: uploadFormData
+          });
+          
+          if (uploadResponse.ok) {
+            const { imageUrl } = await uploadResponse.json();
+            return imageUrl;
+          } else {
+            console.error(`Failed to upload ${fieldName}:`, await uploadResponse.text());
+            return null;
+          }
+        } catch (err) {
+          console.error(`Error uploading ${fieldName}:`, err);
+          return null;
+        }
+      };
+      
+      // 各画像をアップロード
+      if (formData.imageCharacterSelect) {
+        const url = await uploadImage(formData.imageCharacterSelect as any, 'imageCharacterSelect');
+        if (url) uploadedImages.imageCharacterSelect = url;
+      }
+      
+      if (formData.imageDashboard) {
+        const url = await uploadImage(formData.imageDashboard as any, 'imageDashboard');
+        if (url) uploadedImages.imageDashboard = url;
+      }
+      
+      if (formData.imageChatBackground) {
+        const url = await uploadImage(formData.imageChatBackground as any, 'imageChatBackground');
+        if (url) uploadedImages.imageChatBackground = url;
+      }
+      
+      if (formData.imageChatAvatar) {
+        const url = await uploadImage(formData.imageChatAvatar as any, 'imageChatAvatar');
+        if (url) uploadedImages.imageChatAvatar = url;
+      }
+
       const payload = {
         name: formData.name,
         description: formData.description,
@@ -199,7 +251,9 @@ export default function CharacterNewPage() {
         },
         stripeProductId: formData.stripePriceId,
         purchasePrice: formData.displayPrice,
-        isActive: formData.isActive
+        isActive: formData.isActive,
+        // アップロードされた画像URLを追加
+        ...uploadedImages
       };
 
       console.log('📤 Sending character data:', {

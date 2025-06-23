@@ -44,7 +44,7 @@ export default function ImageCropper({
         return { shape: 'round' as const, aspect: 1, label: '円形', cropSize: { width: 400, height: 400 } }; // 円形
       case 'gallery':
       case 'galleryImage':
-        return { shape: 'rect' as const, aspect: 1, label: '正方形（ギャラリー）', cropSize: { width: 300, height: 300 } }; // ギャラリー画像用
+        return { shape: 'rect' as const, aspect: 9/16, label: '9:16（縦長・ギャラリー）', cropSize: { width: 225, height: 400 } }; // ギャラリー画像用（9:16縦長）
       default:
         return { shape: 'rect' as const, aspect: 1, label: '正方形', cropSize: { width: 400, height: 400 } }; // デフォルト
     }
