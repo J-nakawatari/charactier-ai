@@ -65,6 +65,7 @@ import { configureSecurityHeaders } from './middleware/securityHeaders';
 import log from './utils/logger';
 import { requestLoggingMiddleware, securityAuditMiddleware } from './middleware/requestLogger';
 import { sendErrorResponse, ClientErrorCode } from './utils/errorResponse';
+import { ServerMonitor } from './monitoring/ServerMonitor';
 
 // PM2が環境変数を注入するため、dotenv.config()は不要
 // 開発環境の場合のみdotenvを使用（PM2を使わない場合）
@@ -5160,11 +5161,21 @@ app.get('/api/admin/error-stats', authenticateToken, async (req: AuthRequest, re
     const timeRange = (req.query.range as string) || '24h';
     const errorStats = await (APIErrorModel as any).getErrorStats(timeRange);
     
+    // ServerMonitorから全体的なパフォーマンス統計を取得
+    const serverMonitor = ServerMonitor.getInstance();
+    const performanceStats = serverMonitor.getPerformanceStats();
+    
+    // エラー統計にtotalRequestsを追加
+    const enhancedStats = {
+      ...errorStats,
+      totalRequests: performanceStats.totalRequests
+    };
+    
     res.json({
       success: true,
       data: {
         timeRange,
-        stats: errorStats,
+        stats: enhancedStats,
         timestamp: new Date().toISOString()
       }
     });

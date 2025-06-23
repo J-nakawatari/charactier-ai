@@ -11,6 +11,7 @@ interface ErrorStat {
   errorsByType: Record<string, number>;
   errorsByStatus: Record<string, number>;
   topErrorEndpoints: Array<{ endpoint: string; count: number }>;
+  totalRequests?: number;
 }
 
 interface APIError {
@@ -180,7 +181,12 @@ export default function ErrorStatsPage() {
                   <div>
                     <p className="text-sm text-gray-500">エラー率</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {errorStats.totalErrors > 0 ? ((errorStats.unresolvedErrors / errorStats.totalErrors) * 100).toFixed(1) : 0}%
+                      {errorStats.totalRequests && errorStats.totalRequests > 0 
+                        ? ((errorStats.totalErrors / errorStats.totalRequests) * 100).toFixed(1) 
+                        : '0.0'}%
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {errorStats.totalErrors} / {errorStats.totalRequests || 0} リクエスト
                     </p>
                   </div>
                   <TrendingUp className="w-8 h-8 text-green-500" />

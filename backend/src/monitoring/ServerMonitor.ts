@@ -173,20 +173,21 @@ export class ServerMonitor {
     
     this.requestCounts.set(ip, current);
     
-    // エラー統計更新
-    this.errorStats.total++;
-    if (statusCode >= 500) {
-      this.errorStats.errors5xx++;
-    } else if (statusCode >= 400) {
-      this.errorStats.errors4xx++;
-    }
-    
     // パフォーマンス統計更新
     this.performanceStats.totalRequests++;
     this.performanceStats.totalResponseTime += responseTime;
-    
     if (responseTime > 1000) {
       this.performanceStats.slowRequests++;
+    }
+    
+    // エラー統計更新（エラーの場合のみカウント）
+    if (statusCode >= 400) {
+      this.errorStats.total++;
+      if (statusCode >= 500) {
+        this.errorStats.errors5xx++;
+      } else {
+        this.errorStats.errors4xx++;
+      }
     }
   }
   
@@ -285,10 +286,24 @@ export class ServerMonitor {
   }
   
   private getErrorRate(): number {
-    if (this.errorStats.total === 0) return 0;
-    return ((this.errorStats.errors5xx + this.errorStats.errors4xx) / this.errorStats.total) * 100;
+    if (this.performanceStats.totalRequests === 0) return 0;
+    return (this.errorStats.total / this.performanceStats.totalRequests) * 100;
   }
   
+  getPerformanceStats() {
+    return {
+      totalRequests: this.performanceStats.totalRequests,
+      totalErrors: this.errorStats.total,
+      errors5xx: this.errorStats.errors5xx,
+      errors4xx: this.errorStats.errors4xx,
+      avgResponseTime: this.performanceStats.totalRequests > 0 
+        ? Math.round(this.performanceStats.totalResponseTime / this.performanceStats.totalRequests)
+        : 0,
+      slowRequests: this.performanceStats.slowRequests,
+      errorRate: this.getErrorRate()
+    };
+  }
+
   getHealthStatus() {
     const memoryUsage = this.getMemoryUsage();
     const errorRate = this.getErrorRate();
