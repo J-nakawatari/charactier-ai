@@ -73,6 +73,7 @@ docs/
 # Upload files - アップロードされた画像ファイル
 uploads/*
 !uploads/.gitkeep
+!uploads/logo.png
 uploads/images/*
 
 # Archived files
