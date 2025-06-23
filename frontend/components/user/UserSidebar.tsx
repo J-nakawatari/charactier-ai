@@ -87,7 +87,6 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
             setLoading(false);
             return;
           }
-        }
         
         // APIから取得できない場合はlocalStorageのデータを使用
         const userStr = localStorage.getItem('user');
