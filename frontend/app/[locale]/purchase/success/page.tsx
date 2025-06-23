@@ -153,6 +153,12 @@ function PurchaseSuccessContent() {
     const returnToCharacterId = localStorage.getItem('returnToCharacterId');
     const returnLocale = localStorage.getItem('returnToLocale') || 'ja';
     
+    // キャラクター購入の場合、購入完了フラグを設定してデータ再取得を促す
+    if (purchaseData?.type === 'character') {
+      localStorage.setItem('characterPurchaseCompleted', 'true');
+      localStorage.setItem('purchasedCharacterId', purchaseData.characterId || '');
+    }
+    
     if (purchaseData?.type === 'character' && purchaseData.characterId) {
       // キャラクター購入の場合は、購入したキャラクターのチャット画面へ
       router.push(`/${returnLocale}/characters/${purchaseData.characterId}/chat`);

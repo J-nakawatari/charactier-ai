@@ -63,13 +63,19 @@ function CharactersPageContent({
       const response = await fetch('/api/user/profile', {
         headers: {
           ...getAuthHeaders(),
-          'Cache-Control': 'no-store'
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
         },
-        cache: 'no-store'
+        cache: 'no-store',
+        credentials: 'include'
       });
 
       if (response.ok) {
         const userData = await response.json();
+        console.log('👤 取得したユーザーデータ:', {
+          purchasedCharacters: userData.purchasedCharacters,
+          affinities: userData.affinities?.length || 0
+        });
         setUserAffinities(userData.affinities || []);
         setUserPurchasedCharacters(userData.purchasedCharacters?.map((id: string) => id.toString()) || []);
       } else {
@@ -137,13 +143,17 @@ function CharactersPageContent({
     
     // 購入完了フラグをチェック
     const purchaseCompleted = localStorage.getItem('purchaseCompleted');
-    if (purchaseCompleted === 'true') {
+    const characterPurchaseCompleted = localStorage.getItem('characterPurchaseCompleted');
+    
+    if (purchaseCompleted === 'true' || characterPurchaseCompleted === 'true') {
       localStorage.removeItem('purchaseCompleted');
-      // 少し遅延してから再取得（UIの表示を確実にするため）
+      localStorage.removeItem('characterPurchaseCompleted');
+      // 購入完了後は即座にユーザー情報を再取得（キャッシュを無視）
+      fetchUserData();
+      // 少し遅延してキャラクター一覧も再取得
       setTimeout(() => {
-        fetchUserData();
         fetchCharacters();
-      }, 1000);
+      }, 500);
     }
   }, [fetchCharacters, fetchUserData]);
 
