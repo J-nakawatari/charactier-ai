@@ -788,10 +788,9 @@ app.use(express.urlencoded({ extended: true }));
 // Cookie parser設定
 app.use(cookieParser());
 
-// Debug routes (remove in production)
-if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_DEBUG === 'true') {
-  routeRegistry.mount('/api/debug', debugRoutes);
-}
+// Debug routes
+// 一時的に本番環境でも有効化（問題解決後は削除すること）
+routeRegistry.mount('/api/debug', debugRoutes);
 
 // レート制限の適用
 // 認証エンドポイント（厳しい制限）
