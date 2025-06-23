@@ -3074,8 +3074,12 @@ app.post('/api/user/add-tokens', authenticateToken, async (req: Request, res: Re
 // 管理者用：ユーザー一覧取得
 routeRegistry.define('GET', '/api/admin/users', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   
-  if (!req.user || !(req.user as any).isAdmin) {
-    res.status(401).json({ error: 'Admin access required' });
+  // 管理者権限チェック
+  if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+    res.status(403).json({ 
+      error: 'Admin access required',
+      message: 'INSUFFICIENT_PERMISSIONS'
+    });
     return;
   }
 
@@ -3680,8 +3684,12 @@ app.get('/api/admin/admins', authenticateToken, async (req: AuthRequest, res: Re
 
 // 管理者個別取得API
 app.get('/api/admin/admins/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
-  if (!req.user || !(req.user as any).isAdmin) {
-    res.status(401).json({ error: 'Admin access required' });
+  // 管理者権限チェック
+  if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+    res.status(403).json({ 
+      error: 'Admin access required',
+      message: 'INSUFFICIENT_PERMISSIONS'
+    });
     return;
   }
 
@@ -3718,8 +3726,12 @@ app.get('/api/admin/admins/:id', authenticateToken, async (req: AuthRequest, res
 
 // 管理者更新API
 app.put('/api/admin/admins/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
-  if (!req.user || !(req.user as any).isAdmin) {
-    res.status(401).json({ error: 'Admin access required' });
+  // 管理者権限チェック
+  if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+    res.status(403).json({ 
+      error: 'Admin access required',
+      message: 'INSUFFICIENT_PERMISSIONS'
+    });
     return;
   }
 
@@ -3795,8 +3807,12 @@ app.put('/api/admin/admins/:id', authenticateToken, async (req: AuthRequest, res
 
 // 管理者削除API
 app.delete('/api/admin/admins/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
-  if (!req.user || !(req.user as any).isAdmin) {
-    res.status(401).json({ error: 'Admin access required' });
+  // 管理者権限チェック
+  if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+    res.status(403).json({ 
+      error: 'Admin access required',
+      message: 'INSUFFICIENT_PERMISSIONS'
+    });
     return;
   }
 
@@ -4095,6 +4111,15 @@ app.get('/api/admin/security-stats', authenticateToken, async (req: AuthRequest,
 // 📈 包括的トークン使用量統計API
 app.get('/api/admin/token-analytics/overview', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // 管理者権限チェック
+    if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+      res.status(403).json({ 
+        error: 'Admin access required',
+        message: 'INSUFFICIENT_PERMISSIONS'
+      });
+      return;
+    }
+
     if (!isMongoConnected) {
       res.status(500).json({ error: 'Database connection required' });
       return;
@@ -5286,6 +5311,14 @@ app.get('/api/admin/exchange-rate', authenticateToken, async (req: AuthRequest, 
  */
 app.get('/api/admin/error-stats', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // 管理者権限チェック
+    if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+      res.status(403).json({ 
+        error: 'Admin access required',
+        message: 'INSUFFICIENT_PERMISSIONS'
+      });
+      return;
+    }
     
     const timeRange = (req.query.range as string) || '24h';
     const errorStats = await (APIErrorModel as any).getErrorStats(timeRange);
@@ -5806,8 +5839,12 @@ routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authen
 app.get('/api/admin/dashboard/stats', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
-    if (!req.user || !(req.user as any).isAdmin) {
-      res.status(403).json({ error: 'Admin access required' });
+    if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+      res.status(403).json({ 
+        error: 'Admin access required',
+        message: 'INSUFFICIENT_PERMISSIONS',
+        details: '管理者権限が必要です'
+      });
       return;
     }
 
@@ -6277,8 +6314,12 @@ app.delete('/api/user/delete-account', authenticateToken, async (req: AuthReques
 
 // デバッグ用：ユーザーの違反記録確認API（一時的）
 app.get('/api/debug/user-violations/:userId', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
-  if (!req.user || !(req.user as any).isAdmin) {
-    res.status(401).json({ error: 'Admin access required' });
+  // 管理者権限チェック
+  if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+    res.status(403).json({ 
+      error: 'Admin access required',
+      message: 'INSUFFICIENT_PERMISSIONS'
+    });
     return;
   }
 

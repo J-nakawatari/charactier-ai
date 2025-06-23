@@ -23,10 +23,10 @@ export default function AdminLayout({
     }
 
     // 管理者認証チェック
-    const adminToken = localStorage.getItem('adminAccessToken');
+    // HttpOnlyクッキーを使用するため、adminUserの存在のみチェック
     const adminUser = localStorage.getItem('adminUser');
     
-    if (!adminToken || !adminUser) {
+    if (!adminUser) {
       router.push('/admin/login');
       return;
     }
