@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { API_BASE_URL } from '@/lib/api-config';
+import { adminFetch } from '@/utils/admin-fetch';
 import { ArrowLeft, Edit, Play, Pause, Globe, User, MessageSquare, CreditCard, Settings, Brain, Image as ImageIcon, Tag, Heart, Award, Users } from 'lucide-react';
 import Image from 'next/image';
 
@@ -68,18 +69,7 @@ export default function CharacterDetail() {
       try {
         setLoading(true);
         
-        // 管理者認証トークンを取得
-        const adminToken = localStorage.getItem('adminAccessToken');
-        if (!adminToken) {
-          throw new Error('管理者認証が必要です');
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/api/characters/${params.id}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${adminToken}`
-          }
-        });
+        const response = await adminFetch(`/api/characters/${params.id}`);
         
         if (!response.ok) {
           throw new Error(`キャラクターの取得に失敗しました: ${response.status}`);
