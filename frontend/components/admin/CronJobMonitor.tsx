@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Clock, RefreshCw, Calendar, Activity, AlertCircle, CheckCircle, FileText, Filter } from 'lucide-react';
+import { adminFetch } from '@/utils/admin-fetch';
 
 interface CronJob {
   id: string;
@@ -52,18 +53,9 @@ export default function CronJobMonitor() {
   const fetchCronStatus = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminAccessToken');
       
-      if (!token) {
-        setError('認証トークンが見つかりません');
-        return;
-      }
-
-      const response = await fetch('/api/admin/cron-status', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await adminFetch('/api/admin/cron-status', {
+        method: 'GET'
       });
 
       if (!response.ok) {
@@ -85,18 +77,9 @@ export default function CronJobMonitor() {
   const fetchLogs = async () => {
     try {
       setLogLoading(true);
-      const token = localStorage.getItem('adminAccessToken');
       
-      if (!token) {
-        setError('認証トークンが見つかりません');
-        return;
-      }
-
-      const response = await fetch(`/api/admin/logs?lines=50&filter=${logFilter}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await adminFetch(`/api/admin/logs?lines=50&filter=${logFilter}`, {
+        method: 'GET'
       });
 
       if (!response.ok) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, TrendingDown, RefreshCw, Calendar } from 'lucide-react';
+import { adminFetch } from '@/utils/admin-fetch';
 
 interface ExchangeRateData {
   rate: number;
@@ -19,13 +20,9 @@ export default function ExchangeRateWidget() {
   const fetchExchangeRate = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminAccessToken');
       
-      const response = await fetch('/api/admin/exchange-rate', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await adminFetch('/api/admin/exchange-rate', {
+        method: 'GET'
       });
 
       if (!response.ok) {

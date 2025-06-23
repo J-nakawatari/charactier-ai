@@ -4,6 +4,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } fro
 import { useToast } from '@/contexts/ToastContext';
 import { Edit, Trash2, Plus, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
+import { adminFetch } from '@/utils/admin-fetch';
 
 interface TokenPack {
   _id: string;
@@ -48,18 +49,7 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
         params.append('isActive', isActiveFilter.toString());
       }
 
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
-      if (!adminToken) {
-        throw new Error('Admin authentication required');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/token-packs?${params}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        }
-      });
+      const response = await adminFetch(`/api/admin/token-packs?${params}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch token packs');
@@ -90,19 +80,8 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
     }
 
     try {
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
-      if (!adminToken) {
-        error('認証エラー', '管理者認証が必要です');
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/token-packs/${pack._id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        }
+      const response = await adminFetch(`/api/admin/token-packs/${pack._id}`, {
+        method: 'DELETE'
       });
 
       if (!response.ok) {
@@ -121,19 +100,8 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
     const newStatus = !pack.isActive;
     
     try {
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
-      if (!adminToken) {
-        error('認証エラー', '管理者認証が必要です');
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/token-packs/${pack._id}`, {
+      const response = await adminFetch(`/api/admin/token-packs/${pack._id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        },
         body: JSON.stringify({
           isActive: newStatus
         })

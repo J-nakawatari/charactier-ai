@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Bell, User, ChevronDown, LogOut, AlertCircle, AlertTriangle, Zap, Globe, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { adminFetch } from '@/utils/admin-fetch';
 
 interface AdminUser {
   _id: string;
@@ -48,14 +49,9 @@ export default function TopBar() {
 
     const fetchNotifications = async () => {
       try {
-        const token = localStorage.getItem('adminAccessToken');
-        if (!token) return;
-
         // システム通知を取得（警告、緊急、メンテナンスのみ）
-        const response = await fetch('/api/notifications/admin?type=warning,urgent,maintenance&limit=10', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+        const response = await adminFetch('/api/notifications/admin?type=warning,urgent,maintenance&limit=10', {
+          method: 'GET'
         });
 
         if (response.ok) {
@@ -137,15 +133,8 @@ export default function TopBar() {
   // 通知を既読にする
   const markAsRead = async (notificationId: string) => {
     try {
-      const token = localStorage.getItem('adminAccessToken');
-      if (!token) return;
-
-      const response = await fetch(`/api/notifications/admin/${notificationId}/read`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await adminFetch(`/api/notifications/admin/${notificationId}/read`, {
+        method: 'POST'
       });
 
       if (response.ok) {

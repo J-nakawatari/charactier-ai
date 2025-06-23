@@ -18,6 +18,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { Eye, Ban, Unlock } from 'lucide-react';
 import { ensureUserNameString } from '@/utils/userUtils';
 import { API_BASE_URL } from '@/lib/api-config';
+import { adminFetch } from '@/utils/admin-fetch';
 
 interface UserTableProps {
   users: UserData[];
@@ -70,19 +71,8 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
     }
     
     try {
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
-      if (!adminToken) {
-        error('認証エラー', '管理者認証が必要です');
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/users/${user.id}/status`, {
+      const response = await adminFetch(`/api/admin/users/${user.id}/status`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${adminToken}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({
           status: newStatus,
           banReason: newStatus === 'suspended' ? '管理者による停止' : undefined

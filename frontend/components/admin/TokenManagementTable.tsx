@@ -5,6 +5,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { CreditCard, Edit2 } from 'lucide-react';
 import { ensureUserNameString } from '@/utils/userUtils';
 import { API_BASE_URL } from '@/lib/api-config';
+import { adminFetch } from '@/utils/admin-fetch';
 import TokenUpdateModal from './TokenUpdateModal';
 
 interface UserData {
@@ -73,19 +74,8 @@ export default function TokenManagementTable({ users, onUserUpdate }: TokenManag
     if (!selectedUser) return;
 
     try {
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
-      if (!adminToken) {
-        error('認証エラー', '管理者認証が必要です');
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/users/${selectedUser.id}/reset-tokens`, {
+      const response = await adminFetch(`/api/admin/users/${selectedUser.id}/reset-tokens`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        },
         body: JSON.stringify({
           newBalance: newBalance
         })

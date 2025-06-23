@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { X, AlertCircle } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
+import { adminFetch } from '@/utils/admin-fetch';
 
 interface TokenPack {
   _id?: string;
@@ -98,7 +99,6 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
 
     setPriceLoading(true);
     try {
-      const adminToken = localStorage.getItem('adminAccessToken');
       const apiUrl = `/api/admin/stripe/price/${encodeURIComponent(priceIdInput)}`;
       console.log('🔗 Stripe Price API 呼び出し開始:', {
         priceId: priceIdInput,
@@ -107,12 +107,8 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
       });
       
       // 新しいStripe Price APIエンドポイントを呼び出し
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`,
-        }
+      const response = await adminFetch(apiUrl, {
+        method: 'GET'
       });
 
       console.log('📡 API レスポンス:', {
@@ -214,23 +210,12 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
         ? `/api/admin/token-packs/${editingPack._id}`
         : '/api/admin/token-packs';
 
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
-      if (!adminToken) {
-        error('認証エラー', '管理者認証が必要です');
-        return;
-      }
-
       const backendUrl = editingPack 
-        ? `${API_BASE_URL}/api/admin/token-packs/${editingPack._id}`
-        : `${API_BASE_URL}/api/admin/token-packs`;
+        ? `/api/admin/token-packs/${editingPack._id}`
+        : `/api/admin/token-packs`;
 
-      const response = await fetch(backendUrl, {
+      const response = await adminFetch(backendUrl, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        },
         body: JSON.stringify({
           name: formData.name,
           description: formData.description,
