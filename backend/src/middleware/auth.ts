@@ -40,23 +40,43 @@ export const authenticateToken = async (
       }
     }
     
-    log.debug('authenticateToken middleware', {
+    // Comprehensive debug logging for production issues
+    log.info('🔍 AUTH MIDDLEWARE DEBUG', {
       path: req.path,
       method: req.method,
       isAdminPath,
-      hasUserToken: !!req.cookies?.userAccessToken,
-      hasAdminToken: !!req.cookies?.adminAccessToken,
+      allCookies: req.cookies,
+      cookieNames: Object.keys(req.cookies || {}),
+      hasUserAccessToken: !!req.cookies?.userAccessToken,
+      hasAdminAccessToken: !!req.cookies?.adminAccessToken,
       hasAuthHeader: !!req.headers.authorization,
-      tokenSource: token ? (req.headers.authorization ? 'bearer' : 'cookie') : 'none',
-      cookies: Object.keys(req.cookies || {}),
-      cookieNames: Object.keys(req.cookies || {}).join(', ')
+      authHeaderValue: req.headers.authorization ? req.headers.authorization.substring(0, 20) + '...' : 'none',
+      selectedToken: token ? token.substring(0, 20) + '...' : 'none',
+      tokenSource: token ? (req.cookies?.adminAccessToken ? 'adminCookie' : req.cookies?.userAccessToken ? 'userCookie' : 'authHeader') : 'none',
+      origin: req.headers.origin,
+      referer: req.headers.referer,
+      userAgent: req.headers['user-agent']
     });
 
     if (!token) {
-      log.debug('No token found in request', { path: req.path });
+      log.warn('❌ NO TOKEN FOUND', { 
+        path: req.path,
+        isAdminPath,
+        cookieDebug: {
+          hasCookieHeader: !!req.headers.cookie,
+          cookieHeaderValue: req.headers.cookie,
+          parsedCookies: req.cookies,
+          adminTokenExists: !!req.cookies?.adminAccessToken,
+          userTokenExists: !!req.cookies?.userAccessToken
+        }
+      });
       res.status(401).json({ 
         error: 'Access token required',
-        message: 'アクセストークンが必要です'
+        message: 'アクセストークンが必要です',
+        debug: process.env.NODE_ENV === 'development' ? {
+          cookies: Object.keys(req.cookies || {}),
+          headers: Object.keys(req.headers)
+        } : undefined
       });
       return;
     }
@@ -75,12 +95,22 @@ export const authenticateToken = async (
 
     // トークンをデコード
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    log.debug('JWT decoded', { userId: decoded.userId });
+    log.info('✅ JWT DECODED SUCCESSFULLY', { 
+      userId: decoded.userId,
+      tokenSource: token === req.cookies?.adminAccessToken ? 'adminCookie' : 
+                   token === req.cookies?.userAccessToken ? 'userCookie' : 'authHeader'
+    });
     
     // まず管理者として検索
     const admin = await AdminModel.findById(decoded.userId);
     if (admin && admin.isActive) {
       // 管理者として認証成功
+      log.info('✅ ADMIN AUTHENTICATED', {
+        adminId: admin._id.toString(),
+        email: admin.email,
+        role: admin.role,
+        path: req.path
+      });
       req.admin = admin;
       // req.userに管理者情報とisAdminフラグを確実に設定
       req.user = {
@@ -93,6 +123,12 @@ export const authenticateToken = async (
       } as unknown as IUser & { isAdmin: boolean; role: string };
       next();
       return;
+    } else if (admin && !admin.isActive) {
+      log.warn('❌ INACTIVE ADMIN TRIED TO ACCESS', {
+        adminId: admin._id.toString(),
+        email: admin.email,
+        path: req.path
+      });
     }
     
     // 管理者で見つからない場合は一般ユーザーとして検索
@@ -111,24 +147,40 @@ export const authenticateToken = async (
       
       // 一般ユーザーとして認証成功
       req.user = user;
-      log.debug('User authenticated successfully', { 
+      log.info('✅ USER AUTHENTICATED', { 
         userId: user._id.toString(), 
         email: user.email,
-        hasUser: !!req.user,
-        userKeys: Object.keys(user.toObject())
+        path: req.path,
+        isAdminPath
       });
+      // 管理者パスへの一般ユーザーアクセスを警告
+      if (isAdminPath) {
+        log.warn('⚠️ REGULAR USER TRYING TO ACCESS ADMIN PATH', {
+          userId: user._id.toString(),
+          email: user.email,
+          path: req.path
+        });
+      }
       next();
       return;
     }
     
     // どちらでも見つからない場合
+    log.error('❌ USER/ADMIN NOT FOUND', {
+      userId: decoded.userId,
+      path: req.path,
+      isAdminPath
+    });
     res.status(401).json({ 
       error: 'User not found',
       message: 'ユーザーが見つかりません'
     });
 
   } catch (error) {
-    log.debug('JWT verification failed', { error: error instanceof Error ? error.message : 'Unknown error' });
+    log.error('❌ JWT VERIFICATION FAILED', { 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      path: req.path
+    });
     
     if (error instanceof jwt.JsonWebTokenError) {
       log.debug('Invalid token error', { message: error.message });

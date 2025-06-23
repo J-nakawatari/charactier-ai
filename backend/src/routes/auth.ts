@@ -599,12 +599,23 @@ router.post('/admin/login', async (req: Request, res: Response): Promise<void> =
     
     // Cookie設定
     const isProduction = process.env.NODE_ENV === 'production';
+    const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
+    
+    log.info('🍪 ADMIN COOKIE SETTINGS', {
+      isProduction,
+      cookieDomain,
+      nodeEnv: process.env.NODE_ENV,
+      envCookieDomain: process.env.COOKIE_DOMAIN,
+      requestOrigin: req.headers.origin,
+      requestHost: req.headers.host
+    });
+    
     const cookieOptions = {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? 'lax' as const : 'strict' as const,
       maxAge: 24 * 60 * 60 * 1000, // 24時間
-      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
+      domain: cookieDomain,
       path: '/'
     };
     

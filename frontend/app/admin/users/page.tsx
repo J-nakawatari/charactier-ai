@@ -5,7 +5,7 @@ import UserStats from '@/components/admin/UserStats';
 import UserTable from '@/components/admin/UserTable';
 import { useToast } from '@/contexts/ToastContext';
 import { Search, Filter, Download } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api-config';
+import { adminGet } from '@/utils/admin-api';
 
 interface UserData {
   id: string;
@@ -44,6 +44,19 @@ export default function UsersPage() {
     totalPages: 0
   });
 
+  // Debug function to test cookies
+  const testCookies = async () => {
+    try {
+      const response = await adminGet('/api/debug/cookies');
+      const data = await response.json();
+      console.log('🍪 Cookie Test Results:', data);
+      success('クッキーテスト', 'Check console for results');
+    } catch (err) {
+      console.error('🍪 Cookie Test Error:', err);
+      error('クッキーテストエラー', 'コンソールを確認してください');
+    }
+  };
+
   // ユーザーデータを取得
   const fetchUsers = useCallback(async () => {
     try {
@@ -62,28 +75,17 @@ export default function UsersPage() {
         params.append('status', statusFilter);
       }
 
-      const url = `${API_BASE_URL}/api/admin/users?${params}`;
-      console.log('🔍 Fetching users from:', url);
+      const endpoint = `/api/admin/users?${params}`;
+      console.log('🔍 Fetching users from:', endpoint);
 
-      const adminToken = localStorage.getItem('adminAccessToken');
-      
-      if (!adminToken) {
-        throw new Error('Admin authentication required');
-      }
-
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        }
-      });
+      const response = await adminGet(endpoint);
 
       console.log('📡 Response status:', response.status);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ API Error:', errorText);
-        throw new Error(`Failed to fetch users: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        console.error('❌ API Error:', errorData);
+        throw new Error(errorData?.message || `Failed to fetch users: ${response.status}`);
       }
 
       const data: UsersResponse = await response.json();
@@ -175,6 +177,15 @@ export default function UsersPage() {
               <button className="flex items-center space-x-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex-1 sm:flex-none justify-center">
                 <Download className="w-4 h-4" />
                 <span className="text-sm hidden sm:inline">エクスポート</span>
+              </button>
+              
+              {/* Debug Button (remove in production) */}
+              <button 
+                onClick={testCookies}
+                className="flex items-center space-x-2 px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                title="Cookie Debug Test"
+              >
+                <span className="text-sm">🍪 Debug</span>
               </button>
             </div>
           </div>

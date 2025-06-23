@@ -27,6 +27,7 @@ import modelRoutes from './routes/modelSettings';
 import notificationRoutes from './routes/notifications';
 import systemSettingsRoutes from './routes/systemSettings';
 import systemRoutes from './routes/system';
+import debugRoutes from './routes/debug';
 import { monitoringMiddleware } from './middleware/monitoring';
 import { registrationRateLimit } from './middleware/registrationLimit';
 import { createRateLimiter } from './middleware/rateLimiter';
@@ -786,6 +787,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // Cookie parser設定
 app.use(cookieParser());
+
+// Debug routes (remove in production)
+if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_DEBUG === 'true') {
+  routeRegistry.mount('/api/debug', debugRoutes);
+}
 
 // レート制限の適用
 // 認証エンドポイント（厳しい制限）
@@ -3074,11 +3080,32 @@ app.post('/api/user/add-tokens', authenticateToken, async (req: Request, res: Re
 // 管理者用：ユーザー一覧取得
 routeRegistry.define('GET', '/api/admin/users', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   
+  // Debug logging for admin check
+  log.info('🔍 ADMIN CHECK DEBUG', {
+    path: req.path,
+    hasReqAdmin: !!req.admin,
+    hasReqUser: !!req.user,
+    reqUserIsAdmin: req.user ? (req.user as any).isAdmin : 'no user',
+    reqAdminDetails: req.admin ? { id: req.admin._id, email: req.admin.email, role: req.admin.role } : 'no admin',
+    reqUserDetails: req.user ? { id: req.user._id, email: req.user.email, isAdmin: (req.user as any).isAdmin } : 'no user'
+  });
+  
   // 管理者権限チェック
   if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+    log.warn('❌ ADMIN ACCESS DENIED', {
+      reason: 'No admin access',
+      hasReqAdmin: !!req.admin,
+      hasReqUser: !!req.user,
+      userIsAdmin: req.user ? (req.user as any).isAdmin : false
+    });
     res.status(403).json({ 
       error: 'Admin access required',
-      message: 'INSUFFICIENT_PERMISSIONS'
+      message: 'INSUFFICIENT_PERMISSIONS',
+      debug: process.env.NODE_ENV === 'development' ? {
+        hasAdmin: !!req.admin,
+        hasUser: !!req.user,
+        userIsAdmin: req.user ? (req.user as any).isAdmin : false
+      } : undefined
     });
     return;
   }
