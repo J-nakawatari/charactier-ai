@@ -387,7 +387,8 @@ app.use(cors({
 
 // エラーロギング用ミドルウェア（CORS後、認証前に設定）
 app.use(responseTimeMiddleware);
-app.use(statusCodeLoggerMiddleware);
+// statusCodeLoggerMiddleware を無効化 - monitoringMiddleware と重複してエラーをカウントするため
+// app.use(statusCodeLoggerMiddleware);
 
 // 監視ミドルウェア（リクエスト統計収集）
 app.use(monitoringMiddleware);
