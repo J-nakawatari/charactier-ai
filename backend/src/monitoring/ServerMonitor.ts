@@ -27,6 +27,7 @@ interface PerformanceStats {
   totalRequests: number;
   totalResponseTime: number;
   slowRequests: number;
+  windowStartTime: number; // 統計収集開始時刻
 }
 
 export class ServerMonitor {
@@ -45,7 +46,7 @@ export class ServerMonitor {
     this.restartCount = 0;
     this.requestCounts = new Map();
     this.errorStats = { total: 0, errors5xx: 0, errors4xx: 0 };
-    this.performanceStats = { totalRequests: 0, totalResponseTime: 0, slowRequests: 0 };
+    this.performanceStats = { totalRequests: 0, totalResponseTime: 0, slowRequests: 0, windowStartTime: Date.now() };
     this.alerts = [];
     this.restartHistory = [];
     
@@ -62,6 +63,12 @@ export class ServerMonitor {
     setInterval(() => {
       this.requestCounts.clear();
     }, 300000);
+    
+    // 1時間ごとに統計をリセット（メモリリークとデータの正確性のため）
+    setInterval(() => {
+      this.resetStats();
+      console.log('📊 Hourly stats reset completed');
+    }, 3600000);
   }
   
   private async initialize() {
@@ -208,18 +215,28 @@ export class ServerMonitor {
       });
     }
     
-    // 2. 異常なリクエスト数チェック（1分間に100回以上）
+    // 2. 異常なリクエスト数チェック（過去1分間で100回以上）
     this.requestCounts.forEach((data, ip) => {
-      const timeDiff = now.getTime() - data.firstRequest.getTime();
-      const requestsPerMinute = (data.count / timeDiff) * 60000;
+      // 過去1分間のリクエストをカウント
+      const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
       
-      if (requestsPerMinute > 100) {
-        this.addAlert({
-          type: 'suspicious_requests',
-          severity: 'warning',
-          message: `${ip}から異常なリクエスト数を検知: ${Math.round(requestsPerMinute)}回/分`,
-          timestamp: now
-        });
+      // 最近のリクエストのみチェック（過去1分以内にリクエストがある場合）
+      if (data.lastRequest > oneMinuteAgo) {
+        // 簡易的な計算: 全体のレートが高い場合のみアラート
+        // より正確にするには、時系列でリクエスト履歴を保持する必要がある
+        const timeDiff = now.getTime() - data.firstRequest.getTime();
+        const minutesElapsed = Math.max(timeDiff / 60000, 1);
+        const averageRequestsPerMinute = data.count / minutesElapsed;
+        
+        // 平均レートが非常に高い場合のみアラート（短期間の場合を考慮）
+        if (averageRequestsPerMinute > 500 && data.count > 100) {
+          this.addAlert({
+            type: 'suspicious_requests',
+            severity: 'warning',
+            message: `${ip}から異常なリクエスト数を検知: 累計${data.count}回（平均${Math.round(averageRequestsPerMinute)}回/分）`,
+            timestamp: now
+          });
+        }
       }
     });
     
@@ -287,10 +304,18 @@ export class ServerMonitor {
   
   private getErrorRate(): number {
     if (this.performanceStats.totalRequests === 0) return 0;
-    return (this.errorStats.total / this.performanceStats.totalRequests) * 100;
+    
+    // エラー数がリクエスト総数を超えることがないようにする（統計リセットタイミングのズレ対策）
+    const effectiveErrorCount = Math.min(this.errorStats.total, this.performanceStats.totalRequests);
+    return (effectiveErrorCount / this.performanceStats.totalRequests) * 100;
   }
   
   getPerformanceStats() {
+    const windowDuration = Date.now() - this.performanceStats.windowStartTime;
+    const requestsPerMinute = windowDuration > 0 
+      ? (this.performanceStats.totalRequests / windowDuration) * 60000 
+      : 0;
+      
     return {
       totalRequests: this.performanceStats.totalRequests,
       totalErrors: this.errorStats.total,
@@ -300,16 +325,22 @@ export class ServerMonitor {
         ? Math.round(this.performanceStats.totalResponseTime / this.performanceStats.totalRequests)
         : 0,
       slowRequests: this.performanceStats.slowRequests,
-      errorRate: this.getErrorRate()
+      errorRate: this.getErrorRate(),
+      requestsPerMinute: Math.round(requestsPerMinute),
+      windowDurationMinutes: Math.round(windowDuration / 60000)
     };
   }
 
-  // 統計をリセット（デバッグ用）
+  // 統計をリセット（定期リセット用）
   resetStats() {
+    // 同時にリセットして不整合を防ぐ
+    const now = Date.now();
+    
     this.performanceStats = {
       totalRequests: 0,
       totalResponseTime: 0,
-      slowRequests: 0
+      slowRequests: 0,
+      windowStartTime: now
     };
     
     this.errorStats = {
@@ -318,7 +349,7 @@ export class ServerMonitor {
       errors4xx: 0
     };
     
-    console.log('📊 ServerMonitor stats reset');
+    console.log(`📊 ServerMonitor stats reset at ${new Date(now).toISOString()}`);
   }
 
   getHealthStatus() {
@@ -367,6 +398,10 @@ export class ServerMonitor {
         startTime = new Date(now.getTime() - 60 * 60 * 1000);
     }
     
+    // 統計収集期間の情報を追加
+    const statsWindowStart = new Date(this.performanceStats.windowStartTime);
+    const statsWindowMinutes = Math.round((Date.now() - this.performanceStats.windowStartTime) / 60000);
+    
     // IPごとのリクエスト統計
     const requestStats = Array.from(this.requestCounts.entries())
       .map(([ip, data]) => {
@@ -404,6 +439,11 @@ export class ServerMonitor {
       timeRange: {
         start: startTime.toISOString(),
         end: now.toISOString()
+      },
+      statsWindow: {
+        start: statsWindowStart.toISOString(),
+        durationMinutes: statsWindowMinutes,
+        note: '統計は1時間ごとにリセットされます'
       },
       requestStats: {
         total: this.performanceStats.totalRequests,
