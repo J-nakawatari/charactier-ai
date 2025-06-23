@@ -62,7 +62,7 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
       try {
         // 最新のユーザー情報をAPIから取得
         // HttpOnly Cookieを使用するため、credentialsを含める
-        const response = await fetch('/api/user/profile', {
+        const response = await fetch('/api/user/dashboard', {
           method: 'GET',
           credentials: 'include', // Cookieを送信
           headers: {
