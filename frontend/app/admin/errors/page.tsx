@@ -139,6 +139,26 @@ export default function ErrorStatsPage() {
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''} text-gray-600`} />
               <span className="text-gray-700">更新</span>
             </button>
+            
+            {/* 統計リセットボタン（デバッグ用） */}
+            {process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={async () => {
+                  if (confirm('監視統計をリセットしますか？この操作は取り消せません。')) {
+                    try {
+                      // ServerMonitorのresetStatsを直接呼び出すためのデバッグエンドポイントが必要
+                      console.log('統計リセット機能は開発中です');
+                      alert('統計は1時間ごとに自動的にリセットされます');
+                    } catch (error) {
+                      console.error('Failed to reset stats:', error);
+                    }
+                  }
+                }}
+                className="px-4 py-2 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 text-red-700"
+              >
+                統計リセット（デバッグ）
+              </button>
+            )}
           </div>
         </div>
 
