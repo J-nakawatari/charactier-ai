@@ -11,31 +11,6 @@ import log from '../utils/logger';
 
 const router: Router = Router();
 
-// キャラクター画像アップロードエンドポイント（認証あり）
-router.post('/upload/image', 
-  authenticateToken,
-  uploadImage.single('image'), 
-  optimizeImage(800, 800, 80), 
-  async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    if (!req.file) {
-      sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD, 'No image file provided');
-      return;
-    }
-    
-    const imageUrl = `/uploads/images/${req.file.filename}`;
-    
-    res.json({
-      success: true,
-      message: '画像のアップロードが完了しました',
-      imageUrl: imageUrl
-    });
-  } catch (error) {
-    log.error('Character image upload error', error);
-    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
-  }
-});
-
 
 // キャラクター作成（管理者のみ）
 router.post('/', 
