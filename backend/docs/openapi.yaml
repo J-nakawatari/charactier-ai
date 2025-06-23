@@ -2,7 +2,1877 @@ openapi: 3.0.0
 info:
   title: Charactier AI API
   version: 1.0.0
+  description: |
+    Charactier AIのバックエンドAPI仕様書。
+    トークンベースのAIキャラクターチャットサービスのAPIを定義しています。
+    
+    ## 認証
+    - JWT Bearer Token認証を使用
+    - アクセストークンとリフレッシュトークンのペアで管理
+    - HttpOnly Cookieにも対応
+    
+    ## レート制限
+    - 一般API: 100リクエスト/分
+    - チャットAPI: 60メッセージ/時間（ユーザーごと）
+    - 認証API: 5リクエスト/分
+    - 決済API: 20リクエスト/分
+    
+servers:
+  - url: https://api.charactier-ai.com
+    description: Production server
+  - url: http://localhost:5000
+    description: Development server
+
+tags:
+  - name: Authentication
+    description: ユーザー認証関連のAPI
+  - name: User
+    description: ユーザー情報・プロファイル管理
+  - name: Characters
+    description: キャラクター管理・取得
+  - name: Chat
+    description: チャット機能
+  - name: Purchase
+    description: トークン・キャラクター購入
+  - name: Admin
+    description: 管理者向けAPI
+  - name: Admin Security
+    description: セキュリティ・違反管理
+  - name: System
+    description: システム管理・ヘルスチェック
+  - name: Notifications
+    description: 通知管理
+
 paths:
+  # ===================
+  # Authentication APIs
+  # ===================
+  
+  /api/auth/register:
+    post:
+      summary: ユーザー登録
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: メールアドレス
+                password:
+                  type: string
+                  minLength: 8
+                  description: パスワード（8文字以上）
+                locale:
+                  type: string
+                  enum: [ja, en]
+                  default: ja
+                  description: 言語設定
+      responses:
+        '201':
+          description: 登録成功（確認メール送信）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  emailSent:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/AlreadyExists'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /api/auth/login:
+    post:
+      summary: ユーザーログイン
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+                  tokens:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                      refreshToken:
+                        type: string
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: HttpOnly Cookie with tokens
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          description: メール未認証またはアカウント無効
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                  emailNotVerified:
+                    type: boolean
+
+  /api/auth/refresh:
+    post:
+      summary: トークンリフレッシュ
+      tags: [Authentication]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  description: リフレッシュトークン（Cookieからも取得可能）
+      responses:
+        '200':
+          description: 新しいアクセストークン
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        '401':
+          description: リフレッシュトークン無効または期限切れ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                  requireRelogin:
+                    type: boolean
+
+  /api/auth/verify-email:
+    get:
+      summary: メールアドレス認証
+      tags: [Authentication]
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+          description: メール認証トークン
+      responses:
+        '200':
+          description: メール認証成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  tokens:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                      refreshToken:
+                        type: string
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/auth/resend-verification:
+    post:
+      summary: 認証メール再送信
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                locale:
+                  type: string
+                  enum: [ja, en]
+                  default: ja
+      responses:
+        '200':
+          description: メール再送信成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /api/auth/user/profile:
+    put:
+      summary: ユーザープロファイル更新
+      tags: [Authentication]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+      responses:
+        '200':
+          description: プロファイル更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  /api/auth/user/setup-complete:
+    post:
+      summary: 初回セットアップ完了
+      tags: [Authentication]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, selectedCharacterId]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                selectedCharacterId:
+                  type: string
+      responses:
+        '200':
+          description: セットアップ完了（初回ボーナス10000トークン付与）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  /api/auth/verify-token:
+    get:
+      summary: トークン検証
+      tags: [Authentication]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: トークン有効
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  /api/auth/logout:
+    post:
+      summary: ログアウト
+      tags: [Authentication]
+      responses:
+        '200':
+          description: ログアウト成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /api/auth/admin/login:
+    post:
+      summary: 管理者ログイン
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: 管理者ログイン成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  tokens:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                      refreshToken:
+                        type: string
+                  user:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                        enum: [super_admin, admin, moderator]
+                      isAdmin:
+                        type: boolean
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ===================
+  # User APIs
+  # ===================
+  
+  /api/user/profile:
+    get:
+      summary: ユーザープロファイル取得
+      tags: [User]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: プロファイル情報
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+    
+    put:
+      summary: プロファイル更新
+      tags: [User]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                preferredLanguage:
+                  type: string
+                  enum: [ja, en]
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  /api/user/change-password:
+    put:
+      summary: パスワード変更
+      tags: [User]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+                  minLength: 8
+      responses:
+        '200':
+          description: パスワード変更成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/user/delete-account:
+    delete:
+      summary: アカウント削除
+      tags: [User]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password, confirmation]
+              properties:
+                password:
+                  type: string
+                confirmation:
+                  type: string
+                  enum: [DELETE MY ACCOUNT]
+      responses:
+        '200':
+          description: アカウント削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/user/dashboard:
+    get:
+      summary: ダッシュボード情報取得
+      tags: [User]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: ダッシュボードデータ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  stats:
+                    type: object
+                    properties:
+                      totalMessages:
+                        type: integer
+                      totalTokensUsed:
+                        type: integer
+                      favoriteCharacter:
+                        type: string
+                      activeChats:
+                        type: integer
+                  recentChats:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        characterId:
+                          type: string
+                        characterName:
+                          type: string
+                        lastMessage:
+                          type: string
+                        lastActivity:
+                          type: string
+                          format: date-time
+                  purchasedCharacters:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CharacterBasic'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  /api/user/purchase-history:
+    get:
+      summary: 購入履歴取得
+      tags: [User]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [all, token, character, subscription]
+            default: all
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [all, completed, pending, failed]
+            default: all
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            default: createdAt
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: 購入履歴一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  purchases:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PurchaseHistory'
+                  summary:
+                    type: object
+                    properties:
+                      totalSpent:
+                        type: integer
+                      totalPurchases:
+                        type: integer
+                      tokens:
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                          amount:
+                            type: integer
+                      characters:
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                          amount:
+                            type: integer
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  # ===================
+  # Character APIs
+  # ===================
+  
+  /api/characters:
+    get:
+      summary: キャラクター一覧取得
+      tags: [Characters]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [name, price, popularity, createdAt]
+            default: createdAt
+        - name: includeInactive
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: キャラクター一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  characters:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Character'
+                  total:
+                    type: integer
+                  hasMore:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+    
+    post:
+      summary: キャラクター作成（管理者のみ）
+      tags: [Characters]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, description, personalityTags, price, firstMessage, aiModel]
+              properties:
+                name:
+                  $ref: '#/components/schemas/LocalizedString'
+                description:
+                  $ref: '#/components/schemas/LocalizedString'
+                personalityTags:
+                  type: array
+                  items:
+                    type: string
+                personalityPreset:
+                  type: string
+                price:
+                  type: integer
+                  minimum: 0
+                firstMessage:
+                  $ref: '#/components/schemas/LocalizedString'
+                aiModel:
+                  type: string
+                  enum: [gpt-3.5-turbo, gpt-4o-mini]
+                stripeProductId:
+                  type: string
+                category:
+                  type: string
+                isActive:
+                  type: boolean
+                  default: true
+      responses:
+        '201':
+          description: キャラクター作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  character:
+                    $ref: '#/components/schemas/Character'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/characters/{id}:
+    get:
+      summary: キャラクター詳細取得
+      tags: [Characters]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: キャラクター詳細
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CharacterDetail'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    
+    put:
+      summary: キャラクター更新（管理者のみ）
+      tags: [Characters]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: '#/components/schemas/LocalizedString'
+                description:
+                  $ref: '#/components/schemas/LocalizedString'
+                personalityTags:
+                  type: array
+                  items:
+                    type: string
+                price:
+                  type: integer
+                firstMessage:
+                  $ref: '#/components/schemas/LocalizedString'
+                aiModel:
+                  type: string
+                stripeProductId:
+                  type: string
+                category:
+                  type: string
+                isActive:
+                  type: boolean
+      responses:
+        '200':
+          description: キャラクター更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  character:
+                    $ref: '#/components/schemas/Character'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    
+    delete:
+      summary: キャラクター削除（管理者のみ）
+      tags: [Characters]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: キャラクター削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/characters/{id}/translations:
+    put:
+      summary: キャラクター翻訳更新（管理者のみ）
+      tags: [Characters]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: '#/components/schemas/LocalizedString'
+                description:
+                  $ref: '#/components/schemas/LocalizedString'
+                firstMessage:
+                  $ref: '#/components/schemas/LocalizedString'
+      responses:
+        '200':
+          description: 翻訳更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  character:
+                    $ref: '#/components/schemas/Character'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ===================
+  # Chat APIs
+  # ===================
+  
+  /api/chats/{characterId}/messages:
+    get:
+      summary: チャット履歴取得
+      tags: [Chat]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: characterId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: チャットメッセージ一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+                  character:
+                    $ref: '#/components/schemas/CharacterBasic'
+                  affinity:
+                    type: object
+                    properties:
+                      level:
+                        type: number
+                      emotionalState:
+                        type: string
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+    
+    post:
+      summary: メッセージ送信
+      tags: [Chat]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: characterId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+      responses:
+        '200':
+          description: チャット応答
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userMessage:
+                    $ref: '#/components/schemas/Message'
+                  aiResponse:
+                    $ref: '#/components/schemas/Message'
+                  affinity:
+                    type: object
+                    properties:
+                      characterId:
+                        type: string
+                      level:
+                        type: number
+                      increase:
+                        type: number
+                  tokenBalance:
+                    type: integer
+                  levelUp:
+                    type: object
+                    nullable: true
+                    properties:
+                      previousLevel:
+                        type: integer
+                      newLevel:
+                        type: integer
+                      unlockReward:
+                        type: string
+        '400':
+          description: 不適切なメッセージまたはトークン不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  violationType:
+                    type: string
+                  insufficientTokens:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          description: チャット権限なし（制裁中）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  sanctionType:
+                    type: string
+                  endDate:
+                    type: string
+                    format: date-time
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  # ===================
+  # Purchase APIs
+  # ===================
+  
+  /api/token-packs:
+    get:
+      summary: トークンパック一覧取得
+      tags: [Purchase]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: トークンパック一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tokenPacks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TokenPack'
+                  total:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  /api/purchase/create-checkout-session:
+    post:
+      summary: Stripeチェックアウトセッション作成
+      tags: [Purchase]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [priceId]
+              properties:
+                priceId:
+                  type: string
+                  description: Stripe価格ID
+                userId:
+                  type: string
+                  description: ユーザーID（省略時は認証ユーザー）
+      responses:
+        '200':
+          description: チェックアウトセッション作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  sessionId:
+                    type: string
+                  url:
+                    type: string
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/purchase/create-character-checkout-session:
+    post:
+      summary: キャラクター購入チェックアウトセッション作成
+      tags: [Purchase]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [characterId]
+              properties:
+                characterId:
+                  type: string
+      responses:
+        '200':
+          description: チェックアウトセッション作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  sessionId:
+                    type: string
+                  url:
+                    type: string
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/purchase/sse-status:
+    get:
+      summary: 購入ステータスSSE
+      tags: [Purchase]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: sessionId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Server-Sent Events stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  # ===================
+  # Admin APIs
+  # ===================
+  
+  /api/admin/users:
+    get:
+      summary: ユーザー一覧取得（管理者のみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [all, active, suspended, banned]
+            default: all
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [createdAt, name, email, tokenBalance]
+            default: createdAt
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: ユーザー一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminUserView'
+                  total:
+                    type: integer
+                  pages:
+                    type: integer
+                  currentPage:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/users/{id}:
+    get:
+      summary: ユーザー詳細取得（管理者のみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ユーザー詳細情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserDetail'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    
+    delete:
+      summary: ユーザー削除（管理者のみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ユーザー削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  deletedData:
+                    type: object
+                    properties:
+                      chats:
+                        type: integer
+                      tokenUsage:
+                        type: integer
+                      violations:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/admin/users/{userId}/status:
+    put:
+      summary: ユーザーステータス更新（管理者のみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountStatus]
+              properties:
+                accountStatus:
+                  type: string
+                  enum: [active, suspended, banned]
+                suspensionEndDate:
+                  type: string
+                  format: date-time
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: ステータス更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/AdminUserView'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/admins:
+    get:
+      summary: 管理者一覧取得（super_adminのみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 管理者一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  admins:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        name:
+                          type: string
+                        email:
+                          type: string
+                        role:
+                          type: string
+                        isActive:
+                          type: boolean
+                        lastLogin:
+                          type: string
+                          format: date-time
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    
+    post:
+      summary: 管理者作成（super_adminのみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, role]
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                role:
+                  type: string
+                  enum: [admin, moderator]
+      responses:
+        '201':
+          description: 管理者作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  admin:
+                    type: object
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/AlreadyExists'
+
+  /api/admin/admins/{id}:
+    put:
+      summary: 管理者更新（super_adminのみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                role:
+                  type: string
+                  enum: [admin, moderator]
+                isActive:
+                  type: boolean
+                password:
+                  type: string
+      responses:
+        '200':
+          description: 管理者更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  admin:
+                    type: object
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    
+    delete:
+      summary: 管理者削除（super_adminのみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 管理者削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '400':
+          description: 自身または最後のsuper_adminは削除不可
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/admin/models:
+    get:
+      summary: AIモデル一覧取得（管理者のみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: AIモデル一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  models:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        pricePerToken:
+                          type: number
+                        isActive:
+                          type: boolean
+                        isDefault:
+                          type: boolean
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/token-packs:
+    get:
+      summary: トークンパック管理（管理者のみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: includeInactive
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: トークンパック一覧（管理者用）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tokenPacks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminTokenPack'
+                  total:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    
+    post:
+      summary: トークンパック作成（管理者のみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, tokens, price, currency, stripePriceId]
+              properties:
+                name:
+                  $ref: '#/components/schemas/LocalizedString'
+                tokens:
+                  type: integer
+                  minimum: 1
+                price:
+                  type: integer
+                  minimum: 1
+                currency:
+                  type: string
+                  enum: [jpy, usd]
+                stripePriceId:
+                  type: string
+                bonusPercentage:
+                  type: number
+                  default: 0
+                isActive:
+                  type: boolean
+                  default: true
+      responses:
+        '201':
+          description: トークンパック作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  tokenPack:
+                    $ref: '#/components/schemas/AdminTokenPack'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/token-packs/{id}:
+    put:
+      summary: トークンパック更新（管理者のみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: '#/components/schemas/LocalizedString'
+                tokens:
+                  type: integer
+                price:
+                  type: integer
+                bonusPercentage:
+                  type: number
+                isActive:
+                  type: boolean
+      responses:
+        '200':
+          description: トークンパック更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  tokenPack:
+                    $ref: '#/components/schemas/AdminTokenPack'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    
+    delete:
+      summary: トークンパック削除（管理者のみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: トークンパック削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/stripe/price/{priceId}:
+    get:
+      summary: Stripe価格情報取得（管理者のみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: priceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stripe価格情報
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  price:
+                    type: object
+                    description: Stripe価格オブジェクト
+                  calculatedTokens:
+                    type: integer
+                  profitMargin:
+                    type: number
+                  tokenPerYen:
+                    type: number
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/cache/stats:
+    get:
+      summary: キャッシュ統計（管理者のみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: キャッシュ統計情報
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stats:
+                    type: object
+                    properties:
+                      totalCaches:
+                        type: integer
+                      totalSize:
+                        type: integer
+                      hitRate:
+                        type: number
+                      avgGenerationTime:
+                        type: number
+                  performance:
+                    type: object
+                  topCaches:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/cache/cleanup:
+    post:
+      summary: キャッシュクリーンアップ（管理者のみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                daysOld:
+                  type: integer
+                  default: 30
+      responses:
+        '200':
+          description: クリーンアップ結果
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  deletedCount:
+                    type: integer
+                  memoryFreed:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/cache/character/{characterId}:
+    delete:
+      summary: キャラクターキャッシュ無効化（管理者のみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: characterId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: キャッシュ無効化成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  deletedCount:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ===================
+  # Admin Security APIs
+  # ===================
+  
   /api/admin/security/violation-stats:
     get:
       summary: 違反統計取得
@@ -145,8 +2015,877 @@ paths:
                   message:
                     type: string
 
+  # ===================
+  # System APIs
+  # ===================
+  
+  /api/health:
+    get:
+      summary: ヘルスチェック
+      tags: [System]
+      responses:
+        '200':
+          description: システム正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok, degraded]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  services:
+                    type: object
+                    properties:
+                      database:
+                        type: string
+                        enum: [connected, disconnected]
+                      redis:
+                        type: string
+                        enum: [connected, disconnected]
+                      stripe:
+                        type: string
+                        enum: [configured, not_configured]
+                      openai:
+                        type: string
+                        enum: [configured, not_configured]
+                  version:
+                    type: string
+
+  /api/ping:
+    get:
+      summary: Ping
+      tags: [System]
+      responses:
+        '200':
+          description: Pong
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: pong
+    
+    head:
+      summary: Ping (HEAD)
+      tags: [System]
+      responses:
+        '200':
+          description: OK
+
+  /api/admin/system/stats:
+    get:
+      summary: システム統計（管理者のみ）
+      tags: [System]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: システム統計情報
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stats:
+                    type: object
+                    properties:
+                      totalUsers:
+                        type: integer
+                      activeUsers:
+                        type: integer
+                      totalCharacters:
+                        type: integer
+                      totalMessages:
+                        type: integer
+                      totalTokensUsed:
+                        type: integer
+                  tokenUsage:
+                    type: object
+                    properties:
+                      today:
+                        type: integer
+                      thisWeek:
+                        type: integer
+                      thisMonth:
+                        type: integer
+                  revenue:
+                    type: object
+                    properties:
+                      today:
+                        type: integer
+                      thisWeek:
+                        type: integer
+                      thisMonth:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/system/logs:
+    get:
+      summary: システムログ取得（管理者のみ）
+      tags: [System]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [error, warn, info, debug]
+            default: error
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: service
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ログエントリ一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        timestamp:
+                          type: string
+                          format: date-time
+                        level:
+                          type: string
+                        service:
+                          type: string
+                        message:
+                          type: string
+                        metadata:
+                          type: object
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/system-settings/google-analytics:
+    get:
+      summary: Google Analytics設定取得（管理者のみ）
+      tags: [System]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: GA設定
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  settings:
+                    type: object
+                    properties:
+                      measurementId:
+                        type: string
+                      isEnabled:
+                        type: boolean
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    
+    post:
+      summary: Google Analytics設定更新（管理者のみ）
+      tags: [System]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [measurementId]
+              properties:
+                measurementId:
+                  type: string
+                isEnabled:
+                  type: boolean
+                  default: true
+      responses:
+        '200':
+          description: 設定更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  settings:
+                    type: object
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    
+    delete:
+      summary: Google Analytics設定削除（管理者のみ）
+      tags: [System]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 設定削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ===================
+  # Notification APIs
+  # ===================
+  
+  /api/notifications:
+    get:
+      summary: 通知一覧取得
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: unreadOnly
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: 通知一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+                  total:
+                    type: integer
+                  unreadCount:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  /api/notifications/admin:
+    get:
+      summary: 管理者向け通知一覧（管理者のみ）
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: 管理者向け通知一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminNotification'
+                  total:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    
+    post:
+      summary: 管理者向け通知作成（管理者のみ）
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, content, type]
+              properties:
+                title:
+                  $ref: '#/components/schemas/LocalizedString'
+                content:
+                  $ref: '#/components/schemas/LocalizedString'
+                type:
+                  type: string
+                  enum: [system, update, campaign, alert]
+                priority:
+                  type: string
+                  enum: [low, medium, high]
+                  default: medium
+                targetAudience:
+                  type: string
+                  enum: [all, active, premium]
+                  default: all
+                expiresAt:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: 通知作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  notification:
+                    $ref: '#/components/schemas/AdminNotification'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/notifications/admin/{id}:
+    put:
+      summary: 管理者向け通知更新（管理者のみ）
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  $ref: '#/components/schemas/LocalizedString'
+                content:
+                  $ref: '#/components/schemas/LocalizedString'
+                type:
+                  type: string
+                priority:
+                  type: string
+                targetAudience:
+                  type: string
+                isActive:
+                  type: boolean
+                expiresAt:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: 通知更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  notification:
+                    $ref: '#/components/schemas/AdminNotification'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    
+    delete:
+      summary: 管理者向け通知削除（管理者のみ）
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 通知削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/notifications/{id}/read:
+    put:
+      summary: 通知既読マーク
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 既読マーク成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  /api/notifications/mark-all-read:
+    put:
+      summary: 全通知既読マーク
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 全既読マーク成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  markedCount:
+                    type: integer
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  # ===================
+  # Webhook APIs
+  # ===================
+  
+  /webhook/stripe:
+    post:
+      summary: Stripe Webhook
+      tags: [System]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Stripe Event Object
+      responses:
+        '200':
+          description: Webhook処理成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+        '400':
+          description: 無効なペイロード
+        '401':
+          description: 署名検証失敗
+
+  # ===================
+  # Debug APIs (開発環境のみ)
+  # ===================
+  
+  /api/debug/current-user:
+    get:
+      summary: 現在のユーザー情報（デバッグ用）
+      tags: [System]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: ユーザー詳細情報
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                  isAdmin:
+                    type: boolean
+                  adminDetails:
+                    type: object
+                    nullable: true
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  /api/debug/analytics:
+    get:
+      summary: 分析データ（デバッグ用）
+      tags: [System]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 分析データ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  systemStats:
+                    type: object
+                  userStats:
+                    type: object
+                  characterStats:
+                    type: object
+                  tokenStats:
+                    type: object
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
 components:
   schemas:
+    LocalizedString:
+      type: object
+      properties:
+        ja:
+          type: string
+        en:
+          type: string
+    
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        tokenBalance:
+          type: integer
+        isSetupComplete:
+          type: boolean
+        preferredLanguage:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    
+    UserProfile:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            purchasedCharacters:
+              type: array
+              items:
+                type: string
+            affinities:
+              type: array
+              items:
+                type: object
+                properties:
+                  character:
+                    type: string
+                  level:
+                    type: number
+                  emotionalState:
+                    type: string
+    
+    AdminUserView:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        tokenBalance:
+          type: integer
+        accountStatus:
+          type: string
+          enum: [active, suspended, banned, deleted]
+        createdAt:
+          type: string
+          format: date-time
+        lastLogin:
+          type: string
+          format: date-time
+        purchasedCharacters:
+          type: integer
+        totalSpent:
+          type: integer
+    
+    AdminUserDetail:
+      allOf:
+        - $ref: '#/components/schemas/AdminUserView'
+        - type: object
+          properties:
+            affinities:
+              type: array
+              items:
+                type: object
+            purchaseHistory:
+              type: array
+              items:
+                $ref: '#/components/schemas/PurchaseHistory'
+            chatStats:
+              type: object
+              properties:
+                totalMessages:
+                  type: integer
+                totalTokensUsed:
+                  type: integer
+                activeChats:
+                  type: integer
+            violations:
+              type: array
+              items:
+                $ref: '#/components/schemas/ViolationRecord'
+    
+    Character:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          $ref: '#/components/schemas/LocalizedString'
+        description:
+          $ref: '#/components/schemas/LocalizedString'
+        personalityTags:
+          type: array
+          items:
+            type: string
+        personalityPreset:
+          type: string
+        price:
+          type: integer
+        firstMessage:
+          $ref: '#/components/schemas/LocalizedString'
+        profileImage:
+          type: string
+        category:
+          type: string
+        isActive:
+          type: boolean
+        aiModel:
+          type: string
+        stripeProductId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    
+    CharacterBasic:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          $ref: '#/components/schemas/LocalizedString'
+        profileImage:
+          type: string
+        category:
+          type: string
+    
+    CharacterDetail:
+      allOf:
+        - $ref: '#/components/schemas/Character'
+        - type: object
+          properties:
+            isPurchased:
+              type: boolean
+            affinityLevel:
+              type: number
+            unlockedImages:
+              type: array
+              items:
+                type: string
+    
+    Message:
+      type: object
+      properties:
+        _id:
+          type: string
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        tokensUsed:
+          type: integer
+    
+    PurchaseHistory:
+      type: object
+      properties:
+        _id:
+          type: string
+        type:
+          type: string
+          enum: [token, character, subscription]
+        amount:
+          type: integer
+        price:
+          type: integer
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [completed, pending, failed, refunded]
+        paymentMethod:
+          type: string
+        details:
+          type: string
+        description:
+          type: string
+        transactionId:
+          type: string
+        stripeSessionId:
+          type: string
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+    
+    TokenPack:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          $ref: '#/components/schemas/LocalizedString'
+        tokens:
+          type: integer
+        price:
+          type: integer
+        currency:
+          type: string
+        stripePriceId:
+          type: string
+        bonusPercentage:
+          type: number
+        isActive:
+          type: boolean
+        profitMargin:
+          type: number
+        tokenPerYen:
+          type: number
+    
+    AdminTokenPack:
+      allOf:
+        - $ref: '#/components/schemas/TokenPack'
+        - type: object
+          properties:
+            salesCount:
+              type: integer
+            totalRevenue:
+              type: integer
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+    
+    Notification:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          $ref: '#/components/schemas/LocalizedString'
+        content:
+          $ref: '#/components/schemas/LocalizedString'
+        type:
+          type: string
+          enum: [system, update, campaign, alert, personal]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    
+    AdminNotification:
+      allOf:
+        - $ref: '#/components/schemas/Notification'
+        - type: object
+          properties:
+            targetAudience:
+              type: string
+              enum: [all, active, premium]
+            isActive:
+              type: boolean
+            expiresAt:
+              type: string
+              format: date-time
+            metadata:
+              type: object
+    
     ViolationRecord:
       type: object
       properties:
@@ -183,9 +2922,104 @@ components:
           type: string
         isResolved:
           type: boolean
-
+  
+  responses:
+    ValidationError:
+      description: バリデーションエラー
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                enum: [VALIDATION_ERROR]
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    message:
+                      type: string
+    
+    AuthenticationError:
+      description: 認証エラー
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                enum: [AUTH_FAILED, TOKEN_EXPIRED, INVALID_TOKEN]
+              message:
+                type: string
+    
+    Forbidden:
+      description: アクセス権限なし
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                enum: [INSUFFICIENT_PERMISSIONS]
+              message:
+                type: string
+    
+    NotFound:
+      description: リソースが見つからない
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                enum: [NOT_FOUND]
+              message:
+                type: string
+    
+    AlreadyExists:
+      description: リソースが既に存在
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                enum: [ALREADY_EXISTS]
+              message:
+                type: string
+    
+    RateLimitExceeded:
+      description: レート制限超過
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                enum: [RATE_LIMIT_EXCEEDED]
+              message:
+                type: string
+              retryAfter:
+                type: integer
+                description: 再試行可能までの秒数
+  
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: accessToken

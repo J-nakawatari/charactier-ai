@@ -1088,6 +1088,113 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
   }
 });
 
+// ユーザープロファイルエンドポイント
+routeRegistry.define('GET', '/api/user/profile', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
+      return;
+    }
+
+    const user = await UserModel.findById(userId)
+      .select('-password -emailVerificationToken -createdAt -updatedAt -__v')
+      .populate('purchasedCharacters', 'id name profileImage');
+    
+    if (!user) {
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'User not found');
+      return;
+    }
+
+    // トークン残高の計算
+    const UserTokenPack = require('../models/UserTokenPack');
+    const tokenBalance = await UserTokenPack.calculateUserTokenBalance(userId);
+
+    // 親密度情報の取得
+    const affinities = await UserModel.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(userId) } },
+      { $unwind: '$affinities' },
+      {
+        $lookup: {
+          from: 'characters',
+          localField: 'affinities.character',
+          foreignField: '_id',
+          as: 'characterInfo'
+        }
+      },
+      {
+        $project: {
+          character: { $arrayElemAt: ['$characterInfo._id', 0] },
+          characterName: { $arrayElemAt: ['$characterInfo.name', 0] },
+          level: '$affinities.level',
+          emotionalState: '$affinities.emotionalState'
+        }
+      }
+    ]);
+
+    const response = {
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        tokenBalance: tokenBalance || user.tokenBalance || 0,
+        purchasedCharacters: user.purchasedCharacters,
+        selectedCharacter: user.selectedCharacter,
+        isSetupComplete: user.isSetupComplete,
+        preferredLanguage: user.preferredLanguage || 'ja'
+      },
+      affinities: affinities
+    };
+
+    res.json(response);
+  } catch (error) {
+    log.error('Error fetching user profile', error);
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED);
+  }
+});
+
+// ユーザープロファイル更新エンドポイント
+routeRegistry.define('PUT', '/api/user/profile', authenticateToken, validate({ body: authSchemas.updateProfile }), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
+      return;
+    }
+
+    const { name, preferredLanguage } = req.body;
+    const updateData: any = {};
+    
+    if (name) updateData.name = name;
+    if (preferredLanguage) updateData.preferredLanguage = preferredLanguage;
+
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, select: '-password -emailVerificationToken' }
+    );
+
+    if (!user) {
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'User not found');
+      return;
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        preferredLanguage: user.preferredLanguage
+      }
+    });
+  } catch (error) {
+    log.error('Error updating user profile', error);
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED);
+  }
+});
+
 // 現在のユーザー情報確認エンドポイント（デバッグ用）
 routeRegistry.define('GET', '/api/debug/current-user', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {

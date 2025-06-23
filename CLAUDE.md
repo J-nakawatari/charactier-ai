@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+最終更新: 2025-06-23
+
 ## プロジェクト概要
 
 Charactier AIは、ユーザーがトークンを使ってAIキャラクターとチャットできるサービスです。
@@ -16,7 +18,7 @@ Charactier AIは、ユーザーがトークンを使ってAIキャラクター�
 - **決済**: Stripe（キャラクター購入とトークン購入）
 - **AI**: OpenAI API (GPT-4o-mini)
 - **キャッシュ**: Redis（プロンプトキャッシュ、SSE）
-- **デプロイ**: VPS (Xserver) + Nginx + PM2
+- **デプロイ**: VPS (Xserver) + Nginx + systemd
 
 ## アーキテクチャ
 
@@ -25,7 +27,8 @@ Charactier AIは、ユーザーがトークンを使ってAIキャラクター�
 charactier-ai/
 ├── frontend/          # Next.js アプリケーション
 ├── backend/           # Express.js APIサーバー
-├── docs/              # ドキュメント（openapi.yaml含む）
+│   └── docs/         # バックエンドドキュメント（openapi.yaml含む）
+├── docs/              # プロジェクトドキュメント
 ├── scripts/           # ユーティリティスクリプト
 └── uploads/           # アップロードされたファイル
 ```
@@ -34,7 +37,7 @@ charactier-ai/
 - バックエンドAPI: `/api/v1/` で始まる
 - フロントエンドプロキシ: `/api/` 経由（v1なし）
 - RouteRegistry: 重複ルート防止システム
-- OpenAPI仕様: `docs/openapi.yaml` に全API定義
+- OpenAPI仕様: `backend/docs/openapi.yaml` に全API定義
 
 ### 重要なアーキテクチャ決定
 1. **99%利益率システム**: `backend/src/config/tokenConfig.ts` で一元管理
@@ -58,6 +61,8 @@ npm run start            # 本番サーバー起動
 npm run lint             # ESLintチェック
 npm run type-check       # TypeScript型チェック
 npm run check-api-duplicates  # API重複チェック
+npm run test:security    # セキュリティテスト実行
+npm run test:load        # 負荷テスト実行
 ```
 
 ### フロントエンド
@@ -124,10 +129,11 @@ git pull  # 自動的にビルド・再起動される
 ## APIの追加・変更
 
 新しいAPIを追加する際は：
-1. まず `docs/openapi.yaml` で既存の定義を確認
+1. まず `backend/docs/openapi.yaml` で既存の定義を確認
 2. なければ `paths:` に追加
-3. 実装は `backend/src/index.ts` に追加
-4. 型定義は `types.ts` に追加
+3. 実装は `backend/src/index.ts` または適切なルートファイルに追加
+4. 型定義は `backend/src/types/` に追加
+5. 入力検証スキーマを `backend/src/validation/schemas.ts` に追加
 
 ## 重要なシステム
 
@@ -143,12 +149,18 @@ git pull  # 自動的にビルド・再起動される
 - ムードシステムが応答に影響
 
 ### セキュリティとパフォーマンス
-- JWT認証（アクセス/リフレッシュトークン）
+- JWT認証（HttpOnly Cookie + リフレッシュトークン）
 - 全エンドポイントでレート制限
   - 一般API: 100リクエスト/分
   - チャットAPI: 60メッセージ/時間（ユーザーごと）
   - 認証API: 5リクエスト/分
   - 詳細: `docs/rate-limiting.md`
+- セキュリティヘッダー（Helmet.js）
+  - CSP、HSTS、X-Frame-Options等
+  - 詳細: `docs/security-headers.md`
+- 入力検証（Joi）全エンドポイント対応
+- 構造化ログ（Winston）による機密情報保護
+- エラーメッセージの最小化
 - 不適切なメッセージのフィルタリング
 - IPモニタリングとブロック
 - 違反者への制裁システム
@@ -194,4 +206,4 @@ Nginx (SSL終端) →
 - `/backend/models/TokenUsage.js`
 - `/frontend/app/admin/characters/[id]/edit/page.tsx`
 - `/frontend/app/admin/characters/new/page.tsx`
-- `/docs/openapi.yaml`
+- `/backend/docs/openapi.yaml`
