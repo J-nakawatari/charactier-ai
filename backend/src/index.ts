@@ -457,15 +457,31 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
         const priceId = fullSession.line_items.data[0].price.id;
         
         
-        // 価格IDからキャラクター購入かトークン購入かを判別
-        const character = await CharacterModel.findOne({ stripeProductId: priceId });
+        // セッションのmetadataから購入タイプとキャラクターIDを取得
+        const purchaseType = session.metadata?.purchaseType || 'token';
+        let characterId = session.metadata?.characterId;
+        let character = null;
         
-        let purchaseType, characterId;
-        if (character) {
-          purchaseType = 'character';
-          characterId = character._id;
-        } else {
-          purchaseType = 'token';
+        // キャラクター購入の場合、metadataのcharacterIdを使用
+        if (purchaseType === 'character' && characterId) {
+          character = await CharacterModel.findById(characterId);
+          if (!character) {
+            console.error('❌ Character not found for ID:', characterId);
+            // フォールバック：価格IDから検索（複数キャラが同じ価格IDを持つ場合は問題あり）
+            character = await CharacterModel.findOne({ stripeProductId: priceId });
+            if (character) {
+              characterId = character._id;
+            }
+          }
+        } else if (!purchaseType || purchaseType === 'token') {
+          // トークン購入の場合は、価格IDからキャラクターを検索（キャラクターでなければトークン）
+          const possibleCharacter = await CharacterModel.findOne({ stripeProductId: priceId });
+          if (possibleCharacter) {
+            // 実はキャラクター購入だった（古いセッション対応）
+            purchaseType = 'character';
+            character = possibleCharacter;
+            characterId = possibleCharacter._id;
+          }
         }
         
         if (purchaseType === 'character' && character && characterId) {

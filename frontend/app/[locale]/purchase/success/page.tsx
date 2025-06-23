@@ -66,6 +66,13 @@ function PurchaseSuccessContent() {
                 const savedCharacterName = localStorage.getItem('purchasingCharacterName');
                 const savedCharacterId = localStorage.getItem('purchasingCharacterId');
                 
+                console.log('🔍 キャラクター購入情報:', {
+                  savedCharacterName,
+                  savedCharacterId,
+                  metadataCharacterId: latestPurchase.metadata?.characterId,
+                  latestPurchase
+                });
+                
                 // metadata.characterIdまたはlocalStorageからcharacterIdを取得
                 const characterId = latestPurchase.metadata?.characterId || savedCharacterId;
                 
