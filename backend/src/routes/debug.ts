@@ -53,4 +53,23 @@ router.get('/auth-test', authenticateToken, (req: AuthRequest, res: Response) =>
   });
 });
 
+// 管理者認証テスト用エンドポイント（/admin/パスを含む）
+router.get('/admin/auth-test', authenticateToken, (req: AuthRequest, res: Response) => {
+  res.json({
+    authenticated: true,
+    path: req.path,
+    isAdminPath: req.path.includes('/admin/'),
+    user: req.user ? {
+      id: req.user._id,
+      email: req.user.email,
+      isAdmin: (req.user as any).isAdmin
+    } : null,
+    admin: req.admin ? {
+      id: req.admin._id,
+      email: req.admin.email,
+      role: req.admin.role
+    } : null
+  });
+});
+
 export default router;

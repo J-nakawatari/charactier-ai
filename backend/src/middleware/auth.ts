@@ -25,7 +25,8 @@ export const authenticateToken = async (
     if (isAdminPath) {
       token = req.cookies?.adminAccessToken;
     } else {
-      token = req.cookies?.userAccessToken;
+      // 通常パスでも、まず管理者トークンを確認（管理者は全APIにアクセス可能）
+      token = req.cookies?.adminAccessToken || req.cookies?.userAccessToken;
     }
     
     // 2. Cookieになければ、Authorization ヘッダーまたは x-auth-token ヘッダーから JWT を取得
