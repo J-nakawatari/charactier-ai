@@ -3,15 +3,7 @@ import { backendClient } from '@/utils/backend-client';
 
 export async function GET(request: NextRequest) {
   try {
-    // 認証確認
-    const authorization = request.headers.get('authorization');
-    const authToken = request.headers.get('x-auth-token');
-
-    if (!authorization && !authToken) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
-
-    // 統一APIクライアントを使用
+    // 統一APIクライアントを使用（認証はCookieで処理される）
     const response = await backendClient.proxyRequest(request, '/api/user/dashboard');
 
     if (!response.ok) {
