@@ -12,6 +12,7 @@ import {
   Copy,
   ExternalLink
 } from 'lucide-react';
+import { adminFetch } from '@/utils/admin-fetch';
 
 interface GoogleAnalyticsSettings {
   measurementId: string;
@@ -33,17 +34,7 @@ export default function AnalyticsSettingsPage() {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const token = localStorage.getItem('adminAccessToken');
-      if (!token) {
-        router.push('/admin/login');
-        return;
-      }
-
-      const response = await fetch('/api/system-settings/google-analytics', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await adminFetch('/api/system-settings/google-analytics');
 
       if (response.ok) {
         const data = await response.json();
@@ -54,8 +45,6 @@ export default function AnalyticsSettingsPage() {
             isActive: data.isActive
           });
         }
-      } else if (response.status === 401) {
-        router.push('/admin/login');
       }
     } catch (error) {
       console.error('設定取得エラー:', error);
@@ -81,13 +70,8 @@ export default function AnalyticsSettingsPage() {
     setMessage(null);
 
     try {
-      const token = localStorage.getItem('adminAccessToken');
-      const response = await fetch('/api/system-settings/google-analytics', {
+      const response = await adminFetch('/api/system-settings/google-analytics', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify(settings)
       });
 
@@ -113,12 +97,8 @@ export default function AnalyticsSettingsPage() {
     }
 
     try {
-      const token = localStorage.getItem('adminAccessToken');
-      const response = await fetch('/api/system-settings/google-analytics', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await adminFetch('/api/system-settings/google-analytics', {
+        method: 'DELETE'
       });
 
       if (response.ok) {
