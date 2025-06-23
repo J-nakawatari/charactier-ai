@@ -256,21 +256,10 @@ export default function TokensPage() {
                 const fetchTokenData = async () => {
                   try {
                     setLoading(true);
-                    const token = localStorage.getItem('adminAccessToken');
-                    
-                    if (!token) {
-                      setError('認証トークンが見つかりません');
-                      return;
-                    }
-
-                    const headers = {
-                      'Authorization': `Bearer ${token}`,
-                      'Content-Type': 'application/json'
-                    };
 
                     const [tokenRes, usersRes] = await Promise.all([
-                      fetch('/api/admin/token-analytics/overview', { headers }),
-                      fetch('/api/admin/users', { headers })
+                      adminFetch('/api/admin/token-analytics/overview'),
+                      adminFetch('/api/admin/users')
                     ]);
 
                     if (tokenRes.ok && usersRes.ok) {

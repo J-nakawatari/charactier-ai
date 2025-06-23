@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { adminAuthenticatedFetch } from '@/utils/auth';
+import { adminFetch } from '@/utils/admin-fetch';
 import { AlertCircle, Server, Activity, Users, Clock, Zap, RefreshCw, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -49,7 +49,7 @@ export default function SystemMonitoringPage() {
   const fetchMonitoringData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await adminAuthenticatedFetch(`/api/admin/system/monitoring?period=${period}`);
+      const response = await adminFetch(`/api/admin/system/monitoring?period=${period}`);
       if (!response.ok) {
         throw new Error('Failed to fetch monitoring data');
       }

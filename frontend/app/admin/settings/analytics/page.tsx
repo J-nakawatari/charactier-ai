@@ -52,7 +52,7 @@ export default function AnalyticsSettingsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, []);
 
   // 設定を取得
   useEffect(() => {
