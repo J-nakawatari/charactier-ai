@@ -22,11 +22,10 @@ export const authenticateToken = async (
     let token: string | undefined;
     
     // 管理者パスの場合は管理者用クッキー、それ以外はユーザー用クッキーを確認
-    // レガシーサポート: 古いaccessTokenも確認
     if (isAdminPath) {
-      token = req.cookies?.adminAccessToken || req.cookies?.accessToken;
+      token = req.cookies?.adminAccessToken;
     } else {
-      token = req.cookies?.userAccessToken || req.cookies?.accessToken;
+      token = req.cookies?.userAccessToken;
     }
     
     // 2. Cookieになければ、Authorization ヘッダーまたは x-auth-token ヘッダーから JWT を取得
@@ -47,7 +46,6 @@ export const authenticateToken = async (
       isAdminPath,
       hasUserToken: !!req.cookies?.userAccessToken,
       hasAdminToken: !!req.cookies?.adminAccessToken,
-      hasLegacyToken: !!req.cookies?.accessToken,
       hasAuthHeader: !!req.headers.authorization,
       tokenSource: token ? (req.headers.authorization ? 'bearer' : 'cookie') : 'none'
     });

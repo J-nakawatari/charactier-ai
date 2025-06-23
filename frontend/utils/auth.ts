@@ -266,6 +266,7 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
   
   const response = await fetch(url, {
     ...options,
+    credentials: 'include', // クッキーを送信
     headers: {
       ...headers,
       ...options.headers,
@@ -280,6 +281,7 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
       const newHeaders = getAuthHeaders();
       return fetch(url, {
         ...options,
+        credentials: 'include', // クッキーを送信
         headers: {
           ...newHeaders,
           ...options.headers,
@@ -303,6 +305,7 @@ export async function adminAuthenticatedFetch(url: string, options: RequestInit 
   
   const response = await fetch(url, {
     ...options,
+    credentials: 'include', // クッキーを送信
     headers: {
       ...headers,
       ...options.headers,
@@ -317,6 +320,7 @@ export async function adminAuthenticatedFetch(url: string, options: RequestInit 
       const newHeaders = getAdminAuthHeaders();
       return fetch(url, {
         ...options,
+        credentials: 'include', // クッキーを送信
         headers: {
           ...newHeaders,
           ...options.headers,
