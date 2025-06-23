@@ -78,16 +78,16 @@ export const characterSchemas = {
     name: localizedString.required(),
     description: localizedString.required(),
     defaultMessage: localizedString.required(),
-    characterAccessType: Joi.string().valid('free', 'paid').required(),
+    characterAccessType: Joi.string().valid('free', 'purchaseOnly').required(),
     purchasePrice: Joi.when('characterAccessType', {
-      is: 'paid',
+      is: 'purchaseOnly',
       then: Joi.number().min(0).required(),
       otherwise: Joi.number().optional()
     }),
     personalityPreset: Joi.string().optional(),
     personalityTags: Joi.array().items(Joi.string()).optional(),
-    gender: Joi.string().valid('male', 'female', 'other').optional(),
-    model: Joi.string().valid('gpt-3.5-turbo', 'gpt-4o-mini').default('gpt-3.5-turbo'),
+    gender: Joi.string().valid('male', 'female', 'neutral').optional(),
+    aiModel: Joi.string().valid('gpt-3.5-turbo', 'gpt-4o-mini').default('gpt-3.5-turbo'),
     imageCharacterSelect: Joi.string().uri().optional(),
     imageDashboard: Joi.string().uri().optional(),
     imageChatBackground: Joi.string().uri().optional(),
@@ -99,6 +99,18 @@ export const characterSchemas = {
     displayOrder: Joi.number().integer().min(0).optional(),
     isActive: Joi.boolean().default(true),
     stripeProductId: Joi.string().optional(),
+    personalityPrompt: localizedString.required(),
+    affinitySettings: Joi.object({
+      maxLevel: Joi.number().min(1).max(100).default(100),
+      experienceMultiplier: Joi.number().min(0.1).max(5.0).default(1.0),
+      decayRate: Joi.number().min(0).max(1.0).default(0.1),
+      decayThreshold: Joi.number().default(7),
+      levelUpBonuses: Joi.array().items(Joi.object({
+        level: Joi.number().min(1).max(100),
+        bonusType: Joi.string().valid('image_unlock', 'special_message', 'feature_unlock', 'gift_bonus'),
+        value: Joi.string()
+      })).optional()
+    }).required(),
     galleryImages: Joi.array().items(Joi.object({
       imageUrl: Joi.string().uri().required(),
       caption: localizedString.optional(),
@@ -110,12 +122,12 @@ export const characterSchemas = {
     name: localizedString.optional(),
     description: localizedString.optional(),
     defaultMessage: localizedString.optional(),
-    characterAccessType: Joi.string().valid('free', 'paid').optional(),
+    characterAccessType: Joi.string().valid('free', 'purchaseOnly').optional(),
     purchasePrice: Joi.number().min(0).optional(),
     personalityPreset: Joi.string().optional(),
     personalityTags: Joi.array().items(Joi.string()).optional(),
-    gender: Joi.string().valid('male', 'female', 'other').optional(),
-    model: Joi.string().valid('gpt-3.5-turbo', 'gpt-4o-mini').optional(),
+    gender: Joi.string().valid('male', 'female', 'neutral').optional(),
+    aiModel: Joi.string().valid('gpt-3.5-turbo', 'gpt-4o-mini').optional(),
     imageCharacterSelect: Joi.string().uri().allow('').optional(),
     imageDashboard: Joi.string().uri().allow('').optional(),
     imageChatBackground: Joi.string().uri().allow('').optional(),
@@ -125,6 +137,18 @@ export const characterSchemas = {
     displayOrder: Joi.number().integer().min(0).optional(),
     isActive: Joi.boolean().optional(),
     stripeProductId: Joi.string().allow('').optional(),
+    personalityPrompt: localizedString.optional(),
+    affinitySettings: Joi.object({
+      maxLevel: Joi.number().min(1).max(100).optional(),
+      experienceMultiplier: Joi.number().min(0.1).max(5.0).optional(),
+      decayRate: Joi.number().min(0).max(1.0).optional(),
+      decayThreshold: Joi.number().optional(),
+      levelUpBonuses: Joi.array().items(Joi.object({
+        level: Joi.number().min(1).max(100),
+        bonusType: Joi.string().valid('image_unlock', 'special_message', 'feature_unlock', 'gift_bonus'),
+        value: Joi.string()
+      })).optional()
+    }).optional(),
     galleryImages: Joi.array().items(Joi.object({
       imageUrl: Joi.string().uri().required(),
       caption: localizedString.optional(),
