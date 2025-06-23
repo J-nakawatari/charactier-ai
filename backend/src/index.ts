@@ -1107,7 +1107,7 @@ routeRegistry.define('GET', '/api/user/profile', authenticateToken, async (req: 
     }
 
     // トークン残高の計算
-    const UserTokenPack = require('../models/UserTokenPack');
+    const UserTokenPack = require('../../models/UserTokenPack');
     const tokenBalance = await UserTokenPack.calculateUserTokenBalance(userId);
 
     // 親密度情報の取得
