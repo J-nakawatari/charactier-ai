@@ -52,8 +52,10 @@ export function configureSecurityHeaders(app: Express): void {
         mediaSrc: ["'self'"],
         childSrc: ["'self'"],
         formAction: ["'self'"],
-        upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : undefined,
-        blockAllMixedContent: process.env.NODE_ENV === 'production' ? [] : undefined
+        ...(process.env.NODE_ENV === 'production' && {
+          upgradeInsecureRequests: [],
+          blockAllMixedContent: []
+        })
       }
     },
 
