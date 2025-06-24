@@ -204,7 +204,7 @@ export default function ChatPage() {
       }
     } catch (err) {
       console.error('Chat data loading error:', err);
-      setError(t('errors.chatLoadFailed'));
+      setError(t('chatLoadFailed'));
     } finally {
       setLoading(false);
     }
