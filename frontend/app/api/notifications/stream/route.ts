@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createAuthenticatedApiProxy } from '@/lib/api-proxy';
+import { createAuthenticatedApiProxy } from '@/utils/apiProxy';
 
 export async function GET(request: NextRequest) {
   return createAuthenticatedApiProxy('/api/notifications/stream', request);
