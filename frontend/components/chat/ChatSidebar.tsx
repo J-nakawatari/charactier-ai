@@ -49,12 +49,14 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
         const response = await fetch('/api/v1/user/profile');
         if (response.ok) {
           const data = await response.json();
+          console.log('ChatSidebar - User data from API:', data.user);
           setUser(data.user);
         } else {
           // エラー時はlocalStorageから取得
           const userStr = localStorage.getItem('user');
           if (userStr) {
             const userData = JSON.parse(userStr);
+            console.log('ChatSidebar - User data from localStorage:', userData);
             setUser(userData);
           }
         }
@@ -66,7 +68,7 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
     };
 
     fetchUserData();
-  }, []); // 初回のみ実行、パス変更での再取得は不要
+  }, [pathname]); // パス変更時に再取得
 
   // selectedCharacterに基づく動的なチャットリンク
   const getChatHref = () => {
@@ -75,11 +77,14 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
     const chatIndex = pathParts.indexOf('chat');
     if (chatIndex > 0 && pathParts[chatIndex - 1] && pathParts[chatIndex - 2] === 'characters') {
       // 現在チャットページにいる場合は、そのキャラクターIDを使用
-      return `/${currentLocale}/characters/${pathParts[chatIndex - 1]}/chat`;
+      const characterId = pathParts[chatIndex - 1];
+      console.log('Chat link using current path:', characterId);
+      return `/${currentLocale}/characters/${characterId}/chat`;
     }
     
     // selectedCharacterがある場合
     if (user?.selectedCharacter?._id) {
+      console.log('Chat link using selectedCharacter:', user.selectedCharacter._id);
       return `/${currentLocale}/characters/${user.selectedCharacter._id}/chat`;
     }
     
@@ -87,11 +92,13 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
     if (typeof window !== 'undefined') {
       const lastCharacterId = localStorage.getItem('lastSelectedCharacterId');
       if (lastCharacterId) {
+        console.log('Chat link using localStorage:', lastCharacterId);
         return `/${currentLocale}/characters/${lastCharacterId}/chat`;
       }
     }
     
     // キャラクター未選択の場合は一覧へ
+    console.log('Chat link: no character selected, redirecting to character list');
     return `/${currentLocale}/characters?from=chat`;
   };
 
