@@ -76,8 +76,8 @@ export default function DashboardPage() {
       } catch (error) {
         console.error('Dashboard data fetch error:', error);
         
-        // 401エラーの場合のみログインページへリダイレクト
-        if (error instanceof Error && error.message.includes('401')) {
+        // 401または404エラーの場合はログインページへリダイレクト
+        if (error instanceof Error && (error.message.includes('401') || error.message.includes('404'))) {
           console.error('Dashboard data fetch failed - authentication required');
           router.push(`/${locale}/login`);
         } else {
