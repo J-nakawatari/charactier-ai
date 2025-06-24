@@ -102,37 +102,46 @@ export const authenticateToken = async (
                    token === req.cookies?.userAccessToken ? 'userCookie' : 'authHeader'
     });
     
-    // まず管理者として検索
-    const admin = await AdminModel.findById(decoded.userId);
-    if (admin && admin.isActive) {
-      // 管理者として認証成功
-      log.info('✅ ADMIN AUTHENTICATED', {
-        adminId: admin._id.toString(),
-        email: admin.email,
-        role: admin.role,
-        path: req.path
-      });
-      req.admin = admin;
-      // req.userに管理者情報とisAdminフラグを確実に設定
-      req.user = {
-        ...admin.toObject(),
-        isAdmin: true,
-        _id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role
-      } as unknown as IUser & { isAdmin: boolean; role: string };
-      next();
-      return;
-    } else if (admin && !admin.isActive) {
-      log.warn('❌ INACTIVE ADMIN TRIED TO ACCESS', {
-        adminId: admin._id.toString(),
-        email: admin.email,
-        path: req.path
-      });
+    // 管理者パスの場合は管理者として検索
+    if (isAdminPath) {
+      const admin = await AdminModel.findById(decoded.userId);
+      if (admin && admin.isActive) {
+        // 管理者として認証成功
+        log.info('✅ ADMIN AUTHENTICATED', {
+          adminId: admin._id.toString(),
+          email: admin.email,
+          role: admin.role,
+          path: req.path
+        });
+        req.admin = admin;
+        // 管理者パスでは req.user は設定しない
+        next();
+        return;
+      } else if (admin && !admin.isActive) {
+        log.warn('❌ INACTIVE ADMIN TRIED TO ACCESS', {
+          adminId: admin._id.toString(),
+          email: admin.email,
+          path: req.path
+        });
+        res.status(403).json({ 
+          error: 'Admin account inactive',
+          message: '管理者アカウントが無効です'
+        });
+        return;
+      } else {
+        log.error('❌ ADMIN NOT FOUND', {
+          userId: decoded.userId,
+          path: req.path
+        });
+        res.status(401).json({ 
+          error: 'Admin not found',
+          message: '管理者が見つかりません'
+        });
+        return;
+      }
     }
     
-    // 管理者で見つからない場合は一般ユーザーとして検索
+    // ユーザーパスの場合は一般ユーザーとして検索
     const user = await UserModel.findById(decoded.userId);
     if (user) {
       // アカウント状態チェック（停止・削除ユーザーのアクセス拒否）
