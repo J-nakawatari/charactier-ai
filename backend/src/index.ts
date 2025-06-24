@@ -1797,6 +1797,15 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
       },
       unlockedGalleryImages: characterAffinity?.unlockedRewards || []
     };
+    
+    // デバッグログ
+    log.info('Chat API response - userState:', {
+      userId: user._id,
+      tokenBalance: user.tokenBalance,
+      userStateTokenBalance: userState.tokenBalance,
+      characterId,
+      affinityLevel: userState.affinity.level
+    });
 
     res.json({
       chat: {

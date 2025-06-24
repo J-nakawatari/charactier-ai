@@ -82,6 +82,11 @@ export default function ChatPage() {
         
         const apiData = await response.json();
         
+        console.log('Chat API response:', {
+          userState: apiData.userState,
+          tokenBalance: apiData.userState?.tokenBalance,
+          character: apiData.character?.name
+        });
         
         // API レスポンスを ChatLayoutData 形式に変換
         const chatData: ChatLayoutData = {
