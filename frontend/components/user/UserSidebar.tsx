@@ -107,20 +107,38 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
   // selectedCharacterに基づく動的なチャットリンク
   const getChatHref = () => {
     const currentCharacterId = getCurrentCharacterId();
+    console.log('UserSidebar - getCurrentCharacterId:', currentCharacterId);
+    console.log('UserSidebar - user.selectedCharacter:', user?.selectedCharacter);
+    
+    // localStorageから最後に選択したキャラクターIDも確認
+    const lastCharacterId = typeof window !== 'undefined' ? localStorage.getItem('lastSelectedCharacterId') : null;
+    console.log('UserSidebar - lastSelectedCharacterId from localStorage:', lastCharacterId);
     
     if (currentCharacterId) {
       const chatUrl = `/${currentLocale}/characters/${currentCharacterId}/chat`;
+      console.log('UserSidebar - using currentCharacterId, chatUrl:', chatUrl);
+      return chatUrl;
+    }
+    
+    // localStorageから取得
+    if (lastCharacterId) {
+      const chatUrl = `/${currentLocale}/characters/${lastCharacterId}/chat`;
+      console.log('UserSidebar - using lastCharacterId from localStorage, chatUrl:', chatUrl);
       return chatUrl;
     }
     
     // キャラクター未選択の場合は一覧へ
+    console.log('UserSidebar - no character selected, redirecting to character list');
     return `/${currentLocale}/characters?from=chat`;
   };
 
+  const chatHref = getChatHref();
+  console.log('UserSidebar - computed chatHref:', chatHref);
+  
   const sidebarItems = [
     { id: 'home', href: `/${currentLocale}/dashboard`, icon: Home, label: t('home') },
     { id: 'characters', href: `/${currentLocale}/characters`, icon: Users, label: t('characters') },
-    { id: 'chat', href: getChatHref(), icon: MessageSquare, label: t('chatHistory') },
+    { id: 'chat', href: chatHref, icon: MessageSquare, label: t('chatHistory') },
     { id: 'library', href: `/${currentLocale}/library`, icon: Images, label: t('library') },
     { id: 'tokens', href: null, icon: Coins, label: t('tokens'), onClick: () => setShowPurchaseModal(true) },
     { id: 'purchase-history', href: `/${currentLocale}/purchase-history`, icon: ShoppingCart, label: t('purchaseHistory') },

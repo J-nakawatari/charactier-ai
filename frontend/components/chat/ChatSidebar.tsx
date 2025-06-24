@@ -102,10 +102,13 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
     return `/${currentLocale}/characters?from=chat`;
   };
 
+  const chatHref = getChatHref();
+  console.log('ChatSidebar - computed chatHref:', chatHref);
+  
   const sidebarItems = [
     { id: 'home', href: `/${currentLocale}/dashboard`, icon: Home, label: t('home') },
     { id: 'characters', href: `/${currentLocale}/characters`, icon: Users, label: t('characters') },
-    { id: 'chat', href: getChatHref(), icon: MessageSquare, label: t('chatHistory') },
+    { id: 'chat', href: chatHref, icon: MessageSquare, label: t('chatHistory') },
     { id: 'library', href: `/${currentLocale}/library`, icon: Images, label: t('library') },
     { id: 'tokens', href: null, icon: Coins, label: t('tokens'), onClick: () => setShowPurchaseModal(true) },
   ];
