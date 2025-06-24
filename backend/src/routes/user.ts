@@ -115,6 +115,12 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
         tokenBalance: user.tokenBalance,
         isSetupComplete: user.isSetupComplete
       },
+      tokens: {
+        balance: user.tokenBalance || 0,
+        totalPurchased: 0, // TODO: 実装が必要
+        totalUsed: totalTokensUsed,
+        recentUsage: [] // TODO: 実装が必要
+      },
       stats: {
         totalMessages: totalMessages,
         totalTokensUsed: totalTokensUsed,
@@ -126,6 +132,14 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
         } : null,
         activeChats: activeChatsCount
       },
+      affinities: [], // TODO: 実装が必要
+      notifications: [], // TODO: 実装が必要
+      badges: [], // TODO: 実装が必要
+      analytics: {
+        chatCountPerDay: [],
+        tokenUsagePerDay: [],
+        affinityProgress: []
+      }, // TODO: 実装が必要
       recentChats: recentChats.map(chat => ({
         _id: chat._id,
         characterId: (chat.characterId as any)._id || chat.characterId,
