@@ -1430,7 +1430,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
     
     // 3. キャッシュ状態確認
     const cacheKey = `character_prompt:${characterId}`;
-    const redis = getRedisClient();
+    const redis = await getRedisClient();
     let cacheStatus = { enabled: false, exists: false, data: null };
     
     if (redis) {
@@ -1501,7 +1501,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
           lastUsed: recentTokenUsage.createdAt,
           tokensUsed: recentTokenUsage.tokensUsed,
           aiModel: recentTokenUsage.aiModel,
-          cacheHit: !!recentTokenUsage.cacheHit,
+          cacheHit: !!(recentTokenUsage as any).cacheHit,
           apiCost: recentTokenUsage.apiCost
         } : null,
         prompt: promptInfo,

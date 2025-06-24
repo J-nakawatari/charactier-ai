@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/utils/auth';
 import { 
@@ -70,7 +70,7 @@ export default function ChatDiagnosticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDiagnostics = async () => {
+  const fetchDiagnostics = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -90,11 +90,11 @@ export default function ChatDiagnosticsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [characterId]);
 
   useEffect(() => {
     fetchDiagnostics();
-  }, [characterId]);
+  }, [characterId, fetchDiagnostics]);
 
   if (loading) {
     return (
