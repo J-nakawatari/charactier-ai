@@ -34,7 +34,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
     try {
       isRefreshingRef.current = true;
       // APIを再度有効化
-      const response = await fetch('/api/v1/user/profile');
+      const response = await fetch('/api/user/profile');
       if (response.ok) {
         const data = await response.json();
         const newTokens = data.tokenBalance || 0;

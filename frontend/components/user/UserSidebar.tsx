@@ -61,7 +61,7 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
     const fetchUserData = async () => {
       try {
         // APIを再度有効化
-        const response = await fetch('/api/v1/user/dashboard');
+        const response = await fetch('/api/user/dashboard');
         if (response.ok) {
           const data = await response.json();
           // localStorageにも保存

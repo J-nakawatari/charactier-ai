@@ -46,7 +46,7 @@ export default function ResendVerificationPage({
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/auth/resend-verification`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

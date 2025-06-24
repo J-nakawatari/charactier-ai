@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     
     console.log('🔍 Admin notifications proxy - params:', Object.fromEntries(searchParams));
 
-    const response = await fetch(`${backendUrl}/api/v1/notifications/admin?${searchParams}`, {
+    const response = await fetch(`${backendUrl}/api/notifications/admin?${searchParams}`, {
       method: 'GET',
       headers: {
         'Authorization': authHeader,
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
 
-    const response = await fetch(`${backendUrl}/api/v1/notifications/admin`, {
+    const response = await fetch(`${backendUrl}/api/notifications/admin`, {
       method: 'POST',
       headers: {
         'Authorization': authHeader,

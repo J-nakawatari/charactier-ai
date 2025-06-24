@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('Authorization');
     
     // バックエンドAPIに転送
-    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/v1/purchase/create-checkout-session`;
+    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/purchase/create-checkout-session`;
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };

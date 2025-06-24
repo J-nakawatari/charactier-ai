@@ -77,7 +77,7 @@ export default function CharacterLibraryPage() {
       }
 
       // キャラクター一覧を取得
-      const charactersResponse = await fetch('/api/v1/characters', {
+      const charactersResponse = await fetch('/api/characters', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -98,7 +98,7 @@ export default function CharacterLibraryPage() {
         
         try {
           // 実際のユーザー親密度データを取得
-          const affinityResponse = await fetch('/api/v1/user/profile', {
+          const affinityResponse = await fetch('/api/user/profile', {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'

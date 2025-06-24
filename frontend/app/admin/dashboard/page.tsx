@@ -32,7 +32,7 @@ export default function AdminDashboard() {
         const [overviewRes, usersRes, charactersRes, errorStatsRes, dashboardStatsRes, notificationsRes] = await Promise.all([
           adminAuthenticatedFetch('/api/admin/token-analytics/overview'),
           adminAuthenticatedFetch('/api/admin/users'),
-          adminAuthenticatedFetch('/api/v1/characters'), // 公開キャラクター一覧API
+          adminAuthenticatedFetch('/api/characters'), // 公開キャラクター一覧API
           adminAuthenticatedFetch('/api/admin/error-stats?range=24h'), // APIエラー統計
           adminAuthenticatedFetch('/api/admin/dashboard/stats'), // 新しい統合ダッシュボード統計API
           adminAuthenticatedFetch('/api/notifications?limit=5') // 最新の通知5件
