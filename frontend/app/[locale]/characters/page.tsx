@@ -105,7 +105,7 @@ function CharactersPageContent({
       });
 
 
-      const response = await fetch(`/api/characters?${queryParams}`, {
+      const response = await fetch(`/api/v1/characters?${queryParams}`, {
         headers: {
           ...getAuthHeaders(),
           'Cache-Control': 'no-store'

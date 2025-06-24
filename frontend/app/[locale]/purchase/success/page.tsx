@@ -78,7 +78,7 @@ function PurchaseSuccessContent() {
                 
                 if (characterId) {
                   try {
-                    const characterResponse = await fetch(`/api/characters/${characterId}`, {
+                    const characterResponse = await fetch(`/api/v1/characters/${characterId}`, {
                       headers: getAuthHeaders()
                     });
                     
