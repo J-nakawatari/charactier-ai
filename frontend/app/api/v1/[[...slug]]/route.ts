@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 // バックエンドのベースURL
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+const API_VERSION = process.env.API_VERSION || 'v1';
 const API_BASE = `/api/${API_VERSION}`;
 
 async function handler(
