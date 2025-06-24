@@ -142,10 +142,15 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
       }, // TODO: 実装が必要
       recentChats: recentChats.map(chat => ({
         _id: chat._id,
-        characterId: (chat.characterId as any)._id || chat.characterId,
-        characterName: (chat.characterId as any).name,
-        characterImage: (chat.characterId as any).imageChatAvatar,
-        lastActivity: chat.lastActivityAt,
+        character: {
+          _id: (chat.characterId as any)._id || chat.characterId,
+          name: (chat.characterId as any).name || { ja: 'Unknown', en: 'Unknown' },
+          imageCharacterSelect: (chat.characterId as any).imageChatAvatar || '/images/default-avatar.png'
+        },
+        lastMessage: chat.messages && chat.messages.length > 0 
+          ? chat.messages[chat.messages.length - 1].content 
+          : 'チャットを開始しましょう',
+        lastMessageAt: chat.lastActivityAt,
         messageCount: chat.messages.length
       })),
       purchasedCharacters: purchasedCharacters.map(char => ({
