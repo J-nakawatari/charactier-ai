@@ -267,7 +267,7 @@ const testScenarios: TestScenario[] = [
   // 1. Health check endpoint (baseline)
   {
     name: 'Health Check - Light Load',
-    endpoint: '/api/health',
+    endpoint: `/api/${process.env.API_VERSION || 'v1'}/health`,
     method: 'GET',
     concurrentUsers: 10,
     requestsPerUser: 100
@@ -276,7 +276,7 @@ const testScenarios: TestScenario[] = [
   // 2. Health check endpoint (heavy load)
   {
     name: 'Health Check - Heavy Load',
-    endpoint: '/api/health',
+    endpoint: `/api/${process.env.API_VERSION || 'v1'}/health`,
     method: 'GET',
     concurrentUsers: 100,
     requestsPerUser: 50
@@ -285,7 +285,7 @@ const testScenarios: TestScenario[] = [
   // 3. Authentication endpoint (normal load)
   {
     name: 'Login Endpoint - Normal Load',
-    endpoint: '/api/auth/login',
+    endpoint: `/api/auth/login`,
     method: 'POST',
     body: {
       email: 'loadtest@example.com',
@@ -299,7 +299,7 @@ const testScenarios: TestScenario[] = [
   // 4. Character list (authenticated users)
   {
     name: 'Character List - Authenticated Load',
-    endpoint: '/api/characters',
+    endpoint: `/api/${process.env.API_VERSION || 'v1'}/characters`,
     method: 'GET',
     headers: {
       'Authorization': 'Bearer mock-token-for-load-test'
@@ -311,7 +311,7 @@ const testScenarios: TestScenario[] = [
   // 5. Chat endpoint (simulated conversation)
   {
     name: 'Chat API - Conversation Simulation',
-    endpoint: '/api/chat/send',
+    endpoint: `/api/${process.env.API_VERSION || 'v1'}/chat/send`,
     method: 'POST',
     body: {
       characterId: 'mock-character-id',
@@ -337,7 +337,7 @@ const testScenarios: TestScenario[] = [
   // 7. API under rate limiting
   {
     name: 'Rate Limit Test',
-    endpoint: '/api/auth/register',
+    endpoint: `/api/auth/register`,
     method: 'POST',
     body: {
       name: 'Load Test User',

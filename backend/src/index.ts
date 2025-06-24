@@ -873,7 +873,7 @@ routeRegistry.mount(`${API_PREFIX}/notifications`, notificationRoutes);
 routeRegistry.mount(`${API_PREFIX}/system-settings`, systemSettingsRoutes);
 
 // 認証ルート
-app.use('/api/auth', authRoutes);
+app.use(`/api/auth`, authRoutes);
 
 // リアルタイム通知SSEエンドポイント
 routeRegistry.define('GET', `${API_PREFIX}/notifications/stream`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
@@ -975,7 +975,7 @@ routeRegistry.define('GET', `${API_PREFIX}/notifications/stream`, authenticateTo
 // routeRegistry.mount('/api/user/dashboard', dashboardRoutes);
 
 // ユーザーダッシュボード情報取得
-routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
@@ -1216,7 +1216,7 @@ routeRegistry.define('GET', '/api/user/dashboard', authenticateToken, async (req
 });
 
 // ユーザープロファイルエンドポイント
-routeRegistry.define('GET', '/api/user/profile', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/user/profile`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Debug logging
     log.debug('GET /api/user/profile - req.user:', {
@@ -1300,7 +1300,7 @@ routeRegistry.define('GET', '/api/user/profile', authenticateToken, async (req: 
 });
 
 // ユーザープロファイル更新エンドポイント
-routeRegistry.define('PUT', '/api/user/profile', authenticateToken, validate({ body: authSchemas.updateProfile }), async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('PUT', `${API_PREFIX}/user/profile`, authenticateToken, validate({ body: authSchemas.updateProfile }), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
@@ -1342,7 +1342,7 @@ routeRegistry.define('PUT', '/api/user/profile', authenticateToken, validate({ b
 });
 
 // 現在のユーザー情報確認エンドポイント（デバッグ用）
-routeRegistry.define('GET', '/api/debug/current-user', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/debug/current-user`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     res.json({
       user: req.user,
@@ -1359,7 +1359,7 @@ routeRegistry.define('GET', '/api/debug/current-user', authenticateToken, async 
 });
 
 // アナリティクスデバッグ用エンドポイント
-routeRegistry.define('GET', '/api/debug/analytics', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/debug/analytics`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
@@ -1407,7 +1407,7 @@ routeRegistry.define('GET', '/api/debug/analytics', authenticateToken, async (re
 
 
 // パスワード変更API
-routeRegistry.define('PUT', '/api/user/change-password', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -1479,7 +1479,7 @@ routeRegistry.define('PUT', '/api/user/change-password', authenticateToken, asyn
 });
 
 // アカウント削除API
-routeRegistry.define('DELETE', '/api/user/delete-account', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
     if (!userId) {
@@ -1536,7 +1536,7 @@ routeRegistry.define('DELETE', '/api/user/delete-account', authenticateToken, as
 });
 
 // キャラクター選択API（チャット画面で使用）
-routeRegistry.define('POST', '/api/user/select-character', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+routeRegistry.define('POST', `${API_PREFIX}/user/select-character`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { characterId } = req.body;
     const userId = req.user?._id;
@@ -3148,7 +3148,7 @@ app.post(`${API_PREFIX}/user/add-tokens`, authenticateToken, async (req: Request
 });
 
 // 管理者用：ユーザー一覧取得
-routeRegistry.define('GET', '/api/admin/users', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/admin/users`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   
   // Debug logging for admin check
   log.info('🔍 ADMIN CHECK DEBUG', {
@@ -3357,7 +3357,7 @@ app.post('/admin/users/:userId/reset-tokens', authenticateToken, async (req: Req
 });
 
 // 管理者向けユーザー停止/復活（より具体的なルートを先に定義）
-routeRegistry.define('PUT', '/api/admin/users/:id/status', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('PUT', `${API_PREFIX}/admin/users/:id/status`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user || !(req.user as any).isAdmin) {
       res.status(403).json({ error: 'Admin access required' });
@@ -3448,7 +3448,7 @@ routeRegistry.define('PUT', '/api/admin/users/:id/status', authenticateToken, as
 });
 
 // 管理者向けユーザー削除（論理削除）
-routeRegistry.define('DELETE', '/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/admin/users/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user || !(req.user as any).isAdmin) {
       res.status(403).json({ error: 'Admin access required' });
@@ -3515,7 +3515,7 @@ routeRegistry.define('DELETE', '/api/admin/users/:id', authenticateToken, async 
 });
 
 // 管理者向けユーザー詳細取得（一般的なルートを最後に定義）
-routeRegistry.define('GET', '/api/admin/users/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/admin/users/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user || !(req.user as any).isAdmin) {
       res.status(403).json({ error: 'Admin access required' });
@@ -5873,7 +5873,7 @@ app.post(`${API_PREFIX}/admin/cache/cleanup`, authenticateToken, async (req: Aut
 /**
  * 🎯 特定キャラクターのキャッシュ無効化
  */
-routeRegistry.define('DELETE', '/api/admin/cache/character/:characterId', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/admin/cache/character/:characterId`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Check if user has write permission (only super_admin can delete cache)
     if (!hasWritePermission(req)) {

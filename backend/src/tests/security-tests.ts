@@ -123,10 +123,10 @@ async function testAuthBypass() {
   
   // Test accessing protected endpoints without token
   const protectedEndpoints = [
-    '/api/user/profile',
-    '/api/admin/users',
-    '/api/characters',
-    '/api/chat/send'
+    `/api/${process.env.API_VERSION || 'v1'}/user/profile`,
+    `/api/${process.env.API_VERSION || 'v1'}/admin/users`,
+    `/api/${process.env.API_VERSION || 'v1'}/characters`,
+    `/api/${process.env.API_VERSION || 'v1'}/chat/send`
   ];
 
   for (const endpoint of protectedEndpoints) {
@@ -175,7 +175,7 @@ async function testAuthBypass() {
 async function testRateLimiting() {
   console.log('\n🔍 Testing Rate Limiting...');
   
-  const endpoint = '/api/auth/login';
+  const endpoint = `/api/auth/login`;
   const requests = [];
   
   // Send 150 requests rapidly (rate limit should be 100/min)
