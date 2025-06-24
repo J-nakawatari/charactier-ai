@@ -33,16 +33,24 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
     
     try {
       isRefreshingRef.current = true;
-      // TODO: バックエンドの/api/user/profileが正しくデプロイされたら、API呼び出しを復活させる
-      // 一時的にlocalStorageから取得
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const userData = JSON.parse(userStr);
-        const newTokens = userData.tokenBalance || 0;
+      // APIを再度有効化
+      const response = await fetch('/api/user/profile');
+      if (response.ok) {
+        const data = await response.json();
+        const newTokens = data.tokenBalance || 0;
         setCurrentTokens(newTokens);
         onTokenUpdate?.(newTokens);
         errorCountRef.current = 0; // 成功したらエラーカウントをリセット
         lastErrorTimeRef.current = 0; // エラー時刻もリセット
+      } else {
+        // エラー時はlocalStorageから取得
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const userData = JSON.parse(userStr);
+          const newTokens = userData.tokenBalance || 0;
+          setCurrentTokens(newTokens);
+          onTokenUpdate?.(newTokens);
+        }
       }
     } catch (error) {
       console.error('Token balance refresh failed:', error);

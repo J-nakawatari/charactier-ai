@@ -60,17 +60,21 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // 一時的にlocalStorageのデータのみを使用
-        // TODO: バックエンドの/api/user/dashboardまたは/api/user/profileが
-        // 正しくデプロイされたら、API呼び出しを復活させる
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-          const userData = JSON.parse(userStr);
-          setUser(userData);
-          setLoading(false);
-          return;
+        // APIを再度有効化
+        const response = await fetch('/api/user/dashboard');
+        if (response.ok) {
+          const data = await response.json();
+          // localStorageにも保存
+          localStorage.setItem('user', JSON.stringify(data.user));
+          setUser(data.user);
+        } else {
+          // エラー時はlocalStorageから取得
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            const userData = JSON.parse(userStr);
+            setUser(userData);
+          }
         }
-        
         setLoading(false);
       } catch (error) {
         console.error('Error fetching user data:', error);

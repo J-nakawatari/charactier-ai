@@ -60,17 +60,33 @@ function CharactersPageContent({
   // ユーザー情報取得関数
   const fetchUserData = useCallback(async () => {
     try {
-      // TODO: バックエンドの/api/user/profileが正しくデプロイされたら、API呼び出しを復活させる
-      // 一時的にlocalStorageから取得
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const userData = JSON.parse(userStr);
-        console.log('👤 取得したユーザーデータ (localStorage):', {
-          purchasedCharacters: userData.purchasedCharacters,
-          affinities: userData.affinities?.length || 0
+      // APIを再度有効化
+      const response = await fetch('/api/user/profile', {
+        headers: getAuthHeaders(),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('👤 取得したユーザーデータ (API):', {
+          purchasedCharacters: data.purchasedCharacters,
+          affinities: data.affinities?.length || 0
         });
-        setUserAffinities(userData.affinities || []);
-        setUserPurchasedCharacters(userData.purchasedCharacters?.map((id: string) => id.toString()) || []);
+        setUserAffinities(data.affinities || []);
+        setUserPurchasedCharacters(data.purchasedCharacters || []);
+        // localStorageも更新
+        localStorage.setItem('user', JSON.stringify(data.user));
+      } else {
+        // エラー時はlocalStorageから取得
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const userData = JSON.parse(userStr);
+          console.log('👤 取得したユーザーデータ (localStorage):', {
+            purchasedCharacters: userData.purchasedCharacters,
+            affinities: userData.affinities?.length || 0
+          });
+          setUserAffinities(userData.affinities || []);
+          setUserPurchasedCharacters(userData.purchasedCharacters?.map((id: string) => id.toString()) || []);
+        }
       }
     } catch (err) {
       console.error('User info fetch error:', err);

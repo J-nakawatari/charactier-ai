@@ -45,16 +45,19 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // TODO: バックエンドの/api/user/profileが正しくデプロイされたら、API呼び出しを復活させる
-        // 一時的にlocalStorageから取得
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-          const userData = JSON.parse(userStr);
-          setUser(userData);
-          setLoading(false);
-          return;
+        // APIを再度有効化
+        const response = await fetch('/api/user/profile');
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        } else {
+          // エラー時はlocalStorageから取得
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            const userData = JSON.parse(userStr);
+            setUser(userData);
+          }
         }
-        
         setLoading(false);
       } catch (error) {
         console.error('Error fetching user data:', error);

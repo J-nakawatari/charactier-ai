@@ -11,7 +11,7 @@ export async function GET(
     
     
     // バックエンドAPIに転送
-    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/chats/${characterId}?locale=${locale}`;
+    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/v1/chats/${characterId}?locale=${locale}`;
     
     // 認証ヘッダーを転送（必要に応じて）
     const headers: HeadersInit = {
@@ -80,7 +80,7 @@ export async function POST(
     
     
     // バックエンドAPIに転送
-    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/chats/${characterId}/messages`;
+    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/v1/chats/${characterId}/messages`;
     
     // 認証ヘッダーを転送
     const headers: HeadersInit = {

@@ -197,7 +197,7 @@ export default function RegisterPage() {
       console.log('🔐 新規登録実行中...');
       
       // バックエンドの登録APIを呼び出し（メール認証付き）
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

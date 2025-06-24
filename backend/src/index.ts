@@ -1524,6 +1524,66 @@ routeRegistry.define('DELETE', '/api/user/delete-account', authenticateToken, as
   }
 });
 
+// キャラクター選択API（チャット画面で使用）
+routeRegistry.define('POST', '/api/user/select-character', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { characterId } = req.body;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    if (!characterId) {
+      res.status(400).json({
+        error: 'Character ID required',
+        message: 'キャラクターIDが必要です'
+      });
+      return;
+    }
+
+    // キャラクターの存在確認
+    const character = await CharacterModel.findById(characterId);
+    if (!character) {
+      res.status(404).json({
+        error: 'Character not found',
+        message: 'キャラクターが見つかりません'
+      });
+      return;
+    }
+
+    // ユーザーの選択キャラクターを更新
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      { selectedCharacter: characterId },
+      { new: true, select: '-password' }
+    );
+
+    if (!updatedUser) {
+      res.status(404).json({
+        error: 'User not found',
+        message: 'ユーザーが見つかりません'
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      message: 'キャラクターを選択しました',
+      selectedCharacter: characterId,
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Select character error:', error);
+    res.status(500).json({
+      error: 'Character selection failed',
+      message: 'キャラクター選択に失敗しました'
+    });
+  }
+});
+
 // 初回セットアップ完了
 app.post('/api/user/setup-complete', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {

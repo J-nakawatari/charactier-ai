@@ -7,7 +7,8 @@ export async function GET(request: NextRequest) {
     console.log('📍 Backend URL:', process.env.BACKEND_URL || 'http://localhost:5000');
     
     // 統一されたクライアントを使用してバックエンドを呼び出し
-    const response = await backendClient.proxyRequest(request, '/api/user/profile');
+    // バックエンドはv1を使用している
+    const response = await backendClient.proxyRequest(request, '/api/v1/user/profile');
 
     if (!response.ok) {
       const errorData = await response.text();

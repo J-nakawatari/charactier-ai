@@ -26,7 +26,7 @@ function VerifyEmailContent({ locale }: { locale: string }) {
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/verify-email?token=${token}`);
+        const response = await fetch(`${API_BASE_URL}/api/v1/auth/verify-email?token=${token}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -42,7 +42,7 @@ function VerifyEmailContent({ locale }: { locale: string }) {
             
             // ユーザー情報を取得
             try {
-              const userResponse = await fetch(`${API_BASE_URL}/api/user/profile`, {
+              const userResponse = await fetch(`${API_BASE_URL}/api/v1/user/profile`, {
                 headers: {
                   'Authorization': `Bearer ${data.tokens.accessToken}`
                 }

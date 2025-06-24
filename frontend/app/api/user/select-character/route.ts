@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
     
     // バックエンドAPIに転送（OpenAPI仕様に従う）
-    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/user/select-character`;
+    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/v1/user/select-character`;
     const response = await fetch(backendUrl, {
       method: 'POST',
       headers,
