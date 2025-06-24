@@ -25,8 +25,18 @@ export const authenticateToken = async (
     if (isAdminPath) {
       token = req.cookies?.adminAccessToken;
     } else {
-      // 通常パスでも、まず管理者トークンを確認（管理者は全APIにアクセス可能）
-      token = req.cookies?.adminAccessToken || req.cookies?.userAccessToken;
+      // ユーザー専用エンドポイントはユーザートークンのみを使用
+      // チャットやユーザープロファイルなどのエンドポイントでは管理者トークンを使わない
+      const userSpecificPaths = ['/chats/', '/user/', '/characters/'];
+      const isUserSpecificPath = userSpecificPaths.some(path => req.path.includes(path));
+      
+      if (isUserSpecificPath) {
+        // ユーザー専用パスではユーザートークンのみ使用
+        token = req.cookies?.userAccessToken;
+      } else {
+        // その他のパスでは管理者トークンも許可
+        token = req.cookies?.adminAccessToken || req.cookies?.userAccessToken;
+      }
     }
     
     // 2. Cookieになければ、Authorization ヘッダーまたは x-auth-token ヘッダーから JWT を取得
