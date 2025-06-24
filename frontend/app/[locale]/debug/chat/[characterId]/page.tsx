@@ -125,9 +125,9 @@ export default function ChatDiagnosticsPage() {
     status ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />;
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">チャットシステム診断</h1>
+        <h1 className="text-2xl font-bold text-gray-900">チャットシステム診断</h1>
         <button 
           onClick={fetchDiagnostics}
           className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
@@ -139,55 +139,55 @@ export default function ChatDiagnosticsPage() {
 
       {/* システムステータス */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
           <Cpu className="w-5 h-5" />
           システムステータス
         </h2>
         <div className="grid grid-cols-3 gap-4">
           <div className="flex items-center gap-2">
             <StatusIcon status={diagnostics.system.mongoConnected} />
-            <span>MongoDB接続</span>
+            <span className="text-gray-700">MongoDB接続</span>
           </div>
           <div className="flex items-center gap-2">
             <StatusIcon status={diagnostics.system.redisConnected} />
-            <span>Redis接続</span>
+            <span className="text-gray-700">Redis接続</span>
           </div>
           <div className="flex items-center gap-2">
             <Info className="w-5 h-5 text-blue-500" />
-            <span>使用モデル: {diagnostics.system.currentModel}</span>
+            <span className="text-gray-700">使用モデル: {diagnostics.system.currentModel}</span>
           </div>
         </div>
       </div>
 
       {/* キャラクター情報 */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">キャラクター情報</h2>
+        <h2 className="text-lg font-semibold mb-4 text-gray-900">キャラクター情報</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-600">名前</p>
-            <p className="font-medium">{diagnostics.character.name.ja} / {diagnostics.character.name.en}</p>
+            <p className="font-medium text-gray-900">{diagnostics.character.name.ja} / {diagnostics.character.name.en}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">AIモデル</p>
-            <p className="font-medium">{diagnostics.character.aiModel}</p>
+            <p className="font-medium text-gray-900">{diagnostics.character.aiModel}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">ステータス</p>
-            <p className="font-medium flex items-center gap-2">
+            <p className="font-medium flex items-center gap-2 text-gray-900">
               <StatusIcon status={diagnostics.character.isActive} />
               {diagnostics.character.isActive ? 'アクティブ' : '非アクティブ'}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-600">最終更新</p>
-            <p className="font-medium">{new Date(diagnostics.character.updatedAt).toLocaleString('ja-JP')}</p>
+            <p className="font-medium text-gray-900">{new Date(diagnostics.character.updatedAt).toLocaleString('ja-JP')}</p>
           </div>
         </div>
       </div>
 
       {/* チャット履歴 */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
           <MessageSquare className="w-5 h-5" />
           チャット履歴
         </h2>
@@ -242,7 +242,7 @@ export default function ChatDiagnosticsPage() {
 
       {/* キャッシュ状態 */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
           <HardDrive className="w-5 h-5" />
           プロンプトキャッシュ
         </h2>
@@ -265,7 +265,7 @@ export default function ChatDiagnosticsPage() {
 
       {/* プロンプト情報 */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
           <Database className="w-5 h-5" />
           プロンプト情報
         </h2>
@@ -310,30 +310,30 @@ export default function ChatDiagnosticsPage() {
       {/* 最新のトークン使用状況 */}
       {diagnostics.tokenUsage && (
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold mb-4">最新のトークン使用状況</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900">最新のトークン使用状況</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-600">最終使用日時</p>
-              <p className="font-medium">{new Date(diagnostics.tokenUsage.lastUsed).toLocaleString('ja-JP')}</p>
+              <p className="font-medium text-gray-900">{new Date(diagnostics.tokenUsage.lastUsed).toLocaleString('ja-JP')}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">使用トークン数</p>
-              <p className="font-medium">{diagnostics.tokenUsage.tokensUsed}</p>
+              <p className="font-medium text-gray-900">{diagnostics.tokenUsage.tokensUsed}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">使用モデル</p>
-              <p className="font-medium">{diagnostics.tokenUsage.aiModel}</p>
+              <p className="font-medium text-gray-900">{diagnostics.tokenUsage.aiModel}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">キャッシュヒット</p>
-              <p className="font-medium flex items-center gap-2">
+              <p className="font-medium flex items-center gap-2 text-gray-900">
                 <StatusIcon status={diagnostics.tokenUsage.cacheHit} />
                 {diagnostics.tokenUsage.cacheHit ? 'あり' : 'なし'}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-600">API費用</p>
-              <p className="font-medium">${diagnostics.tokenUsage.apiCost.toFixed(4)}</p>
+              <p className="font-medium text-gray-900">${diagnostics.tokenUsage.apiCost.toFixed(4)}</p>
             </div>
           </div>
         </div>
