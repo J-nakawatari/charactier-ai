@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-最終更新: 2025-06-23
+最終更新: 2025-06-24
 
 ## プロジェクト概要
 
@@ -34,10 +34,18 @@ charactier-ai/
 ```
 
 ### APIアーキテクチャ
-- バックエンドAPI: `/api/v1/` で始まる
-- フロントエンドプロキシ: `/api/` 経由（v1なし）
+- バックエンドAPI: `/api/v1/` で始まる（移行中）
+- フロントエンドプロキシ: `/api/v1/` 経由
 - RouteRegistry: 重複ルート防止システム
 - OpenAPI仕様: `backend/docs/openapi.yaml` に全API定義
+
+#### API v1移行の経緯（2025-06-24）
+- **問題**: フロントエンド/バックエンド間でAPIパスの不整合により404エラーが多発
+- **原因**: `/api/` と `/api/v1/` の混在、Next.jsプロキシルートの不完全な実装
+- **解決策**: 全システムを `/api/v1/` に統一
+  - バックエンド: 全ルートを `/api/v1/` 配下に集約
+  - フロントエンド: catch-all proxyで `/api/v1/` に統一
+  - Nginx: `/api/v1/` → `http://localhost:5000/api/v1/` にプロキシ
 
 ### 重要なアーキテクチャ決定
 1. **99%利益率システム**: `backend/src/config/tokenConfig.ts` で一元管理

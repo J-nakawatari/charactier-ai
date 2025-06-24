@@ -53,7 +53,7 @@ export default function NotificationStatsPage() {
     try {
       setIsLoading(true);
       
-      const response = await adminFetch(`/api/notifications/admin/${notificationId}/stats`);
+      const response = await adminFetch(`/api/v1/notifications/admin/${notificationId}/stats`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

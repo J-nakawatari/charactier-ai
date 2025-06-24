@@ -60,7 +60,7 @@ export default function TokenOptimizationInsights({ timeRange, className = '' }:
       setLoading(true);
       
       // TODO: 実際のAPIエンドポイント実装
-      // const response = await fetch(`/api/analytics/token-optimization?range=${timeRange}`);
+      // const response = await fetch(`/api/v1/analytics/token-optimization?range=${timeRange}`);
       // const data = await response.json();
       
       // モックデータ

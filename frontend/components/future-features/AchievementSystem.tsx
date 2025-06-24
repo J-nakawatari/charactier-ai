@@ -74,7 +74,7 @@ export default function AchievementSystem({ userId, className = '' }: Achievemen
       setLoading(true);
       
       // TODO: 実際のAPIエンドポイント実装
-      // const response = await fetch(`/api/user/achievements`);
+      // const response = await fetch(`/api/v1/user/achievements`);
       // const data = await response.json();
       
       // モックデータ

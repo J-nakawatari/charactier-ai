@@ -54,9 +54,9 @@ export default function SecurityPage() {
       setLoading(true);
 
       const [statsRes, usersRes, violationsRes] = await Promise.all([
-        adminFetch('/api/admin/security/violation-stats'),
-        adminFetch('/api/admin/security/sanctioned-users'),
-        adminFetch('/api/admin/security/recent-violations?limit=10')
+        adminFetch('/api/v1/admin/security/violation-stats'),
+        adminFetch('/api/v1/admin/security/sanctioned-users'),
+        adminFetch('/api/v1/admin/security/recent-violations?limit=10')
       ]);
 
       if (statsRes.ok) {
@@ -87,7 +87,7 @@ export default function SecurityPage() {
     }
 
     try {
-      const response = await adminFetch(`/api/admin/security/lift-sanction/${userId}`, {
+      const response = await adminFetch(`/api/v1/admin/security/lift-sanction/${userId}`, {
         method: 'POST'
       });
 

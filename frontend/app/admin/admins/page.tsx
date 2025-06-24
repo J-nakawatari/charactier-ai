@@ -28,7 +28,7 @@ export default function AdminListPage() {
     try {
       setLoading(true);
       
-      const response = await adminFetch('/api/admin/admins');
+      const response = await adminFetch('/api/v1/admin/admins');
 
       if (!response.ok) {
         throw new Error(`API Error: ${response.status}`);
@@ -93,7 +93,7 @@ export default function AdminListPage() {
     }
 
     try {
-      const response = await adminFetch(`/api/admin/admins/${adminId}`, {
+      const response = await adminFetch(`/api/v1/admin/admins/${adminId}`, {
         method: 'DELETE'
       });
 

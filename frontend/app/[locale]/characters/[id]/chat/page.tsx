@@ -65,7 +65,7 @@ export default function ChatPage() {
 
       try {
         // 実際のAPI呼び出し
-        const response = await fetch(`/api/chats/${characterId}?locale=${locale}`, {
+        const response = await fetch(`/api/v1/chats/${characterId}?locale=${locale}`, {
           method: 'GET',
           headers: getAuthHeaders()
         });
@@ -238,7 +238,7 @@ export default function ChatPage() {
       setMessages(prev => [...prev, tempUserMessage]);
 
       // API呼び出し
-      const response = await fetch(`/api/chats/${characterId}/messages`, {
+      const response = await fetch(`/api/v1/chats/${characterId}/messages`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({

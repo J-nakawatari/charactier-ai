@@ -71,7 +71,7 @@ export default function UserTable({ users, onUserUpdate }: UserTableProps) {
     }
     
     try {
-      const response = await adminFetch(`/api/admin/users/${user.id}/status`, {
+      const response = await adminFetch(`/api/v1/admin/users/${user.id}/status`, {
         method: 'PUT',
         body: JSON.stringify({
           status: newStatus,

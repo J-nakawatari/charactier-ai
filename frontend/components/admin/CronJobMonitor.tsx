@@ -54,7 +54,7 @@ export default function CronJobMonitor() {
     try {
       setLoading(true);
       
-      const response = await adminFetch('/api/admin/cron-status', {
+      const response = await adminFetch('/api/v1/admin/cron-status', {
         method: 'GET'
       });
 
@@ -78,7 +78,7 @@ export default function CronJobMonitor() {
     try {
       setLogLoading(true);
       
-      const response = await adminFetch(`/api/admin/logs?lines=50&filter=${logFilter}`, {
+      const response = await adminFetch(`/api/v1/admin/logs?lines=50&filter=${logFilter}`, {
         method: 'GET'
       });
 

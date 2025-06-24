@@ -25,7 +25,7 @@ export function PriceDisplay({ priceJpy, locale, className = '' }: PriceDisplayP
   
   const fetchExchangeRate = async () => {
     try {
-      const response = await fetch('/api/exchange-rate');
+      const response = await fetch('/api/v1/exchange-rate');
       const data = await response.json();
       
       if (data.success) {

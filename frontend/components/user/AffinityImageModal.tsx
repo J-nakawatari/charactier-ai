@@ -59,7 +59,7 @@ export default function AffinityImageModal({
       }
 
       console.log('🔍 Fetching affinity images for character:', characterId);
-      const response = await fetch(`/api/characters/${characterId}/affinity-images`, {
+      const response = await fetch(`/api/v1/characters/${characterId}/affinity-images`, {
         headers
       });
 

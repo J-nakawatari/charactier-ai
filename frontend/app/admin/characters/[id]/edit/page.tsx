@@ -102,7 +102,7 @@ export default function CharacterEditPage() {
         setIsLoading(true);
         
         // モデル情報を並行して取得
-        const modelPromise = adminFetch('/api/admin/models');
+        const modelPromise = adminFetch('/api/v1/admin/models');
         
         // 基本キャラクター情報を取得
         const characterResponse = await adminFetch(`${API_BASE_URL}/api/characters/${characterId}`);
@@ -234,7 +234,7 @@ export default function CharacterEditPage() {
     try {
       console.log('🔍 価格取得リクエスト:', formData.stripeProductId);
       
-      const response = await adminFetch(`/api/admin/stripe/product-price/${formData.stripeProductId}`);
+      const response = await adminFetch(`/api/v1/admin/stripe/product-price/${formData.stripeProductId}`);
       
       console.log('📡 価格取得レスポンス状態:', response.status);
       

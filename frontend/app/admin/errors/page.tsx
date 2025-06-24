@@ -45,8 +45,8 @@ export default function ErrorStatsPage() {
       
       // エラー統計を取得
       const [statsRes, errorsRes] = await Promise.all([
-        adminAuthenticatedFetch(`/api/admin/error-stats?range=${timeRange}`),
-        adminAuthenticatedFetch(`/api/admin/errors?range=${timeRange}&limit=50`)
+        adminAuthenticatedFetch(`/api/v1/admin/error-stats?range=${timeRange}`),
+        adminAuthenticatedFetch(`/api/v1/admin/errors?range=${timeRange}&limit=50`)
       ]);
 
       if (!statsRes.ok) throw new Error('エラー統計の取得に失敗しました');

@@ -78,7 +78,7 @@ export default function NewNotificationPage() {
         throw new Error('メッセージは日本語・英語両方とも入力してください');
       }
 
-      const response = await adminFetch('/api/notifications/admin', {
+      const response = await adminFetch('/api/v1/notifications/admin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

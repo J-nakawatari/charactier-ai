@@ -112,10 +112,10 @@ export default function CacheManagementPage() {
       }
 
       const [metricsRes, invalidationRes] = await Promise.all([
-        fetch(`/api/admin/cache/performance?timeframe=${timeframe}`, {
+        fetch(`/api/v1/admin/cache/performance?timeframe=${timeframe}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch(`/api/admin/cache/invalidation-stats?timeframe=${timeframe}`, {
+        fetch(`/api/v1/admin/cache/invalidation-stats?timeframe=${timeframe}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -153,7 +153,7 @@ export default function CacheManagementPage() {
         throw new Error('認証トークンが見つかりません');
       }
 
-      const response = await fetch('/api/admin/cache/cleanup', {
+      const response = await fetch('/api/v1/admin/cache/cleanup', {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -190,7 +190,7 @@ export default function CacheManagementPage() {
         throw new Error('認証トークンが見つかりません');
       }
 
-      const response = await fetch(`/api/admin/cache/character/${characterId}`, {
+      const response = await fetch(`/api/v1/admin/cache/character/${characterId}`, {
         method: 'DELETE',
         headers: { 
           'Authorization': `Bearer ${token}`,

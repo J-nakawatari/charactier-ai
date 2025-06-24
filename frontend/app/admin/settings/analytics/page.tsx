@@ -34,7 +34,7 @@ export default function AnalyticsSettingsPage() {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const response = await adminFetch('/api/system-settings/google-analytics');
+      const response = await adminFetch('/api/v1/system-settings/google-analytics');
 
       if (response.ok) {
         const data = await response.json();
@@ -70,7 +70,7 @@ export default function AnalyticsSettingsPage() {
     setMessage(null);
 
     try {
-      const response = await adminFetch('/api/system-settings/google-analytics', {
+      const response = await adminFetch('/api/v1/system-settings/google-analytics', {
         method: 'POST',
         body: JSON.stringify(settings)
       });
@@ -97,7 +97,7 @@ export default function AnalyticsSettingsPage() {
     }
 
     try {
-      const response = await adminFetch('/api/system-settings/google-analytics', {
+      const response = await adminFetch('/api/v1/system-settings/google-analytics', {
         method: 'DELETE'
       });
 

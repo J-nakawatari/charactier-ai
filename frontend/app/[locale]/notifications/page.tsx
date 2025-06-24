@@ -43,7 +43,7 @@ export default function NotificationsPage({
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const response = await authenticatedFetch('/api/notifications?limit=100');
+      const response = await authenticatedFetch('/api/v1/notifications?limit=100');
       
       if (response.ok) {
         const data = await response.json();
@@ -63,7 +63,7 @@ export default function NotificationsPage({
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const response = await authenticatedFetch(`/api/notifications/${notificationId}/read`, {
+      const response = await authenticatedFetch(`/api/v1/notifications/${notificationId}/read`, {
         method: 'POST'
       });
 
@@ -86,7 +86,7 @@ export default function NotificationsPage({
 
   const markAllAsRead = async () => {
     try {
-      const response = await authenticatedFetch('/api/notifications/read-all', {
+      const response = await authenticatedFetch('/api/v1/notifications/read-all', {
         method: 'POST'
       });
 

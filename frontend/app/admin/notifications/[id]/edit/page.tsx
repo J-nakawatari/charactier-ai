@@ -86,7 +86,7 @@ export default function EditNotificationPage() {
     try {
       setIsLoading(true);
       
-      const response = await adminFetch(`/api/notifications/admin/${notificationId}`);
+      const response = await adminFetch(`/api/v1/notifications/admin/${notificationId}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -184,7 +184,7 @@ export default function EditNotificationPage() {
         validUntil: formData.validUntil ? new Date(formData.validUntil).toISOString() : undefined
       };
       
-      const response = await adminFetch(`/api/notifications/admin/${notificationId}`, {
+      const response = await adminFetch(`/api/v1/notifications/admin/${notificationId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

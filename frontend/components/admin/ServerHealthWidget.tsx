@@ -29,7 +29,7 @@ export default function ServerHealthWidget() {
 
   const fetchHealthStatus = async () => {
     try {
-      const response = await adminAuthenticatedFetch('/api/admin/system/health');
+      const response = await adminAuthenticatedFetch('/api/v1/admin/system/health');
       if (!response.ok) {
         throw new Error('Failed to fetch health status');
       }

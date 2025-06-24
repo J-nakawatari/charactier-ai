@@ -49,7 +49,7 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
         params.append('isActive', isActiveFilter.toString());
       }
 
-      const response = await adminFetch(`/api/admin/token-packs?${params}`);
+      const response = await adminFetch(`/api/v1/admin/token-packs?${params}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch token packs');
@@ -80,7 +80,7 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
     }
 
     try {
-      const response = await adminFetch(`/api/admin/token-packs/${pack._id}`, {
+      const response = await adminFetch(`/api/v1/admin/token-packs/${pack._id}`, {
         method: 'DELETE'
       });
 
@@ -100,7 +100,7 @@ const TokenPackTable = forwardRef<TokenPackTableRef, TokenPackTableProps>(({ onC
     const newStatus = !pack.isActive;
     
     try {
-      const response = await adminFetch(`/api/admin/token-packs/${pack._id}`, {
+      const response = await adminFetch(`/api/v1/admin/token-packs/${pack._id}`, {
         method: 'PUT',
         body: JSON.stringify({
           isActive: newStatus

@@ -28,7 +28,7 @@ export function useNotificationStream() {
       try {
         // EventSourceはCookieを自動的に送るので、認証はCookieベースで行われる
         // フロントエンドプロキシ経由で接続（CSP対策）
-        eventSource = new EventSource(`/api/notifications/stream`, {
+        eventSource = new EventSource(`/api/v1/notifications/stream`, {
           withCredentials: true // Cookieを送信
         });
 

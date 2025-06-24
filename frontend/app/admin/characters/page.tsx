@@ -56,7 +56,7 @@ export default function CharactersPage() {
     try {
       setIsLoading(true);
       
-      const response = await adminFetch('/api/characters?locale=ja');
+      const response = await adminFetch('/api/v1/characters?locale=ja');
 
       if (response.ok) {
         const data = await response.json();
@@ -77,7 +77,7 @@ export default function CharactersPage() {
     try {
       setUpdatingStats(true);
       
-      const response = await adminFetch('/api/admin/characters/update-stats', {
+      const response = await adminFetch('/api/v1/admin/characters/update-stats', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

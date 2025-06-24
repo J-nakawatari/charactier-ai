@@ -141,9 +141,9 @@ export default function TokenAnalyticsDashboard({ defaultDays = 30 }: TokenAnaly
 
 
       const [overviewRes, profitRes, anomalyRes] = await Promise.all([
-        adminFetch(`/api/admin/token-analytics/overview?days=${selectedDays}`),
-        adminFetch(`/api/admin/token-analytics/profit-analysis?days=${selectedDays}`),
-        adminFetch(`/api/admin/token-analytics/anomaly-detection?hours=24`)
+        adminFetch(`/api/v1/admin/token-analytics/overview?days=${selectedDays}`),
+        adminFetch(`/api/v1/admin/token-analytics/profit-analysis?days=${selectedDays}`),
+        adminFetch(`/api/v1/admin/token-analytics/anomaly-detection?hours=24`)
       ]);
 
       if (!overviewRes.ok || !profitRes.ok || !anomalyRes.ok) {

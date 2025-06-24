@@ -162,7 +162,7 @@ export function useChatConnectionStatus() {
   const checkConnectionQuality = useCallback(async () => {
     try {
       const startTime = Date.now();
-      const response = await fetch('/api/ping', { 
+      const response = await fetch('/api/v1/ping', { 
         method: 'HEAD',
         cache: 'no-cache'
       });

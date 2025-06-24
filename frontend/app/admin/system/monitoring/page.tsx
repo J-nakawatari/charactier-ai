@@ -49,7 +49,7 @@ export default function SystemMonitoringPage() {
   const fetchMonitoringData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await adminFetch(`/api/admin/system/monitoring?period=${period}`);
+      const response = await adminFetch(`/api/v1/admin/system/monitoring?period=${period}`);
       if (!response.ok) {
         throw new Error('Failed to fetch monitoring data');
       }

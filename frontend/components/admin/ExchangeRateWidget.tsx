@@ -21,7 +21,7 @@ export default function ExchangeRateWidget() {
     try {
       setLoading(true);
       
-      const response = await adminFetch('/api/admin/exchange-rate', {
+      const response = await adminFetch('/api/v1/admin/exchange-rate', {
         method: 'GET'
       });
 

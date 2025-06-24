@@ -83,7 +83,7 @@ export default function SettingsPage() {
           return;
         }
 
-        const response = await fetch('/api/user/profile', {
+        const response = await fetch('/api/v1/user/profile', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -129,7 +129,7 @@ export default function SettingsPage() {
       setProfileLoading(true);
       const token = localStorage.getItem('accessToken');
 
-      const response = await fetch('/api/user/profile', {
+      const response = await fetch('/api/v1/user/profile', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -184,7 +184,7 @@ export default function SettingsPage() {
       setPasswordLoading(true);
       const token = localStorage.getItem('accessToken');
 
-      const response = await fetch('/api/user/change-password', {
+      const response = await fetch('/api/v1/user/change-password', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -217,7 +217,7 @@ export default function SettingsPage() {
       setDeleteLoading(true);
       const token = localStorage.getItem('accessToken');
 
-      const response = await fetch('/api/user/delete-account', {
+      const response = await fetch('/api/v1/user/delete-account', {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

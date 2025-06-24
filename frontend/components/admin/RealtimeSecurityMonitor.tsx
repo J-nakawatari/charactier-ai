@@ -107,7 +107,7 @@ export default function RealtimeSecurityMonitor({
     
     try {
       // SSEはクッキー認証を使用するため、credentialsを指定
-      const eventSource = new EventSource('/api/admin/security/events-stream');
+      const eventSource = new EventSource('/api/v1/admin/security/events-stream');
 
       eventSourceRef.current = eventSource;
 

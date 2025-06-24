@@ -1,0 +1,74 @@
+# Nginx Configuration Template with Environment Variables
+# Usage: envsubst < charactier-ai.conf.template > charactier-ai.conf
+
+server {
+    listen 443 ssl http2;
+    server_name charactier-ai.com;
+    
+    # SSL configuration (existing)
+    ssl_certificate /path/to/ssl/fullchain.pem;
+    ssl_certificate_key /path/to/ssl/privkey.pem;
+    
+    # Security headers
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    
+    # Frontend proxy
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # API Version-based proxy (環境変数対応)
+    location /api/${API_VERSION}/ {
+        proxy_pass http://localhost:5000/api/${API_VERSION}/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection '';
+        
+        # SSE対応
+        proxy_read_timeout 600;
+        proxy_buffering off;
+        proxy_cache off;
+        
+        # SSE specific headers
+        add_header Cache-Control 'no-cache';
+        add_header X-Accel-Buffering 'no';
+    }
+    
+    # Stripe webhook (unchanged)
+    location /webhook/stripe {
+        proxy_pass http://localhost:5000/webhook/stripe;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Static files
+    location /uploads {
+        alias /var/www/charactier-ai/uploads;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+
+# HTTP to HTTPS redirect
+server {
+    listen 80;
+    server_name charactier-ai.com;
+    return 301 https://$server_name$request_uri;
+}

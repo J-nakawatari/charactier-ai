@@ -59,7 +59,7 @@ export default function CharacterNewPage() {
   useEffect(() => {
     const fetchAvailableModels = async () => {
       try {
-        const response = await adminFetch('/api/admin/models');
+        const response = await adminFetch('/api/v1/admin/models');
         
         if (response.ok) {
           const data = await response.json();
@@ -305,7 +305,7 @@ export default function CharacterNewPage() {
     if (priceId && priceId.startsWith('price_') && priceId.length > 10) {
       setIsLoadingPrice(true);
       try {
-        const response = await adminFetch(`/api/admin/stripe/price/${priceId}`);
+        const response = await adminFetch(`/api/v1/admin/stripe/price/${priceId}`);
         
         const responseData = await response.json();
         

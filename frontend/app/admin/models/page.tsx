@@ -36,7 +36,7 @@ export default function ModelsPage() {
   // モデル情報を取得
   const fetchModels = useCallback(async () => {
     try {
-      const response = await adminFetch('/api/admin/models');
+      const response = await adminFetch('/api/v1/admin/models');
 
       if (response.ok) {
         const data = await response.json();
@@ -61,7 +61,7 @@ export default function ModelsPage() {
 
     setIsChanging(true);
     try {
-      const response = await adminFetch('/api/admin/models/set-model', {
+      const response = await adminFetch('/api/v1/admin/models/set-model', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -85,7 +85,7 @@ export default function EnhancedAnalyticsSection({ userId, className = '' }: Enh
       setLoading(true);
       
       // TODO: 実際のAPIエンドポイント実装
-      // const response = await fetch(`/api/user/enhanced-analytics`);
+      // const response = await fetch(`/api/v1/user/enhanced-analytics`);
       // const data = await response.json();
       
       // モックデータで機能をデモンストレーション

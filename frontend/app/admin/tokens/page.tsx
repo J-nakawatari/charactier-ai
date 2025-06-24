@@ -68,8 +68,8 @@ export default function TokensPage() {
 
         // 実際のAPIコールを実行（既存の動作しているエンドポイントを使用）
         const [tokenRes, usersRes] = await Promise.all([
-          adminFetch('/api/admin/token-analytics/overview'),
-          adminFetch('/api/admin/users')
+          adminFetch('/api/v1/admin/token-analytics/overview'),
+          adminFetch('/api/v1/admin/users')
         ]);
 
         if (!tokenRes.ok) {
@@ -258,8 +258,8 @@ export default function TokensPage() {
                     setLoading(true);
 
                     const [tokenRes, usersRes] = await Promise.all([
-                      adminFetch('/api/admin/token-analytics/overview'),
-                      adminFetch('/api/admin/users')
+                      adminFetch('/api/v1/admin/token-analytics/overview'),
+                      adminFetch('/api/v1/admin/users')
                     ]);
 
                     if (tokenRes.ok && usersRes.ok) {

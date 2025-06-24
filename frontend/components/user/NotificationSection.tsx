@@ -44,7 +44,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
       setIsLoading(true);
       const token = localStorage.getItem('accessToken');
       
-      const response = await fetch('/api/notifications?limit=10', {
+      const response = await fetch('/api/v1/notifications?limit=10', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -101,7 +101,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
   const markAsRead = async (notificationId: string) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`/api/notifications/${notificationId}/read`, {
+      const response = await fetch(`/api/v1/notifications/${notificationId}/read`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -129,7 +129,7 @@ export default function NotificationSection({ locale }: NotificationSectionProps
   const markAllAsRead = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('/api/notifications/read-all', {
+      const response = await fetch('/api/v1/notifications/read-all', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

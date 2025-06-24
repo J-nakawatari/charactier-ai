@@ -74,7 +74,7 @@ export default function TokenManagementTable({ users, onUserUpdate }: TokenManag
     if (!selectedUser) return;
 
     try {
-      const response = await adminFetch(`/api/admin/users/${selectedUser.id}/reset-tokens`, {
+      const response = await adminFetch(`/api/v1/admin/users/${selectedUser.id}/reset-tokens`, {
         method: 'POST',
         body: JSON.stringify({
           newBalance: newBalance

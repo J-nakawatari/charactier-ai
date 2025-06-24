@@ -39,7 +39,7 @@ export function useCharacterState(characterId: string, affinityLevel: number) {
       };
 
       // TODO: 実際のAPIを実装
-      // const response = await fetch(`/api/characters/${characterId}/state`);
+      // const response = await fetch(`/api/v1/characters/${characterId}/state`);
       // const data = await response.json();
       
       setTimeout(() => {

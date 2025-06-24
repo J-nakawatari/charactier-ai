@@ -58,7 +58,7 @@ export class ChatPaginationService {
     this.setState({ isLoading: true });
     
     try {
-      const response = await fetch(`/api/chats/${this.characterId}?page=1&limit=${this.messagesPerPage}`, {
+      const response = await fetch(`/api/v1/chats/${this.characterId}?page=1&limit=${this.messagesPerPage}`, {
         headers: getAuthHeaders()
       });
 

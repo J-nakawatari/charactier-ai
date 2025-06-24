@@ -62,7 +62,7 @@ export default function Sidebar() {
   const handleLogout = async () => {
     try {
       // APIを呼び出してクッキーをクリア
-      await fetch('/api/auth/admin/logout', {
+      await fetch('/api/v1/auth/admin/logout', {
         method: 'POST',
         credentials: 'include',
         headers: {
