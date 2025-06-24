@@ -4,8 +4,7 @@ import { backendClient } from '@/utils/backend-client';
 export async function GET(request: NextRequest) {
   try {
     // 統一APIクライアントを使用（認証はCookieで処理される）
-    // バックエンドはv1を使用している
-    const response = await backendClient.proxyRequest(request, '/api/v1/user/dashboard');
+    const response = await backendClient.proxyRequest(request, '/api/user/dashboard');
 
     if (!response.ok) {
       const errorText = await response.text();

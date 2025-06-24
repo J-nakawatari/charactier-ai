@@ -28,6 +28,7 @@ import notificationRoutes from './routes/notifications';
 import systemSettingsRoutes from './routes/systemSettings';
 import systemRoutes from './routes/system';
 import debugRoutes from './routes/debug';
+import userRoutes from './routes/user';
 import { monitoringMiddleware } from './middleware/monitoring';
 import { registrationRateLimit } from './middleware/registrationLimit';
 import { createRateLimiter } from './middleware/rateLimiter';
@@ -820,7 +821,7 @@ app.use('/api', createRateLimiter('general'));
 app.use('/api/auth', authRoutes);
 
 // ユーザールート
-// app.use('/api/user', userRoutes);
+app.use('/api/user', userRoutes);
 
 // 管理者ルート - モデル設定
 app.use('/api/admin/models', modelRoutes);
