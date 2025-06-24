@@ -190,7 +190,7 @@ export const ChatLayout = memo(function ChatLayout({
   const refreshTokenBalance = useCallback(async () => {
     try {
       // TODO: 適切なユーザー情報取得APIに変更
-      const response = await fetch('/api/user/profile', {
+      const response = await fetch('/api/v1/user/profile', {
         headers: getAuthHeaders()
       });
       if (response.ok) {

@@ -62,7 +62,7 @@ export default function DashboardPage() {
           headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const response = await fetch('/api/user/dashboard', {
+        const response = await fetch('/api/v1/user/dashboard', {
           headers
         });
 

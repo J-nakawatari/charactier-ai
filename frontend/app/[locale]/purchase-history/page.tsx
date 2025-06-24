@@ -49,7 +49,7 @@ export default function PurchaseHistoryPage() {
     const fetchPurchaseHistory = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/user/purchase-history', {
+        const response = await fetch('/api/v1/user/purchase-history', {
           headers: getAuthHeaders(),
         });
 

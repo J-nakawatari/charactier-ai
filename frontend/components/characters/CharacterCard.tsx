@@ -148,7 +148,7 @@ export default function CharacterCard({
       
       if (token) {
         console.log('📡 Sending API request to update selectedCharacter...');
-        const response = await fetch('/api/user/select-character', {
+        const response = await fetch('/api/v1/user/select-character', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

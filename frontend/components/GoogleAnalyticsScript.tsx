@@ -78,7 +78,7 @@ export default function GoogleAnalyticsScript() {
 
       try {
         // GA設定を取得
-        const response = await fetch('/api/system-settings/google-analytics');
+        const response = await fetch('/api/v1/system-settings/google-analytics');
         if (!response.ok) return;
 
         const data = await response.json();

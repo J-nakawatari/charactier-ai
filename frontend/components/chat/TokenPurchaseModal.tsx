@@ -58,7 +58,7 @@ export function TokenPurchaseModal({
       // 認証ヘッダーを取得
       const headers = getAuthHeaders();
       
-      const response = await fetch('/api/token-packs?isActive=true', {
+      const response = await fetch('/api/v1/token-packs?isActive=true', {
         headers
       });
       
@@ -89,7 +89,7 @@ export function TokenPurchaseModal({
       }
 
       // Stripe Checkout Session作成
-      const response = await fetch('/api/purchase/create-checkout-session', {
+      const response = await fetch('/api/v1/purchase/create-checkout-session', {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ 

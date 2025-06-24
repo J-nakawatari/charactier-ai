@@ -31,7 +31,7 @@ function PurchaseSuccessContent() {
       console.log('🎉 決済成功ページ: Session ID', sessionId);
       
       // 最新のユーザー情報を取得
-      const userResponse = await fetch('/api/auth/user', {
+      const userResponse = await fetch('/api/v1/auth/user', {
         headers: getAuthHeaders()
       });
       
@@ -44,7 +44,7 @@ function PurchaseSuccessContent() {
       
       // 購入履歴から最新の購入情報を取得
       try {
-        const historyResponse = await fetch('/api/user/purchase-history', {
+        const historyResponse = await fetch('/api/v1/user/purchase-history', {
           headers: getAuthHeaders()
         });
         

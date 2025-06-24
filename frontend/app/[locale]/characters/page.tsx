@@ -61,7 +61,7 @@ function CharactersPageContent({
   const fetchUserData = useCallback(async () => {
     try {
       // APIを再度有効化
-      const response = await fetch('/api/user/profile', {
+      const response = await fetch('/api/v1/user/profile', {
         headers: getAuthHeaders(),
       });
       
