@@ -70,10 +70,28 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
 
   // selectedCharacterに基づく動的なチャットリンク
   const getChatHref = () => {
+    // 現在のURLからキャラクターIDを取得（チャットページにいる場合）
+    const pathParts = pathname.split('/');
+    const chatIndex = pathParts.indexOf('chat');
+    if (chatIndex > 0 && pathParts[chatIndex - 1] && pathParts[chatIndex - 2] === 'characters') {
+      // 現在チャットページにいる場合は、そのキャラクターIDを使用
+      return `/${currentLocale}/characters/${pathParts[chatIndex - 1]}/chat`;
+    }
+    
+    // selectedCharacterがある場合
     if (user?.selectedCharacter?._id) {
       return `/${currentLocale}/characters/${user.selectedCharacter._id}/chat`;
     }
-    // キャラクター未選択の場合は一覧へ（重複を避けるため特別な処理）
+    
+    // localStorageから最後に選択したキャラクターIDを取得
+    if (typeof window !== 'undefined') {
+      const lastCharacterId = localStorage.getItem('lastSelectedCharacterId');
+      if (lastCharacterId) {
+        return `/${currentLocale}/characters/${lastCharacterId}/chat`;
+      }
+    }
+    
+    // キャラクター未選択の場合は一覧へ
     return `/${currentLocale}/characters?from=chat`;
   };
 

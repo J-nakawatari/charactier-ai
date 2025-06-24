@@ -62,6 +62,11 @@ export default function ChatPage() {
     try {
       setLoading(true);
       setError(null);
+      
+      // 最後にアクセスしたキャラクターIDを保存
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('lastSelectedCharacterId', characterId);
+      }
 
       try {
         // 実際のAPI呼び出し
