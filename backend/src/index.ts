@@ -1406,6 +1406,121 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/analytics`, authenticateToken, 
 });
 
 
+// チャットシステム診断エンドポイント
+routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    const { characterId } = req.params;
+    
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // 1. キャラクター情報とモデル設定
+    const character = await CharacterModel.findById(characterId);
+    if (!character) {
+      res.status(404).json({ error: 'Character not found' });
+      return;
+    }
+
+    // 2. チャット履歴確認
+    const chat = await ChatModel.findOne({ userId, characterId })
+      .select('messages totalTokensUsed lastActivityAt createdAt');
+    
+    // 3. キャッシュ状態確認
+    const cacheKey = `character_prompt:${characterId}`;
+    const redis = getRedisClient();
+    let cacheStatus = { enabled: false, exists: false, data: null };
+    
+    if (redis) {
+      try {
+        const cachedPrompt = await redis.get(cacheKey);
+        cacheStatus = {
+          enabled: true,
+          exists: !!cachedPrompt,
+          data: cachedPrompt ? JSON.parse(cachedPrompt) : null
+        };
+      } catch (err) {
+        cacheStatus.enabled = false;
+      }
+    }
+
+    // 4. 最新のトークン使用状況
+    const recentTokenUsage = await TokenUsage.findOne({
+      userId,
+      characterId
+    }).sort({ createdAt: -1 });
+
+    // 5. プロンプトの診断情報
+    const promptInfo = {
+      personalityPrompt: character.personalityPrompt ? {
+        ja: character.personalityPrompt.ja?.substring(0, 100) + '...',
+        en: character.personalityPrompt.en?.substring(0, 100) + '...'
+      } : null,
+      adminPrompt: character.adminPrompt ? {
+        ja: character.adminPrompt.ja?.substring(0, 100) + '...',
+        en: character.adminPrompt.en?.substring(0, 100) + '...'
+      } : null,
+      promptLength: {
+        personality: {
+          ja: character.personalityPrompt?.ja?.length || 0,
+          en: character.personalityPrompt?.en?.length || 0
+        },
+        admin: {
+          ja: character.adminPrompt?.ja?.length || 0,
+          en: character.adminPrompt?.en?.length || 0
+        }
+      }
+    };
+
+    res.json({
+      diagnostics: {
+        character: {
+          id: character._id,
+          name: character.name,
+          aiModel: character.aiModel || process.env.OPENAI_MODEL || 'gpt-4o-mini',
+          isActive: character.isActive,
+          updatedAt: character.updatedAt
+        },
+        chat: {
+          exists: !!chat,
+          messageCount: chat?.messages?.length || 0,
+          totalTokensUsed: chat?.totalTokensUsed || 0,
+          lastActivity: chat?.lastActivityAt,
+          createdAt: chat?.createdAt,
+          recentMessages: chat?.messages?.slice(-5).map(m => ({
+            role: m.role,
+            timestamp: m.timestamp,
+            tokensUsed: m.tokensUsed,
+            contentPreview: m.content.substring(0, 50) + '...'
+          })) || []
+        },
+        cache: cacheStatus,
+        tokenUsage: recentTokenUsage ? {
+          lastUsed: recentTokenUsage.createdAt,
+          tokensUsed: recentTokenUsage.tokensUsed,
+          aiModel: recentTokenUsage.aiModel,
+          cacheHit: !!recentTokenUsage.cacheHit,
+          apiCost: recentTokenUsage.apiCost
+        } : null,
+        prompt: promptInfo,
+        system: {
+          mongoConnected: isMongoConnected,
+          redisConnected: !!redis,
+          currentModel: character.aiModel || process.env.OPENAI_MODEL || 'gpt-4o-mini'
+        }
+      }
+    });
+  } catch (error) {
+    log.error('Chat diagnostics error', error);
+    res.status(500).json({ 
+      error: 'Diagnostics failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // パスワード変更API (削除: 6261行目に同じ定義があるため)
 /* routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
