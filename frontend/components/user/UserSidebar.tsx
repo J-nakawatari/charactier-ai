@@ -107,33 +107,47 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
   // selectedCharacterに基づく動的なチャットリンク
   const getChatHref = () => {
     const currentCharacterId = getCurrentCharacterId();
-    console.log('UserSidebar - getCurrentCharacterId:', currentCharacterId);
-    console.log('UserSidebar - user.selectedCharacter:', user?.selectedCharacter);
+    
+    // ブラウザ環境でのみログを出力
+    if (typeof window !== 'undefined') {
+      console.log('UserSidebar - getCurrentCharacterId:', currentCharacterId);
+      console.log('UserSidebar - user.selectedCharacter:', user?.selectedCharacter);
+    }
     
     // localStorageから最後に選択したキャラクターIDも確認
     const lastCharacterId = typeof window !== 'undefined' ? localStorage.getItem('lastSelectedCharacterId') : null;
-    console.log('UserSidebar - lastSelectedCharacterId from localStorage:', lastCharacterId);
+    if (typeof window !== 'undefined') {
+      console.log('UserSidebar - lastSelectedCharacterId from localStorage:', lastCharacterId);
+    }
     
     if (currentCharacterId) {
       const chatUrl = `/${currentLocale}/characters/${currentCharacterId}/chat`;
-      console.log('UserSidebar - using currentCharacterId, chatUrl:', chatUrl);
+      if (typeof window !== 'undefined') {
+        console.log('UserSidebar - using currentCharacterId, chatUrl:', chatUrl);
+      }
       return chatUrl;
     }
     
     // localStorageから取得
     if (lastCharacterId) {
       const chatUrl = `/${currentLocale}/characters/${lastCharacterId}/chat`;
-      console.log('UserSidebar - using lastCharacterId from localStorage, chatUrl:', chatUrl);
+      if (typeof window !== 'undefined') {
+        console.log('UserSidebar - using lastCharacterId from localStorage, chatUrl:', chatUrl);
+      }
       return chatUrl;
     }
     
     // キャラクター未選択の場合は一覧へ
-    console.log('UserSidebar - no character selected, redirecting to character list');
+    if (typeof window !== 'undefined') {
+      console.log('UserSidebar - no character selected, redirecting to character list');
+    }
     return `/${currentLocale}/characters?from=chat`;
   };
 
   const chatHref = getChatHref();
-  console.log('UserSidebar - computed chatHref:', chatHref);
+  if (typeof window !== 'undefined') {
+    console.log('UserSidebar - computed chatHref:', chatHref);
+  }
   
   const sidebarItems = [
     { id: 'home', href: `/${currentLocale}/dashboard`, icon: Home, label: t('home') },

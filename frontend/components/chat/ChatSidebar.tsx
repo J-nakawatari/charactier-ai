@@ -49,14 +49,18 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
         const response = await fetch('/api/v1/user/profile');
         if (response.ok) {
           const data = await response.json();
-          console.log('ChatSidebar - User data from API:', data.user);
+          if (typeof window !== 'undefined') {
+        console.log('ChatSidebar - User data from API:', data.user);
+      }
           setUser(data.user);
         } else {
           // エラー時はlocalStorageから取得
           const userStr = localStorage.getItem('user');
           if (userStr) {
             const userData = JSON.parse(userStr);
-            console.log('ChatSidebar - User data from localStorage:', userData);
+            if (typeof window !== 'undefined') {
+              console.log('ChatSidebar - User data from localStorage:', userData);
+            }
             setUser(userData);
           }
         }
