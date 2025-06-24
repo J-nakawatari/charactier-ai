@@ -8,7 +8,9 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
+    "@types/tar": "^6.1.13",
     "concurrently": "^9.1.2",
+    "tar": "^7.4.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },

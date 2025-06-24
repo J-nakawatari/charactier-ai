@@ -869,6 +869,12 @@ routeRegistry.mount(`${API_PREFIX}/characters`, characterRoutes);
 // お知らせルート（ユーザー用 + 管理者用）
 routeRegistry.mount(`${API_PREFIX}/notifications`, notificationRoutes);
 
+// システム設定ルート（Google Analytics等）
+routeRegistry.mount(`${API_PREFIX}/system-settings`, systemSettingsRoutes);
+
+// 認証ルート
+app.use('/api/auth', authRoutes);
+
 // リアルタイム通知SSEエンドポイント
 routeRegistry.define('GET', `${API_PREFIX}/notifications/stream`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req.user?.id || req.user?._id;
