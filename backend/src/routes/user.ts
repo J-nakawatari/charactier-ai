@@ -18,7 +18,11 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
       return;
     }
 
-    const user = await UserModel.findById(userId).select('-password');
+    const user = await UserModel.findById(userId)
+      .select('-password')
+      .populate('purchasedCharacters', '_id name')
+      .populate('affinities.character', '_id name');
+      
     if (!user) {
       sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND);
       return;
@@ -34,7 +38,9 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
         emailVerified: user.emailVerified,
         isSetupComplete: user.isSetupComplete,
         createdAt: user.createdAt,
-        lastLogin: user.lastLogin
+        lastLogin: user.lastLogin,
+        purchasedCharacters: user.purchasedCharacters || [],
+        affinities: user.affinities || []
       }
     });
 

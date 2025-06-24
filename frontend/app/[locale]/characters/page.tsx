@@ -68,13 +68,17 @@ function CharactersPageContent({
       if (response.ok) {
         const data = await response.json();
         console.log('👤 取得したユーザーデータ (API):', {
-          purchasedCharacters: data.purchasedCharacters,
-          affinities: data.affinities?.length || 0
+          user: data.user,
+          purchasedCharacters: data.user?.purchasedCharacters,
+          affinities: data.user?.affinities?.length || 0
         });
-        setUserAffinities(data.affinities || []);
-        setUserPurchasedCharacters(data.purchasedCharacters || []);
+        // user.profileは基本情報のみなので、purchasedCharactersとaffinitiesは別途取得が必要
+        setUserAffinities(data.user?.affinities || []);
+        setUserPurchasedCharacters(data.user?.purchasedCharacters || []);
         // localStorageも更新
-        localStorage.setItem('user', JSON.stringify(data.user));
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
       } else {
         // エラー時はlocalStorageから取得
         const userStr = localStorage.getItem('user');
