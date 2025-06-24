@@ -37,7 +37,9 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
       const response = await fetch('/api/v1/user/profile');
       if (response.ok) {
         const data = await response.json();
-        const newTokens = data.tokenBalance || 0;
+        // Handle different API response structures
+        const newTokens = data.user?.tokenBalance || data.userState?.tokenBalance || data.tokenBalance || 0;
+        console.log('TokenBar - API response:', { data, newTokens });
         setCurrentTokens(newTokens);
         onTokenUpdate?.(newTokens);
         errorCountRef.current = 0; // 成功したらエラーカウントをリセット
