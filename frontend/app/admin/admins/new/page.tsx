@@ -74,7 +74,7 @@ export default function CreateAdminPage() {
     try {
       setIsLoading(true);
       
-      const response = await adminFetch(`${API_BASE_URL}/api/admin/create-admin`, {
+      const response = await adminFetch(`${API_BASE_URL}/api/v1/admin/create-admin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

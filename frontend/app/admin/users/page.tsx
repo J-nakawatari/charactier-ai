@@ -75,7 +75,7 @@ export default function UsersPage() {
         params.append('status', statusFilter);
       }
 
-      const endpoint = `/api/admin/users?${params}`;
+      const endpoint = `/api/v1/admin/users?${params}`;
       console.log('🔍 Fetching users from:', endpoint);
 
       const response = await adminGet(endpoint);

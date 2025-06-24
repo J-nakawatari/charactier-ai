@@ -38,7 +38,7 @@ export default function EditAdminPage() {
 
   const fetchAdminData = async () => {
     try {
-      const response = await adminFetch(`${API_BASE_URL}/api/admin/admins/${adminId}`);
+      const response = await adminFetch(`${API_BASE_URL}/api/v1/admin/admins/${adminId}`);
 
       if (!response.ok) {
         throw new Error(`API Error: ${response.status}`);
@@ -71,7 +71,7 @@ export default function EditAdminPage() {
     setSaving(true);
 
     try {
-      const response = await adminFetch(`${API_BASE_URL}/api/admin/admins/${adminId}`, {
+      const response = await adminFetch(`${API_BASE_URL}/api/v1/admin/admins/${adminId}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json'

@@ -169,7 +169,7 @@ export default function CharacterNewPage() {
         uploadFormData.append('fieldname', fieldName);
         
         try {
-          const uploadResponse = await adminFetch(`${API_BASE_URL}/api/characters/upload/image`, {
+          const uploadResponse = await adminFetch(`${API_BASE_URL}/api/v1/characters/upload/image`, {
             method: 'POST',
             body: uploadFormData
           });
@@ -245,7 +245,7 @@ export default function CharacterNewPage() {
         payloadSize: JSON.stringify(payload).length
       });
 
-      const response = await adminFetch(`${API_BASE_URL}/api/characters`, {
+      const response = await adminFetch(`${API_BASE_URL}/api/v1/characters`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -47,7 +47,7 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
 
   // 401の場合はトークンリフレッシュを試行
   if (response.status === 401) {
-    const refreshResponse = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+    const refreshResponse = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -81,7 +81,7 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
 export async function logoutWithCookie(): Promise<void> {
   if (USE_COOKIE_AUTH) {
     try {
-      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -106,7 +106,7 @@ export async function verifyToken(): Promise<boolean> {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/verify-token`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/verify-token`, {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -138,7 +138,7 @@ export async function loginWithCookie(email: string, password: string): Promise<
   error?: string;
 }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
       method: 'POST',
       credentials: 'include', // Cookie認証のため必須
       headers: {
@@ -191,7 +191,7 @@ export async function adminLoginWithCookie(email: string, password: string): Pro
   error?: string;
 }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/admin/login`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/admin/login`, {
       method: 'POST',
       credentials: 'include',
       headers: {

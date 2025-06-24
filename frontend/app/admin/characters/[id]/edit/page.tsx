@@ -105,7 +105,7 @@ export default function CharacterEditPage() {
         const modelPromise = adminFetch('/api/v1/admin/models');
         
         // 基本キャラクター情報を取得
-        const characterResponse = await adminFetch(`${API_BASE_URL}/api/characters/${characterId}`);
+        const characterResponse = await adminFetch(`${API_BASE_URL}/api/v1/characters/${characterId}`);
         if (characterResponse.ok) {
           const character = await characterResponse.json();
           console.log('✅ キャラクターデータを取得しました:', character);
@@ -175,7 +175,7 @@ export default function CharacterEditPage() {
         
         // 翻訳データを取得
         try {
-          const translationResponse = await adminFetch(`${API_BASE_URL}/api/characters/${characterId}/translations`);
+          const translationResponse = await adminFetch(`${API_BASE_URL}/api/v1/characters/${characterId}/translations`);
           if (translationResponse.ok) {
             const translationData = await translationResponse.json();
             setTranslationData(translationData);
@@ -273,7 +273,7 @@ export default function CharacterEditPage() {
       
       // 1. 翻訳データを保存
       console.log('🔍 Sending translation data:', translationData);
-      const translationSaveResponse = await adminFetch(`${API_BASE_URL}/api/characters/${characterId}/translations`, {
+      const translationSaveResponse = await adminFetch(`${API_BASE_URL}/api/v1/characters/${characterId}/translations`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -336,7 +336,7 @@ export default function CharacterEditPage() {
       console.log('  imageChatBackgroundUrl:', formData.imageChatBackgroundUrl);
       console.log('  imageChatAvatarUrl:', formData.imageChatAvatarUrl);
       
-      const basicSaveResponse = await adminFetch(`${API_BASE_URL}/api/characters/${characterId}`, {
+      const basicSaveResponse = await adminFetch(`${API_BASE_URL}/api/v1/characters/${characterId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -445,7 +445,7 @@ export default function CharacterEditPage() {
       const formDataForUpload = new FormData();
       formDataForUpload.append('image', croppedFile);
       
-      const uploadResponse = await adminFetch(`${API_BASE_URL}/api/characters/upload/image`, {
+      const uploadResponse = await adminFetch(`${API_BASE_URL}/api/v1/characters/upload/image`, {
         method: 'POST',
         body: formDataForUpload
       });
@@ -509,7 +509,7 @@ export default function CharacterEditPage() {
         const updateField = imageFieldMap[currentImageType];
         if (updateField) {
           // キャラクターデータを即座に更新
-          const updateResponse = await adminFetch(`${API_BASE_URL}/api/characters/${characterId}`, {
+          const updateResponse = await adminFetch(`${API_BASE_URL}/api/v1/characters/${characterId}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json'

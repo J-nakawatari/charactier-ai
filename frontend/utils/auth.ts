@@ -79,7 +79,7 @@ export function setAdminRefreshToken(token: string): void {
  */
 export async function refreshAdminToken(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/admin/refresh`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/admin/refresh`, {
       method: 'POST',
       credentials: 'include', // クッキーを送信
       headers: {
@@ -185,7 +185,7 @@ export function isAuthenticated(): boolean {
  */
 export async function refreshToken(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
       method: 'POST',
       credentials: 'include', // クッキーを送信
       headers: {

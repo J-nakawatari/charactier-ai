@@ -68,7 +68,7 @@ export default function UserDetailPage() {
       try {
         setLoading(true);
         
-        const response = await adminFetch(`${API_BASE_URL}/api/admin/users/${params.id}`);
+        const response = await adminFetch(`${API_BASE_URL}/api/v1/admin/users/${params.id}`);
         
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
@@ -156,7 +156,7 @@ export default function UserDetailPage() {
     }
     
     try {
-      const response = await adminFetch(`${API_BASE_URL}/api/admin/users/${user.id}/status`, {
+      const response = await adminFetch(`${API_BASE_URL}/api/v1/admin/users/${user.id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -203,7 +203,7 @@ export default function UserDetailPage() {
     }
     
     try {
-      const response = await adminFetch(`${API_BASE_URL}/api/admin/users/${user.id}`, {
+      const response = await adminFetch(`${API_BASE_URL}/api/v1/admin/users/${user.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'
