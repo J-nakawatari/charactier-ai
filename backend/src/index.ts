@@ -1689,7 +1689,7 @@ app.get(`${API_PREFIX}/auth/user`, authenticateToken, (req: Request, res: Respon
 
 
 // Chat API endpoints
-app.get(`${API_PREFIX}/chats/:characterId`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -1812,7 +1812,7 @@ app.get(`${API_PREFIX}/chats/:characterId`, authenticateToken, async (req: Reque
   }
 });
 
-app.post(`${API_PREFIX}/chats/:characterId/messages`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -3822,7 +3822,7 @@ app.get(`${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthReq
 });
 
 // 管理者更新API
-app.put(`${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('PUT', `${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   // 管理者権限チェック
   if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
     res.status(403).json({ 
@@ -3903,7 +3903,7 @@ app.put(`${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthReq
 });
 
 // 管理者削除API
-app.delete(`${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   // 管理者権限チェック
   if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
     res.status(403).json({ 
@@ -6258,7 +6258,7 @@ app.get(`${API_PREFIX}/exchange-rate`, async (req: Request, res: Response): Prom
 // ==================== USER SETTINGS ENDPOINTS ====================
 
 // ユーザーのパスワード変更API
-app.put(`${API_PREFIX}/user/change-password`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
@@ -6334,7 +6334,7 @@ app.put(`${API_PREFIX}/user/change-password`, authenticateToken, async (req: Aut
 });
 
 // ユーザーのアカウント削除API
-app.delete(`${API_PREFIX}/user/delete-account`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
