@@ -89,7 +89,7 @@ export class BackendClient {
     return this.fetch(backendPath, {
       method: request.method,
       headers,
-      body: request.method !== 'GET' ? await request.text() : undefined
+      body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined
     });
   }
 }
