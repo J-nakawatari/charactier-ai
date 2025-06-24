@@ -29,8 +29,9 @@ async function handler(
     });
 
     // クッキーを転送
-    const cookieStore = cookies();
-    const cookieHeader = cookieStore.toString();
+    const cookieStore = await cookies();
+    const allCookies = cookieStore.getAll();
+    const cookieHeader = allCookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
     if (cookieHeader) {
       headers.set('Cookie', cookieHeader);
     }
