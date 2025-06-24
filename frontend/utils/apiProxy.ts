@@ -112,7 +112,7 @@ export async function createAuthenticatedApiProxy(
   backendPath: string,
   request: NextRequest
 ): Promise<NextResponse> {
-  return createApiProxy(backendPath, request, { requireAuth: true });
+  return createApiProxy(backendPath, request, { requireAuth: true, useCookieAuth: true });
 }
 
 /**
