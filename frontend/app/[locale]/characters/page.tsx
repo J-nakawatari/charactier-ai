@@ -70,7 +70,7 @@ function CharactersPageContent({
         console.log('👤 取得したユーザーデータ (API):', {
           user: data.user,
           purchasedCharacters: data.user?.purchasedCharacters,
-          affinities: data.user?.affinities?.length || 0
+          affinities: data.user?.affinities
         });
         // user.profileは基本情報のみなので、purchasedCharactersとaffinitiesは別途取得が必要
         setUserAffinities(data.user?.affinities || []);

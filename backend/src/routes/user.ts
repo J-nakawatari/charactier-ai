@@ -21,6 +21,7 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
     const user = await UserModel.findById(userId)
       .select('-password')
       .populate('purchasedCharacters', '_id name')
+      .populate('selectedCharacter', '_id name')
       .populate('affinities.character', '_id name');
       
     if (!user) {
@@ -40,7 +41,8 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
         createdAt: user.createdAt,
         lastLogin: user.lastLogin,
         purchasedCharacters: user.purchasedCharacters || [],
-        affinities: user.affinities || []
+        affinities: user.affinities || [],
+        selectedCharacter: user.selectedCharacter || null
       }
     });
 
