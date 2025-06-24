@@ -1406,8 +1406,8 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/analytics`, authenticateToken, 
 });
 
 
-// パスワード変更API
-routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+// パスワード変更API (削除: 6261行目に同じ定義があるため)
+/* routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -1476,10 +1476,10 @@ routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateTo
       message: 'パスワードの変更に失敗しました'
     });
   }
-});
+}); */
 
-// アカウント削除API
-routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+// アカウント削除API (削除: 6337行目に同じ定義があるため)
+/* routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
     if (!userId) {
@@ -1533,7 +1533,7 @@ routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticate
       message: 'アカウントの削除に失敗しました'
     });
   }
-});
+}); */
 
 // キャラクター選択API（チャット画面で使用）
 routeRegistry.define('POST', `${API_PREFIX}/user/select-character`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
