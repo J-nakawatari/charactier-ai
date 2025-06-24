@@ -8,9 +8,11 @@ const API_BASE = `/api/${API_VERSION}`;
 
 async function handler(
   req: NextRequest,
-  { params }: { params: { slug?: string[] } }
+  context: { params: Promise<{ slug?: string[] }> }
 ) {
   try {
+    // paramsをawaitで取得
+    const params = await context.params;
     // スラッグからパスを構築
     const path = params.slug ? params.slug.join('/') : '';
     const url = `${BACKEND_URL}${API_BASE}/${path}${req.nextUrl.search}`;
