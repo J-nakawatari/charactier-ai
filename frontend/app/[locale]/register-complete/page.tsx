@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Mail, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api-config';
+import { API_BASE_URL } from '@/libs/constants';
 
 export default function RegisterCompletePage({ 
   params
@@ -42,7 +42,7 @@ export default function RegisterCompletePage({
     setResendError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/resend-verification`, {
+      const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

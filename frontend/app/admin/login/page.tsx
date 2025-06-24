@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Shield } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api-config';
+import { API_BASE_URL } from '@/libs/constants';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -25,7 +25,7 @@ export default function AdminLoginPage() {
       setIsLoading(true);
       setError('');
 
-      const response = await fetch(`${API_BASE_URL}/api/auth/admin/login`, {
+      const response = await fetch(`${API_BASE_URL}/auth/admin/login`, {
         method: 'POST',
         credentials: 'include', // クッキーを受信
         headers: {

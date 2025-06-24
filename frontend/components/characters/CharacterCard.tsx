@@ -10,7 +10,7 @@ import AffinityBar from './AffinityBar';
 import LockBadge from './LockBadge';
 import { PriceDisplay } from '../common/PriceDisplay';
 import { BaseCharacter } from '../../types/common';
-import { API_BASE_URL } from '@/lib/api-config';
+import { API_BASE_URL } from '@/libs/constants';
 import { getSafeImageUrl } from '@/utils/imageUtils';
 import { getPersonalityPresetLabel, getPersonalityTagLabel } from '@/lib/characterConstants';
 
@@ -72,7 +72,7 @@ export default function CharacterCard({
       console.log('🛒 キャラクター購入リクエスト開始:', character._id);
 
       // キャラクター購入のチェックアウトセッション作成（直接バックエンドアクセス）
-      const response = await fetch(`${API_BASE_URL}/api/purchase/create-character-checkout-session`, {
+      const response = await fetch(`${API_BASE_URL}/purchase/create-character-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

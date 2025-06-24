@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
-import { API_BASE_URL } from '@/lib/api-config';
+import { API_BASE_URL } from '@/libs/constants';
 import * as gtag from '@/lib/gtag';
 import { CommercialTransactionModal } from '@/components/CommercialTransactionModal';
 
@@ -130,7 +130,7 @@ export default function LoginPage() {
       }
       
       // バックエンドのログインAPIを呼び出し
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

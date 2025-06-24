@@ -1,3 +1,12 @@
 {
-  "extends": ["next/core-web-vitals"]
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "TemplateLiteral[quasis.0.value.raw*='/api/']",
+        "message": "直書き '/api/' は禁止。API_BASE_URL を使うか '/api/v1/' に統一してください。"
+      }
+    ]
+  }
 }

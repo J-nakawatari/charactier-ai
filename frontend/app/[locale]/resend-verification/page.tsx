@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api-config';
+import { API_BASE_URL } from '@/libs/constants';
 
 export default function ResendVerificationPage({ 
   params
@@ -46,7 +46,7 @@ export default function ResendVerificationPage({
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/resend-verification`, {
+      const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { API_BASE_URL } from '@/lib/api-config';
+import { API_BASE_URL } from '@/libs/constants';
 
 function VerifyEmailContent({ locale }: { locale: string }) {
   const router = useRouter();
@@ -26,7 +26,7 @@ function VerifyEmailContent({ locale }: { locale: string }) {
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/verify-email?token=${token}`);
+        const response = await fetch(`${API_BASE_URL}/auth/verify-email?token=${token}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -42,7 +42,7 @@ function VerifyEmailContent({ locale }: { locale: string }) {
             
             // ユーザー情報を取得
             try {
-              const userResponse = await fetch(`${API_BASE_URL}/api/user/profile`, {
+              const userResponse = await fetch(`${API_BASE_URL}/user/profile`, {
                 headers: {
                   'Authorization': `Bearer ${data.tokens.accessToken}`
                 }
