@@ -1,16 +1,15 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import api from '@/lib/axios';
+import { AxiosInstance, AxiosError } from 'axios';
 
 // API Version from environment variable
 const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
 
 // APIクライアントの作成
-export const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? `/api/${API_VERSION}`,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true, // Cookie認証のため
-});
+// 既存のapiインスタンスを再エクスポート
+export { api };
+
+// 追加設定
+api.defaults.headers.common['Content-Type'] = 'application/json';
 
 // デバッグ用
 console.log(`🔗 API Client initialized with base URL: /api/${API_VERSION}`);
