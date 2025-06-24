@@ -5,7 +5,7 @@ const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
 
 // APIクライアントの作成
 export const api: AxiosInstance = axios.create({
-  baseURL: `/api/${API_VERSION}`,
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? `/api/${API_VERSION}`,
   headers: {
     'Content-Type': 'application/json',
   },
