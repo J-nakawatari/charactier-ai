@@ -11,6 +11,7 @@ import RecentChatHistory from '@/components/user/RecentChatHistory';
 import PurchaseHistorySummary from '@/components/user/PurchaseHistorySummary';
 import BadgeGallery from '@/components/user/BadgeGallery';
 import AnalyticsCharts from '@/components/user/AnalyticsCharts';
+import { getAuthHeaders } from '@/utils/auth';
 // 将来実装用コンポーネント（現在は非表示）
 // import EnhancedAnalyticsSection from '@/components/future-features/EnhancedAnalyticsSection';
 // import AchievementSystem from '@/components/future-features/AchievementSystem';
@@ -52,18 +53,9 @@ export default function DashboardPage() {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
-        // 認証ヘッダーを取得
-        const token = localStorage.getItem('accessToken');
-        const headers: HeadersInit = {
-          'Content-Type': 'application/json',
-        };
         
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-
         const response = await fetch('/api/v1/user/dashboard', {
-          headers
+          headers: getAuthHeaders()
         });
 
         if (!response.ok) {
