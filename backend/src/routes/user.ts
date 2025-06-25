@@ -179,7 +179,7 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
         character: affinity.character ? {
           _id: affinity.character._id || affinity.character,
           name: affinity.character.name || { ja: 'Unknown', en: 'Unknown' },
-          imageCharacterSelect: affinity.character.imageCharacterSelect || affinity.character.imageChatAvatar || '/images/default-avatar.png'
+          imageCharacterSelect: affinity.character.imageCharacterSelect || affinity.character.imageChatAvatar || '/uploads/placeholder.png'
         } : null,
         level: affinity.level || 0,
         experience: affinity.experience || 0,
@@ -208,7 +208,7 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
         character: {
           _id: (chat.characterId as any)._id || chat.characterId,
           name: (chat.characterId as any).name || { ja: 'Unknown', en: 'Unknown' },
-          imageCharacterSelect: (chat.characterId as any).imageChatAvatar || '/images/default-avatar.png'
+          imageCharacterSelect: (chat.characterId as any).imageChatAvatar || '/uploads/placeholder.png'
         },
         lastMessage: chat.messages && chat.messages.length > 0 
           ? chat.messages[chat.messages.length - 1].content 

@@ -285,8 +285,8 @@ function CharactersPageContent({
                 ? { ja: char.description, en: char.description }
                 : char.description,
               characterAccessType: char.characterAccessType === 'free' ? 'free' : 'purchaseOnly',
-              imageChatAvatar: (char as any).imageChatAvatar || '/images/default-avatar.png',
-              imageChatBackground: (char as any).imageChatBackground || '/images/default-bg.png',
+              imageChatAvatar: (char as any).imageChatAvatar || '/uploads/placeholder.png',
+              imageChatBackground: (char as any).imageChatBackground || '/uploads/placeholder.png',
               currentMood: (char as any).currentMood || 'happy',
               themeColor: (char as any).themeColor || '#8B5CF6',
               aiModel: (char as any).aiModel || 'gpt-4o-mini',
