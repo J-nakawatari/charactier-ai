@@ -1087,6 +1087,12 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
 
     // nullを除外
     const validAffinities = affinities.filter(a => a !== null);
+    
+    log.debug('Formatted affinities for dashboard:', {
+      userId: userId.toString(),
+      totalAffinities: validAffinities.length,
+      affinities: validAffinities
+    });
 
     // recentChatsをフロントエンドが期待する形式に変換
     const formattedRecentChats = await Promise.all(recentChats.map(async (chat) => {
@@ -2289,6 +2295,14 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
         const newAffinity = Math.min(100, currentUserAffinity + affinityIncrease);
 
         // UserModelの親密度データも更新
+        log.debug('Updating user affinity:', {
+          userId: req.user._id,
+          characterId,
+          previousAffinity,
+          newAffinity,
+          affinityIncrease
+        });
+        
         try {
           const userAffinityUpdate = await UserModel.findOneAndUpdate(
             { 
@@ -2309,6 +2323,11 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
 
           if (!userAffinityUpdate) {
             // 親密度データが存在しない場合は新規作成
+            log.info('Creating new affinity data for user:', {
+              userId: req.user._id,
+              characterId
+            });
+            
             await UserModel.findByIdAndUpdate(
               req.user._id,
               {
@@ -2336,7 +2355,9 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
                     totalGiftsValue: 0,
                     unlockedRewards: [],
                     nextRewardLevel: 10,
-                    moodHistory: []
+                    moodHistory: [],
+                    unlockedImages: [],
+                    nextUnlockLevel: 10
                   }
                 }
               },
