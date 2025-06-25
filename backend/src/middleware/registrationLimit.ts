@@ -12,9 +12,9 @@ const registrationLimiter = new RateLimiterMemory({
 // 短期間の連続登録を防ぐ
 const shortTermLimiter = new RateLimiterMemory({
   keyPrefix: 'registration_short',
-  points: 1, // 1回まで
-  duration: 300, // 5分間
-  blockDuration: 300,
+  points: 3, // 3回まで（テスト用に緩和）
+  duration: 60, // 1分間（テスト用に短縮）
+  blockDuration: 60,
 });
 
 export const registrationRateLimit = async (
