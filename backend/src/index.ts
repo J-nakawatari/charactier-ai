@@ -1016,10 +1016,10 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
       return;
     }
 
-    // ユーザー基本情報を取得
+    // ユーザー基本情報を取得 - affinitiesを明示的に含める
     const user = await UserModel.findById(userId)
-      .select('_id email name createdAt lastLogin affinities tokenBalance totalSpent selectedCharacter purchasedCharacters')
-      .populate('purchasedCharacters', '_id name');
+      .populate('purchasedCharacters', '_id name')
+      .lean();
     
     // affinities.characterのpopulateが失敗することがあるため、一旦populateなしで取得
     
