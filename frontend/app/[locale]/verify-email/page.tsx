@@ -26,11 +26,8 @@ function VerifyEmailContent({ locale }: { locale: string }) {
       }
 
       try {
-        // 一時的にバックエンドに直接アクセス（プロキシの問題を回避）
-        const backendUrl = process.env.NODE_ENV === 'production' 
-          ? 'https://charactier-ai.com' 
-          : 'http://localhost:3000';
-        const response = await fetch(`${backendUrl}/api/v1/auth/verify-email?token=${token}`);
+        // APIエンドポイントにアクセス
+        const response = await fetch(`/api/v1/auth/verify-email?token=${token}`);
         const data = await response.json();
 
         if (response.ok) {
