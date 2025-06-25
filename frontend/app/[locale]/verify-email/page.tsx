@@ -26,8 +26,11 @@ function VerifyEmailContent({ locale }: { locale: string }) {
       }
 
       try {
-        // APIエンドポイントにアクセス
-        const response = await fetch(`/api/v1/auth/verify-email?token=${token}`);
+        // APIエンドポイントにアクセス（localeが含まれないよう絶対パスを使用）
+        const apiUrl = process.env.NODE_ENV === 'production' 
+          ? 'https://charactier-ai.com/api/v1/auth/verify-email'
+          : 'http://localhost:3000/api/v1/auth/verify-email';
+        const response = await fetch(`${apiUrl}?token=${token}`);
         const data = await response.json();
 
         if (response.ok) {
