@@ -5694,11 +5694,11 @@ app.post(`${API_PREFIX}/admin/errors/test`, authenticateToken, async (req: AuthR
       return;
     }
 
-    // 一時的に本番環境でも許可（デバッグ用）
-    // if (process.env.NODE_ENV === 'production') {
-    //   res.status(403).json({ error: 'Test errors not allowed in production' });
-    //   return;
-    // }
+    // 開発環境でのみ許可
+    if (process.env.NODE_ENV === 'production') {
+      res.status(403).json({ error: 'Test errors not allowed in production' });
+      return;
+    }
 
     // テスト用エラーを生成
     const testErrors = [
