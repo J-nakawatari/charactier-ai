@@ -19,42 +19,43 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
     }
 
     const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
-    const offset = parseInt(req.query.offset as string) || 0;
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const offset = (page - 1) * limit;
     const types = req.query.type ? (req.query.type as string).split(',') : null;
 
     log.info('Admin notifications request', {
       adminId: req.admin._id,
       limit,
+      page,
       offset,
-      types
+      types,
+      isActive: req.query.isActive,
+      search: req.query.search
     });
 
-    // クエリ構築
-    const query: any = {
-      isActive: true,
-      // 管理者向け通知のみ（または全体向け）
-      $or: [
-        { targetUserGroups: 'admins' },
-        { targetUserGroups: 'all' }
-      ]
-    };
+    // クエリ構築 - 管理者は全てのお知らせを見る（管理用）
+    const query: any = {};
 
     // タイプフィルター
     if (types && types.length > 0) {
       query.type = { $in: types };
     }
 
-    // 現在有効な通知のみ
-    const now = new Date();
-    query.validFrom = { $lte: now };
-    query.$and = [
-      {
-        $or: [
-          { validUntil: { $exists: false } },
-          { validUntil: { $gte: now } }
-        ]
-      }
-    ];
+    // isActiveフィルター（フロントエンドから渡される）
+    if (req.query.isActive !== undefined) {
+      query.isActive = req.query.isActive === 'true';
+    }
+
+    // 検索フィルター
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search as string, 'i');
+      query.$or = [
+        { 'title.ja': searchRegex },
+        { 'title.en': searchRegex },
+        { 'message.ja': searchRegex },
+        { 'message.en': searchRegex }
+      ];
+    }
 
     // お知らせを取得
     const notifications = await NotificationModel.find(query)
@@ -89,10 +90,9 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
     res.json({
       notifications: notificationsWithReadStatus,
       pagination: {
-        total,
-        limit,
-        offset,
-        hasMore: offset + limit < total
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalItems: total
       }
     });
 

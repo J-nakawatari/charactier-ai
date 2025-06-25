@@ -262,7 +262,7 @@ export default function NotificationsManagementPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => router.back()}
+                onClick={() => router.push('/admin/dashboard')}
                 className="flex items-center justify-center w-10 h-10 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
               >
                 <Image
