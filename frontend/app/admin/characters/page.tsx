@@ -56,7 +56,7 @@ export default function CharactersPage() {
     try {
       setIsLoading(true);
       
-      const response = await adminFetch('/api/v1/characters?locale=ja');
+      const response = await adminFetch('/api/v1/admin/characters?locale=ja&includeInactive=true');
 
       if (response.ok) {
         const data = await response.json();

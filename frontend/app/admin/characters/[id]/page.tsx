@@ -69,7 +69,7 @@ export default function CharacterDetail() {
       try {
         setLoading(true);
         
-        const response = await adminFetch(`/api/v1/characters/${params.id}`);
+        const response = await adminFetch(`/api/v1/admin/characters/${params.id}`);
         
         if (!response.ok) {
           throw new Error(`キャラクターの取得に失敗しました: ${response.status}`);

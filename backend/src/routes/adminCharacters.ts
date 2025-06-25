@@ -3,6 +3,7 @@ import { Router, Response, NextFunction, Request } from 'express';
 import { CharacterModel } from '../models/CharacterModel';
 import { UserModel } from '../models/UserModel';
 import { authenticateToken, hasWritePermission } from '../middleware/auth';
+import { uploadImage, optimizeImage } from '../utils/fileUpload';
 import { validate, validateObjectId } from '../middleware/validation';
 import { characterSchemas } from '../validation/schemas';
 import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
@@ -331,6 +332,159 @@ router.patch('/:id/toggle-active', authenticateToken, validateObjectId('id'), as
     log.error('Error toggling character status', error, {
       characterId: req.params.id,
       adminId: req.admin?._id
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
+// キャラクター作成（管理者用）
+router.post('/', authenticateToken, validate({ body: characterSchemas.create }), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 書き込み権限チェック（super_adminのみ）
+    if (!hasWritePermission(req)) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Only super admin can create characters');
+      return;
+    }
+
+    const {
+      name,
+      description,
+      characterAccessType = 'free',
+      aiModel = 'gpt-4o-mini',
+      gender,
+      personalityPreset,
+      personalityTags = [],
+      personalityPrompt,
+      themeColor = '#8B5CF6',
+      imageCharacterSelect,
+      imageDashboard,
+      imageChatAvatar,
+      defaultMessage,
+      affinitySettings,
+      stripeProductId,
+      purchasePrice
+    } = req.body;
+
+    // 新しいキャラクターを作成
+    const character = new CharacterModel({
+      name,
+      description,
+      characterAccessType,
+      aiModel,
+      gender,
+      personalityPreset,
+      personalityTags,
+      personalityPrompt,
+      themeColor,
+      imageCharacterSelect,
+      imageDashboard,
+      imageChatAvatar,
+      defaultMessage,
+      affinitySettings,
+      stripeProductId,
+      purchasePrice,
+      isActive: true
+    });
+
+    const savedCharacter = await character.save();
+    
+    log.info('Character created by admin', {
+      characterId: savedCharacter._id,
+      adminId: req.admin?._id,
+      name: savedCharacter.name
+    });
+
+    res.status(201).json({
+      message: 'キャラクターが作成されました',
+      character: savedCharacter
+    });
+
+  } catch (error) {
+    const errorCode = mapErrorToClientCode(error);
+    const statusCode = errorCode === ClientErrorCode.INVALID_INPUT ? 400 : 500;
+    log.error('Admin character creation error', error, {
+      adminId: req.admin?._id,
+      body: req.body
+    });
+    sendErrorResponse(res, statusCode, errorCode, error);
+  }
+});
+
+// キャラクター更新（管理者用）
+router.put('/:id', authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 書き込み権限チェック（super_adminのみ）
+    if (!hasWritePermission(req)) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Only super admin can update characters');
+      return;
+    }
+
+    const character = await CharacterModel.findById(req.params.id);
+    
+    if (!character) {
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'Character not found');
+      return;
+    }
+
+    // 更新データを適用
+    const updatedCharacter = await CharacterModel.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    log.info('Character updated by admin', {
+      characterId: character._id,
+      adminId: req.admin?._id,
+      updates: Object.keys(req.body)
+    });
+
+    res.json({
+      message: 'キャラクターが更新されました',
+      character: updatedCharacter
+    });
+
+  } catch (error) {
+    log.error('Admin character update error', error, {
+      characterId: req.params.id,
+      adminId: req.admin?._id
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
+// 画像アップロード（管理者用）
+router.post('/upload/image', authenticateToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 書き込み権限チェック（super_adminのみ）
+    if (!hasWritePermission(req)) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Only super admin can upload images');
+      return;
+    }
+
+    if (!req.file) {
+      sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD, 'No image file provided');
+      return;
+    }
+    
+    const imageUrl = `/uploads/images/${req.file.filename}`;
+    log.info('Image uploaded by admin', {
+      adminId: req.admin?._id,
+      filename: req.file.filename,
+      size: req.file.size
+    });
+    
+    res.json({
+      message: '画像アップロードが完了しました',
+      imageUrl,
+      filename: req.file.filename,
+      size: req.file.size
+    });
+    
+  } catch (error) {
+    log.error('Admin image upload error', error, {
+      adminId: req.admin?._id,
+      fileName: req.file?.filename
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
