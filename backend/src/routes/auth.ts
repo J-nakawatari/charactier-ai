@@ -418,8 +418,9 @@ router.post('/user/setup-complete', authenticateToken, async (req: Request, res:
 
 // メールアドレス認証
 router.get('/verify-email', async (req: Request, res: Response): Promise<void> => {
+  const { token, locale = 'ja' } = req.query;
+  
   try {
-    const { token, locale = 'ja' } = req.query;
 
     if (!token || typeof token !== 'string') {
       // エラーページをHTMLで返す
