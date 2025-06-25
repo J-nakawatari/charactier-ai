@@ -36,6 +36,7 @@ interface ITokenUsage extends Document {
   outputTokens: number;
   apiCost: number; // USD
   apiCostYen: number; // 円換算
+  cacheHit: boolean; // キャッシュヒット情報
 
   // 原価・利益分析
   stripeFee: number;
@@ -138,6 +139,13 @@ const TokenUsageSchema = new Schema<ITokenUsage>({
     required: true,
     min: 0,
     max: 1500 // 1500円上限
+  },
+  
+  // キャッシュヒット情報
+  cacheHit: {
+    type: Boolean,
+    default: false,
+    index: true
   },
 
   // 原価・利益分析

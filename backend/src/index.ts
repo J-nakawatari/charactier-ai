@@ -2446,6 +2446,7 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
             outputTokens: outputTokens,
             apiCost: apiCost,
             apiCostYen: apiCostYen,
+            cacheHit: aiResponse.cacheHit,
             
             // 原価・利益分析
             stripeFee: 0, // チャットメッセージは直接課金なし

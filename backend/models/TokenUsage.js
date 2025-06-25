@@ -113,6 +113,12 @@ const TokenUsageSchema = new mongoose_1.Schema({
         min: 0,
         max: 1500 // 1500円上限
     },
+    // キャッシュヒット情報
+    cacheHit: {
+        type: Boolean,
+        default: false,
+        index: true
+    },
     // 原価・利益分析
     stripeFee: {
         type: Number,

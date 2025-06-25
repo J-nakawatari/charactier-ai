@@ -28,6 +28,7 @@ interface ITokenUsage extends Document {
     outputTokens: number;
     apiCost: number;
     apiCostYen: number;
+    cacheHit: boolean;
     stripeFee: number;
     grossProfit: number;
     profitMargin: number;
