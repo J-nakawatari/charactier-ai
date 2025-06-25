@@ -30,7 +30,13 @@ export const registrationRateLimit = async (
   }
 
   try {
-    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    // Nginx経由の場合、x-real-ipまたはx-forwarded-forからIPを取得
+    const ip = (req.headers['x-real-ip'] as string) || 
+               (req.headers['x-forwarded-for'] as string)?.split(',')[0] || 
+               req.ip || 
+               req.connection.remoteAddress || 
+               'unknown';
+    
     console.log('🔍 Registration rate limit check - IP:', ip, 'Headers:', {
       'x-real-ip': req.headers['x-real-ip'],
       'x-forwarded-for': req.headers['x-forwarded-for'],
