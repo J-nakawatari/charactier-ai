@@ -28,11 +28,21 @@ export async function adminFetch(endpoint: string, options: AdminApiOptions = {}
 
   // Handle unauthorized responses
   if (response.status === 401 || response.status === 403) {
-    // Redirect to login if unauthorized
-    if (typeof window !== 'undefined') {
-      window.location.href = '/admin/login';
-    }
-    throw new Error('Unauthorized');
+    console.error('🚨 Admin API Error:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.url
+    });
+    
+    // Log the error response for debugging
+    const errorText = await response.text();
+    console.error('🚨 Error Response:', errorText);
+    
+    // For now, don't redirect to allow debugging
+    // if (typeof window !== 'undefined') {
+    //   window.location.href = '/admin/login';
+    // }
+    throw new Error(`Unauthorized: ${response.status} - ${errorText}`);
   }
 
   return response;

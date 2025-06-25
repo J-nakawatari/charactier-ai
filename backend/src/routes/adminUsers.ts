@@ -13,18 +13,26 @@ const router: Router = Router();
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {
   log.debug('Admin authentication check for users API', {
+    hasAdmin: !!req.admin,
     hasUser: !!req.user,
+    adminId: req.admin?._id?.toString(),
     userId: req.user?._id?.toString(),
-    isAdmin: req.user?.isAdmin
+    path: req.path,
+    originalUrl: req.originalUrl
   });
 
-  if (!req.user?.isAdmin) {
-    log.warn('Admin access denied - user is not admin', { userId: req.user?._id?.toString() });
-    sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'User is not admin');
+  // 管理者パスなので req.admin をチェック
+  if (!req.admin) {
+    log.warn('Admin access denied - no admin in request', { 
+      hasAdmin: !!req.admin,
+      hasUser: !!req.user,
+      path: req.originalUrl 
+    });
+    sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
     return;
   }
   
-  log.debug('Admin access granted for users API', { userId: req.user?._id?.toString() });
+  log.debug('Admin access granted for users API', { adminId: req.admin._id?.toString() });
   next();
 };
 
@@ -111,7 +119,7 @@ router.get('/',
 
   } catch (error) {
     log.error('Error fetching admin users', error, {
-      adminId: req.user?._id,
+      adminId: req.admin?._id,
       query: req.query
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
@@ -159,7 +167,7 @@ router.post('/:userId/reset-tokens',
 
   } catch (error) {
     log.error('Error resetting user tokens', error, {
-      adminId: req.user?._id,
+      adminId: req.admin?._id,
       userId: req.params.userId,
       newBalance: req.body.newBalance
     });
@@ -208,7 +216,7 @@ router.put('/:userId/status', authenticateToken, authenticateAdmin, async (req: 
 
   } catch (error) {
     log.error('Error updating user status', error, {
-      adminId: req.user?._id,
+      adminId: req.admin?._id,
       userId: req.params.userId,
       status: req.body.status
     });
@@ -286,7 +294,7 @@ router.get('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest
 
   } catch (error) {
     log.error('Error fetching user details', error, {
-      adminId: req.user?._id,
+      adminId: req.admin?._id,
       userId: req.params.id
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
