@@ -131,7 +131,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
     }
 
     // お知らせを作成
-    const notification = await NotificationModel.create({
+    const notificationData: any = {
       title,
       message,
       type: type || 'info',
@@ -141,11 +141,18 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
       validFrom: validFrom ? new Date(validFrom) : new Date(),
       validUntil: validUntil ? new Date(validUntil) : undefined,
       isActive: true,
-      createdBy: req.admin._id,
+      createdBy: new mongoose.Types.ObjectId(req.admin._id.toString()),
       totalTargetUsers: 0, // 後で計算する
       totalViews: 0,
       totalReads: 0
-    });
+    };
+
+    // validUntilがundefinedの場合は除外
+    if (!validUntil) {
+      delete notificationData.validUntil;
+    }
+
+    const notification = await NotificationModel.create(notificationData);
 
     log.info('Notification created', {
       adminId: req.admin._id,
@@ -318,7 +325,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
 
     // 更新データを準備
     const updateData: any = {
-      updatedBy: req.admin._id,
+      updatedBy: new mongoose.Types.ObjectId(req.admin._id.toString()),
       updatedAt: new Date()
     };
 

@@ -173,12 +173,12 @@ const NotificationSchema = new Schema<INotification>({
   // メタデータ
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Admin',
     required: true
   },
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'Admin'
   }
 }, {
   timestamps: true,
