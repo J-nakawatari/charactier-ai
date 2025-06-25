@@ -61,11 +61,39 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
       return;
     }
 
-    // ユーザー情報取得
-    const user = await UserModel.findById(userId).select('-password');
+    // ユーザー情報取得 - lean()を使用して生のJavaScriptオブジェクトとして取得
+    const user = await UserModel.findById(userId)
+      .select('-password')
+      .lean();
+    
     if (!user) {
       sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND);
       return;
+    }
+    
+    // affinitiesフィールドの検証
+    if (!user.affinities) {
+      log.warn('User affinities field is missing:', {
+        userId: user._id.toString(),
+        userFields: Object.keys(user)
+      });
+      user.affinities = [];
+    }
+    
+    // 親密度データが取得できない場合は、別のクエリで取得を試みる
+    if (!user.affinities || user.affinities.length === 0) {
+      log.info('No affinities in user object, trying separate query');
+      const userWithAffinities = await UserModel.findById(userId)
+        .select('affinities')
+        .populate('affinities.character', '_id name imageCharacterSelect imageChatAvatar')
+        .lean();
+      
+      if (userWithAffinities && userWithAffinities.affinities) {
+        log.info('Found affinities in separate query:', {
+          count: userWithAffinities.affinities.length
+        });
+        user.affinities = userWithAffinities.affinities;
+      }
     }
 
     // 購入済みキャラクター取得
@@ -101,6 +129,13 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
         favoriteCharacterId = charId;
       }
     }
+    
+    // デバッグログ：affinities データを確認
+    log.info('Dashboard - Final affinities data:', {
+      userId: user._id.toString(),
+      affinitiesCount: user.affinities?.length || 0,
+      affinitiesData: user.affinities
+    });
 
     let favoriteCharacter = null;
     if (favoriteCharacterId) {
@@ -140,7 +175,27 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
         } : null,
         activeChats: activeChatsCount
       },
-      affinities: [], // TODO: 実装が必要
+      affinities: user.affinities ? user.affinities.map((affinity: any) => ({
+        character: affinity.character ? {
+          _id: affinity.character._id || affinity.character,
+          name: affinity.character.name || { ja: 'Unknown', en: 'Unknown' },
+          imageCharacterSelect: affinity.character.imageCharacterSelect || affinity.character.imageChatAvatar || '/images/default-avatar.png'
+        } : null,
+        level: affinity.level || 0,
+        experience: affinity.experience || 0,
+        experienceToNext: affinity.experienceToNext || 100,
+        emotionalState: affinity.emotionalState || 'neutral',
+        relationshipType: affinity.relationshipType || 'stranger',
+        trustLevel: affinity.trustLevel || 0,
+        intimacyLevel: affinity.intimacyLevel || 0,
+        totalConversations: affinity.totalConversations || 0,
+        totalMessages: affinity.totalMessages || 0,
+        lastInteraction: affinity.lastInteraction || null,
+        currentStreak: affinity.currentStreak || 0,
+        maxStreak: affinity.maxStreak || 0,
+        unlockedRewards: affinity.unlockedRewards || [],
+        nextRewardLevel: affinity.nextRewardLevel || 10
+      })) : [],
       notifications: [], // TODO: 実装が必要
       badges: [], // TODO: 実装が必要
       analytics: {
