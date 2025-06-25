@@ -1075,19 +1075,31 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
     });
 
     // 親密度情報をフロントエンドが期待する形式に変換
-    const affinities = await Promise.all((user.affinities || []).map(async (affinity: any) => {
+    log.info('Processing affinities for dashboard:', {
+      userId: userId.toString(),
+      rawAffinitiesCount: user.affinities?.length || 0
+    });
+    
+    const affinities = await Promise.all((user.affinities || []).map(async (affinity: any, index: number) => {
+      log.debug(`Processing affinity ${index}:`, {
+        characterId: affinity.character,
+        level: affinity.level,
+        hasCharacterData: !!affinity.character
+      });
+      
       // キャラクターがpopulateされていない場合は手動で取得
       let character = affinity.character;
       if (!character || typeof character === 'string' || character instanceof mongoose.Types.ObjectId) {
         const characterDoc = await CharacterModel.findById(character).select('_id name imageCharacterSelect themeColor');
         if (!characterDoc) {
+          log.warn('Character not found for affinity:', { characterId: character });
           return null;
         }
         character = characterDoc;
       }
 
       // デフォルト値を設定
-      return {
+      const formattedAffinity = {
         character: {
           _id: character._id,
           name: character.name || { ja: '不明なキャラクター', en: 'Unknown Character' },
@@ -1101,6 +1113,10 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
         unlockedImages: affinity.unlockedImages || [],
         nextUnlockLevel: Math.floor((affinity.level || 0) / 10 + 1) * 10
       };
+      
+      log.debug(`Formatted affinity ${index}:`, formattedAffinity);
+      
+      return formattedAffinity;
     }));
 
     // nullを除外
@@ -2346,7 +2362,7 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
               characterId
             });
             
-            await UserModel.findByIdAndUpdate(
+            const newAffinityUser = await UserModel.findByIdAndUpdate(
               req.user._id,
               {
                 $push: {
@@ -2374,17 +2390,27 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
                     unlockedRewards: [],
                     nextRewardLevel: 10,
                     moodHistory: [],
-                    unlockedImages: [],
-                    nextUnlockLevel: 10
+                    currentMoodModifiers: []
                   }
                 }
               },
               { new: true }
             );
+            
+            log.info('New affinity created successfully:', {
+              userId: req.user._id,
+              characterId,
+              affinityCount: newAffinityUser?.affinities?.length || 0
+            });
           } else {
           }
         } catch (affinityError) {
-          // Error handling for affinity update
+          log.error('Failed to update user affinity:', {
+            userId: req.user._id,
+            characterId,
+            error: affinityError instanceof Error ? affinityError.message : 'Unknown error',
+            stack: affinityError instanceof Error ? affinityError.stack : undefined
+          });
         }
 
         // Chat response successful
