@@ -66,7 +66,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
     // 管理者の既読状況を取得
     const notificationIds = notifications.map(n => n._id.toString());
     const readStatuses = await AdminNotificationReadStatusModel.find({
-      adminId: new mongoose.Types.ObjectId(req.admin._id),
+      adminId: new mongoose.Types.ObjectId(req.admin._id.toString()),
       notificationId: { $in: notificationIds.map(id => new mongoose.Types.ObjectId(id)) }
     }).lean();
 
@@ -125,7 +125,7 @@ router.post('/:id/read', authenticateToken, async (req: AuthRequest, res: Respon
     // 既読状態を更新（upsert）
     await AdminNotificationReadStatusModel.findOneAndUpdate(
       {
-        adminId: new mongoose.Types.ObjectId(req.admin._id),
+        adminId: new mongoose.Types.ObjectId(req.admin._id.toString()),
         notificationId: new mongoose.Types.ObjectId(notificationId)
       },
       {
@@ -180,7 +180,7 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response):
         isActive: true,
         _id: {
           $nin: await AdminNotificationReadStatusModel.find({
-            adminId: req.admin._id,
+            adminId: req.admin._id.toString(),
             isRead: true
           }).distinct('notificationId')
         }
