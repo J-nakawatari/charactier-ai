@@ -252,8 +252,34 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
 【話し相手について】
 あなたが会話している相手の名前は「${userName}」です。会話の中で自然に名前を呼んであげてください。` : '';
 
-    systemPrompt = `あなたは${character.name.ja}というキャラクターです。
+    // personalityPromptが設定されている場合はそれを優先使用
+    if (character.personalityPrompt?.ja) {
+      systemPrompt = character.personalityPrompt.ja;
+      
+      // 年齢と職業の情報を追加
+      const additionalInfo = [];
+      if (character.age) additionalInfo.push(`年齢: ${character.age}`);
+      if (character.occupation) additionalInfo.push(`職業: ${character.occupation}`);
+      
+      if (additionalInfo.length > 0) {
+        systemPrompt = `${systemPrompt}\n\n【基本情報】\n${additionalInfo.join('\n')}`;
+      }
+      
+      // ムード情報を追加
+      if (moodInstruction) {
+        systemPrompt += moodInstruction;
+      }
+      
+      // ユーザー名情報を追加
+      if (userNameInfo) {
+        systemPrompt += userNameInfo;
+      }
+    } else {
+      // personalityPromptがない場合は従来のフォーマットを使用
+      systemPrompt = `あなたは${character.name.ja}というキャラクターです。
 性格: ${character.personalityPreset || '優しい'}
+年齢: ${character.age || '不明'}
+職業: ${character.occupation || '不明'}
 特徴: ${character.personalityTags?.join(', ') || '親しみやすい'}
 説明: ${character.description.ja}${moodInstruction}${userNameInfo}
 
@@ -264,6 +290,7 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
 - ${character.personalityTags?.join('\n- ') || '優しく親しみやすい会話'}
 - 約50-150文字程度で返答してください
 - 絵文字を適度に使用してください`;
+    }
 
     // 新規生成されたプロンプトをログに表示
     console.log('📝 ========== GENERATED SYSTEM PROMPT ==========');
@@ -1455,21 +1482,19 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
     // 5. プロンプトの診断情報
     const promptInfo = {
       personalityPrompt: character.personalityPrompt ? {
-        ja: character.personalityPrompt.ja?.substring(0, 100) + '...',
-        en: character.personalityPrompt.en?.substring(0, 100) + '...'
+        ja: character.personalityPrompt.ja?.substring(0, 200) + '...',
+        en: character.personalityPrompt.en?.substring(0, 200) + '...'
       } : null,
-      adminPrompt: character.adminPrompt ? {
-        ja: character.adminPrompt.ja?.substring(0, 100) + '...',
-        en: character.adminPrompt.en?.substring(0, 100) + '...'
-      } : null,
+      characterInfo: {
+        age: character.age || '未設定',
+        occupation: character.occupation || '未設定',
+        personalityPreset: character.personalityPreset || '未設定',
+        personalityTags: character.personalityTags || []
+      },
       promptLength: {
         personality: {
           ja: character.personalityPrompt?.ja?.length || 0,
           en: character.personalityPrompt?.en?.length || 0
-        },
-        admin: {
-          ja: character.adminPrompt?.ja?.length || 0,
-          en: character.adminPrompt?.en?.length || 0
         }
       }
     };

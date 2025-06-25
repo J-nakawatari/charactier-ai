@@ -50,10 +50,14 @@ interface ChatDiagnostics {
   } | null;
   prompt: {
     personalityPrompt: { ja: string; en: string } | null;
-    adminPrompt: { ja: string; en: string } | null;
+    characterInfo: {
+      age: string;
+      occupation: string;
+      personalityPreset: string;
+      personalityTags: string[];
+    };
     promptLength: {
       personality: { ja: number; en: number };
-      admin: { ja: number; en: number };
     };
   };
   system: {
@@ -271,37 +275,51 @@ export default function ChatDiagnosticsPage() {
         </h2>
         <div className="space-y-4">
           <div>
-            <h3 className="text-sm font-semibold mb-2">性格プロンプト</h3>
+            <h3 className="text-sm font-semibold mb-2 text-gray-800">キャラクター基本情報</h3>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <p className="text-xs text-gray-600">年齢</p>
+                <p className="font-medium text-gray-900">{diagnostics.prompt.characterInfo.age}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">職業</p>
+                <p className="font-medium text-gray-900">{diagnostics.prompt.characterInfo.occupation}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">性格プリセット</p>
+                <p className="font-medium text-gray-900">{diagnostics.prompt.characterInfo.personalityPreset}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">性格タグ</p>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {diagnostics.prompt.characterInfo.personalityTags.length > 0 ? (
+                    diagnostics.prompt.characterInfo.personalityTags.map((tag, idx) => (
+                      <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">
+                        {tag}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-500 text-sm">タグなし</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold mb-2 text-gray-800">性格プロンプト</h3>
             {diagnostics.prompt.personalityPrompt ? (
               <div className="space-y-2">
                 <div className="p-3 bg-gray-50 rounded">
                   <p className="text-xs text-gray-600 mb-1">日本語 ({diagnostics.prompt.promptLength.personality.ja}文字)</p>
-                  <p className="text-sm">{diagnostics.prompt.personalityPrompt.ja}</p>
+                  <p className="text-sm text-gray-700">{diagnostics.prompt.personalityPrompt.ja}</p>
                 </div>
                 <div className="p-3 bg-gray-50 rounded">
                   <p className="text-xs text-gray-600 mb-1">英語 ({diagnostics.prompt.promptLength.personality.en}文字)</p>
-                  <p className="text-sm">{diagnostics.prompt.personalityPrompt.en}</p>
+                  <p className="text-sm text-gray-700">{diagnostics.prompt.personalityPrompt.en}</p>
                 </div>
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">性格プロンプトが設定されていません</p>
-            )}
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold mb-2">管理プロンプト</h3>
-            {diagnostics.prompt.adminPrompt ? (
-              <div className="space-y-2">
-                <div className="p-3 bg-gray-50 rounded">
-                  <p className="text-xs text-gray-600 mb-1">日本語 ({diagnostics.prompt.promptLength.admin.ja}文字)</p>
-                  <p className="text-sm">{diagnostics.prompt.adminPrompt.ja}</p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded">
-                  <p className="text-xs text-gray-600 mb-1">英語 ({diagnostics.prompt.promptLength.admin.en}文字)</p>
-                  <p className="text-sm">{diagnostics.prompt.adminPrompt.en}</p>
-                </div>
-              </div>
-            ) : (
-              <p className="text-gray-500 text-sm">管理プロンプトが設定されていません</p>
+              <p className="text-gray-500 text-sm">性格プロンプトが設定されていません（デフォルトプロンプトが使用されます）</p>
             )}
           </div>
         </div>
