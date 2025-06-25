@@ -16,7 +16,7 @@ interface AuthRequest extends Request {
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: any, res: Response, next: any) => {
   // 管理者として認証されているかチェック（標準パターンに従う）
-  if (!req.user?.isAdmin) {
+  if (!req.admin) {
     res.status(403).json({ error: '管理者権限が必要です' });
     return;
   }

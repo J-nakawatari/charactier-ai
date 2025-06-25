@@ -11,8 +11,8 @@ const router: Router = Router();
 
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {
-  if (!req.user?.isAdmin) {
-    sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'User is not admin');
+  if (!req.admin) {
+    sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
     return;
   }
   next();
@@ -83,7 +83,7 @@ router.get('/violation-stats', authenticateToken, authenticateAdmin, async (req:
     
   } catch (error) {
     log.error('Error fetching violation stats', error, {
-      adminId: req.user?._id,
+      adminId: req.admin?._id,
       timeframe: req.query.timeframe
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
@@ -108,7 +108,7 @@ router.get('/recent-violations', authenticateToken, authenticateAdmin, async (re
     
   } catch (error) {
     log.error('Error fetching recent violations', error, {
-      adminId: req.user?._id,
+      adminId: req.admin?._id,
       limit: req.query.limit
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
@@ -134,7 +134,7 @@ router.get('/sanctioned-users', authenticateToken, authenticateAdmin, async (req
     
   } catch (error) {
     log.error('Error fetching sanctioned users', error, {
-      adminId: req.user?._id
+      adminId: req.admin?._id
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
@@ -162,7 +162,7 @@ router.get('/user/:userId/violations', authenticateToken, authenticateAdmin, asy
     
   } catch (error) {
     log.error('Error fetching user violations', error, {
-      adminId: req.user?._id,
+      adminId: req.admin?._id,
       userId: req.params.userId,
       limit: req.query.limit
     });
@@ -182,7 +182,7 @@ router.post('/lift-sanction/:userId', authenticateToken, authenticateAdmin, asyn
     
     const result = await liftSanction(
       new mongoose.Types.ObjectId(userId),
-      new mongoose.Types.ObjectId(req.user._id)
+      new mongoose.Types.ObjectId(req.admin._id)
     );
     
     res.json({
@@ -193,7 +193,7 @@ router.post('/lift-sanction/:userId', authenticateToken, authenticateAdmin, asyn
     
   } catch (error) {
     log.error('Error lifting sanction', error, {
-      adminId: req.user?._id,
+      adminId: req.admin?._id,
       userId: req.params.userId
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
@@ -258,7 +258,7 @@ router.get('/violations/search', authenticateToken, authenticateAdmin, async (re
     
   } catch (error) {
     log.error('Error searching violations', error, {
-      adminId: req.user?._id,
+      adminId: req.admin?._id,
       query: req.query
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);

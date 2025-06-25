@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Shield, AlertTriangle, CheckCircle, Activity, Users, Clock, Eye, UserX } from 'lucide-react';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminAuthenticatedFetch } from '@/utils/auth';
 
 interface ViolationStats {
   totalViolations: number;
@@ -54,9 +54,9 @@ export default function SecurityPage() {
       setLoading(true);
 
       const [statsRes, usersRes, violationsRes] = await Promise.all([
-        adminFetch('/api/v1/admin/security/violation-stats'),
-        adminFetch('/api/v1/admin/security/sanctioned-users'),
-        adminFetch('/api/v1/admin/security/recent-violations?limit=10')
+        adminAuthenticatedFetch('/api/v1/admin/security/violation-stats'),
+        adminAuthenticatedFetch('/api/v1/admin/security/sanctioned-users'),
+        adminAuthenticatedFetch('/api/v1/admin/security/recent-violations?limit=10')
       ]);
 
       if (statsRes.ok) {
@@ -87,7 +87,7 @@ export default function SecurityPage() {
     }
 
     try {
-      const response = await adminFetch(`/api/v1/admin/security/lift-sanction/${userId}`, {
+      const response = await adminAuthenticatedFetch(`/api/v1/admin/security/lift-sanction/${userId}`, {
         method: 'POST'
       });
 

@@ -12,19 +12,17 @@ const TokenUsageModel = require('../../models/TokenUsage');
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {
   console.log('🔍 Admin authentication check for token-usage API:', {
-    hasUser: !!req.user,
-    userId: req.user?._id,
-    isAdmin: req.user?.isAdmin,
-    email: req.user?.email
+    hasAdmin: !!req.admin,
+    adminId: req.admin?._id,
+    email: req.admin?.email
   });
 
-  if (!req.user?.isAdmin) {
-    console.log('❌ Admin access denied - user is not admin');
+  if (!req.admin) {
+    console.log('❌ Admin access denied - admin access required');
     res.status(403).json({ 
       error: '管理者権限が必要です',
       debug: {
-        hasUser: !!req.user,
-        isAdmin: req.user?.isAdmin
+        hasAdmin: !!req.admin
       }
     });
     return;
