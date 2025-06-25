@@ -97,10 +97,11 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
     });
 
   } catch (error) {
-    log.error('Error fetching admin notifications', error, {
+    log.error('Error fetching admin notifications', {
+      error: error instanceof Error ? error.message : 'Unknown error',
       adminId: req.admin?._id?.toString()
     });
-    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error instanceof Error ? error.message : 'An error occurred');
   }
 });
 
@@ -177,10 +178,17 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
     });
 
   } catch (error: any) {
-    log.error('Error creating notification', error, {
+    // エラーオブジェクトから安全な情報のみを抽出
+    const safeError = {
+      message: error.message || 'Unknown error',
+      name: error.name || 'Error',
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    };
+    
+    log.error('Error creating notification', safeError, {
       adminId: req.admin?._id?.toString(),
-      errorMessage: error.message,
-      errorName: error.name
+      errorMessage: safeError.message,
+      errorName: safeError.name
     });
     
     // MongoDBのバリデーションエラーの場合
@@ -192,7 +200,8 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
       log.error('Validation errors', { validationErrors });
     }
     
-    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+    // エラーレスポンスにも安全なエラー情報のみを渡す
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, safeError.message);
   }
 });
 
@@ -235,11 +244,12 @@ router.post('/:id/read', authenticateToken, async (req: AuthRequest, res: Respon
     });
 
   } catch (error) {
-    log.error('Error marking admin notification as read', error, {
+    log.error('Error marking admin notification as read', {
+      error: error instanceof Error ? error.message : 'Unknown error',
       adminId: req.admin?._id?.toString(),
       notificationId: req.params.id
     });
-    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error instanceof Error ? error.message : 'An error occurred');
   }
 });
 
@@ -307,10 +317,11 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response):
     });
 
   } catch (error) {
-    log.error('Error fetching admin notification stats', error, {
+    log.error('Error fetching admin notification stats', {
+      error: error instanceof Error ? error.message : 'Unknown error',
       adminId: req.admin?._id?.toString()
     });
-    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error instanceof Error ? error.message : 'An error occurred');
   }
 });
 
@@ -379,11 +390,12 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
     });
 
   } catch (error) {
-    log.error('Error updating notification', error, {
+    log.error('Error updating notification', {
+      error: error instanceof Error ? error.message : 'Unknown error',
       adminId: req.admin?._id?.toString(),
       notificationId: req.params.id
     });
-    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error instanceof Error ? error.message : 'An error occurred');
   }
 });
 
@@ -422,11 +434,12 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
     });
 
   } catch (error) {
-    log.error('Error deleting notification', error, {
+    log.error('Error deleting notification', {
+      error: error instanceof Error ? error.message : 'Unknown error',
       adminId: req.admin?._id?.toString(),
       notificationId: req.params.id
     });
-    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error instanceof Error ? error.message : 'An error occurred');
   }
 });
 
@@ -456,11 +469,12 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
     });
 
   } catch (error) {
-    log.error('Error fetching notification details', error, {
+    log.error('Error fetching notification details', {
+      error: error instanceof Error ? error.message : 'Unknown error',
       adminId: req.admin?._id?.toString(),
       notificationId: req.params.id
     });
-    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error instanceof Error ? error.message : 'An error occurred');
   }
 });
 
@@ -480,7 +494,7 @@ router.get('/debug/recent-errors', authenticateToken, async (req: AuthRequest, r
     });
 
   } catch (error) {
-    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error instanceof Error ? error.message : 'An error occurred');
   }
 });
 
