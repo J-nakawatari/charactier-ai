@@ -222,3 +222,36 @@ Nginx (SSL終端) →
 - `/frontend/app/admin/characters/[id]/edit/page.tsx`
 - `/frontend/app/admin/characters/new/page.tsx`
 - `/backend/docs/openapi.yaml`
+
+## メール認証システム（日本語・英語対応）
+
+### 概要
+- メール認証リンクは直接バックエンドAPI（`/api/v1/auth/verify-email`）を呼び出す
+- バックエンドがHTMLレスポンスを直接返す（フロントエンドページは不要）
+- localeパラメータで言語を判別
+
+### 重要なポイント
+1. **localStorageへの保存タイミング**
+   - `window.onload`を待たずに即座にlocalStorageに保存
+   - 自己実行関数でユーザー情報とトークンを保存
+   - これによりセットアップページで`getCurrentUser()`が正しく動作
+
+2. **リダイレクト処理**
+   - 認証成功後は`/${locale}/setup`にリダイレクト
+   - 3秒後の自動リダイレクト（JavaScript）
+   - 「今すぐセットアップを開始」ボタンで即座に移動可能
+
+3. **エラーハンドリング**
+   - トークン無効/期限切れ：赤いエラーページ
+   - 既に認証済み：セットアップページへリダイレクト
+   - サーバーエラー：グレーのエラーページ
+
+4. **互換性の維持**
+   - 古いメールリンク（`/api/auth/verify-email`）もサポート
+   - 新しいパス（`/api/v1/auth/verify-email`）にリダイレクト
+
+### 関連ファイル
+- `/backend/src/routes/auth.ts` - メール認証エンドポイント
+- `/backend/src/utils/sendEmail.ts` - メール送信処理
+- `/frontend/app/[locale]/setup/page.tsx` - セットアップページ
+- `/frontend/utils/auth.ts` - 認証ユーティリティ
