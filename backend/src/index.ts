@@ -4148,7 +4148,7 @@ routeRegistry.define('DELETE', `${API_PREFIX}/admin/admins/:id`, authenticateTok
     }
 
     // 自分自身を削除できないようにする
-    if (req.user._id.toString() === id) {
+    if (req.admin._id.toString() === id) {
       res.status(400).json({
         error: 'Cannot delete yourself',
         message: '自分自身を削除することはできません'
