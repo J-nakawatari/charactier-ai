@@ -3377,16 +3377,22 @@ routeRegistry.define('GET', `${API_PREFIX}/admin/users`, authenticateToken, asyn
   
   // 管理者権限チェック（管理パスなのでreq.adminのみチェック）
   if (!req.admin) {
-    log.warn('❌ ADMIN ACCESS DENIED', {
+    log.warn('❌ ADMIN ACCESS DENIED for /admin/users', {
       reason: 'No admin access',
       hasReqAdmin: !!req.admin,
       hasReqUser: !!req.user,
       path: req.path,
-      originalUrl: req.originalUrl
+      originalUrl: req.originalUrl,
+      fullPath: req.originalUrl || req.url,
+      cookies: Object.keys(req.cookies || {}),
+      headers: {
+        cookie: !!req.headers.cookie,
+        authorization: !!req.headers.authorization
+      }
     });
     res.status(403).json({ 
-      error: 'Admin access required',
-      message: 'INSUFFICIENT_PERMISSIONS'
+      error: 'INSUFFICIENT_PERMISSIONS',
+      message: '権限が不足しています'
     });
     return;
   }
