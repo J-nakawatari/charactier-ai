@@ -1016,28 +1016,22 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
       return;
     }
 
-    // ユーザー基本情報を取得 - affinitiesを明示的に含める
-    const userDoc = await UserModel.findById(userId)
-      .populate('purchasedCharacters', '_id name')
-      .populate('affinities.character', '_id name imageCharacterSelect themeColor');
-    
-    // デバッグ: userDocの内容を確認
-    log.info('UserDoc before toObject:', {
-      userId: userId.toString(),
-      hasAffinities: !!userDoc?.affinities,
-      affinitiesLength: userDoc?.affinities?.length || 0
-    });
-    
-    // Mongooseドキュメントをプレーンオブジェクトに変換
-    // toObject()がaffinitiesを正しく変換しない問題があるため、直接使用
-    const user = userDoc;
-    
-    // affinities.characterのpopulateが失敗することがあるため、一旦populateなしで取得
+    // ユーザー基本情報を取得 - lean()を使用して生のJavaScriptオブジェクトとして取得
+    const user = await UserModel.findById(userId).lean();
     
     if (!user) {
       log.error('User not found in dashboard:', { userId });
       res.status(404).json({ error: 'User not found' });
       return;
+    }
+    
+    // purchasedCharactersを別途populate
+    const populatedUser = await UserModel.findById(userId)
+      .populate('purchasedCharacters', '_id name')
+      .lean();
+    
+    if (populatedUser) {
+      user.purchasedCharacters = populatedUser.purchasedCharacters;
     }
     
     // ユーザーオブジェクトの検証
@@ -1054,26 +1048,8 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
       userId: user._id.toString(),
       hasAffinities: !!user.affinities,
       affinitiesLength: user.affinities?.length || 0,
-      affinitiesData: user.affinities,
-      userKeys: Object.keys(user || {}),
-      affinitiesType: Array.isArray(user.affinities) ? 'array' : typeof user.affinities
+      affinitiesData: user.affinities
     });
-    
-    // 別の方法でaffinitiesを確認
-    const userWithFullData = await UserModel.findById(userId).lean();
-    log.info('Dashboard - Full user data check:', {
-      userId: userId.toString(),
-      hasAffinitiesInDB: !!userWithFullData?.affinities,
-      affinitiesCount: userWithFullData?.affinities?.length || 0
-    });
-    
-    // デバッグ: lean()で取得したデータを確認
-    if (userWithFullData && userWithFullData.affinities) {
-      log.info('Lean query found affinities:', {
-        leanAffinitiesCount: userWithFullData.affinities.length,
-        firstAffinity: userWithFullData.affinities[0]
-      });
-    }
 
     // UserTokenPackモデルをインポート
     const UserTokenPack = require('../../models/UserTokenPack');
