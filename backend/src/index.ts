@@ -1080,6 +1080,22 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
       affinities: user.affinities
     });
 
+    // 親密度データが取得できない場合は、別のクエリで取得を試みる
+    if (!user.affinities || user.affinities.length === 0) {
+      log.warn('No affinities in user object, trying separate query');
+      const userWithAffinities = await UserModel.findById(userId)
+        .select('affinities')
+        .populate('affinities.character', '_id name imageCharacterSelect themeColor')
+        .lean();
+      
+      if (userWithAffinities && userWithAffinities.affinities) {
+        log.info('Found affinities in separate query:', {
+          count: userWithAffinities.affinities.length
+        });
+        user.affinities = userWithAffinities.affinities;
+      }
+    }
+    
     // 親密度情報をフロントエンドが期待する形式に変換
     log.info('Processing affinities for dashboard:', {
       userId: userId.toString(),
