@@ -1019,8 +1019,9 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
     // ユーザー基本情報を取得
     const user = await UserModel.findById(userId)
       .select('_id email name createdAt lastLogin affinities tokenBalance totalSpent selectedCharacter purchasedCharacters')
-      .populate('purchasedCharacters', '_id name')
-      .populate('affinities.character', '_id name imageCharacterSelect themeColor');
+      .populate('purchasedCharacters', '_id name');
+    
+    // affinities.characterのpopulateが失敗することがあるため、一旦populateなしで取得
 
     if (!user) {
       res.status(404).json({ error: 'User not found' });
