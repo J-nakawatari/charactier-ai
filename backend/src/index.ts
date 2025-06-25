@@ -1017,8 +1017,11 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
     }
 
     // ユーザー基本情報を取得 - affinitiesを明示的に含める
-    const user = await UserModel.findById(userId)
+    const userDoc = await UserModel.findById(userId)
       .populate('purchasedCharacters', '_id name');
+    
+    // Mongooseドキュメントをプレーンオブジェクトに変換
+    const user = userDoc ? userDoc.toObject() : null;
     
     // affinities.characterのpopulateが失敗することがあるため、一旦populateなしで取得
     
