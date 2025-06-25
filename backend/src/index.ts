@@ -843,6 +843,13 @@ app.use(API_PREFIX, createRateLimiter('general'));
 // 認証ルート
 app.use(`${API_PREFIX}/auth`, authRoutes);
 
+// 古いメール認証リンクの互換性対応（/api/auth/verify-email）
+app.get('/api/auth/verify-email', (req: Request, res: Response) => {
+  // 新しいAPIパスにリダイレクト
+  const { token, locale = 'ja' } = req.query;
+  res.redirect(301, `${API_PREFIX}/auth/verify-email?token=${token}&locale=${locale}`);
+});
+
 // ユーザールート
 app.use(`${API_PREFIX}/user`, userRoutes);
 
