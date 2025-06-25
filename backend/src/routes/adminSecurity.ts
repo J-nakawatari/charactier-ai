@@ -182,7 +182,7 @@ router.post('/lift-sanction/:userId', authenticateToken, authenticateAdmin, asyn
     
     const result = await liftSanction(
       new mongoose.Types.ObjectId(userId),
-      new mongoose.Types.ObjectId(req.admin._id)
+      new mongoose.Types.ObjectId(req.admin._id.toString())
     );
     
     res.json({
