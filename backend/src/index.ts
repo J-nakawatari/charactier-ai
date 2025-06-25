@@ -1456,22 +1456,55 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
     const chat = await ChatModel.findOne({ userId, characterId })
       .select('messages totalTokensUsed lastActivityAt createdAt');
     
-    // 3. キャッシュ状態確認
-    const cacheKey = `character_prompt:${characterId}`;
-    const redis = await getRedisClient();
-    let cacheStatus = { enabled: false, exists: false, data: null };
+    // 3. キャッシュ状態確認（MongoDBのCharacterPromptCacheを確認）
+    let cacheStatus = { enabled: true, exists: false, data: null, count: 0 };
     
-    if (redis) {
-      try {
-        const cachedPrompt = await redis.get(cacheKey);
-        cacheStatus = {
-          enabled: true,
-          exists: !!cachedPrompt,
-          data: cachedPrompt ? JSON.parse(cachedPrompt) : null
-        };
-      } catch (err) {
-        cacheStatus.enabled = false;
+    try {
+      // ユーザーの親密度レベルを取得
+      const user = userId ? await UserModel.findById(userId) : null;
+      let userAffinityLevel = 0;
+      if (user) {
+        const affinity = user.affinities.find(
+          aff => aff.character.toString() === characterId
+        );
+        userAffinityLevel = affinity?.level || 0;
       }
+      
+      // キャッシュ検索（親密度レベル±5で検索）
+      const affinityRange = 5;
+      const cachedPrompts = await CharacterPromptCache.find({
+        userId: userId,
+        characterId: characterId,
+        'promptConfig.affinityLevel': {
+          $gte: Math.max(0, userAffinityLevel - affinityRange),
+          $lte: Math.min(100, userAffinityLevel + affinityRange)
+        },
+        'promptConfig.languageCode': 'ja',
+        ttl: { $gt: new Date() }, // TTL未期限切れ
+        characterVersion: '1.0.0'
+      }).sort({ 
+        useCount: -1, // 使用回数順
+        lastUsed: -1  // 最終使用日順
+      }).limit(1);
+      
+      const cachedPrompt = cachedPrompts[0];
+      cacheStatus = {
+        enabled: true,
+        exists: !!cachedPrompt,
+        data: cachedPrompt ? {
+          useCount: cachedPrompt.useCount,
+          lastUsed: cachedPrompt.lastUsed,
+          ttl: cachedPrompt.ttl,
+          affinityLevel: cachedPrompt.promptConfig?.affinityLevel,
+          promptLength: cachedPrompt.systemPrompt?.length || 0
+        } : null,
+        count: await CharacterPromptCache.countDocuments({
+          characterId: characterId,
+          ttl: { $gt: new Date() }
+        })
+      };
+    } catch (err) {
+      cacheStatus.enabled = false;
     }
 
     // 4. 最新のトークン使用状況
