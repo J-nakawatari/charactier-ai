@@ -24,7 +24,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
     const types = req.query.type ? (req.query.type as string).split(',') : null;
 
     log.info('Admin notifications request', {
-      adminId: req.admin._id,
+      adminId: req.admin._id.toString(),
       limit,
       page,
       offset,
@@ -98,7 +98,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
 
   } catch (error) {
     log.error('Error fetching admin notifications', error, {
-      adminId: req.admin?._id
+      adminId: req.admin?._id?.toString()
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
@@ -126,12 +126,11 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
 
     // デバッグログ
     log.info('Creating notification - request body', {
-      adminId: req.admin._id,
+      adminId: req.admin._id.toString(),
       hasTitle: !!title,
       hasMessage: !!message,
       type,
-      targetCondition,
-      body: req.body
+      targetCondition
     });
 
     // 必須フィールドの検証
@@ -165,8 +164,8 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
     const notification = await NotificationModel.create(notificationData);
 
     log.info('Notification created', {
-      adminId: req.admin._id,
-      notificationId: notification._id,
+      adminId: req.admin._id.toString(),
+      notificationId: notification._id.toString(),
       type: notification.type,
       targetCondition: notification.targetCondition
     });
@@ -179,10 +178,8 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
 
   } catch (error: any) {
     log.error('Error creating notification', error, {
-      adminId: req.admin?._id,
-      body: req.body,
+      adminId: req.admin?._id?.toString(),
       errorMessage: error.message,
-      errorStack: error.stack,
       errorName: error.name
     });
     
@@ -239,7 +236,7 @@ router.post('/:id/read', authenticateToken, async (req: AuthRequest, res: Respon
 
   } catch (error) {
     log.error('Error marking admin notification as read', error, {
-      adminId: req.admin?._id,
+      adminId: req.admin?._id?.toString(),
       notificationId: req.params.id
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
@@ -275,7 +272,7 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response):
         isActive: true,
         _id: {
           $nin: await AdminNotificationReadStatusModel.find({
-            adminId: req.admin._id.toString(),
+            adminId: new mongoose.Types.ObjectId(req.admin._id.toString()),
             isRead: true
           }).distinct('notificationId')
         }
@@ -311,7 +308,7 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response):
 
   } catch (error) {
     log.error('Error fetching admin notification stats', error, {
-      adminId: req.admin?._id
+      adminId: req.admin?._id?.toString()
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
@@ -370,7 +367,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
     );
 
     log.info('Notification updated', {
-      adminId: req.admin._id,
+      adminId: req.admin._id.toString(),
       notificationId,
       changes: Object.keys(updateData)
     });
@@ -383,7 +380,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
 
   } catch (error) {
     log.error('Error updating notification', error, {
-      adminId: req.admin?._id,
+      adminId: req.admin?._id?.toString(),
       notificationId: req.params.id
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
@@ -414,7 +411,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
     });
 
     log.info('Notification deleted', {
-      adminId: req.admin._id,
+      adminId: req.admin._id.toString(),
       notificationId,
       title: deletedNotification.title
     });
@@ -426,7 +423,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
 
   } catch (error) {
     log.error('Error deleting notification', error, {
-      adminId: req.admin?._id,
+      adminId: req.admin?._id?.toString(),
       notificationId: req.params.id
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
@@ -460,7 +457,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
 
   } catch (error) {
     log.error('Error fetching notification details', error, {
-      adminId: req.admin?._id,
+      adminId: req.admin?._id?.toString(),
       notificationId: req.params.id
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
