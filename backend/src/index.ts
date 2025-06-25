@@ -198,8 +198,10 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
         await cachedPrompt.save();
         
         // キャッシュから取得したプロンプトをログに表示
+        console.log('🎯 Cache HIT! Using cached prompt');
+        console.log(`📝 Cache details: userId=${userId}, characterId=${characterId}, affinityLevel=${userAffinityLevel}`);
         console.log('📝 ========== CACHED SYSTEM PROMPT ==========');
-        console.log(systemPrompt);
+        console.log(systemPrompt.substring(0, 500) + '...');  // 最初の500文字のみ表示
         console.log('📝 ========== END CACHED PROMPT ==========');
         
       }
@@ -252,47 +254,38 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
 【話し相手について】
 あなたが会話している相手の名前は「${userName}」です。会話の中で自然に名前を呼んであげてください。` : '';
 
-    // personalityPromptが設定されている場合はそれを優先使用
-    if (character.personalityPrompt?.ja) {
-      systemPrompt = character.personalityPrompt.ja;
-      
-      // 年齢と職業の情報を追加
-      const additionalInfo = [];
-      if (character.age) additionalInfo.push(`年齢: ${character.age}`);
-      if (character.occupation) additionalInfo.push(`職業: ${character.occupation}`);
-      
-      if (additionalInfo.length > 0) {
-        systemPrompt = `${systemPrompt}\n\n【基本情報】\n${additionalInfo.join('\n')}`;
-      }
-      
-      // ムード情報を追加
-      if (moodInstruction) {
-        systemPrompt += moodInstruction;
-      }
-      
-      // ユーザー名情報を追加
-      if (userNameInfo) {
-        systemPrompt += userNameInfo;
-      }
-    } else {
-      // personalityPromptがない場合は従来のフォーマットを使用
-      systemPrompt = `あなたは${character.name.ja}というキャラクターです。
-性格: ${character.personalityPreset || '優しい'}
-年齢: ${character.age || '不明'}
-職業: ${character.occupation || '不明'}
-特徴: ${character.personalityTags?.join(', ') || '親しみやすい'}
-説明: ${character.description.ja}${moodInstruction}${userNameInfo}
+    // 統一されたプロンプト構造を生成
+    const baseIntro = character.personalityPrompt?.ja || `あなたは${character.name.ja}です。`;
+    
+    // キャラクター設定セクション
+    const characterSettingLines = [];
+    if (character.personalityPreset) characterSettingLines.push(`性格: ${character.personalityPreset}`);
+    if (character.age) characterSettingLines.push(`年齢: ${character.age}`);
+    if (character.occupation) characterSettingLines.push(`職業: ${character.occupation}`);
+    if (character.personalityTags && character.personalityTags.length > 0) {
+      characterSettingLines.push(`特徴: ${character.personalityTags.join(', ')}`);
+    }
+    
+    const characterSettingSection = characterSettingLines.length > 0 
+      ? `\n\n【キャラクター設定】\n${characterSettingLines.join('\n')}`
+      : '';
 
-【会話スタンス】
-あなたは相手の話し相手として会話します。アドバイスや解決策を提示するのではなく、人間らしい自然な反応や共感を示してください。相手の感情や状況に寄り添い、「そうなんだ」「大変だったね」「わかる」といった、友達同士のような気持ちの共有を大切にしてください。
-
-以下の特徴に従って、一人称と話し方でユーザーと自然な会話をしてください：
-- ${character.personalityTags?.join('\n- ') || '優しく親しみやすい会話'}
+    // プロンプトを組み立て
+    systemPrompt = baseIntro + 
+      (moodInstruction || '') +
+      (userNameInfo || '') +
+      `\n\n【会話スタンス】
+あなたは相手の話し相手として会話します。アドバイスや解決策を提示するのではなく、人間らしい自然な反応や共感を示してください。
+相手の感情や状況に寄り添い、「そうなんだ」「大変だったね」「わかる」といった、友達同士のような気持ちの共有を大切にしてください。` +
+      characterSettingSection +
+      `\n\n【会話ルール】
+- 上記の設定に従って、一人称と話し方でユーザーと自然な会話をしてください
 - 約50-150文字程度で返答してください
 - 絵文字を適度に使用してください`;
-    }
 
     // 新規生成されたプロンプトをログに表示
+    console.log('🔨 Cache MISS! Generating new prompt');
+    console.log(`📝 Generation details: characterId=${characterId}, affinityLevel=${userAffinityLevel}`);
     console.log('📝 ========== GENERATED SYSTEM PROMPT ==========');
     console.log(systemPrompt);
     console.log('📝 ========== END GENERATED PROMPT ==========');
