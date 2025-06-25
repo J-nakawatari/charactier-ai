@@ -12,7 +12,8 @@ import {
   XCircle,
   Info,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Brain
 } from 'lucide-react';
 
 interface ChatDiagnostics {
@@ -35,6 +36,19 @@ interface ChatDiagnostics {
       tokensUsed: number;
       contentPreview: string;
     }>;
+    conversationHistory?: {
+      description: string;
+      sentToAI: Array<{
+        role: string;
+        content: string;
+        originalLength: number;
+        timestamp: string;
+      }>;
+      totalMessagesInDB: number;
+      messagesUsedForContext: number;
+      contextWindowSize: string;
+      truncationLimit: string;
+    };
   };
   cache: {
     enabled: boolean;
@@ -243,6 +257,64 @@ export default function ChatDiagnosticsPage() {
           <p className="text-gray-500">チャット履歴がありません</p>
         )}
       </div>
+
+      {/* AI記憶システム（会話コンテキスト） */}
+      {diagnostics.chat.conversationHistory && (
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
+            <Brain className="w-5 h-5" />
+            AI記憶システム
+          </h2>
+          <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-800 mb-2">{diagnostics.chat.conversationHistory.description}</p>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-blue-600">データベース内の総メッセージ数:</span>
+                <span className="ml-2 font-medium text-blue-900">{diagnostics.chat.conversationHistory.totalMessagesInDB}</span>
+              </div>
+              <div>
+                <span className="text-blue-600">AIに送信されるメッセージ数:</span>
+                <span className="ml-2 font-medium text-blue-900">{diagnostics.chat.conversationHistory.messagesUsedForContext}</span>
+              </div>
+              <div>
+                <span className="text-blue-600">コンテキストウィンドウ:</span>
+                <span className="ml-2 font-medium text-blue-900">{diagnostics.chat.conversationHistory.contextWindowSize}</span>
+              </div>
+              <div>
+                <span className="text-blue-600">文字数制限:</span>
+                <span className="ml-2 font-medium text-blue-900">{diagnostics.chat.conversationHistory.truncationLimit}</span>
+              </div>
+            </div>
+          </div>
+          {diagnostics.chat.conversationHistory.sentToAI.length > 0 ? (
+            <div>
+              <h3 className="text-sm font-semibold mb-2 text-gray-800">AIに送信される会話履歴</h3>
+              <div className="space-y-2">
+                {diagnostics.chat.conversationHistory.sentToAI.map((msg, idx) => (
+                  <div key={idx} className="border-l-2 border-purple-200 pl-3 py-1">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className={`font-medium ${msg.role === 'user' ? 'text-blue-600' : 'text-green-600'}`}>
+                        {msg.role === 'user' ? 'ユーザー' : 'AI'}
+                      </span>
+                      <span className="text-gray-500">
+                        {new Date(msg.timestamp).toLocaleString('ja-JP')}
+                      </span>
+                      {msg.originalLength > 120 && (
+                        <span className="text-xs text-orange-600">
+                          (元: {msg.originalLength}文字 → 120文字に短縮)
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-700">{msg.content}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-500">AIに送信される会話履歴がありません</p>
+          )}
+        </div>
+      )}
 
       {/* キャッシュ状態 */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">

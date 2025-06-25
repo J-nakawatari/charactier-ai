@@ -1553,7 +1553,20 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
             timestamp: m.timestamp,
             tokensUsed: m.tokensUsed,
             contentPreview: m.content.substring(0, 50) + '...'
-          })) || []
+          })) || [],
+          conversationHistory: {
+            description: 'AI記憶システム: 最新10件のメッセージ（各120文字まで）を会話コンテキストとして送信',
+            sentToAI: chat?.messages?.slice(-10).map(msg => ({
+              role: msg.role,
+              content: msg.content.length > 120 ? msg.content.substring(0, 120) + '...' : msg.content,
+              originalLength: msg.content.length,
+              timestamp: msg.timestamp
+            })) || [],
+            totalMessagesInDB: chat?.messages?.length || 0,
+            messagesUsedForContext: Math.min(10, chat?.messages?.length || 0),
+            contextWindowSize: '最大10メッセージ',
+            truncationLimit: '120文字/メッセージ'
+          }
         },
         cache: cacheStatus,
         tokenUsage: recentTokenUsage ? {
@@ -1566,7 +1579,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
         prompt: promptInfo,
         system: {
           mongoConnected: isMongoConnected,
-          redisConnected: !!redis,
+          redisConnected: !!(await getRedisClient()),
           currentModel: character.aiModel || process.env.OPENAI_MODEL || 'gpt-4o-mini'
         }
       }
@@ -2110,11 +2123,25 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
       characterId: characterId
     });
     
+    // デバッグログ: 既存のチャット情報
+    console.log('🔍 [Chat History Debug] Existing chat found:', !!existingChat);
+    if (existingChat) {
+      console.log('🔍 [Chat History Debug] Total messages in DB:', existingChat.messages?.length || 0);
+      console.log('🔍 [Chat History Debug] Last 3 messages:');
+      existingChat.messages?.slice(-3).forEach((msg, index) => {
+        console.log(`  ${index + 1}. ${msg.role}: ${msg.content.substring(0, 50)}...`);
+      });
+    }
+    
     // 会話履歴を10件に調整（1000トークン以内で最適化）
     const conversationHistory = existingChat?.messages?.slice(-10).map(msg => ({
       role: msg.role,
       content: msg.content.length > 120 ? msg.content.substring(0, 120) + '...' : msg.content
     })) || [];
+    
+    // デバッグログ: 送信される会話履歴
+    console.log('🔍 [Chat History Debug] Conversation history to send:', conversationHistory.length, 'messages');
+    console.log('🔍 [Chat History Debug] History contents:', conversationHistory);
 
     // 事前トークン残高チェック（1000トークン許容基準）
     const minimumTokensRequired = 1000; // 高品質な会話に必要なトークン
@@ -2212,6 +2239,10 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
             upsert: true // 存在しない場合は新規作成
           }
         );
+        
+        // デバッグログ: メッセージ保存確認
+        console.log('💾 [Chat Save Debug] Messages saved successfully:', !!updatedChat);
+        console.log('💾 [Chat Save Debug] Total messages after save:', updatedChat?.messages?.length || 0);
 
         // UserModelから現在の親密度を取得（ChatModelではなくUserModelが正確な値）
         const userAffinityData = await UserModel.findOne({
