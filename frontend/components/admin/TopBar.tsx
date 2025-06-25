@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Bell, User, ChevronDown, LogOut, AlertCircle, AlertTriangle, Zap, Globe, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminAuthenticatedFetch } from '@/utils/auth';
 
 interface AdminUser {
   _id: string;
@@ -50,7 +50,7 @@ export default function TopBar() {
     const fetchNotifications = async () => {
       try {
         // システム通知を取得（警告、緊急、メンテナンスのみ）
-        const response = await adminFetch('/api/v1/admin/notifications?type=warning,urgent,maintenance&limit=10', {
+        const response = await adminAuthenticatedFetch('/api/v1/admin/notifications?type=warning,urgent,maintenance&limit=10', {
           method: 'GET'
         });
 
@@ -133,7 +133,7 @@ export default function TopBar() {
   // 通知を既読にする
   const markAsRead = async (notificationId: string) => {
     try {
-      const response = await adminFetch(`/api/v1/notifications/admin/${notificationId}/read`, {
+      const response = await adminAuthenticatedFetch(`/api/v1/admin/notifications/${notificationId}/read`, {
         method: 'POST'
       });
 

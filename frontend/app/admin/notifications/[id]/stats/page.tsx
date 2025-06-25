@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminAuthenticatedFetch } from '@/utils/auth';
 import { 
   ArrowLeft, 
   Eye,
@@ -53,7 +53,7 @@ export default function NotificationStatsPage() {
     try {
       setIsLoading(true);
       
-      const response = await adminFetch(`/api/v1/notifications/admin/${notificationId}/stats`);
+      const response = await adminAuthenticatedFetch(`/api/v1/admin/notifications/${notificationId}/stats`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

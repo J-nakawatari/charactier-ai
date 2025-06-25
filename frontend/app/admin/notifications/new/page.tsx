@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminAuthenticatedFetch } from '@/utils/auth';
 import { 
   Save, 
   ArrowLeft, 
@@ -78,7 +78,7 @@ export default function NewNotificationPage() {
         throw new Error('メッセージは日本語・英語両方とも入力してください');
       }
 
-      const response = await adminFetch('/api/v1/notifications/admin', {
+      const response = await adminAuthenticatedFetch('/api/v1/admin/notifications', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
