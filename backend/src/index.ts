@@ -1050,6 +1050,11 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
       .select('characterId lastActivityAt messages');
 
     // デバッグログ：populateの結果を確認
+    log.debug('User affinities raw data:', {
+      userId: userId.toString(),
+      affinitiesCount: user.affinities?.length || 0,
+      affinities: user.affinities
+    });
 
     // 親密度情報をフロントエンドが期待する形式に変換
     const affinities = await Promise.all((user.affinities || []).map(async (affinity: any) => {

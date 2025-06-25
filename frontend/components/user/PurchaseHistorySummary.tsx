@@ -72,10 +72,7 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
         </div>
         <div className="text-center py-8">
           <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-3">{t('noHistory')}</p>
-          <button className="text-sm text-green-600 hover:text-green-700 font-medium transition-colors">
-            {t('buyTokens')}
-          </button>
+          <p className="text-gray-500">{t('noHistory')}</p>
         </div>
       </div>
     );

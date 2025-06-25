@@ -38,6 +38,8 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState<AffinityItem | null>(null);
   
+  console.log('AffinitySection received:', { affinities, length: affinities?.length || 0 });
+  
   const getProgressPercentage = (experience: number, maxExperience: number) => {
     return maxExperience > 0 ? (experience / maxExperience) * 100 : 0;
   };

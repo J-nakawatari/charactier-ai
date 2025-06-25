@@ -66,6 +66,8 @@ export default function DashboardPage() {
 
         const data = await response.json();
         console.log('Dashboard data received:', data);
+        console.log('Affinities data:', data.affinities);
+        console.log('Affinities length:', data.affinities?.length || 0);
         
         // データ構造の検証
         if (!data || typeof data !== 'object') {
