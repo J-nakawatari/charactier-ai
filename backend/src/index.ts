@@ -1125,7 +1125,7 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
         character: {
           _id: character._id,
           name: character.name || { ja: '不明なキャラクター', en: 'Unknown Character' },
-          imageCharacterSelect: character.imageCharacterSelect || '/images/default-avatar.png',
+          imageCharacterSelect: character.imageCharacterSelect || '/uploads/placeholder.png',
           themeColor: character.themeColor || '#8B5CF6'
         },
         level: affinity.level || 0,
