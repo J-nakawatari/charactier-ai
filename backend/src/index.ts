@@ -1029,7 +1029,8 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
     });
     
     // Mongooseドキュメントをプレーンオブジェクトに変換
-    const user = userDoc ? userDoc.toObject() : null;
+    // toObject()がaffinitiesを正しく変換しない問題があるため、直接使用
+    const user = userDoc;
     
     // affinities.characterのpopulateが失敗することがあるため、一旦populateなしで取得
     
@@ -1066,12 +1067,12 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
       affinitiesCount: userWithFullData?.affinities?.length || 0
     });
     
-    // デバッグ: lean()で取得したデータをuserに使用してみる
-    if (userWithFullData && userWithFullData.affinities && user) {
-      log.info('Using affinities from lean() query:', {
-        leanAffinitiesCount: userWithFullData.affinities.length
+    // デバッグ: lean()で取得したデータを確認
+    if (userWithFullData && userWithFullData.affinities) {
+      log.info('Lean query found affinities:', {
+        leanAffinitiesCount: userWithFullData.affinities.length,
+        firstAffinity: userWithFullData.affinities[0]
       });
-      user.affinities = userWithFullData.affinities;
     }
 
     // UserTokenPackモデルをインポート
