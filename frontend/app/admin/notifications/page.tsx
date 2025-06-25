@@ -104,7 +104,7 @@ export default function NotificationsManagementPage() {
       if (filters.isActive !== '') queryParams.append('isActive', filters.isActive);
       if (filters.search) queryParams.append('search', filters.search);
 
-      const response = await adminAuthenticatedFetch(`/api/v1/notifications/admin?${queryParams}`);
+      const response = await adminAuthenticatedFetch(`/api/v1/admin/notifications?${queryParams}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -128,7 +128,7 @@ export default function NotificationsManagementPage() {
     if (!confirm('このお知らせを削除しますか？')) return;
 
     try {
-      const response = await adminAuthenticatedFetch(`/api/v1/notifications/admin/${id}`, {
+      const response = await adminAuthenticatedFetch(`/api/v1/admin/notifications/${id}`, {
         method: 'DELETE'
       });
 
@@ -151,7 +151,7 @@ export default function NotificationsManagementPage() {
   // 通知を既読にする
   const markAsRead = async (notificationId: string) => {
     try {
-      const response = await adminAuthenticatedFetch(`/api/v1/notifications/admin/${notificationId}/read`, {
+      const response = await adminAuthenticatedFetch(`/api/v1/admin/notifications/${notificationId}/read`, {
         method: 'POST'
       });
 
@@ -177,7 +177,7 @@ export default function NotificationsManagementPage() {
   // 一括既読
   const markAllAsRead = async () => {
     try {
-      const response = await adminAuthenticatedFetch('/api/v1/notifications/admin/read-all', {
+      const response = await adminAuthenticatedFetch('/api/v1/admin/notifications/read-all', {
         method: 'POST'
       });
 
