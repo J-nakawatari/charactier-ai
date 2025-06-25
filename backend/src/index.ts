@@ -868,7 +868,8 @@ routeRegistry.mount(`${API_PREFIX}/admin/security`, adminSecurityRoutes);
 
 
 // 静的ファイル配信（アップロードされた画像）
-app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {
+const uploadsPath = path.join(__dirname, '../../../uploads');
+app.use('/uploads', express.static(uploadsPath, {
   maxAge: '365d', // 1年キャッシュ
   etag: true,
   setHeaders: (res, filePath) => {
