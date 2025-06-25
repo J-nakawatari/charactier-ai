@@ -72,4 +72,81 @@ router.get('/admin/auth-test', authenticateToken, (req: AuthRequest, res: Respon
   });
 });
 
+// デバッグ用のルート一覧
+router.get('/routes', (req: Request, res: Response) => {
+  const routes: any[] = [];
+  
+  const extractRoutes = (app: any, basePath = '') => {
+    if (app._router && app._router.stack) {
+      app._router.stack.forEach((middleware: any) => {
+        if (middleware.route) {
+          // ルートが定義されている場合
+          const path = basePath + middleware.route.path;
+          const methods = Object.keys(middleware.route.methods).join(', ').toUpperCase();
+          routes.push({ path, methods });
+        } else if (middleware.name === 'router' && middleware.handle.stack) {
+          // サブルーターの場合
+          const subPath = basePath + (middleware.regexp.source.replace(/\\/g, '').replace(/\^|\$/g, '').replace(/\(\?\:\/\)/g, '/') || '');
+          middleware.handle.stack.forEach((handler: any) => {
+            if (handler.route) {
+              const path = subPath + handler.route.path;
+              const methods = Object.keys(handler.route.methods).join(', ').toUpperCase();
+              routes.push({ path, methods });
+            }
+          });
+        }
+      });
+    }
+  };
+  
+  // Express appからルートを抽出
+  const app = req.app;
+  extractRoutes(app);
+  
+  res.json({
+    totalRoutes: routes.length,
+    routes: routes.sort((a, b) => a.path.localeCompare(b.path))
+  });
+});
+
+// Auth関連のルートを確認するエンドポイント
+router.get('/auth-routes', (req: Request, res: Response) => {
+  const routes: any[] = [];
+  
+  const extractRoutes = (app: any, basePath = '') => {
+    if (app._router && app._router.stack) {
+      app._router.stack.forEach((middleware: any) => {
+        if (middleware.route) {
+          const path = basePath + middleware.route.path;
+          const methods = Object.keys(middleware.route.methods).join(', ').toUpperCase();
+          if (path.includes('auth')) {
+            routes.push({ path, methods });
+          }
+        } else if (middleware.name === 'router' && middleware.handle.stack) {
+          const subPath = basePath + (middleware.regexp.source.replace(/\\/g, '').replace(/\^|\$/g, '').replace(/\(\?\:\/\)/g, '/') || '');
+          middleware.handle.stack.forEach((handler: any) => {
+            if (handler.route) {
+              const path = subPath + handler.route.path;
+              const methods = Object.keys(handler.route.methods).join(', ').toUpperCase();
+              if (path.includes('auth')) {
+                routes.push({ path, methods });
+              }
+            }
+          });
+        }
+      });
+    }
+  };
+  
+  const app = req.app;
+  extractRoutes(app);
+  
+  res.json({
+    message: 'Auth routes found in the application',
+    totalAuthRoutes: routes.length,
+    routes: routes.sort((a, b) => a.path.localeCompare(b.path)),
+    expectedVerifyEmailRoute: '/api/v1/auth/verify-email'
+  });
+});
+
 export default router;
