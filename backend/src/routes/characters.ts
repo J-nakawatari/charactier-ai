@@ -1,7 +1,8 @@
 import type { AuthRequest } from '../middleware/auth';
-import { Router, Response, NextFunction } from 'express';
+import { Router, Response, NextFunction, Request } from 'express';
 import { CharacterModel } from '../models/CharacterModel';
 import { UserModel } from '../models/UserModel';
+import { AdminModel } from '../models/AdminModel';
 import { authenticateToken, hasWritePermission } from '../middleware/auth';
 import { uploadImage, optimizeImage } from '../utils/fileUpload';
 import { validate, validateObjectId } from '../middleware/validation';
@@ -325,11 +326,37 @@ router.get('/:id/translations', authenticateToken, async (req: AuthRequest, res:
 });
 
 // 翻訳データ保存（/:idより前に定義する必要あり）
-router.put('/:id/translations', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:id/translations', async (req: Request, res: Response): Promise<void> => {
   try {
-    // Check if user has write permission (only super_admin can update character translations)
-    if (!hasWritePermission(req)) {
-      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Moderator cannot edit character translations');
+    // 管理者トークンを明示的にチェック
+    const adminToken = req.cookies?.adminAccessToken;
+    if (!adminToken) {
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED, 'Admin authentication required');
+      return;
+    }
+
+    // 管理者トークンを検証
+    const jwt = require('jsonwebtoken');
+    const JWT_SECRET = process.env.JWT_SECRET;
+    const decoded = jwt.verify(adminToken, JWT_SECRET) as { userId: string };
+    
+    // 管理者を取得
+    const admin = await AdminModel.findById(decoded.userId);
+    if (!admin || !admin.isActive) {
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED, 'Invalid admin credentials');
+      return;
+    }
+
+    // Debug: ログに認証情報を出力
+    console.log('🔍 Character translation update - Auth debug:', {
+      adminId: admin._id,
+      adminRole: admin.role,
+      adminEmail: admin.email
+    });
+    
+    // Check if admin is super_admin
+    if (admin.role !== 'super_admin') {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Only super admin can edit characters');
       return;
     }
 
