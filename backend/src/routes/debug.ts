@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import log from '../utils/logger';
+import { UserModel } from '../models/UserModel';
+import { CharacterModel } from '../models/CharacterModel';
 
 const router = Router();
 
@@ -147,6 +149,67 @@ router.get('/auth-routes', (req: Request, res: Response) => {
     routes: routes.sort((a, b) => a.path.localeCompare(b.path)),
     expectedVerifyEmailRoute: '/api/v1/auth/verify-email'
   });
+});
+
+// デバッグ用：親密度詳細情報取得
+router.get('/affinity-details/:userId', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userId } = req.params;
+    
+    const user = await UserModel.findById(userId)
+      .select('affinities')
+      .populate({
+        path: 'affinities.character',
+        select: '_id name imageCharacterSelect themeColor galleryImages'
+      })
+      .lean();
+    
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    
+    // 各親密度の詳細情報を整形
+    const detailedAffinities = (user.affinities || []).map((affinity: any) => {
+      const unlockedImages = [];
+      if (affinity.character && affinity.character.galleryImages) {
+        // レベルに基づいて解放された画像を計算
+        for (const image of affinity.character.galleryImages) {
+          if (image.unlockLevel <= affinity.level) {
+            unlockedImages.push(image);
+          }
+        }
+      }
+      
+      return {
+        characterId: affinity.character?._id || affinity.character,
+        characterName: affinity.character?.name || 'Unknown',
+        characterImage: affinity.character?.imageCharacterSelect || '/uploads/placeholder.png',
+        themeColor: affinity.character?.themeColor || '#8B5CF6',
+        level: affinity.level || 0,
+        experience: affinity.experience || 0,
+        experienceToNext: affinity.experienceToNext || 10,
+        maxExperience: 100, // 固定値
+        unlockedImagesCount: unlockedImages.length,
+        unlockedImages: unlockedImages,
+        nextUnlockLevel: Math.floor((affinity.level || 0) / 10 + 1) * 10,
+        rawCharacterData: affinity.character
+      };
+    });
+    
+    res.json({
+      userId,
+      affinitiesCount: user.affinities?.length || 0,
+      affinities: detailedAffinities
+    });
+    
+  } catch (error) {
+    console.error('Debug affinity details error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 export default router;

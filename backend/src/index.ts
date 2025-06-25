@@ -1080,26 +1080,30 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
       affinities: user.affinities
     });
 
-    // 親密度データが取得できない場合は、別のクエリで取得を試みる
-    if (!user.affinities || user.affinities.length === 0) {
-      log.warn('No affinities in user object, trying separate query');
-      const userWithAffinities = await UserModel.findById(userId)
-        .select('affinities')
-        .populate('affinities.character', '_id name imageCharacterSelect themeColor')
-        .lean();
-      
-      if (userWithAffinities && userWithAffinities.affinities) {
-        log.info('Found affinities in separate query:', {
-          count: userWithAffinities.affinities.length
-        });
-        user.affinities = userWithAffinities.affinities;
-      }
+    // 親密度データを常に別のクエリで取得（populate含む）
+    log.info('Fetching affinities with populate');
+    const userWithAffinities = await UserModel.findById(userId)
+      .select('affinities')
+      .populate({
+        path: 'affinities.character',
+        select: '_id name imageCharacterSelect themeColor galleryImages'
+      })
+      .lean();
+    
+    if (userWithAffinities && userWithAffinities.affinities) {
+      log.info('Found affinities with populate:', {
+        count: userWithAffinities.affinities.length,
+        firstCharacterPopulated: !!(userWithAffinities.affinities[0]?.character && typeof userWithAffinities.affinities[0].character === 'object')
+      });
+      user.affinities = userWithAffinities.affinities;
     }
     
     // 親密度情報をフロントエンドが期待する形式に変換
     log.info('Processing affinities for dashboard:', {
       userId: userId.toString(),
-      rawAffinitiesCount: user.affinities?.length || 0
+      rawAffinitiesCount: user.affinities?.length || 0,
+      firstAffinityCharacter: user.affinities?.[0]?.character,
+      firstAffinityCharacterType: typeof user.affinities?.[0]?.character
     });
     
     const affinities = await Promise.all((user.affinities || []).map(async (affinity: any, index: number) => {
@@ -1125,8 +1129,20 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
         characterId: character._id,
         name: character.name,
         hasName: !!character.name,
-        nameType: typeof character.name
+        nameType: typeof character.name,
+        hasGalleryImages: !!character.galleryImages,
+        galleryImagesCount: character.galleryImages?.length || 0
       });
+
+      // 解放された画像を計算
+      const unlockedImages = [];
+      if (character.galleryImages && Array.isArray(character.galleryImages)) {
+        for (const image of character.galleryImages) {
+          if (image.unlockLevel <= (affinity.level || 0)) {
+            unlockedImages.push(image.url);
+          }
+        }
+      }
 
       // デフォルト値を設定
       const formattedAffinity = {
@@ -1140,7 +1156,7 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
         experience: affinity.experience || 0,
         experienceToNext: affinity.experienceToNext || 10,
         maxExperience: 100, // 固定値
-        unlockedImages: affinity.unlockedImages || [],
+        unlockedImages: unlockedImages,
         nextUnlockLevel: Math.floor((affinity.level || 0) / 10 + 1) * 10
       };
       
@@ -1174,7 +1190,7 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
           character = {
             _id: character.toString(),
             name: { ja: 'Unknown Character', en: 'Unknown Character' },
-            imageCharacterSelect: '/images/default-avatar.png'
+            imageCharacterSelect: '/uploads/placeholder.png'
           };
         }
       }
