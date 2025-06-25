@@ -5635,11 +5635,30 @@ app.get(`${API_PREFIX}/admin/error-stats`, authenticateToken, async (req: AuthRe
     }
     
     const timeRange = (req.query.range as string) || '24h';
+    
+    // デバッグ: APIErrorModelのドキュメント数を確認
+    const totalErrorCount = await APIErrorModel.countDocuments();
+    log.info('🔍 Error Stats Debug', {
+      timeRange,
+      totalErrorCount,
+      adminId: req.admin._id
+    });
+    
     const errorStats = await (APIErrorModel as any).getErrorStats(timeRange);
     
     // ServerMonitorから全体的なパフォーマンス統計を取得
     const serverMonitor = ServerMonitor.getInstance();
     const performanceStats = serverMonitor.getPerformanceStats();
+    
+    // デバッグ: 統計情報をログ出力
+    log.info('📊 Error Statistics', {
+      errorStats,
+      performanceStats: {
+        totalRequests: performanceStats.totalRequests,
+        totalErrors: performanceStats.totalErrors,
+        averageResponseTime: performanceStats.avgResponseTime
+      }
+    });
     
     // エラー統計にtotalRequestsを追加
     const enhancedStats = {
@@ -5662,6 +5681,68 @@ app.get(`${API_PREFIX}/admin/error-stats`, authenticateToken, async (req: AuthRe
       error: 'Internal Server Error',
       message: 'APIエラー統計の取得に失敗しました'
     });
+  }
+});
+
+/**
+ * 🧪 テスト用エラー生成API（開発環境のみ）
+ */
+app.post(`${API_PREFIX}/admin/errors/test`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.admin) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    // 開発環境でのみ許可
+    if (process.env.NODE_ENV === 'production') {
+      res.status(403).json({ error: 'Test errors not allowed in production' });
+      return;
+    }
+
+    // テスト用エラーを生成
+    const testErrors = [
+      {
+        endpoint: '/api/v1/test/endpoint1',
+        method: 'GET',
+        statusCode: 404,
+        errorType: 'not_found',
+        errorMessage: 'Test endpoint not found',
+        responseTime: 150,
+        timestamp: new Date()
+      },
+      {
+        endpoint: '/api/v1/test/endpoint2',
+        method: 'POST',
+        statusCode: 500,
+        errorType: 'server_error',
+        errorMessage: 'Test server error',
+        responseTime: 250,
+        timestamp: new Date(Date.now() - 3600000) // 1時間前
+      },
+      {
+        endpoint: '/api/v1/test/auth',
+        method: 'GET',
+        statusCode: 401,
+        errorType: 'authentication',
+        errorMessage: 'Test authentication error',
+        responseTime: 50,
+        timestamp: new Date(Date.now() - 7200000) // 2時間前
+      }
+    ];
+
+    // エラーを保存
+    const savedErrors = await APIErrorModel.insertMany(testErrors);
+
+    res.json({
+      success: true,
+      message: `${savedErrors.length} test errors created`,
+      errors: savedErrors
+    });
+
+  } catch (error) {
+    log.error('Test error creation failed', error);
+    res.status(500).json({ error: 'Failed to create test errors' });
   }
 });
 
@@ -5702,6 +5783,15 @@ app.get(`${API_PREFIX}/admin/errors`, authenticateToken, async (req: AuthRequest
     if (errorType) filter.errorType = errorType;
     if (statusCode) filter.statusCode = parseInt(statusCode as string);
 
+    // デバッグ: フィルタとドキュメント数を確認
+    const totalDocs = await APIErrorModel.countDocuments();
+    log.info('🔍 Error List Debug', {
+      filter,
+      totalDocs,
+      limit: parseInt(limit as string),
+      offset: parseInt(offset as string)
+    });
+
     const errors = await APIErrorModel
       .find(filter)
       .sort({ timestamp: -1 })
@@ -5710,6 +5800,12 @@ app.get(`${API_PREFIX}/admin/errors`, authenticateToken, async (req: AuthRequest
       .lean();
 
     const total = await APIErrorModel.countDocuments(filter);
+    
+    log.info('📋 Error List Results', {
+      foundErrors: errors.length,
+      totalMatching: total,
+      sampleError: errors[0] || null
+    });
 
     res.json({
       success: true,
