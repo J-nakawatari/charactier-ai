@@ -26,13 +26,34 @@ const SENSITIVE_FIELDS = [
 ];
 
 // Sanitize sensitive data from objects
-function sanitizeData(data: any): any {
+function sanitizeData(data: any, visited = new WeakSet()): any {
   if (typeof data !== 'object' || data === null) {
     return data;
   }
 
+  // Prevent circular references
+  if (visited.has(data)) {
+    return '[Circular Reference]';
+  }
+  visited.add(data);
+
+  // Handle MongoDB ObjectId
+  if (data._bsontype === 'ObjectId' || data.constructor?.name === 'ObjectId') {
+    return data.toString();
+  }
+
+  // Handle Date objects
+  if (data instanceof Date) {
+    return data.toISOString();
+  }
+
+  // Handle Buffer
+  if (Buffer.isBuffer(data)) {
+    return '[Buffer]';
+  }
+
   if (Array.isArray(data)) {
-    return data.map(item => sanitizeData(item));
+    return data.map(item => sanitizeData(item, visited));
   }
 
   const sanitized: any = {};
@@ -43,7 +64,7 @@ function sanitizeData(data: any): any {
     if (SENSITIVE_FIELDS.some(field => lowerKey.includes(field.toLowerCase()))) {
       sanitized[key] = '[REDACTED]';
     } else if (typeof value === 'object' && value !== null) {
-      sanitized[key] = sanitizeData(value);
+      sanitized[key] = sanitizeData(value, visited);
     } else if (typeof value === 'string') {
       // Check for patterns that look like tokens or secrets
       if (value.length > 20 && /^[A-Za-z0-9+/=._-]+$/.test(value)) {
