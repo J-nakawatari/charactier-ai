@@ -1022,11 +1022,28 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
       .populate('purchasedCharacters', '_id name');
     
     // affinities.characterのpopulateが失敗することがあるため、一旦populateなしで取得
-
+    
     if (!user) {
+      log.error('User not found in dashboard:', { userId });
       res.status(404).json({ error: 'User not found' });
       return;
     }
+    
+    // 生のユーザーデータをログ出力
+    log.info('Dashboard - Raw user data:', {
+      userId: user._id.toString(),
+      hasAffinities: !!user.affinities,
+      affinitiesLength: user.affinities?.length || 0,
+      affinitiesData: user.affinities
+    });
+    
+    // 別の方法でaffinitiesを確認
+    const userWithFullData = await UserModel.findById(userId).lean();
+    log.info('Dashboard - Full user data check:', {
+      userId: userId.toString(),
+      hasAffinitiesInDB: !!userWithFullData?.affinities,
+      affinitiesCount: userWithFullData?.affinities?.length || 0
+    });
 
     // UserTokenPackモデルをインポート
     const UserTokenPack = require('../../models/UserTokenPack');
