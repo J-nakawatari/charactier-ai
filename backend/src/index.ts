@@ -1029,12 +1029,23 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
       return;
     }
     
+    // ユーザーオブジェクトの検証
+    if (!user.affinities) {
+      log.warn('User affinities field is missing:', {
+        userId: user._id.toString(),
+        userFields: Object.keys(user)
+      });
+      user.affinities = [];
+    }
+    
     // 生のユーザーデータをログ出力
     log.info('Dashboard - Raw user data:', {
       userId: user._id.toString(),
       hasAffinities: !!user.affinities,
       affinitiesLength: user.affinities?.length || 0,
-      affinitiesData: user.affinities
+      affinitiesData: user.affinities,
+      userKeys: Object.keys(user || {}),
+      affinitiesType: Array.isArray(user.affinities) ? 'array' : typeof user.affinities
     });
     
     // 別の方法でaffinitiesを確認
