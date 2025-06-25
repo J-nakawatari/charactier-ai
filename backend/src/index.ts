@@ -1018,7 +1018,8 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
 
     // ユーザー基本情報を取得 - affinitiesを明示的に含める
     const userDoc = await UserModel.findById(userId)
-      .populate('purchasedCharacters', '_id name');
+      .populate('purchasedCharacters', '_id name')
+      .populate('affinities.character', '_id name imageCharacterSelect themeColor');
     
     // Mongooseドキュメントをプレーンオブジェクトに変換
     const user = userDoc ? userDoc.toObject() : null;
