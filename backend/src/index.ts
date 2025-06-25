@@ -3375,22 +3375,18 @@ routeRegistry.define('GET', `${API_PREFIX}/admin/users`, authenticateToken, asyn
     reqUserDetails: req.user ? { id: req.user._id, email: req.user.email, isAdmin: (req.user as any).isAdmin } : 'no user'
   });
   
-  // 管理者権限チェック
-  if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+  // 管理者権限チェック（管理パスなのでreq.adminのみチェック）
+  if (!req.admin) {
     log.warn('❌ ADMIN ACCESS DENIED', {
       reason: 'No admin access',
       hasReqAdmin: !!req.admin,
       hasReqUser: !!req.user,
-      userIsAdmin: req.user ? (req.user as any).isAdmin : false
+      path: req.path,
+      originalUrl: req.originalUrl
     });
     res.status(403).json({ 
       error: 'Admin access required',
-      message: 'INSUFFICIENT_PERMISSIONS',
-      debug: process.env.NODE_ENV === 'development' ? {
-        hasAdmin: !!req.admin,
-        hasUser: !!req.user,
-        userIsAdmin: req.user ? (req.user as any).isAdmin : false
-      } : undefined
+      message: 'INSUFFICIENT_PERMISSIONS'
     });
     return;
   }
@@ -3574,7 +3570,7 @@ app.post('/admin/users/:userId/reset-tokens', authenticateToken, async (req: Req
 // 管理者向けユーザー停止/復活（より具体的なルートを先に定義）
 routeRegistry.define('PUT', `${API_PREFIX}/admin/users/:id/status`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user || !(req.user as any).isAdmin) {
+    if (!req.admin) {
       res.status(403).json({ error: 'Admin access required' });
       return;
     }
@@ -3665,7 +3661,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/admin/users/:id/status`, authenticate
 // 管理者向けユーザー削除（論理削除）
 routeRegistry.define('DELETE', `${API_PREFIX}/admin/users/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user || !(req.user as any).isAdmin) {
+    if (!req.admin) {
       res.status(403).json({ error: 'Admin access required' });
       return;
     }
@@ -3732,7 +3728,7 @@ routeRegistry.define('DELETE', `${API_PREFIX}/admin/users/:id`, authenticateToke
 // 管理者向けユーザー詳細取得（一般的なルートを最後に定義）
 routeRegistry.define('GET', `${API_PREFIX}/admin/users/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user || !(req.user as any).isAdmin) {
+    if (!req.admin) {
       res.status(403).json({ error: 'Admin access required' });
       return;
     }
@@ -3841,7 +3837,7 @@ try {
 // 管理者作成API
 app.post(`${API_PREFIX}/admin/create-admin`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   
-  if (!req.user || !(req.user as any).isAdmin) {
+  if (!req.admin) {
     sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED, 'Admin access required');
     return;
   }
@@ -3930,7 +3926,7 @@ app.post(`${API_PREFIX}/admin/create-admin`, authenticateToken, async (req: Auth
 // 管理者一覧取得API
 app.get(`${API_PREFIX}/admin/admins`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   
-  if (!req.user || !(req.user as any).isAdmin) {
+  if (!req.admin) {
     sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED, 'Admin access required');
     return;
   }
@@ -3997,7 +3993,7 @@ app.get(`${API_PREFIX}/admin/admins`, authenticateToken, async (req: AuthRequest
 // 管理者個別取得API
 app.get(`${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   // 管理者権限チェック
-  if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+  if (!req.admin) {
     res.status(403).json({ 
       error: 'Admin access required',
       message: 'INSUFFICIENT_PERMISSIONS'
@@ -4039,7 +4035,7 @@ app.get(`${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthReq
 // 管理者更新API
 routeRegistry.define('PUT', `${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   // 管理者権限チェック
-  if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+  if (!req.admin) {
     res.status(403).json({ 
       error: 'Admin access required',
       message: 'INSUFFICIENT_PERMISSIONS'
@@ -4120,7 +4116,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/admin/admins/:id`, authenticateToken,
 // 管理者削除API
 routeRegistry.define('DELETE', `${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   // 管理者権限チェック
-  if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+  if (!req.admin) {
     res.status(403).json({ 
       error: 'Admin access required',
       message: 'INSUFFICIENT_PERMISSIONS'
@@ -4424,7 +4420,7 @@ app.get(`${API_PREFIX}/admin/security-stats`, authenticateToken, async (req: Aut
 app.get(`${API_PREFIX}/admin/token-analytics/overview`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
-    if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+    if (!req.admin) {
       res.status(403).json({ 
         error: 'Admin access required',
         message: 'INSUFFICIENT_PERMISSIONS'
@@ -5624,7 +5620,7 @@ app.get(`${API_PREFIX}/admin/exchange-rate`, authenticateToken, async (req: Auth
 app.get(`${API_PREFIX}/admin/error-stats`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
-    if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+    if (!req.admin) {
       res.status(403).json({ 
         error: 'Admin access required',
         message: 'INSUFFICIENT_PERMISSIONS'
@@ -5668,7 +5664,7 @@ app.get(`${API_PREFIX}/admin/error-stats`, authenticateToken, async (req: AuthRe
  */
 app.get(`${API_PREFIX}/admin/errors`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user || !(req.user as any).isAdmin) {
+    if (!req.admin) {
       res.status(401).json({ error: 'Admin access required' });
       return;
     }
@@ -5734,7 +5730,7 @@ app.get(`${API_PREFIX}/admin/errors`, authenticateToken, async (req: AuthRequest
  */
 app.post(`${API_PREFIX}/admin/errors/resolve`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user || !(req.user as any).isAdmin) {
+    if (!req.admin) {
       res.status(401).json({ error: 'Admin access required' });
       return;
     }
@@ -5792,7 +5788,7 @@ app.post(`${API_PREFIX}/admin/errors/resolve`, authenticateToken, async (req: Au
  */
 app.get(`${API_PREFIX}/admin/errors/details`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user || !(req.user as any).isAdmin) {
+    if (!req.admin) {
       res.status(401).json({ error: 'Admin access required' });
       return;
     }
@@ -6151,7 +6147,7 @@ routeRegistry.define('DELETE', `${API_PREFIX}/admin/cache/character/:characterId
 app.get(`${API_PREFIX}/admin/dashboard/stats`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
-    if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+    if (!req.admin) {
       res.status(403).json({ 
         error: 'Admin access required',
         message: 'INSUFFICIENT_PERMISSIONS',
@@ -6324,7 +6320,7 @@ app.get(`${API_PREFIX}/admin/dashboard/stats`, authenticateToken, async (req: Au
 app.post(`${API_PREFIX}/admin/characters/update-stats`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
-    if (!req.user || !(req.user as any).isAdmin) {
+    if (!req.admin) {
       res.status(403).json({ error: 'Admin access required' });
       return;
     }
@@ -6627,7 +6623,7 @@ routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticate
 // デバッグ用：ユーザーの違反記録確認API（一時的）
 app.get(`${API_PREFIX}/debug/user-violations/:userId`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   // 管理者権限チェック
-  if (!req.admin && (!req.user || !(req.user as any).isAdmin)) {
+  if (!req.admin) {
     res.status(403).json({ 
       error: 'Admin access required',
       message: 'INSUFFICIENT_PERMISSIONS'
