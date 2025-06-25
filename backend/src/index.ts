@@ -24,6 +24,7 @@ import { authenticateToken, AuthRequest, isModerator, hasWritePermission } from 
 import authRoutes from './routes/auth';
 import characterRoutes from './routes/characters';
 import adminCharactersRoutes from './routes/adminCharacters';
+import adminNotificationsRoutes from './routes/adminNotifications';
 import modelRoutes from './routes/modelSettings';
 import notificationRoutes from './routes/notifications';
 import systemSettingsRoutes from './routes/systemSettings';
@@ -889,6 +890,9 @@ routeRegistry.mount(`${API_PREFIX}/characters`, characterRoutes);
 
 // 管理者用キャラクタールート
 routeRegistry.mount(`${API_PREFIX}/admin/characters`, adminCharactersRoutes);
+
+// 管理者用通知ルート
+routeRegistry.mount(`${API_PREFIX}/admin/notifications`, adminNotificationsRoutes);
 
 // お知らせルート（ユーザー用 + 管理者用）
 routeRegistry.mount(`${API_PREFIX}/notifications`, notificationRoutes);
