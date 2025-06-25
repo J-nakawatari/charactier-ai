@@ -108,7 +108,11 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
               <div className="flex-1 min-w-0">
                 {/* キャラクター名 */}
                 <h4 className="font-medium text-gray-900 mb-1">
-                  {affinity.character.name[locale as keyof LocalizedString]}
+                  {affinity.character.name ? 
+                    (typeof affinity.character.name === 'object' ? 
+                      affinity.character.name[locale as keyof LocalizedString] || affinity.character.name.ja || affinity.character.name.en || 'Unknown' 
+                      : affinity.character.name)
+                    : 'Unknown Character'}
                 </h4>
 
                 {/* 経験値バー */}

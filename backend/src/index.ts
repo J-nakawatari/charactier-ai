@@ -1120,6 +1120,14 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
         character = characterDoc;
       }
 
+      // デバッグ: キャラクターデータを確認
+      log.info(`Character data for affinity:`, {
+        characterId: character._id,
+        name: character.name,
+        hasName: !!character.name,
+        nameType: typeof character.name
+      });
+
       // デフォルト値を設定
       const formattedAffinity = {
         character: {
