@@ -50,7 +50,7 @@ export default function TopBar() {
     const fetchNotifications = async () => {
       try {
         // システム通知を取得（警告、緊急、メンテナンスのみ）
-        const response = await adminFetch('/api/v1/notifications/admin?type=warning,urgent,maintenance&limit=10', {
+        const response = await adminFetch('/api/v1/admin/notifications?type=warning,urgent,maintenance&limit=10', {
           method: 'GET'
         });
 

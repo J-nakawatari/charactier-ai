@@ -18,7 +18,9 @@ export const authenticateToken = async (
 ): Promise<void> => {
   try {
     // 1. パスに基づいて適切なクッキーを選択
-    const isAdminPath = req.path.includes('/admin/');
+    // req.originalUrl を使用して完全なパスを確認（/api/v1/admin/...）
+    const fullPath = req.originalUrl || req.url;
+    const isAdminPath = fullPath.includes('/admin/');
     let token: string | undefined;
     
     // 管理者パスの場合は管理者用クッキー、それ以外はユーザー用クッキーを確認
@@ -44,6 +46,8 @@ export const authenticateToken = async (
     // Comprehensive debug logging for production issues
     log.info('🔍 AUTH MIDDLEWARE DEBUG', {
       path: req.path,
+      originalUrl: req.originalUrl,
+      fullPath,
       method: req.method,
       isAdminPath,
       allCookies: req.cookies,
@@ -62,6 +66,8 @@ export const authenticateToken = async (
     if (!token) {
       log.warn('❌ NO TOKEN FOUND', { 
         path: req.path,
+        originalUrl: req.originalUrl,
+        fullPath,
         isAdminPath,
         cookieDebug: {
           hasCookieHeader: !!req.headers.cookie,
@@ -111,7 +117,9 @@ export const authenticateToken = async (
           adminId: admin._id.toString(),
           email: admin.email,
           role: admin.role,
-          path: req.path
+          path: req.path,
+          originalUrl: req.originalUrl,
+          fullPath
         });
         req.admin = admin;
         // 管理者パスでは req.user は設定しない
@@ -121,7 +129,8 @@ export const authenticateToken = async (
         log.warn('❌ INACTIVE ADMIN TRIED TO ACCESS', {
           adminId: admin._id.toString(),
           email: admin.email,
-          path: req.path
+          path: req.path,
+          originalUrl: req.originalUrl
         });
         res.status(403).json({ 
           error: 'Admin account inactive',
@@ -131,7 +140,8 @@ export const authenticateToken = async (
       } else {
         log.error('❌ ADMIN NOT FOUND', {
           userId: decoded.userId,
-          path: req.path
+          path: req.path,
+          originalUrl: req.originalUrl
         });
         res.status(401).json({ 
           error: 'Admin not found',
@@ -161,6 +171,8 @@ export const authenticateToken = async (
         userId: user._id.toString(), 
         email: user.email,
         path: req.path,
+        originalUrl: req.originalUrl,
+        fullPath,
         isAdminPath
       });
       // 管理者パスへの一般ユーザーアクセスを警告
@@ -168,7 +180,9 @@ export const authenticateToken = async (
         log.warn('⚠️ REGULAR USER TRYING TO ACCESS ADMIN PATH', {
           userId: user._id.toString(),
           email: user.email,
-          path: req.path
+          path: req.path,
+          originalUrl: req.originalUrl,
+          fullPath
         });
       }
       next();
@@ -179,6 +193,7 @@ export const authenticateToken = async (
     log.error('❌ USER/ADMIN NOT FOUND', {
       userId: decoded.userId,
       path: req.path,
+      originalUrl: req.originalUrl,
       isAdminPath
     });
     res.status(401).json({ 
@@ -189,7 +204,8 @@ export const authenticateToken = async (
   } catch (error) {
     log.error('❌ JWT VERIFICATION FAILED', { 
       error: error instanceof Error ? error.message : 'Unknown error',
-      path: req.path
+      path: req.path,
+      originalUrl: req.originalUrl
     });
     
     if (error instanceof jwt.JsonWebTokenError) {
