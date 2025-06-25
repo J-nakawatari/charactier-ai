@@ -1021,6 +1021,13 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
       .populate('purchasedCharacters', '_id name')
       .populate('affinities.character', '_id name imageCharacterSelect themeColor');
     
+    // デバッグ: userDocの内容を確認
+    log.info('UserDoc before toObject:', {
+      userId: userId.toString(),
+      hasAffinities: !!userDoc?.affinities,
+      affinitiesLength: userDoc?.affinities?.length || 0
+    });
+    
     // Mongooseドキュメントをプレーンオブジェクトに変換
     const user = userDoc ? userDoc.toObject() : null;
     
@@ -1058,6 +1065,14 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
       hasAffinitiesInDB: !!userWithFullData?.affinities,
       affinitiesCount: userWithFullData?.affinities?.length || 0
     });
+    
+    // デバッグ: lean()で取得したデータをuserに使用してみる
+    if (userWithFullData && userWithFullData.affinities && user) {
+      log.info('Using affinities from lean() query:', {
+        leanAffinitiesCount: userWithFullData.affinities.length
+      });
+      user.affinities = userWithFullData.affinities;
+    }
 
     // UserTokenPackモデルをインポート
     const UserTokenPack = require('../../models/UserTokenPack');
