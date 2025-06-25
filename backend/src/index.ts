@@ -1068,7 +1068,7 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
       .select('characterId lastActivityAt messages');
 
     // デバッグログ：populateの結果を確認
-    log.debug('User affinities raw data:', {
+    log.info('User affinities raw data:', {
       userId: userId.toString(),
       affinitiesCount: user.affinities?.length || 0,
       affinities: user.affinities
@@ -1081,7 +1081,7 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
     });
     
     const affinities = await Promise.all((user.affinities || []).map(async (affinity: any, index: number) => {
-      log.debug(`Processing affinity ${index}:`, {
+      log.info(`Processing affinity ${index}:`, {
         characterId: affinity.character,
         level: affinity.level,
         hasCharacterData: !!affinity.character
@@ -1114,7 +1114,7 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
         nextUnlockLevel: Math.floor((affinity.level || 0) / 10 + 1) * 10
       };
       
-      log.debug(`Formatted affinity ${index}:`, formattedAffinity);
+      log.info(`Formatted affinity ${index}:`, formattedAffinity);
       
       return formattedAffinity;
     }));
@@ -1122,7 +1122,7 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
     // nullを除外
     const validAffinities = affinities.filter(a => a !== null);
     
-    log.debug('Formatted affinities for dashboard:', {
+    log.info('Formatted affinities for dashboard:', {
       userId: userId.toString(),
       totalAffinities: validAffinities.length,
       affinities: validAffinities
@@ -1430,6 +1430,35 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/current-user`, authenticateToke
         authorization: req.headers.authorization?.substring(0, 20) + '...',
         userAgent: req.headers['user-agent']
       }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error });
+  }
+});
+
+// 親密度デバッグ用エンドポイント
+routeRegistry.define('GET', `${API_PREFIX}/debug/user-affinities`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // 生のユーザーデータを取得
+    const user = await UserModel.findById(userId).lean();
+    
+    // 親密度データのみを取得
+    const userWithAffinities = await UserModel.findById(userId)
+      .select('affinities')
+      .populate('affinities.character', 'name');
+    
+    res.json({
+      userId: userId.toString(),
+      affinitiesCount: user?.affinities?.length || 0,
+      rawAffinities: user?.affinities || [],
+      populatedAffinities: userWithAffinities?.affinities || [],
+      firstAffinity: user?.affinities?.[0] || null
     });
   } catch (error) {
     res.status(500).json({ error: error });
@@ -2329,7 +2358,7 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
         const newAffinity = Math.min(100, currentUserAffinity + affinityIncrease);
 
         // UserModelの親密度データも更新
-        log.debug('Updating user affinity:', {
+        log.info('Updating user affinity:', {
           userId: req.user._id,
           characterId,
           previousAffinity,
