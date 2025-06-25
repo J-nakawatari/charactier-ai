@@ -23,8 +23,21 @@ export const registrationRateLimit = async (
   next: NextFunction
 ): Promise<void> => {
   // 一時的にレート制限を無効化（テスト用）
-  if (process.env.DISABLE_RATE_LIMIT === 'true') {
-    console.log('⚠️ Registration rate limit is temporarily disabled for testing');
+  if (process.env.DISABLE_RATE_LIMIT === 'true' || process.env.NODE_ENV === 'development') {
+    console.log('⚠️ Registration rate limit is temporarily disabled');
+    next();
+    return;
+  }
+  
+  // 緊急用: 特定のIPアドレスをホワイトリスト化
+  const whitelistedIPs = process.env.RATE_LIMIT_WHITELIST?.split(',') || [];
+  const clientIP = (req.headers['x-real-ip'] as string) || 
+                   (req.headers['x-forwarded-for'] as string)?.split(',')[0] || 
+                   req.ip || 
+                   'unknown';
+  
+  if (whitelistedIPs.includes(clientIP)) {
+    console.log('✅ Whitelisted IP, bypassing rate limit:', clientIP);
     next();
     return;
   }
@@ -46,18 +59,33 @@ export const registrationRateLimit = async (
     // 短期間制限をチェック
     try {
       const limiterRes = await shortTermLimiter.get(ip);
+      const now = new Date();
       console.log('📊 Short-term limiter status:', {
         ip,
         consumedPoints: limiterRes ? limiterRes.consumedPoints : 0,
-        remainingPoints: limiterRes ? limiterRes.remainingPoints : 1,
-        msBeforeNext: limiterRes ? limiterRes.msBeforeNext : 0
+        remainingPoints: limiterRes ? limiterRes.remainingPoints : 3,
+        msBeforeNext: limiterRes ? limiterRes.msBeforeNext : 0,
+        resetTime: limiterRes && limiterRes.msBeforeNext ? new Date(now.getTime() + limiterRes.msBeforeNext).toISOString() : 'No limit',
+        currentTime: now.toISOString()
       });
       
       await shortTermLimiter.consume(ip);
     } catch (shortTermError) {
+      const limiterRes = await shortTermLimiter.get(ip);
+      const resetTime = limiterRes && limiterRes.msBeforeNext 
+        ? Math.ceil(limiterRes.msBeforeNext / 1000) 
+        : 60;
+      
+      console.error('❌ Short-term rate limit exceeded:', {
+        ip,
+        consumedPoints: limiterRes?.consumedPoints,
+        resetInSeconds: resetTime
+      });
+      
       res.status(429).json({
         error: 'Too many registration attempts',
-        message: '登録の間隔が短すぎます。5分後に再試行してください。'
+        message: `登録の間隔が短すぎます。${resetTime}秒後に再試行してください。`,
+        retryAfter: resetTime
       });
       return;
     }

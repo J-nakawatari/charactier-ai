@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# レート制限を一時的に無効化するスクリプト
+
+echo "⚠️  レート制限を一時的に無効化します..."
+echo ""
+echo "本番サーバーで以下のコマンドを実行してください："
+echo ""
+echo "1. 環境変数を設定:"
+echo "   export DISABLE_RATE_LIMIT=true"
+echo ""
+echo "2. バックエンドを再起動:"
+echo "   sudo systemctl restart charactier-backend"
+echo ""
+echo "3. テスト完了後、元に戻す:"
+echo "   unset DISABLE_RATE_LIMIT"
+echo "   sudo systemctl restart charactier-backend"
+echo ""
+echo "または、PM2を使用している場合:"
+echo "   pm2 set charactier-backend:DISABLE_RATE_LIMIT true"
+echo "   pm2 restart charactier-backend"
+echo ""
+echo "テスト後に戻す:"
+echo "   pm2 delete charactier-backend:DISABLE_RATE_LIMIT"
+echo "   pm2 restart charactier-backend"
