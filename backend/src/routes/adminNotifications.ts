@@ -104,6 +104,71 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
   }
 });
 
+// お知らせ作成
+router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 管理者権限チェック
+    if (!req.admin) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
+      return;
+    }
+
+    const {
+      title,
+      message,
+      type,
+      isPinned,
+      priority,
+      targetCondition,
+      validFrom,
+      validUntil
+    } = req.body;
+
+    // 必須フィールドの検証
+    if (!title?.ja || !title?.en || !message?.ja || !message?.en) {
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Title and message are required in both languages');
+      return;
+    }
+
+    // お知らせを作成
+    const notification = await NotificationModel.create({
+      title,
+      message,
+      type: type || 'info',
+      isPinned: isPinned || false,
+      priority: priority || 0,
+      targetCondition: targetCondition || { type: 'all' },
+      validFrom: validFrom ? new Date(validFrom) : new Date(),
+      validUntil: validUntil ? new Date(validUntil) : undefined,
+      isActive: true,
+      createdBy: req.admin._id,
+      totalTargetUsers: 0, // 後で計算する
+      totalViews: 0,
+      totalReads: 0
+    });
+
+    log.info('Notification created', {
+      adminId: req.admin._id,
+      notificationId: notification._id,
+      type: notification.type,
+      targetCondition: notification.targetCondition
+    });
+
+    res.status(201).json({
+      success: true,
+      notification,
+      message: 'お知らせを作成しました'
+    });
+
+  } catch (error) {
+    log.error('Error creating notification', error, {
+      adminId: req.admin?._id,
+      body: req.body
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
 // 管理者用お知らせ既読マーク
 router.post('/:id/read', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -217,6 +282,156 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response):
   } catch (error) {
     log.error('Error fetching admin notification stats', error, {
       adminId: req.admin?._id
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
+// お知らせ更新
+router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 管理者権限チェック
+    if (!req.admin) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
+      return;
+    }
+
+    const notificationId = req.params.id;
+    const {
+      title,
+      message,
+      type,
+      isPinned,
+      priority,
+      targetCondition,
+      validFrom,
+      validUntil,
+      isActive
+    } = req.body;
+
+    // お知らせの存在確認
+    const notification = await NotificationModel.findById(notificationId);
+    if (!notification) {
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'Notification not found');
+      return;
+    }
+
+    // 更新データを準備
+    const updateData: any = {
+      updatedBy: req.admin._id,
+      updatedAt: new Date()
+    };
+
+    if (title) updateData.title = title;
+    if (message) updateData.message = message;
+    if (type) updateData.type = type;
+    if (isPinned !== undefined) updateData.isPinned = isPinned;
+    if (priority !== undefined) updateData.priority = priority;
+    if (targetCondition) updateData.targetCondition = targetCondition;
+    if (validFrom) updateData.validFrom = new Date(validFrom);
+    if (validUntil) updateData.validUntil = new Date(validUntil);
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    // お知らせを更新
+    const updatedNotification = await NotificationModel.findByIdAndUpdate(
+      notificationId,
+      updateData,
+      { new: true }
+    );
+
+    log.info('Notification updated', {
+      adminId: req.admin._id,
+      notificationId,
+      changes: Object.keys(updateData)
+    });
+
+    res.json({
+      success: true,
+      notification: updatedNotification,
+      message: 'お知らせを更新しました'
+    });
+
+  } catch (error) {
+    log.error('Error updating notification', error, {
+      adminId: req.admin?._id,
+      notificationId: req.params.id
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
+// お知らせ削除
+router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 管理者権限チェック
+    if (!req.admin) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
+      return;
+    }
+
+    const notificationId = req.params.id;
+
+    // お知らせを削除
+    const deletedNotification = await NotificationModel.findByIdAndDelete(notificationId);
+    if (!deletedNotification) {
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'Notification not found');
+      return;
+    }
+
+    // 関連する既読状態も削除
+    await AdminNotificationReadStatusModel.deleteMany({
+      notificationId: new mongoose.Types.ObjectId(notificationId)
+    });
+
+    log.info('Notification deleted', {
+      adminId: req.admin._id,
+      notificationId,
+      title: deletedNotification.title
+    });
+
+    res.json({
+      success: true,
+      message: 'お知らせを削除しました'
+    });
+
+  } catch (error) {
+    log.error('Error deleting notification', error, {
+      adminId: req.admin?._id,
+      notificationId: req.params.id
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
+// お知らせ詳細取得
+router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 管理者権限チェック
+    if (!req.admin) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
+      return;
+    }
+
+    const notificationId = req.params.id;
+
+    const notification = await NotificationModel.findById(notificationId)
+      .populate('createdBy', 'name email')
+      .populate('updatedBy', 'name email');
+
+    if (!notification) {
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'Notification not found');
+      return;
+    }
+
+    res.json({
+      success: true,
+      notification
+    });
+
+  } catch (error) {
+    log.error('Error fetching notification details', error, {
+      adminId: req.admin?._id,
+      notificationId: req.params.id
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
