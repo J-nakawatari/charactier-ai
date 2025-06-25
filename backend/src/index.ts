@@ -1018,8 +1018,7 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
 
     // ユーザー基本情報を取得 - affinitiesを明示的に含める
     const user = await UserModel.findById(userId)
-      .populate('purchasedCharacters', '_id name')
-      .lean();
+      .populate('purchasedCharacters', '_id name');
     
     // affinities.characterのpopulateが失敗することがあるため、一旦populateなしで取得
     
@@ -1269,6 +1268,13 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
     });
 
 
+    // 最終的なレスポンス前にaffinitiesをログ出力
+    log.info('Dashboard - Final affinities before response:', {
+      userId: userId.toString(),
+      validAffinitiesCount: validAffinities.length,
+      validAffinities: validAffinities
+    });
+    
     res.json({
       user: {
         _id: user._id,
