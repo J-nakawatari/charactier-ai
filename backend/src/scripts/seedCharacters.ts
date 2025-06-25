@@ -2,10 +2,10 @@
 
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-dotenv.config({ path: './backend/.env' });
-import Character from '../backend/models/Character';
+import path from 'path';
 
-dotenv.config();
+// Load environment variables
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/charactier';
 
@@ -13,6 +13,10 @@ const run = async () => {
   try {
     await mongoose.connect(MONGO_URI);
     console.log('✅ MongoDB接続完了');
+
+    // Import Character model after connection
+    await import('../models/CharacterModel');
+    const Character = mongoose.model('Character');
 
     // 初期データ
     const characters = [
