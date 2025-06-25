@@ -17,9 +17,11 @@ export async function sendVerificationEmail(
   token: string,
   locale: 'ja' | 'en' = 'ja'
 ): Promise<void> {
-  // フロントエンドのURLを環境変数から取得（末尾のスラッシュを除去）
-  const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
-  const verifyUrl = `${frontendUrl}/${locale}/verify-email?token=${token}`;
+  // バックエンドのAPIエンドポイントを使用（メール認証は直接APIで処理）
+  const baseUrl = process.env.NODE_ENV === 'production' 
+    ? 'https://charactier-ai.com' 
+    : (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const verifyUrl = `${baseUrl}/api/v1/auth/verify-email?token=${token}&locale=${locale}`;
 
   // デバッグ情報を出力
   log.debug('Preparing to send verification email', {

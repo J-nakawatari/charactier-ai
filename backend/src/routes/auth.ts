@@ -419,10 +419,29 @@ router.post('/user/setup-complete', authenticateToken, async (req: Request, res:
 // メールアドレス認証
 router.get('/verify-email', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { token } = req.query;
+    const { token, locale = 'ja' } = req.query;
 
     if (!token || typeof token !== 'string') {
-      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT);
+      // エラーページをHTMLで返す
+      res.status(400).send(`
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>${locale === 'ja' ? 'エラー' : 'Error'}</title>
+            <style>
+              body { font-family: sans-serif; text-align: center; padding: 50px; }
+              .error { color: #e53e3e; }
+              a { color: #3182ce; text-decoration: none; }
+              a:hover { text-decoration: underline; }
+            </style>
+          </head>
+          <body>
+            <h1 class="error">${locale === 'ja' ? 'エラー' : 'Error'}</h1>
+            <p>${locale === 'ja' ? '無効なリクエストです。' : 'Invalid request.'}</p>
+            <p><a href="/">${locale === 'ja' ? 'ホームに戻る' : 'Back to Home'}</a></p>
+          </body>
+        </html>
+      `);
       return;
     }
 
@@ -434,14 +453,36 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
 
     if (!user) {
       log.warn('Email verification failed - invalid or expired token', { token });
-      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND);
+      res.status(404).send(`
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>${locale === 'ja' ? 'エラー' : 'Error'}</title>
+            <style>
+              body { font-family: sans-serif; text-align: center; padding: 50px; }
+              .error { color: #e53e3e; }
+              a { color: #3182ce; text-decoration: none; }
+              a:hover { text-decoration: underline; }
+            </style>
+          </head>
+          <body>
+            <h1 class="error">${locale === 'ja' ? 'エラー' : 'Error'}</h1>
+            <p>${locale === 'ja' ? 'トークンが無効または期限切れです。' : 'Token is invalid or expired.'}</p>
+            <p><a href="/${locale}/login">${locale === 'ja' ? 'ログインページへ' : 'Go to Login'}</a></p>
+          </body>
+        </html>
+      `);
       return;
     }
 
     // 既に認証済みの場合
     if (user.emailVerified) {
       log.info('Email verification attempt for already verified user', { userId: user._id.toString() });
-      sendErrorResponse(res, 400, ClientErrorCode.ALREADY_EXISTS);
+      // 認証済みの場合はセットアップページへリダイレクト
+      const frontendUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://charactier-ai.com' 
+        : 'http://localhost:3000';
+      res.redirect(`${frontendUrl}/${locale}/setup`);
       return;
     }
 
@@ -484,17 +525,54 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
 
     log.info('Email verified successfully', { email: user.email, userId: user._id.toString() });
 
-    res.json({
-      message: 'メールアドレスが確認されました',
-      tokens: {
-        accessToken,
-        refreshToken
-      }
-    });
+    // 成功ページを表示して、自動的にセットアップページへリダイレクト
+    const frontendUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://charactier-ai.com' 
+      : 'http://localhost:3000';
+    res.send(`
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>${locale === 'ja' ? '認証成功' : 'Verification Success'}</title>
+          <meta http-equiv="refresh" content="3;url=${frontendUrl}/${locale}/setup">
+          <style>
+            body { font-family: sans-serif; text-align: center; padding: 50px; }
+            .success { color: #48bb78; }
+            a { color: #3182ce; text-decoration: none; }
+            a:hover { text-decoration: underline; }
+          </style>
+        </head>
+        <body>
+          <h1 class="success">✓ ${locale === 'ja' ? '認証成功' : 'Verification Success'}</h1>
+          <p>${locale === 'ja' ? 'メールアドレスが確認されました。' : 'Your email has been verified.'}</p>
+          <p>${locale === 'ja' ? '3秒後にセットアップページへ移動します...' : 'Redirecting to setup page in 3 seconds...'}</p>
+          <p><a href="${frontendUrl}/${locale}/setup">${locale === 'ja' ? '今すぐ移動' : 'Go now'}</a></p>
+        </body>
+      </html>
+    `);
 
   } catch (error) {
     const errorCode = mapErrorToClientCode(error);
-    sendErrorResponse(res, 500, errorCode, error);
+    log.error('Email verification error', error);
+    res.status(500).send(`
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Error</title>
+          <style>
+            body { font-family: sans-serif; text-align: center; padding: 50px; }
+            .error { color: #e53e3e; }
+            a { color: #3182ce; text-decoration: none; }
+            a:hover { text-decoration: underline; }
+          </style>
+        </head>
+        <body>
+          <h1 class="error">Error</h1>
+          <p>An error occurred. Please try again later.</p>
+          <p><a href="/">Back to Home</a></p>
+        </body>
+      </html>
+    `);
   }
 });
 
