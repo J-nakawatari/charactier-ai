@@ -74,7 +74,15 @@ function CharactersPageContent({
         });
         // user.profileは基本情報のみなので、purchasedCharactersとaffinitiesは別途取得が必要
         setUserAffinities(data.user?.affinities || []);
-        setUserPurchasedCharacters(data.user?.purchasedCharacters || []);
+        // purchasedCharactersがオブジェクト配列の場合、IDのみを抽出
+        const purchasedIds = (data.user?.purchasedCharacters || []).map((char: any) => 
+          typeof char === 'string' ? char : char._id
+        );
+        console.log('🔄 購入済みキャラクターID変換:', {
+          original: data.user?.purchasedCharacters,
+          converted: purchasedIds
+        });
+        setUserPurchasedCharacters(purchasedIds);
         // localStorageも更新
         if (data.user) {
           localStorage.setItem('user', JSON.stringify(data.user));
@@ -89,7 +97,11 @@ function CharactersPageContent({
             affinities: userData.affinities?.length || 0
           });
           setUserAffinities(userData.affinities || []);
-          setUserPurchasedCharacters(userData.purchasedCharacters?.map((id: string) => id.toString()) || []);
+          // localStorageからもオブジェクト配列の可能性があるため同様に処理
+          const purchasedIds = (userData.purchasedCharacters || []).map((char: any) => 
+            typeof char === 'string' ? char : char._id
+          );
+          setUserPurchasedCharacters(purchasedIds);
         }
       }
     } catch (err) {
