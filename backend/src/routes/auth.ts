@@ -703,6 +703,15 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
 
     log.info('Email verified successfully', { email: user.email, userId: user._id.toString() });
 
+    // ユーザー情報を準備
+    const userInfo = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      tokenBalance: user.tokenBalance,
+      isSetupComplete: user.isSetupComplete
+    };
+
     // 成功ページを表示して、自動的にセットアップページへリダイレクト
     const frontendUrl = process.env.NODE_ENV === 'production' 
       ? 'https://charactier-ai.com' 
@@ -714,7 +723,27 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${locale === 'ja' ? '認証完了' : 'Email Verified'}</title>
-  <meta http-equiv="refresh" content="3;url=${frontendUrl}/${locale}/setup">
+  <script>
+    // ユーザー情報とトークンをlocalStorageに保存
+    (function() {
+      try {
+        // ユーザー情報を保存
+        localStorage.setItem('user', JSON.stringify(${JSON.stringify(userInfo)}));
+        localStorage.setItem('accessToken', '${accessToken}');
+        localStorage.setItem('refreshToken', '${refreshToken}');
+        console.log('✅ User data saved to localStorage');
+      } catch (error) {
+        console.error('❌ Failed to save user data:', error);
+      }
+    })();
+    
+    // 3秒後にリダイレクト
+    window.onload = function() {
+      setTimeout(function() {
+        window.location.href = '${frontendUrl}/${locale}/setup';
+      }, 3000);
+    };
+  </script>
   <style>
     * {
       margin: 0;
@@ -796,7 +825,7 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
     <p class="message">
       ${locale === 'ja' ? 'メールアドレスが確認されました。' : 'Your email has been verified successfully.'}
     </p>
-    <p class="countdown">
+    <p class="countdown" id="countdown">
       ${locale === 'ja' ? '3秒後にセットアップ画面に移動します...' : 'Redirecting to setup in 3 seconds...'}
     </p>
     <a href="${frontendUrl}/${locale}/setup" class="button">
