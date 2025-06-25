@@ -61,6 +61,11 @@ temp/
 .claude/settings.json
 CLAUDE.local.md
 
+# Security - 内部ドキュメント（セキュリティリスク回避）
+CLAUDE.md
+frontend/CLAUDE.md
+backend/CLAUDE.md
+
 # TypeScript Next.js 自動生成ファイル
 next-env.d.ts
 
