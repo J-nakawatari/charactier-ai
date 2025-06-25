@@ -57,7 +57,7 @@ export default function CharacterEditPage() {
     occupation: '',
     
     // AI設定
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4o-mini',
     characterAccessType: 'free' as 'free' | 'purchaseOnly',
     stripeProductId: '',
     purchasePrice: 0,
@@ -107,9 +107,15 @@ export default function CharacterEditPage() {
         // 基本キャラクター情報を取得
         const characterResponse = await adminFetch(`${API_BASE_URL}/api/v1/admin/characters/${characterId}`);
         if (characterResponse.ok) {
-          const character = await characterResponse.json();
+          const responseData = await characterResponse.json();
+          const character = responseData.character || responseData; // characterプロパティがあれば使用、なければ全体を使用
           console.log('✅ キャラクターデータを取得しました:', character);
-          console.log('🔍 取得した価格情報:', character.purchasePrice);
+          console.log('🔍 重要フィールドの確認:');
+          console.log('  personalityPreset:', character.personalityPreset);
+          console.log('  isActive:', character.isActive);
+          console.log('  characterAccessType:', character.characterAccessType);
+          console.log('  aiModel:', character.aiModel);
+          console.log('  purchasePrice:', character.purchasePrice);
           
           // 既存のギャラリー画像を変換
           const existingGalleryImages = character.galleryImages ? character.galleryImages.map((img: any) => ({
@@ -134,11 +140,11 @@ export default function CharacterEditPage() {
             gender: character.gender || 'female',
             age: character.age || '',
             occupation: character.occupation || '',
-            model: character.model || character.aiModel || 'o4-mini',
+            model: character.aiModel || character.model || 'gpt-4o-mini',
             characterAccessType: character.characterAccessType || 'free',
             stripeProductId: character.stripeProductId || '',
             purchasePrice: character.purchasePrice || 0,
-            isActive: character.isActive || false,
+            isActive: character.isActive === true, // 明示的にtrue/falseを設定
             
             // 既存の画像URLを設定
             imageCharacterSelectUrl: character.imageCharacterSelect || '',
