@@ -23,6 +23,7 @@ import { UserNotificationReadStatusModel } from './models/UserNotificationReadSt
 import { authenticateToken, AuthRequest, isModerator, hasWritePermission } from './middleware/auth';
 import authRoutes from './routes/auth';
 import characterRoutes from './routes/characters';
+import adminCharactersRoutes from './routes/adminCharacters';
 import modelRoutes from './routes/modelSettings';
 import notificationRoutes from './routes/notifications';
 import systemSettingsRoutes from './routes/systemSettings';
@@ -885,6 +886,9 @@ app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {
 
 // キャラクタールート
 routeRegistry.mount(`${API_PREFIX}/characters`, characterRoutes);
+
+// 管理者用キャラクタールート
+routeRegistry.mount(`${API_PREFIX}/admin/characters`, adminCharactersRoutes);
 
 // お知らせルート（ユーザー用 + 管理者用）
 routeRegistry.mount(`${API_PREFIX}/notifications`, notificationRoutes);

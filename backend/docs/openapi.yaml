@@ -1581,6 +1581,190 @@ paths:
                   error:
                     type: string
 
+  /api/admin/characters:
+    get:
+      summary: 管理者用キャラクター一覧取得（統計情報付き）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locale
+          in: query
+          schema:
+            type: string
+            default: ja
+        - name: includeInactive
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [popular, newest, oldest, name, revenue, active]
+            default: newest
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: キャラクター一覧（統計情報付き）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  characters:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Character'
+                        - type: object
+                          properties:
+                            stats:
+                              type: object
+                              properties:
+                                totalUsers:
+                                  type: integer
+                                averageLevel:
+                                  type: number
+                                maxLevel:
+                                  type: integer
+                                totalPurchases:
+                                  type: integer
+                                totalRevenue:
+                                  type: number
+                                lastActive:
+                                  type: string
+                                  format: date-time
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      totalPages:
+                        type: integer
+                  locale:
+                    type: string
+                  filter:
+                    type: object
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/characters/{id}:
+    get:
+      summary: 管理者用キャラクター詳細取得（詳細統計付き）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: キャラクター詳細（統計情報付き）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  character:
+                    $ref: '#/components/schemas/CharacterDetail'
+                  stats:
+                    type: object
+                    properties:
+                      totalUsers:
+                        type: integer
+                      levelDistribution:
+                        type: object
+                        properties:
+                          '0-10':
+                            type: integer
+                          '11-30':
+                            type: integer
+                          '31-50':
+                            type: integer
+                          '51-70':
+                            type: integer
+                          '71-90':
+                            type: integer
+                          '91-100':
+                            type: integer
+                      activeUsersThisWeek:
+                        type: integer
+                      isActive:
+                        type: boolean
+                      createdAt:
+                        type: string
+                        format: date-time
+                      updatedAt:
+                        type: string
+                        format: date-time
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      summary: キャラクターアクティブ状態切り替え（super_adminのみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ステータス変更成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  character:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      name:
+                        $ref: '#/components/schemas/LocalizedString'
+                      isActive:
+                        type: boolean
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /api/admin/models:
     get:
       summary: AIモデル一覧取得（管理者のみ）

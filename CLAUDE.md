@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-最終更新: 2025-06-24
+最終更新: 2025-06-25
 
 ## プロジェクト概要
 
@@ -46,6 +46,13 @@ charactier-ai/
   - バックエンド: 全ルートを `/api/v1/` 配下に集約
   - フロントエンド: catch-all proxyで `/api/v1/` に統一
   - Nginx: `/api/v1/` → `http://localhost:5000/api/v1/` にプロキシ
+
+#### 管理者/ユーザーAPI分離（2025-06-25）
+- **問題**: 管理者認証とユーザー認証の混在による認証エラー
+- **原因**: `/api/v1/characters` が管理者・ユーザー共用で、パスベース認証が混乱
+- **解決策**: 明確な役割分担
+  - `/api/v1/characters`: ユーザー専用（購入状況フィルタリングあり）
+  - `/api/v1/admin/characters`: 管理者専用（統計情報付き、全キャラ表示）
 
 ### 重要なアーキテクチャ決定
 1. **99%利益率システム**: `backend/src/config/tokenConfig.ts` で一元管理
