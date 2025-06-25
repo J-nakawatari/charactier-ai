@@ -38,9 +38,9 @@ export const pagination = Joi.object({
 // 認証スキーマ
 export const authSchemas = {
   register: Joi.object({
-    name: name.required(),
     email: email.required(),
-    password: password.required()
+    password: password.required(),
+    locale: Joi.string().valid('ja', 'en').optional()
   }),
 
   login: Joi.object({
