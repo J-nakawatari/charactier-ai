@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, AlertTriangle, CheckCircle, Activity, Users, Clock, Eye, UserX } from 'lucide-react';
+import { Shield, AlertTriangle, CheckCircle, Activity, Users, Clock, Eye, UserX, Trash2 } from 'lucide-react';
 import { adminAuthenticatedFetch } from '@/utils/auth';
 
 interface ViolationStats {
@@ -81,6 +81,37 @@ export default function SecurityPage() {
     }
   };
 
+  const handleClearViolations = async (type: 'all' | 'old', daysOld?: number) => {
+    const confirmMessage = type === 'all' 
+      ? '全ての違反記録を削除しますか？この操作は取り消せません。'
+      : `${daysOld}日以上前の違反記録を削除しますか？`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      const queryParams = type === 'old' && daysOld 
+        ? `?type=old&daysOld=${daysOld}`
+        : '?type=all';
+        
+      const response = await adminAuthenticatedFetch(`/api/v1/admin/security/violations/clear${queryParams}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(data.message);
+        fetchSecurityData(); // データを再読み込み
+      } else {
+        throw new Error('違反記録の削除に失敗しました');
+      }
+    } catch (error) {
+      console.error('違反記録削除エラー:', error);
+      alert('違反記録の削除に失敗しました');
+    }
+  };
+
   const handleLiftSanction = async (userId: string) => {
     if (!confirm('この制裁を解除してもよろしいですか？')) {
       return;
@@ -153,12 +184,43 @@ export default function SecurityPage() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={fetchSecurityData}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              更新
-            </button>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={fetchSecurityData}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                更新
+              </button>
+              <div className="relative group">
+                <button
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>記録削除</span>
+                </button>
+                <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                  <button
+                    onClick={() => handleClearViolations('old', 30)}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors text-gray-700"
+                  >
+                    30日以上前を削除
+                  </button>
+                  <button
+                    onClick={() => handleClearViolations('old', 90)}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors text-gray-700"
+                  >
+                    90日以上前を削除
+                  </button>
+                  <hr className="my-1" />
+                  <button
+                    onClick={() => handleClearViolations('all')}
+                    className="w-full px-4 py-2 text-left hover:bg-red-50 transition-colors text-red-600 font-medium"
+                  >
+                    全て削除
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

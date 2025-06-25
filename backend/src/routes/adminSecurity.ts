@@ -265,4 +265,43 @@ router.get('/violations/search', authenticateToken, authenticateAdmin, async (re
   }
 });
 
+// 違反記録のクリア（管理者のみ）
+router.delete('/violations/clear', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { type } = req.query; // 'all' または 'old'
+    const { daysOld } = req.query; // 古い記録のみ削除する場合の日数
+    
+    let deleteQuery: any = {};
+    
+    if (type === 'old' && daysOld) {
+      // 指定日数より古い記録のみ削除
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - parseInt(daysOld as string));
+      deleteQuery = { timestamp: { $lt: cutoffDate } };
+    }
+    // type === 'all' の場合は全削除（deleteQuery は空のまま）
+    
+    const result = await ViolationRecordModel.deleteMany(deleteQuery);
+    
+    log.info('Violation records cleared', {
+      adminId: req.admin._id,
+      type,
+      daysOld,
+      deletedCount: result.deletedCount
+    });
+    
+    res.json({
+      success: true,
+      message: `${result.deletedCount}件の違反記録を削除しました`,
+      deletedCount: result.deletedCount
+    });
+    
+  } catch (error) {
+    log.error('Error clearing violation records', error, {
+      adminId: req.admin?._id
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
 export default router;
