@@ -52,12 +52,16 @@ export default function ErrorStatsPage() {
       if (!statsRes.ok) throw new Error('エラー統計の取得に失敗しました');
 
       const statsData = await statsRes.json();
+      console.log('📊 Error Stats Response:', statsData);
       setErrorStats(statsData.data.stats);
 
       // エラー一覧が実装されている場合
       if (errorsRes.ok) {
         const errorsData = await errorsRes.json();
+        console.log('📋 Error List Response:', errorsData);
         setRecentErrors(errorsData.errors || []);
+      } else {
+        console.error('❌ Error List Failed:', errorsRes.status, errorsRes.statusText);
       }
     } catch (error) {
       console.error('Error fetching error data:', error);
