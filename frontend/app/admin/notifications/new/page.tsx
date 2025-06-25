@@ -78,16 +78,21 @@ export default function NewNotificationPage() {
         throw new Error('メッセージは日本語・英語両方とも入力してください');
       }
 
+      const requestData = {
+        ...form,
+        validFrom: form.validFrom ? new Date(form.validFrom).toISOString() : undefined,
+        validUntil: form.validUntil ? new Date(form.validUntil).toISOString() : undefined
+      };
+
+      // デバッグ用ログ
+      console.log('送信データ:', requestData);
+
       const response = await adminAuthenticatedFetch('/api/v1/admin/notifications', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          ...form,
-          validFrom: form.validFrom ? new Date(form.validFrom).toISOString() : undefined,
-          validUntil: form.validUntil ? new Date(form.validUntil).toISOString() : undefined
-        })
+        body: JSON.stringify(requestData)
       });
 
       if (!response.ok) {

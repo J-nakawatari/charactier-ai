@@ -124,6 +124,16 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
       validUntil
     } = req.body;
 
+    // デバッグログ
+    log.info('Creating notification - request body', {
+      adminId: req.admin._id,
+      hasTitle: !!title,
+      hasMessage: !!message,
+      type,
+      targetCondition,
+      body: req.body
+    });
+
     // 必須フィールドの検証
     if (!title?.ja || !title?.en || !message?.ja || !message?.en) {
       sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Title and message are required in both languages');
@@ -167,11 +177,24 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
       message: 'お知らせを作成しました'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     log.error('Error creating notification', error, {
       adminId: req.admin?._id,
-      body: req.body
+      body: req.body,
+      errorMessage: error.message,
+      errorStack: error.stack,
+      errorName: error.name
     });
+    
+    // MongoDBのバリデーションエラーの場合
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.keys(error.errors || {}).map(key => ({
+        field: key,
+        message: error.errors[key].message
+      }));
+      log.error('Validation errors', { validationErrors });
+    }
+    
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
@@ -440,6 +463,26 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
       adminId: req.admin?._id,
       notificationId: req.params.id
     });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
+// 最近のエラーログ取得（デバッグ用）
+router.get('/debug/recent-errors', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 管理者権限チェック
+    if (!req.admin) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
+      return;
+    }
+
+    // 最近のエラーログを取得（実装は簡易的）
+    res.json({
+      message: 'サーバーログを確認してください',
+      hint: 'sudo journalctl -u charactier-backend -f でログを確認できます'
+    });
+
+  } catch (error) {
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
 });
