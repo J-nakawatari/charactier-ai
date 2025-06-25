@@ -145,24 +145,52 @@ export default function ErrorStatsPage() {
             </button>
             
             {/* 統計リセットボタン（デバッグ用） */}
-            {process.env.NODE_ENV === 'development' && (
+            {/* デバッグ用ボタン */}
+            <div className="flex gap-2">
               <button
                 onClick={async () => {
-                  if (confirm('監視統計をリセットしますか？この操作は取り消せません。')) {
+                  if (confirm('テスト用のエラーデータを生成しますか？')) {
                     try {
-                      // ServerMonitorのresetStatsを直接呼び出すためのデバッグエンドポイントが必要
-                      console.log('統計リセット機能は開発中です');
-                      alert('統計は1時間ごとに自動的にリセットされます');
+                      const response = await adminAuthenticatedFetch('/api/v1/admin/errors/test', {
+                        method: 'POST'
+                      });
+                      if (response.ok) {
+                        const data = await response.json();
+                        alert(`${data.message}`);
+                        fetchErrorData(); // データを再取得
+                      } else {
+                        const error = await response.text();
+                        alert(`エラー生成失敗: ${error}`);
+                      }
                     } catch (error) {
-                      console.error('Failed to reset stats:', error);
+                      console.error('Failed to create test errors:', error);
+                      alert('テストエラーの生成に失敗しました');
                     }
                   }
                 }}
-                className="px-4 py-2 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 text-red-700"
+                className="px-4 py-2 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 text-blue-700"
               >
-                統計リセット（デバッグ）
+                テストエラー生成
               </button>
-            )}
+              
+              {process.env.NODE_ENV === 'development' && (
+                <button
+                  onClick={async () => {
+                    if (confirm('監視統計をリセットしますか？この操作は取り消せません。')) {
+                      try {
+                        console.log('統計リセット機能は開発中です');
+                        alert('統計は1時間ごとに自動的にリセットされます');
+                      } catch (error) {
+                        console.error('Failed to reset stats:', error);
+                      }
+                    }
+                  }}
+                  className="px-4 py-2 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 text-red-700"
+                >
+                  統計リセット（デバッグ）
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
