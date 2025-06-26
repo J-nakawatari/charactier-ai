@@ -9,7 +9,7 @@ const { createRateLimiter } = require('../src/middleware/rateLimiter');
 const generalRateLimit = createRateLimiter('general');
 
 // POST /api/user/select-character - キャラ選択保存API
-router.post('/select-character', authenticateToken, generalRateLimit, async (req, res) => {
+router.post('/select-character', generalRateLimit, authenticateToken, async (req, res) => {
   try {
     const { characterId } = req.body;
 
