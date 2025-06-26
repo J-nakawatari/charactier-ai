@@ -3,9 +3,13 @@ const router = express.Router();
 const { authenticateToken } = require('../src/middleware/auth');
 const { UserModel } = require('../src/models/UserModel');
 const { CharacterModel } = require('../src/models/CharacterModel');
+const { createRateLimiter } = require('../src/middleware/rateLimiter');
+
+// レートリミッターを作成
+const generalRateLimit = createRateLimiter('general');
 
 // POST /api/user/select-character - キャラ選択保存API
-router.post('/select-character', authenticateToken, async (req, res) => {
+router.post('/select-character', authenticateToken, generalRateLimit, async (req, res) => {
   try {
     const { characterId } = req.body;
 

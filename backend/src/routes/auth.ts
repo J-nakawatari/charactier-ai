@@ -942,7 +942,7 @@ router.post('/admin/login', authRateLimit, async (req: Request, res: Response): 
 });
 
 // トークン検証
-router.get('/verify-token', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/verify-token', authenticateToken, authRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
       sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);

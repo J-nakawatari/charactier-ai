@@ -927,7 +927,7 @@ routeRegistry.mount(`${API_PREFIX}/notifications`, notificationRoutes);
 routeRegistry.mount(`${API_PREFIX}/system-settings`, systemSettingsRoutes);
 
 // リアルタイム通知SSEエンドポイント
-routeRegistry.define('GET', `${API_PREFIX}/notifications/stream`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/notifications/stream`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req.user?.id || req.user?._id;
   if (!userId) {
     res.status(401).json({ error: '認証が必要です' });
@@ -1026,7 +1026,7 @@ routeRegistry.define('GET', `${API_PREFIX}/notifications/stream`, authenticateTo
 // routeRegistry.mount('/api/user/dashboard', dashboardRoutes);
 
 // ユーザーダッシュボード情報取得
-routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
@@ -1365,7 +1365,7 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, a
 });
 
 // ユーザープロファイルエンドポイント
-routeRegistry.define('GET', `${API_PREFIX}/user/profile`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/user/profile`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Debug logging
     log.debug('GET /api/user/profile - req.user:', {
@@ -1449,7 +1449,7 @@ routeRegistry.define('GET', `${API_PREFIX}/user/profile`, authenticateToken, asy
 });
 
 // ユーザープロファイル更新エンドポイント
-routeRegistry.define('PUT', `${API_PREFIX}/user/profile`, authenticateToken, validate({ body: authSchemas.updateProfile }), async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('PUT', `${API_PREFIX}/user/profile`, authenticateToken, createRateLimiter('general'), validate({ body: authSchemas.updateProfile }), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
@@ -1491,7 +1491,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/user/profile`, authenticateToken, val
 });
 
 // 現在のユーザー情報確認エンドポイント（デバッグ用）
-routeRegistry.define('GET', `${API_PREFIX}/debug/current-user`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/debug/current-user`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     res.json({
       user: req.user,
@@ -1508,7 +1508,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/current-user`, authenticateToke
 });
 
 // 親密度デバッグ用エンドポイント
-routeRegistry.define('GET', `${API_PREFIX}/debug/user-affinities`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/debug/user-affinities`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
@@ -1537,7 +1537,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/user-affinities`, authenticateT
 });
 
 // アナリティクスデバッグ用エンドポイント
-routeRegistry.define('GET', `${API_PREFIX}/debug/analytics`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/debug/analytics`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
@@ -1585,7 +1585,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/analytics`, authenticateToken, 
 
 
 // チャットシステム診断エンドポイント
-routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id || req.user?._id;
     const { characterId } = req.params;
@@ -1744,7 +1744,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
 });
 
 // パスワード変更API (削除: 6261行目に同じ定義があるため)
-/* routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+/* routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateToken, createRateLimiter('general'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -1826,7 +1826,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
 }); */
 
 // アカウント削除API (削除: 6337行目に同じ定義があるため)
-/* routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+/* routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticateToken, createRateLimiter('general'), async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
     if (!userId) {
@@ -1883,7 +1883,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
 }); */
 
 // キャラクター選択API（チャット画面で使用）
-routeRegistry.define('POST', `${API_PREFIX}/user/select-character`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+routeRegistry.define('POST', `${API_PREFIX}/user/select-character`, authenticateToken, createRateLimiter('general'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { characterId } = req.body;
     const userId = req.user?._id;
@@ -1952,7 +1952,7 @@ routeRegistry.define('POST', `${API_PREFIX}/user/select-character`, authenticate
 });
 
 // 初回セットアップ完了
-app.post(`${API_PREFIX}/user/setup-complete`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.post(`${API_PREFIX}/user/setup-complete`, authenticateToken, createRateLimiter('general'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, selectedCharacterId } = req.body;
 
@@ -2028,7 +2028,7 @@ app.post(`${API_PREFIX}/user/setup-complete`, authenticateToken, async (req: Req
 // All character-related endpoints are defined in ./routes/characters.ts
 
 // User API endpoints
-app.get(`${API_PREFIX}/auth/user`, authenticateToken, (req: Request, res: Response): void => {
+app.get(`${API_PREFIX}/auth/user`, authenticateToken, createRateLimiter('general'), (req: Request, res: Response): void => {
   if (!req.user) {
     res.status(401).json({ msg: 'Unauthorized' });
     return;
@@ -2045,7 +2045,7 @@ app.get(`${API_PREFIX}/auth/user`, authenticateToken, (req: Request, res: Respon
 
 
 // Chat API endpoints
-routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -2180,7 +2180,7 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
   }
 });
 
-routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authenticateToken, createRateLimiter('chat'), async (req: AuthRequest, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -2735,7 +2735,7 @@ app.head(`${API_PREFIX}/ping`, (_req: Request, res: Response): void => {
 // 削除: 重複するダッシュボードAPI（routes/dashboard.jsを使用）
 
 // Purchase History API
-app.get(`${API_PREFIX}/user/purchase-history`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/user/purchase-history`, authenticateToken, createRateLimiter('general'), async (req: Request, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -2824,7 +2824,7 @@ app.get(`${API_PREFIX}/user/purchase-history`, authenticateToken, async (req: Re
 
 
 // Token Pack Management APIs
-app.get(`${API_PREFIX}/token-packs`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/token-packs`, authenticateToken, createRateLimiter('payment'), async (req: Request, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -2906,7 +2906,7 @@ const validateTokenPriceRatio = async (tokens: number, price: number): Promise<b
 
 
 // Stripe Price API endpoint
-app.get(`${API_PREFIX}/admin/stripe/price/:priceId`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/stripe/price/:priceId`, authenticateToken, createRateLimiter('admin'), async (req: Request, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -3020,7 +3020,7 @@ app.get(`${API_PREFIX}/admin/stripe/price/:priceId`, authenticateToken, async (r
 
 
 // Stripe Checkout Session作成API
-app.post(`${API_PREFIX}/purchase/create-checkout-session`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.post(`${API_PREFIX}/purchase/create-checkout-session`, authenticateToken, createRateLimiter('payment'), async (req: Request, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -3109,7 +3109,7 @@ app.post(`${API_PREFIX}/purchase/create-checkout-session`, authenticateToken, as
 });
 
 // キャラクター購入用チェックアウトセッション作成API
-app.post(`${API_PREFIX}/purchase/create-character-checkout-session`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.post(`${API_PREFIX}/purchase/create-character-checkout-session`, authenticateToken, createRateLimiter('payment'), async (req: Request, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -3327,7 +3327,7 @@ app.get(`${API_PREFIX}/purchase/events/:sessionId`, async (req: Request, res: Re
 });
 
 // Stripe価格情報取得API（商品IDまたは価格IDに対応・管理者専用）
-app.get(`${API_PREFIX}/admin/stripe/product-price/:id`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/stripe/product-price/:id`, authenticateToken, createRateLimiter('admin'), async (req: Request, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -3425,7 +3425,7 @@ app.get(`${API_PREFIX}/admin/stripe/product-price/:id`, authenticateToken, async
 
 
 // 開発用：Session IDを使って手動でトークンを付与するAPI
-app.post(`${API_PREFIX}/user/process-session`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.post(`${API_PREFIX}/user/process-session`, authenticateToken, createRateLimiter('payment'), async (req: Request, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -3520,7 +3520,7 @@ app.post(`${API_PREFIX}/user/process-session`, authenticateToken, async (req: Re
 });
 
 // ユーザートークン残高更新API
-app.post(`${API_PREFIX}/user/add-tokens`, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.post(`${API_PREFIX}/user/add-tokens`, authenticateToken, createRateLimiter('payment'), async (req: Request, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -3588,7 +3588,7 @@ app.post(`${API_PREFIX}/user/add-tokens`, authenticateToken, async (req: Request
 });
 
 // 管理者用：ユーザー一覧取得
-routeRegistry.define('GET', `${API_PREFIX}/admin/users`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/admin/users`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   
   // Debug logging for admin check
   log.info('🔍 ADMIN CHECK DEBUG', {
@@ -3734,7 +3734,7 @@ routeRegistry.define('GET', `${API_PREFIX}/admin/users`, authenticateToken, asyn
 });
 
 // ⚠️ 管理者用：ユーザーのトークンをゼロにリセット（一時的機能）
-app.post('/admin/users/:userId/reset-tokens', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+app.post('/admin/users/:userId/reset-tokens', authenticateToken, createRateLimiter('admin'), async (req: Request, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -3799,7 +3799,7 @@ app.post('/admin/users/:userId/reset-tokens', authenticateToken, async (req: Req
 });
 
 // 管理者向けユーザー停止/復活（より具体的なルートを先に定義）
-routeRegistry.define('PUT', `${API_PREFIX}/admin/users/:id/status`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('PUT', `${API_PREFIX}/admin/users/:id/status`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.admin) {
       res.status(403).json({ error: 'Admin access required' });
@@ -3890,7 +3890,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/admin/users/:id/status`, authenticate
 });
 
 // 管理者向けユーザー削除（論理削除）
-routeRegistry.define('DELETE', `${API_PREFIX}/admin/users/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/admin/users/:id`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.admin) {
       res.status(403).json({ error: 'Admin access required' });
@@ -3957,7 +3957,7 @@ routeRegistry.define('DELETE', `${API_PREFIX}/admin/users/:id`, authenticateToke
 });
 
 // 管理者向けユーザー詳細取得（一般的なルートを最後に定義）
-routeRegistry.define('GET', `${API_PREFIX}/admin/users/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('GET', `${API_PREFIX}/admin/users/:id`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.admin) {
       res.status(403).json({ error: 'Admin access required' });
@@ -4066,7 +4066,7 @@ try {
 }
 
 // 管理者作成API
-app.post(`${API_PREFIX}/admin/create-admin`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.post(`${API_PREFIX}/admin/create-admin`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   
   if (!req.admin) {
     sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED, 'Admin access required');
@@ -4165,7 +4165,7 @@ app.post(`${API_PREFIX}/admin/create-admin`, authenticateToken, async (req: Auth
 });
 
 // 管理者一覧取得API
-app.get(`${API_PREFIX}/admin/admins`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/admins`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   
   if (!req.admin) {
     sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED, 'Admin access required');
@@ -4232,7 +4232,7 @@ app.get(`${API_PREFIX}/admin/admins`, authenticateToken, async (req: AuthRequest
 });
 
 // 管理者個別取得API
-app.get(`${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/admins/:id`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   // 管理者権限チェック
   if (!req.admin) {
     res.status(403).json({ 
@@ -4274,7 +4274,7 @@ app.get(`${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthReq
 });
 
 // 管理者更新API
-routeRegistry.define('PUT', `${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('PUT', `${API_PREFIX}/admin/admins/:id`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   // 管理者権限チェック
   if (!req.admin) {
     res.status(403).json({ 
@@ -4355,7 +4355,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/admin/admins/:id`, authenticateToken,
 });
 
 // 管理者削除API
-routeRegistry.define('DELETE', `${API_PREFIX}/admin/admins/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/admin/admins/:id`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   // 管理者権限チェック
   if (!req.admin) {
     res.status(403).json({ 
@@ -4514,7 +4514,7 @@ app.get(`${API_PREFIX}/admin/security/events-stream`, async (req: Request, res: 
 });
 
 // 🛡️ セキュリティ管理API（管理者専用）
-app.get(`${API_PREFIX}/admin/security-events`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/security-events`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!isMongoConnected) {
       res.status(500).json({ error: 'Database connection required' });
@@ -4569,7 +4569,7 @@ app.get(`${API_PREFIX}/admin/security-events`, authenticateToken, async (req: Au
 });
 
 // 🔧 違反解決API
-app.post(`${API_PREFIX}/admin/resolve-violation/:id`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.post(`${API_PREFIX}/admin/resolve-violation/:id`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!isMongoConnected) {
       res.status(500).json({ error: 'Database connection required' });
@@ -4618,7 +4618,7 @@ app.post(`${API_PREFIX}/admin/resolve-violation/:id`, authenticateToken, async (
 });
 
 // 📊 セキュリティ統計API
-app.get(`${API_PREFIX}/admin/security-stats`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/security-stats`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!isMongoConnected) {
       res.status(500).json({ error: 'Database connection required' });
@@ -4658,7 +4658,7 @@ app.get(`${API_PREFIX}/admin/security-stats`, authenticateToken, async (req: Aut
 // =================================
 
 // 📈 包括的トークン使用量統計API
-app.get(`${API_PREFIX}/admin/token-analytics/overview`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/token-analytics/overview`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -4963,7 +4963,7 @@ app.get(`${API_PREFIX}/admin/token-analytics/overview`, authenticateToken, async
 });
 
 // 📊 利益分析詳細API
-app.get(`${API_PREFIX}/admin/token-analytics/profit-analysis`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/token-analytics/profit-analysis`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!isMongoConnected) {
       res.status(500).json({ error: 'Database connection required' });
@@ -5161,7 +5161,7 @@ app.get(`${API_PREFIX}/admin/token-analytics/profit-analysis`, authenticateToken
 });
 
 // 📈 トークン使用量トレンドAPI
-app.get(`${API_PREFIX}/admin/token-analytics/usage-trends`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/token-analytics/usage-trends`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!isMongoConnected) {
       res.status(500).json({ error: 'Database connection required' });
@@ -5364,7 +5364,7 @@ app.get(`${API_PREFIX}/admin/token-analytics/usage-trends`, authenticateToken, a
 });
 
 // 🔍 異常使用検知API
-app.get(`${API_PREFIX}/admin/token-analytics/anomaly-detection`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/token-analytics/anomaly-detection`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!isMongoConnected) {
       res.status(500).json({ error: 'Database connection required' });
@@ -5658,7 +5658,7 @@ app.get(`${API_PREFIX}/admin/token-analytics/anomaly-detection`, authenticateTok
 /**
  * 📊 キャッシュパフォーマンス総合メトリクス取得
  */
-app.get(`${API_PREFIX}/admin/cache/performance`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/cache/performance`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     
     const timeframe = parseInt(req.query.timeframe as string) || 30; // デフォルト30日
@@ -5697,7 +5697,7 @@ app.get(`${API_PREFIX}/admin/cache/performance`, authenticateToken, async (req: 
 /**
  * 📈 キャラクター別キャッシュ統計取得
  */
-app.get(`${API_PREFIX}/admin/cache/characters`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/cache/characters`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     
     const timeframe = parseInt(req.query.timeframe as string) || 30;
@@ -5732,7 +5732,7 @@ app.get(`${API_PREFIX}/admin/cache/characters`, authenticateToken, async (req: A
 /**
  * 🏆 トップパフォーマンスキャッシュ取得
  */
-app.get(`${API_PREFIX}/admin/cache/top-performing`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/cache/top-performing`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     
     const limit = parseInt(req.query.limit as string) || 20;
@@ -5767,7 +5767,7 @@ app.get(`${API_PREFIX}/admin/cache/top-performing`, authenticateToken, async (re
 /**
  * 🗑️ キャッシュ無効化統計取得
  */
-app.get(`${API_PREFIX}/admin/cache/invalidation-stats`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/cache/invalidation-stats`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     
     const timeframe = parseInt(req.query.timeframe as string) || 30;
@@ -5802,7 +5802,7 @@ app.get(`${API_PREFIX}/admin/cache/invalidation-stats`, authenticateToken, async
 /**
  * 💱 現在の為替レート取得
  */
-app.get(`${API_PREFIX}/admin/exchange-rate`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/exchange-rate`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     
     // 最新の為替レートを取得
@@ -5858,7 +5858,7 @@ app.get(`${API_PREFIX}/admin/exchange-rate`, authenticateToken, async (req: Auth
 /**
  * 📊 APIエラー統計取得
  */
-app.get(`${API_PREFIX}/admin/error-stats`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/error-stats`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -5922,7 +5922,7 @@ app.get(`${API_PREFIX}/admin/error-stats`, authenticateToken, async (req: AuthRe
 /**
  * 🧪 テスト用エラー生成API（開発環境のみ）
  */
-app.post(`${API_PREFIX}/admin/errors/test`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.post(`${API_PREFIX}/admin/errors/test`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.admin) {
       res.status(403).json({ error: 'Admin access required' });
@@ -5984,7 +5984,7 @@ app.post(`${API_PREFIX}/admin/errors/test`, authenticateToken, async (req: AuthR
 /**
  * 📊 エラー一覧取得API
  */
-app.get(`${API_PREFIX}/admin/errors`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/errors`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.admin) {
       res.status(401).json({ error: 'Admin access required' });
@@ -6073,7 +6073,7 @@ app.get(`${API_PREFIX}/admin/errors`, authenticateToken, async (req: AuthRequest
 /**
  * 🔧 エラー管理API - エラー解決マーク
  */
-app.post(`${API_PREFIX}/admin/errors/resolve`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.post(`${API_PREFIX}/admin/errors/resolve`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.admin) {
       res.status(401).json({ error: 'Admin access required' });
@@ -6131,7 +6131,7 @@ app.post(`${API_PREFIX}/admin/errors/resolve`, authenticateToken, async (req: Au
 /**
  * 🔧 エラー管理API - エラー詳細取得
  */
-app.get(`${API_PREFIX}/admin/errors/details`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/errors/details`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.admin) {
       res.status(401).json({ error: 'Admin access required' });
@@ -6205,7 +6205,7 @@ app.get(`${API_PREFIX}/admin/errors/details`, authenticateToken, async (req: Aut
 /**
  * 📅 クーロンジョブ状態確認
  */
-app.get(`${API_PREFIX}/admin/cron-status`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/cron-status`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     
     const now = new Date();
@@ -6305,7 +6305,7 @@ app.get(`${API_PREFIX}/admin/cron-status`, authenticateToken, async (req: AuthRe
 /**
  * 📋 サーバーログ取得（管理者用）
  */
-app.get(`${API_PREFIX}/admin/logs`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/logs`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     
     const lines = parseInt(req.query.lines as string) || 100;
@@ -6397,7 +6397,7 @@ app.get(`${API_PREFIX}/admin/logs`, authenticateToken, async (req: AuthRequest, 
 /**
  * 🧹 キャッシュクリーンアップ実行
  */
-app.post(`${API_PREFIX}/admin/cache/cleanup`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.post(`${API_PREFIX}/admin/cache/cleanup`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     
     if (!isMongoConnected) {
@@ -6429,7 +6429,7 @@ app.post(`${API_PREFIX}/admin/cache/cleanup`, authenticateToken, async (req: Aut
 /**
  * 🎯 特定キャラクターのキャッシュ無効化
  */
-routeRegistry.define('DELETE', `${API_PREFIX}/admin/cache/character/:characterId`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/admin/cache/character/:characterId`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Check if user has write permission (only super_admin can delete cache)
     if (!hasWritePermission(req)) {
@@ -6489,7 +6489,7 @@ routeRegistry.define('DELETE', `${API_PREFIX}/admin/cache/character/:characterId
 // ==================== ADMIN DASHBOARD ENDPOINTS ====================
 
 // 管理者ダッシュボード統計情報API
-app.get(`${API_PREFIX}/admin/dashboard/stats`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/dashboard/stats`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -6662,7 +6662,7 @@ app.get(`${API_PREFIX}/admin/dashboard/stats`, authenticateToken, async (req: Au
 });
 
 // キャラクター統計更新API
-app.post(`${API_PREFIX}/admin/characters/update-stats`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.post(`${API_PREFIX}/admin/characters/update-stats`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -6814,7 +6814,7 @@ app.get(`${API_PREFIX}/exchange-rate`, async (req: Request, res: Response): Prom
 // ==================== USER SETTINGS ENDPOINTS ====================
 
 // ユーザーのパスワード変更API
-routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
@@ -6900,7 +6900,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateTo
 });
 
 // ユーザーのアカウント削除API
-routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
@@ -6976,7 +6976,7 @@ routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticate
 // ==================== DEBUG ENDPOINTS ====================
 
 // デバッグ用：ユーザーの違反記録確認API（一時的）
-app.get(`${API_PREFIX}/debug/user-violations/:userId`, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/debug/user-violations/:userId`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   // 管理者権限チェック
   if (!req.admin) {
     res.status(403).json({ 

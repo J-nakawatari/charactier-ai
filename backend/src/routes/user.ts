@@ -6,11 +6,15 @@ import { ChatModel } from '../models/ChatModel';
 import { authenticateToken } from '../middleware/auth';
 import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
 import log from '../utils/logger';
+import { createRateLimiter } from '../middleware/rateLimiter';
 
 const router: Router = Router();
 
+// レートリミッターを作成
+const generalRateLimit = createRateLimiter('general');
+
 // ユーザープロフィール取得
-router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/profile', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
     if (!userId) {
@@ -53,7 +57,7 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
 });
 
 // ダッシュボード情報取得
-router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/dashboard', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     log.info('🚀 USER ROUTES DASHBOARD API CALLED');
     const userId = req.user?._id;

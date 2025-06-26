@@ -323,7 +323,7 @@ router.get('/:id/translations', authenticateToken, generalRateLimit, async (req:
 });
 
 // 翻訳データ保存（/:idより前に定義する必要あり）
-router.put('/:id/translations', authenticateToken, adminRateLimit, async (req: Request, res: Response): Promise<void> => {
+router.put('/:id/translations', authenticateToken, adminRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者トークンを明示的にチェック
     const adminToken = req.cookies?.adminAccessToken;
