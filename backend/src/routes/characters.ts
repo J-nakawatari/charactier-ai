@@ -403,7 +403,7 @@ router.put('/:id/translations', authenticateToken, adminRateLimit, async (req: A
     
     const updatedCharacter = await CharacterModel.findByIdAndUpdate(
       req.params.id,
-      updateData,
+      { $set: updateData },
       { new: true, runValidators: true }
     );
     
@@ -480,9 +480,27 @@ router.put('/:id',
       updateFields: Object.keys(req.body)
     });
 
+    // 安全な更新データの作成（許可されたフィールドのみ）
+    const allowedFields = [
+      'name', 'description', 'aiModel', 'characterAccessType', 'requiresUnlock',
+      'purchasePrice', 'personalityPreset', 'personalityTags', 'gender', 'age',
+      'occupation', 'personalityPrompt', 'adminPrompt', 'voice', 'themeColor',
+      'imageCharacterSelect', 'imageDashboard', 'imageChatBackground', 'imageChatAvatar',
+      'sampleVoiceUrl', 'galleryImages', 'stripeProductId', 'purchaseType',
+      'defaultMessage', 'limitMessage', 'affinitySettings', 'levelRewards',
+      'specialMessages', 'giftPreferences', 'isActive'
+    ];
+
+    const updateData: any = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    }
+
     const updatedCharacter = await CharacterModel.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { $set: updateData },
       { new: true, runValidators: true }
     );
     

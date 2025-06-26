@@ -273,7 +273,7 @@ router.post('/register',
 
     // メールアドレスの重複チェック（アクティブユーザーのみ）
     const existingUser = await UserModel.findOne({ 
-      email, 
+      email: { $eq: email }, 
       isActive: { $ne: false } 
     });
     if (existingUser) {
@@ -354,7 +354,7 @@ router.post('/login',
     const { email, password } = req.body;
 
     // ユーザーを検索
-    const user = await UserModel.findOne({ email });
+    const user = await UserModel.findOne({ email: { $eq: email } });
     if (!user) {
       log.warn('Login attempt with non-existent email', { email });
       sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
@@ -642,10 +642,12 @@ router.post('/user/setup-complete', authenticateToken, generalRateLimit, async (
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
       { 
-        name: name.trim(),
-        selectedCharacter: selectedCharacterId,
-        isSetupComplete: true,
-        tokenBalance: 10000 // 初回セットアップ完了ボーナス
+        $set: {
+          name: name.trim(),
+          selectedCharacter: selectedCharacterId,
+          isSetupComplete: true,
+          tokenBalance: 10000 // 初回セットアップ完了ボーナス
+        }
       },
       { new: true, select: '-password' }
     );
@@ -794,7 +796,7 @@ router.post('/resend-verification', registrationRateLimit, async (req: Request, 
       return;
     }
 
-    const user = await UserModel.findOne({ email }).select('+emailVerificationToken +emailVerificationExpires');
+    const user = await UserModel.findOne({ email: { $eq: email } }).select('+emailVerificationToken +emailVerificationExpires');
     
     if (!user) {
       // セキュリティ上、ユーザーが存在しない場合も成功したように見せる
@@ -852,7 +854,7 @@ router.post('/admin/login', authRateLimit, async (req: Request, res: Response): 
     }
 
     // AdminModelから管理者を検索
-    const admin = await AdminModel.findOne({ email });
+    const admin = await AdminModel.findOne({ email: { $eq: email } });
     if (!admin) {
       log.warn('Admin login attempt with non-existent email', { email });
       sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);

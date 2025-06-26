@@ -6162,7 +6162,8 @@ app.get(`${API_PREFIX}/admin/errors/details`, authenticateToken, createRateLimit
     }
 
     if (errorType) {
-      filter.errorType = errorType;
+      // Use $eq operator to prevent NoSQL injection
+      filter.errorType = { $eq: errorType };
     }
 
     // エラー一覧取得

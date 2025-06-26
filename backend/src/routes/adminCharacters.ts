@@ -432,10 +432,28 @@ router.put('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), as
       return;
     }
 
+    // 安全な更新データの作成（許可されたフィールドのみ）
+    const allowedFields = [
+      'name', 'description', 'aiModel', 'characterAccessType', 'requiresUnlock',
+      'purchasePrice', 'personalityPreset', 'personalityTags', 'gender', 'age',
+      'occupation', 'personalityPrompt', 'adminPrompt', 'voice', 'themeColor',
+      'imageCharacterSelect', 'imageDashboard', 'imageChatBackground', 'imageChatAvatar',
+      'sampleVoiceUrl', 'galleryImages', 'stripeProductId', 'purchaseType',
+      'defaultMessage', 'limitMessage', 'affinitySettings', 'levelRewards',
+      'specialMessages', 'giftPreferences', 'isActive'
+    ];
+
+    const updateData: any = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    }
+
     // 更新データを適用
     const updatedCharacter = await CharacterModel.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
 
