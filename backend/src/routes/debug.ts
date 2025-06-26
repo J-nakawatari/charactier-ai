@@ -3,21 +3,15 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import log from '../utils/logger';
 import { UserModel } from '../models/UserModel';
 import { CharacterModel } from '../models/CharacterModel';
-import rateLimit from 'express-rate-limit';
+import { createRateLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
-// Debug routes rate limiter
-const debugRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // Limit each IP to 50 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// レートリミッターを作成
+const generalRateLimit = createRateLimiter('general');
 
 // Debug endpoint to check authentication and cookies
-router.get('/auth-status', (req: Request, res: Response) => {
+router.get('/auth-status', generalRateLimit, (req: Request, res: Response) => {
   log.info('🔍 AUTH STATUS CHECK', {
     cookies: req.cookies,
     headers: {
@@ -49,7 +43,7 @@ router.get('/auth-status', (req: Request, res: Response) => {
 });
 
 // Test authenticated endpoint
-router.get('/auth-test', authenticateToken, (req: AuthRequest, res: Response) => {
+router.get('/auth-test', authenticateToken, generalRateLimit, (req: AuthRequest, res: Response) => {
   res.json({
     authenticated: true,
     user: req.user ? {
@@ -66,7 +60,7 @@ router.get('/auth-test', authenticateToken, (req: AuthRequest, res: Response) =>
 });
 
 // 管理者認証テスト用エンドポイント（/admin/パスを含む）
-router.get('/admin/auth-test', authenticateToken, (req: AuthRequest, res: Response) => {
+router.get('/admin/auth-test', authenticateToken, generalRateLimit, (req: AuthRequest, res: Response) => {
   res.json({
     authenticated: true,
     path: req.path,
@@ -85,7 +79,7 @@ router.get('/admin/auth-test', authenticateToken, (req: AuthRequest, res: Respon
 });
 
 // デバッグ用のルート一覧
-router.get('/routes', (req: Request, res: Response) => {
+router.get('/routes', generalRateLimit, (req: Request, res: Response) => {
   const routes: any[] = [];
   
   const extractRoutes = (app: any, basePath = '') => {
@@ -122,7 +116,7 @@ router.get('/routes', (req: Request, res: Response) => {
 });
 
 // Auth関連のルートを確認するエンドポイント
-router.get('/auth-routes', (req: Request, res: Response) => {
+router.get('/auth-routes', generalRateLimit, (req: Request, res: Response) => {
   const routes: any[] = [];
   
   const extractRoutes = (app: any, basePath = '') => {
@@ -162,7 +156,7 @@ router.get('/auth-routes', (req: Request, res: Response) => {
 });
 
 // デバッグ用：親密度詳細情報取得
-router.get('/affinity-details/:userId', debugRateLimit, async (req: Request, res: Response): Promise<void> => {
+router.get('/affinity-details/:userId', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
     

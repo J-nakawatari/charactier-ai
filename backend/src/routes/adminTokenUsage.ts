@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { authenticateToken } from '../middleware/auth';
 import { UserModel } from '../models/UserModel';
 import { createRateLimiter } from '../middleware/rateLimiter';
+import log from '../utils/logger';
 
 const router: Router = Router();
 
@@ -15,14 +16,13 @@ const TokenUsageModel = require('../../models/TokenUsage');
 
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {
-  console.log('🔍 Admin authentication check for token-usage API:', {
+  log.debug('Admin authentication check for token-usage API', {
     hasAdmin: !!req.admin,
-    adminId: req.admin?._id,
-    email: req.admin?.email
+    adminId: req.admin?._id
   });
 
   if (!req.admin) {
-    console.log('❌ Admin access denied - admin access required');
+    log.debug('Admin access denied - admin access required');
     res.status(403).json({ 
       error: '管理者権限が必要です',
       debug: {
@@ -32,7 +32,7 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
     return;
   }
   
-  console.log('✅ Admin access granted for token-usage API');
+  log.debug('Admin access granted for token-usage API');
   next();
 };
 
@@ -47,7 +47,7 @@ router.get('/', adminRateLimit, authenticateToken, authenticateAdmin, async (req
     const dateTo = req.query.dateTo as string;
     const usageType = req.query.usageType as string;
 
-    console.log('🔍 Admin token-usage query:', { page, limit, userId, characterId, dateFrom, dateTo, usageType });
+    log.debug('Admin token-usage query', { page, limit, userId, characterId, dateFrom, dateTo, usageType });
 
     // クエリ構築
     const query: any = {};
@@ -122,7 +122,7 @@ router.get('/', adminRateLimit, authenticateToken, authenticateAdmin, async (req
       createdAt: usage.createdAt || usage.timestamp
     }));
 
-    console.log(`✅ Fetched ${formattedUsages.length} token usage records for admin`);
+    log.debug('Fetched token usage records', { count: formattedUsages.length });
 
     res.json({
       tokenUsages: formattedUsages,
@@ -140,7 +140,7 @@ router.get('/', adminRateLimit, authenticateToken, authenticateAdmin, async (req
     });
 
   } catch (error) {
-    console.error('❌ Error fetching admin token usage:', error);
+    log.error('Error fetching admin token usage', error);
     res.status(500).json({ error: 'トークン使用状況の取得に失敗しました' });
   }
 });
@@ -148,7 +148,7 @@ router.get('/', adminRateLimit, authenticateToken, authenticateAdmin, async (req
 // 日別トークン使用統計（一時的に簡略化）
 router.get('/daily-stats', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('🔍 Daily token usage stats query (simplified)');
+    log.debug('Daily token usage stats query (simplified)');
     
     // 一時的に空のデータを返す
     res.json({
@@ -156,7 +156,7 @@ router.get('/daily-stats', adminRateLimit, authenticateToken, authenticateAdmin,
     });
 
   } catch (error) {
-    console.error('❌ Error fetching daily token stats:', error);
+    log.error('Error fetching daily token stats', error);
     res.status(500).json({ error: '日別統計の取得に失敗しました' });
   }
 });
@@ -164,7 +164,7 @@ router.get('/daily-stats', adminRateLimit, authenticateToken, authenticateAdmin,
 // キャラクター別トークン使用統計（一時的に簡略化）
 router.get('/character-stats', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('🔍 Character token usage stats query (simplified)');
+    log.debug('Character token usage stats query (simplified)');
     
     // 一時的に空のデータを返す
     res.json({
@@ -172,7 +172,7 @@ router.get('/character-stats', adminRateLimit, authenticateToken, authenticateAd
     });
 
   } catch (error) {
-    console.error('❌ Error fetching character token stats:', error);
+    log.error('Error fetching character token stats', error);
     res.status(500).json({ error: 'キャラクター別統計の取得に失敗しました' });
   }
 });

@@ -52,12 +52,12 @@ export const optimizeImage = (width: number = 800, height: number = 800, quality
       
       // 入力画像の形式を確認
       const inputMeta = await sharp(req.file.path).metadata();
-      console.log('🔍 Input image metadata:', {
-        format: inputMeta.format,
-        channels: inputMeta.channels,
-        hasAlpha: inputMeta.hasAlpha,
-        space: inputMeta.space
-      });
+      // log('🔍 Input image metadata:', {
+      //   format: inputMeta.format,
+      //   channels: inputMeta.channels,
+      //   hasAlpha: inputMeta.hasAlpha,
+      //   space: inputMeta.space
+      // });
 
       // 透過情報を保持しつつ全ての画像を処理
       const sharpInstance = sharp(req.file.path)
@@ -80,12 +80,12 @@ export const optimizeImage = (width: number = 800, height: number = 800, quality
 
       // 出力画像の形式を確認
       const outputMeta = await sharp(tmpPath).metadata();
-      console.log('🔍 Output image metadata:', {
-        format: outputMeta.format,
-        channels: outputMeta.channels,
-        hasAlpha: outputMeta.hasAlpha,
-        space: outputMeta.space
-      });
+      // log('🔍 Output image metadata:', {
+      //   format: outputMeta.format,
+      //   channels: outputMeta.channels,
+      //   hasAlpha: outputMeta.hasAlpha,
+      //   space: outputMeta.space
+      // });
         
       await fs.promises.rename(tmpPath, req.file.path);
       next();

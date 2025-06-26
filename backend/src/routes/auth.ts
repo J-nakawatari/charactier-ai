@@ -8,6 +8,7 @@ import { AdminModel } from '../models/AdminModel';
 import { generateAccessToken, generateRefreshToken, authenticateToken } from '../middleware/auth';
 import { sendVerificationEmail, generateVerificationToken, isDisposableEmail } from '../utils/sendEmail';
 import { registrationRateLimit } from '../middleware/registrationLimit';
+import { createRateLimiter } from '../middleware/rateLimiter';
 import { validate } from '../middleware/validation';
 import { authSchemas } from '../validation/schemas';
 import log from '../utils/logger';
@@ -15,6 +16,10 @@ import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../uti
 import { hashPassword, verifyPassword, needsRehash, validatePasswordStrength } from '../services/passwordHash';
 
 const router: Router = Router();
+
+// レートリミッターを作成
+const generalRateLimit = createRateLimiter('general');
+const authRateLimit = createRateLimiter('auth');
 
 // Helper function to safely get locale
 function getSafeLocale(locale: string | undefined): 'ja' | 'en' {
@@ -80,9 +85,9 @@ function generateEmailVerificationHTML(
           localStorage.setItem('user', JSON.stringify(${JSON.stringify(userData.userInfo)}));
           localStorage.setItem('accessToken', '${userData.accessToken}');
           localStorage.setItem('refreshToken', '${userData.refreshToken}');
-          console.log('✅ User data saved to localStorage');
+          // User data saved to localStorage
         } catch (error) {
-          console.error('❌ Failed to save user data:', error);
+          // Failed to save user data
         }
       })();
       
@@ -342,6 +347,7 @@ router.post('/register',
 
 // ユーザーログイン
 router.post('/login', 
+  authRateLimit,
   validate({ body: authSchemas.login }),
   async (req: Request, res: Response): Promise<void> => {
   try {
@@ -459,6 +465,7 @@ router.post('/login',
 
 // トークンリフレッシュ
 router.post('/refresh', 
+  authRateLimit,
   validate({ body: authSchemas.refreshToken }),
   async (req: Request, res: Response): Promise<void> => {
   try {
@@ -559,6 +566,7 @@ router.post('/refresh',
 // ユーザープロフィール更新
 router.put('/user/profile', 
   authenticateToken,
+  generalRateLimit,
   validate({ body: authSchemas.updateProfile }),
   async (req: Request, res: Response): Promise<void> => {
   try {
@@ -607,7 +615,7 @@ router.put('/user/profile',
 });
 
 // 初回セットアップ完了
-router.post('/user/setup-complete', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.post('/user/setup-complete', authenticateToken, generalRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, selectedCharacterId } = req.body;
 
@@ -675,7 +683,7 @@ router.post('/user/setup-complete', authenticateToken, async (req: Request, res:
 });
 
 // メールアドレス認証
-router.get('/verify-email', async (req: Request, res: Response): Promise<void> => {
+router.get('/verify-email', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
   const { token, locale = 'ja' } = req.query;
   
   try {
@@ -833,7 +841,7 @@ router.post('/resend-verification', registrationRateLimit, async (req: Request, 
 });
 
 // 管理者ログイン
-router.post('/admin/login', async (req: Request, res: Response): Promise<void> => {
+router.post('/admin/login', authRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
@@ -959,7 +967,7 @@ router.get('/verify-token', authenticateToken, async (req: AuthRequest, res: Res
 });
 
 // ログアウト
-router.post('/logout', async (req: Request, res: Response): Promise<void> => {
+router.post('/logout', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     // すべての認証関連Cookieをクリア（ユーザー用と管理者用の両方）
     const isProduction = process.env.NODE_ENV === 'production';
@@ -987,7 +995,7 @@ router.post('/logout', async (req: Request, res: Response): Promise<void> => {
 });
 
 // 管理者ログアウト
-router.post('/admin/logout', async (req: Request, res: Response): Promise<void> => {
+router.post('/admin/logout', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     // 管理者用Cookieをクリア
     const isProduction = process.env.NODE_ENV === 'production';

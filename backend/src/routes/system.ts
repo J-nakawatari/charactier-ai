@@ -1,12 +1,16 @@
 import { Router, Request, Response } from 'express';
 import { authenticateToken } from '../middleware/auth';
 import { ServerMonitor } from '../monitoring/ServerMonitor';
+import { createRateLimiter } from '../middleware/rateLimiter';
 import type { Router as ExpressRouter } from 'express';
 
 const router: ExpressRouter = Router();
 
+// レートリミッターを作成
+const adminRateLimit = createRateLimiter('admin');
+
 // ヘルスチェックAPI（管理者のみ）
-router.get('/health', authenticateToken, async (req: Request, res: Response) => {
+router.get('/health', authenticateToken, adminRateLimit, async (req: Request, res: Response) => {
   try {
     // 管理者権限チェック（仮実装）
     // TODO: 実際の管理者権限チェックを実装
@@ -25,7 +29,7 @@ router.get('/health', authenticateToken, async (req: Request, res: Response) => 
 });
 
 // 監視データ取得API（管理者のみ）
-router.get('/monitoring', authenticateToken, async (req: Request, res: Response) => {
+router.get('/monitoring', authenticateToken, adminRateLimit, async (req: Request, res: Response) => {
   try {
     // 管理者権限チェック（仮実装）
     // TODO: 実際の管理者権限チェックを実装

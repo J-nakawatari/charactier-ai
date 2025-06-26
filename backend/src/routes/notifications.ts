@@ -2,6 +2,7 @@ import type { AuthRequest } from '../middleware/auth';
 import { Router, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { authenticateToken } from '../middleware/auth';
+import { validateObjectId } from '../middleware/validation';
 import { NotificationModel, INotification } from '../models/NotificationModel';
 import { UserNotificationReadStatusModel } from '../models/UserNotificationReadStatusModel';
 import { UserModel } from '../models/UserModel';
@@ -138,7 +139,7 @@ router.get('/unread-count', generalRateLimit, authenticateToken, async (req: Aut
 });
 
 // お知らせ既読マーク
-router.post('/:id/read', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/:id/read', generalRateLimit, authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!._id;
     const notificationId = req.params.id;
@@ -546,7 +547,7 @@ router.get('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, a
 });
 
 // お知らせ更新
-router.put('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
       title,
@@ -594,7 +595,7 @@ router.put('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, a
 });
 
 // お知らせ削除
-router.delete('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.delete('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const notification = await NotificationModel.findByIdAndDelete(req.params.id);
 

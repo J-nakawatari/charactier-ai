@@ -1,8 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { authenticateToken } from '../middleware/auth';
 import { SystemSettingsModel } from '../models/SystemSettingsModel';
+import { createRateLimiter } from '../middleware/rateLimiter';
 
 const router: Router = Router();
+
+// レートリミッターを作成
+const generalRateLimit = createRateLimiter('general');
+const adminRateLimit = createRateLimiter('admin');
 
 // リクエストの型定義
 interface AuthRequest extends Request {
@@ -24,7 +29,7 @@ const authenticateAdmin = (req: any, res: Response, next: any) => {
 };
 
 // Google Analytics設定の取得（公開API - 認証不要）
-router.get('/google-analytics', async (req: any, res: Response): Promise<void> => {
+router.get('/google-analytics', generalRateLimit, async (req: any, res: Response): Promise<void> => {
   try {
     const settings = await SystemSettingsModel.findOne({ key: 'google_analytics' });
     
@@ -39,7 +44,7 @@ router.get('/google-analytics', async (req: any, res: Response): Promise<void> =
 });
 
 // Google Analytics設定の更新
-router.post('/google-analytics', authenticateToken, authenticateAdmin, async (req: any, res: Response): Promise<void> => {
+router.post('/google-analytics', authenticateToken, adminRateLimit, authenticateAdmin, async (req: any, res: Response): Promise<void> => {
   try {
     const { measurementId, trackingCode, isActive } = req.body;
     const adminId = req.user?._id;
@@ -93,7 +98,7 @@ router.post('/google-analytics', authenticateToken, authenticateAdmin, async (re
 });
 
 // Google Analytics設定の削除（無効化）
-router.delete('/google-analytics', authenticateToken, authenticateAdmin, async (req: any, res: Response): Promise<void> => {
+router.delete('/google-analytics', authenticateToken, adminRateLimit, authenticateAdmin, async (req: any, res: Response): Promise<void> => {
   try {
     await SystemSettingsModel.findOneAndUpdate(
       { key: 'google_analytics' },

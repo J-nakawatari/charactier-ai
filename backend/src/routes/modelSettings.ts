@@ -2,8 +2,12 @@ import type { AuthRequest } from '../middleware/auth';
 import { Router, Response, NextFunction } from 'express';
 import { authenticateToken } from '../middleware/auth';
 import { calcTokensToGive, validateModel } from '../config/tokenConfig';
+import { createRateLimiter } from '../middleware/rateLimiter';
 
 const router: Router = Router();
+
+// レートリミッターを作成
+const generalRateLimit = createRateLimiter('general');
 
 // 利用可能なモデル一覧
 const AVAILABLE_MODELS = [
@@ -26,7 +30,7 @@ const AVAILABLE_MODELS = [
 /**
  * 利用可能なモデル一覧取得
  */
-router.get('/', async (req: AuthRequest, res: Response) => {
+router.get('/', generalRateLimit, async (req: AuthRequest, res: Response) => {
   try {
     const modelsWithCalc = await Promise.all(AVAILABLE_MODELS.map(async model => ({
       ...model,
@@ -52,7 +56,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 /**
  * 現在のモデル設定取得
  */
-router.get('/current', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/current', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response) => {
   try {
     const currentModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
     const modelInfo = AVAILABLE_MODELS.find(m => m.id === currentModel);
@@ -77,7 +81,7 @@ router.get('/current', authenticateToken, async (req: AuthRequest, res: Response
 /**
  * モデル設定変更
  */
-router.post('/set-model', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/set-model', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { model } = req.body;
     
@@ -112,7 +116,7 @@ router.post('/set-model', authenticateToken, async (req: AuthRequest, res: Respo
 /**
  * モデル別料金シミュレーション
  */
-router.post('/simulate', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/simulate', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { model, purchaseAmount } = req.body;
     

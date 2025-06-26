@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { authenticateToken } from '../middleware/auth';
 import { TokenPackModel } from '../models/TokenPackModel';
 import { createRateLimiter } from '../middleware/rateLimiter';
+import log from '../utils/logger';
 
 const router: Router = Router();
 
@@ -12,14 +13,13 @@ const adminRateLimit = createRateLimiter('admin');
 
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {
-  console.log('🔍 Admin authentication check for token-packs API:', {
+  log.debug('Admin authentication check for token-packs API', {
     hasAdmin: !!req.admin,
-    adminId: req.admin?._id,
-    email: req.admin?.email
+    adminId: req.admin?._id
   });
 
   if (!req.admin) {
-    console.log('❌ Admin access denied - admin access required');
+    log.debug('Admin access denied - admin access required');
     res.status(403).json({ 
       error: '管理者権限が必要です',
       debug: {
@@ -29,7 +29,7 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
     return;
   }
   
-  console.log('✅ Admin access granted for token-packs API');
+  log.debug('Admin access granted for token-packs API');
   next();
 };
 
@@ -40,7 +40,7 @@ router.get('/', adminRateLimit, authenticateToken, authenticateAdmin, async (req
     const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
     const isActive = req.query.isActive;
 
-    console.log('🔍 Admin token-packs query:', { page, limit, isActive });
+    log.debug('Admin token-packs query', { page, limit, isActive });
 
     const query: any = {};
     if (isActive !== undefined) {
@@ -74,7 +74,7 @@ router.get('/', adminRateLimit, authenticateToken, authenticateAdmin, async (req
     const total = await TokenPackModel.countDocuments(query);
     const totalPages = Math.ceil(total / limit);
 
-    console.log(`✅ Fetched ${tokenPacks.length} token packs for admin with actual profit margins`);
+    log.debug('Fetched token packs for admin', { count: tokenPacks.length });
 
     res.json({
       tokenPacks: tokenPacksWithProfitMargin,
@@ -141,7 +141,7 @@ router.post('/', adminRateLimit, authenticateToken, authenticateAdmin, async (re
 
     const savedTokenPack = await tokenPack.save();
 
-    console.log('✅ Token pack created:', savedTokenPack._id);
+    log.info('Token pack created', { id: savedTokenPack._id });
 
     res.status(201).json({
       message: 'トークンパックが作成されました',
@@ -149,7 +149,7 @@ router.post('/', adminRateLimit, authenticateToken, authenticateAdmin, async (re
     });
 
   } catch (error) {
-    console.error('❌ Error creating token pack:', error);
+    log.error('Error creating token pack', error);
     res.status(500).json({ error: 'トークンパックの作成に失敗しました' });
   }
 });
@@ -183,7 +183,7 @@ router.put('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (
       return;
     }
 
-    console.log('✅ Token pack updated:', tokenPack._id);
+    log.info('Token pack updated', { id: tokenPack._id });
 
     res.json({
       message: 'トークンパックが更新されました',
@@ -191,7 +191,7 @@ router.put('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (
     });
 
   } catch (error) {
-    console.error('❌ Error updating token pack:', error);
+    log.error('Error updating token pack', error);
     res.status(500).json({ error: 'トークンパックの更新に失敗しました' });
   }
 });
@@ -208,14 +208,14 @@ router.delete('/:id', adminRateLimit, authenticateToken, authenticateAdmin, asyn
       return;
     }
 
-    console.log('✅ Token pack deleted:', id);
+    log.info('Token pack deleted', { id });
 
     res.json({
       message: 'トークンパックが削除されました'
     });
 
   } catch (error) {
-    console.error('❌ Error deleting token pack:', error);
+    log.error('Error deleting token pack', error);
     res.status(500).json({ error: 'トークンパックの削除に失敗しました' });
   }
 });

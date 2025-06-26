@@ -31,10 +31,9 @@ router.post('/',
       return;
     }
 
-    console.log('📥 Received character creation request:', {
-      headers: req.headers,
-      body: req.body,
-      user: req.user
+    log.info('Character creation request received', {
+      userId: req.user?._id,
+      characterName: req.body.name
     });
     
     const {
@@ -78,7 +77,7 @@ router.post('/',
     });
 
     const savedCharacter = await character.save();
-    console.log('✅ Character created:', savedCharacter._id);
+    log.info('Character created successfully', { characterId: savedCharacter._id });
 
     res.status(201).json({
       message: 'キャラクターが作成されました',
@@ -104,7 +103,7 @@ router.get('/', authenticateToken, generalRateLimit, async (req: AuthRequest, re
     const sort = (req.query.sort as string) || 'newest';
     const keyword = (req.query.keyword as string) || '';
     
-    console.log('🚀 Characters API (TS) called with:', { locale, characterType, sort, keyword });
+    log.debug('Characters API called', { locale, characterType, sort, hasKeyword: !!keyword });
 
     // ユーザーの購入履歴を取得
     let userPurchasedCharacters: string[] = [];
@@ -113,7 +112,7 @@ router.get('/', authenticateToken, generalRateLimit, async (req: AuthRequest, re
       if (user && user.purchasedCharacters) {
         userPurchasedCharacters = user.purchasedCharacters.map(charId => charId.toString());
       }
-      console.log(`🛒 ユーザー ${req.user._id} の購入済みキャラ:`, userPurchasedCharacters);
+      log.debug('User purchased characters loaded', { userId: req.user._id, count: userPurchasedCharacters.length });
     }
     
     // Build query
@@ -187,14 +186,13 @@ router.get('/', authenticateToken, generalRateLimit, async (req: AuthRequest, re
         sortQuery = { createdAt: -1 };
     }
     
-    console.log(`🔍 フィルター条件:`, { characterType, userPurchasedCount: userPurchasedCharacters.length });
-    console.log(`🔍 適用フィルター:`, query);
+    log.debug('Character filter applied', { characterType, userPurchasedCount: userPurchasedCharacters.length });
 
     const characters = await CharacterModel.find(query)
       .select('-__v')
       .sort(sortQuery);
     
-    console.log(`✅ ${characters.length}件のキャラクターを取得`);
+    log.debug('Characters fetched', { count: characters.length });
     
     res.json({
       characters,
@@ -215,7 +213,7 @@ router.get('/', authenticateToken, generalRateLimit, async (req: AuthRequest, re
 // 親密度画像取得（/:idより前に定義する必要あり）
 router.get('/:id/affinity-images', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('🖼️ Affinity images request:', {
+    log.debug('Affinity images request', {
       characterId: req.params.id,
       userId: req.user?._id
     });
@@ -230,19 +228,12 @@ router.get('/:id/affinity-images', authenticateToken, generalRateLimit, async (r
     // ユーザーの親密度レベルを取得
     let userAffinityLevel = 0;
     if (req.user && req.user._id) {
-      console.log('🔍 Looking up user affinity for:', req.user._id);
+      log.debug('Looking up user affinity', { userId: req.user._id });
       const user = await UserModel.findById(req.user._id);
-      console.log('🔍 User found:', user ? 'Yes' : 'No');
-      console.log('🔍 User affinities:', user?.affinities?.length || 0);
+      log.debug('User lookup result', { found: !!user, affinityCount: user?.affinities?.length || 0 });
       
       if (user && user.affinities) {
-        console.log('🔍 User affinities structure:', user.affinities.map((aff: any) => ({
-          characterId: aff.characterId,
-          character: aff.character,
-          level: aff.level,
-          hasCharacterId: !!aff.characterId,
-          hasCharacter: !!aff.character
-        })));
+        log.debug('User affinities structure', { count: user.affinities.length });
         
         const characterAffinity = user.affinities.find(
           (aff: any) => (aff.characterId && aff.characterId.toString() === req.params.id) ||
@@ -250,16 +241,16 @@ router.get('/:id/affinity-images', authenticateToken, generalRateLimit, async (r
         );
         if (characterAffinity) {
           userAffinityLevel = characterAffinity.level || 0;
-          console.log('🔍 Found character affinity level:', userAffinityLevel);
+          log.debug('Character affinity found', { level: userAffinityLevel });
         } else {
-          console.log('🔍 No affinity found for this character');
+          log.debug('No affinity found for character');
         }
       }
     }
 
     // ギャラリー画像を取得（unlockLevelでソート）
     const galleryImages = character.galleryImages || [];
-    console.log('🔍 Character gallery images:', galleryImages.length);
+    log.debug('Character gallery images', { count: galleryImages.length });
     
     const sortedImages = galleryImages
       .map(img => ({
@@ -275,7 +266,7 @@ router.get('/:id/affinity-images', authenticateToken, generalRateLimit, async (r
       }))
       .sort((a, b) => a.unlockLevel - b.unlockLevel);
 
-    console.log(`🖼️ キャラクター ${character.name.ja} の画像取得: ユーザーレベル ${userAffinityLevel}, 総画像数 ${sortedImages.length}`);
+    log.debug('Character images fetched', { characterName: character.name.ja, userLevel: userAffinityLevel, totalImages: sortedImages.length });
 
     // 画像が存在しない場合でも正常なレスポンスを返す
     res.json({
@@ -332,7 +323,7 @@ router.get('/:id/translations', authenticateToken, generalRateLimit, async (req:
 });
 
 // 翻訳データ保存（/:idより前に定義する必要あり）
-router.put('/:id/translations', adminRateLimit, async (req: Request, res: Response): Promise<void> => {
+router.put('/:id/translations', authenticateToken, adminRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     // 管理者トークンを明示的にチェック
     const adminToken = req.cookies?.adminAccessToken;
@@ -353,11 +344,10 @@ router.put('/:id/translations', adminRateLimit, async (req: Request, res: Respon
       return;
     }
 
-    // Debug: ログに認証情報を出力
-    console.log('🔍 Character translation update - Auth debug:', {
+    // 認証情報をログ
+    log.debug('Character translation update - Auth', {
       adminId: admin._id,
-      adminRole: admin.role,
-      adminEmail: admin.email
+      adminRole: admin.role
     });
     
     // Check if admin is super_admin
@@ -417,7 +407,7 @@ router.put('/:id/translations', adminRateLimit, async (req: Request, res: Respon
       { new: true, runValidators: true }
     );
     
-    console.log('✅ Character translations updated:', updatedCharacter?._id);
+    log.info('Character translations updated', { characterId: updatedCharacter?._id });
     res.json({
       message: '翻訳データが更新されました',
       translations: {
@@ -454,14 +444,10 @@ router.get('/:id', authenticateToken, generalRateLimit, async (req: AuthRequest,
       return;
     }
     
-    console.log('🔍 Character data being returned:', {
+    log.debug('Character data fetched', {
       id: character._id,
       aiModel: character.aiModel,
-      name: character.name?.ja,
-      imageCharacterSelect: character.imageCharacterSelect,
-      imageDashboard: character.imageDashboard,
-      imageChatBackground: character.imageChatBackground,
-      imageChatAvatar: character.imageChatAvatar
+      hasImages: !!character.imageCharacterSelect
     });
     
     res.json(character);
@@ -489,9 +475,9 @@ router.put('/:id',
       return;
     }
 
-    console.log('📝 Character update request:', {
+    log.debug('Character update request', {
       id: req.params.id,
-      body: req.body
+      updateFields: Object.keys(req.body)
     });
 
     const updatedCharacter = await CharacterModel.findByIdAndUpdate(
@@ -506,7 +492,7 @@ router.put('/:id',
       return;
     }
     
-    console.log('✅ Character updated successfully:', updatedCharacter._id);
+    log.info('Character updated successfully', { characterId: updatedCharacter._id });
     res.json({
       message: 'キャラクターが更新されました',
       character: updatedCharacter
@@ -542,7 +528,7 @@ router.delete('/:id', authenticateToken, adminRateLimit, async (req: AuthRequest
       return;
     }
     
-    console.log('✅ Character deactivated:', updatedCharacter._id);
+    log.info('Character deactivated', { characterId: updatedCharacter._id });
     res.json({
       message: 'キャラクターが無効化されました'
     });
@@ -578,7 +564,7 @@ router.post('/upload/image', authenticateToken, adminRateLimit, uploadImage.sing
     }
     
     const imageUrl = `/uploads/images/${req.file.filename}`;
-    console.log('✅ Image uploaded successfully:', imageUrl);
+    log.info('Image uploaded successfully', { path: imageUrl });
     
     res.json({
       message: '画像アップロードが完了しました',
