@@ -44,7 +44,7 @@ router.get('/google-analytics', generalRateLimit, async (req: any, res: Response
 });
 
 // Google Analytics設定の更新
-router.post('/google-analytics', authenticateToken, adminRateLimit, authenticateAdmin, async (req: any, res: Response): Promise<void> => {
+router.post('/google-analytics', adminRateLimit, authenticateToken, authenticateAdmin, async (req: any, res: Response): Promise<void> => {
   try {
     const { measurementId, trackingCode, isActive } = req.body;
     const adminId = req.user?._id;
@@ -98,7 +98,7 @@ router.post('/google-analytics', authenticateToken, adminRateLimit, authenticate
 });
 
 // Google Analytics設定の削除（無効化）
-router.delete('/google-analytics', authenticateToken, adminRateLimit, authenticateAdmin, async (req: any, res: Response): Promise<void> => {
+router.delete('/google-analytics', adminRateLimit, authenticateToken, authenticateAdmin, async (req: any, res: Response): Promise<void> => {
   try {
     await SystemSettingsModel.findOneAndUpdate(
       { key: 'google_analytics' },

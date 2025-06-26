@@ -615,7 +615,7 @@ router.put('/user/profile',
 });
 
 // 初回セットアップ完了
-router.post('/user/setup-complete', authenticateToken, generalRateLimit, async (req: Request, res: Response): Promise<void> => {
+router.post('/user/setup-complete', generalRateLimit, authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, selectedCharacterId } = req.body;
 
@@ -944,7 +944,7 @@ router.post('/admin/login', authRateLimit, async (req: Request, res: Response): 
 });
 
 // トークン検証
-router.get('/verify-token', authenticateToken, authRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/verify-token', authRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
       sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);

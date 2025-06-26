@@ -23,7 +23,7 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
 };
 
 // 違反統計取得
-router.get('/violation-stats', authenticateToken, securityRateLimit, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/violation-stats', securityRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const timeframe = parseInt(req.query.timeframe as string) || 24 * 60 * 60 * 1000; // デフォルト24時間
     
@@ -95,7 +95,7 @@ router.get('/violation-stats', authenticateToken, securityRateLimit, authenticat
 });
 
 // 最近の違反記録取得
-router.get('/recent-violations', authenticateToken, securityRateLimit, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/recent-violations', securityRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const limit = parseInt(req.query.limit as string) || 20;
     
@@ -120,7 +120,7 @@ router.get('/recent-violations', authenticateToken, securityRateLimit, authentic
 });
 
 // 制裁中ユーザー一覧
-router.get('/sanctioned-users', authenticateToken, securityRateLimit, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/sanctioned-users', securityRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const users = await UserModel.find({
       accountStatus: { 
@@ -145,7 +145,7 @@ router.get('/sanctioned-users', authenticateToken, securityRateLimit, authentica
 });
 
 // ユーザーの違反履歴取得
-router.get('/user/:userId/violations', authenticateToken, securityRateLimit, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/user/:userId/violations', securityRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -175,7 +175,7 @@ router.get('/user/:userId/violations', authenticateToken, securityRateLimit, aut
 });
 
 // 制裁解除
-router.post('/lift-sanction/:userId', authenticateToken, securityRateLimit, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/lift-sanction/:userId', securityRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
     
@@ -205,7 +205,7 @@ router.post('/lift-sanction/:userId', authenticateToken, securityRateLimit, auth
 });
 
 // 違反記録の詳細検索
-router.get('/violations/search', authenticateToken, securityRateLimit, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/violations/search', securityRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
       userId,
@@ -270,7 +270,7 @@ router.get('/violations/search', authenticateToken, securityRateLimit, authentic
 });
 
 // 違反記録のクリア（管理者のみ）
-router.delete('/violations/clear', authenticateToken, securityRateLimit, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.delete('/violations/clear', securityRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { type } = req.query; // 'all' または 'old'
     const { daysOld } = req.query; // 古い記録のみ削除する場合の日数

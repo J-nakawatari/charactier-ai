@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-最終更新: 2025-06-25
+最終更新: 2025-06-26
 
 ## プロジェクト概要
 
@@ -34,7 +34,7 @@ charactier-ai/
 ```
 
 ### APIアーキテクチャ
-- バックエンドAPI: `/api/v1/` で始まる（移行中）
+- バックエンドAPI: `/api/v1/` で始まる（移行完了）
 - フロントエンドプロキシ: `/api/v1/` 経由
 - RouteRegistry: 重複ルート防止システム
 - OpenAPI仕様: `backend/docs/openapi.yaml` に全API定義
@@ -255,3 +255,32 @@ Nginx (SSL終端) →
 - `/backend/src/utils/sendEmail.ts` - メール送信処理
 - `/frontend/app/[locale]/setup/page.tsx` - セットアップページ
 - `/frontend/utils/auth.ts` - 認証ユーティリティ
+
+## 最近のセキュリティ改善（2025-06-26）
+
+### 実装済みのセキュリティ対策
+1. **CORS設定**: 本番ドメインのみに制限
+2. **パスワードハッシュ**: bcryptからargon2idに移行（互換性維持）
+3. **OpenAI Moderation API**: 不適切なコンテンツのフィルタリング
+4. **JWT暗号化**: JWT秘密鍵の暗号化保管（AES-256-GCM）
+5. **Stripe Idempotency**: 重複請求防止のための冪等性キー実装
+6. **Gitleaks**: pre-commitフックで機密情報漏洩防止
+7. **レート制限**: 全APIエンドポイントに適用
+8. **NoSQLインジェクション対策**: $eq演算子とフィールドホワイトリスト
+9. **正規表現インジェクション対策**: escapeRegex関数でReDoS防止
+
+### 破壊的変更のため保留中
+- CSRF保護（クライアント側の変更が必要）
+- より厳格なHTMLサニタイゼーション
+
+## トラブルシューティング
+
+### よくある問題
+1. **API 404エラー**: `/api/v1/` プレフィックスを確認
+2. **認証エラー**: Cookie設定とSameSite属性を確認
+3. **CORS エラー**: 本番環境のドメイン設定を確認
+4. **トークン計算エラー**: `tokenConfig.ts`の設定を確認
+
+### デバッグ用エンドポイント
+- `/api/v1/debug/auth-status` - 認証状態の確認
+- `/api/v1/debug/affinity-details/:userId` - 親密度詳細情報

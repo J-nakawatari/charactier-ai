@@ -43,7 +43,7 @@ router.get('/auth-status', generalRateLimit, (req: Request, res: Response) => {
 });
 
 // Test authenticated endpoint
-router.get('/auth-test', authenticateToken, generalRateLimit, (req: AuthRequest, res: Response) => {
+router.get('/auth-test', generalRateLimit, authenticateToken, (req: AuthRequest, res: Response) => {
   res.json({
     authenticated: true,
     user: req.user ? {
@@ -60,7 +60,7 @@ router.get('/auth-test', authenticateToken, generalRateLimit, (req: AuthRequest,
 });
 
 // 管理者認証テスト用エンドポイント（/admin/パスを含む）
-router.get('/admin/auth-test', authenticateToken, generalRateLimit, (req: AuthRequest, res: Response) => {
+router.get('/admin/auth-test', generalRateLimit, authenticateToken, (req: AuthRequest, res: Response) => {
   res.json({
     authenticated: true,
     path: req.path,

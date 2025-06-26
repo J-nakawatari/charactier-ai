@@ -14,7 +14,7 @@ const router: Router = Router();
 const generalRateLimit = createRateLimiter('general');
 
 // ユーザープロフィール取得
-router.get('/profile', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/profile', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
     if (!userId) {
@@ -57,7 +57,7 @@ router.get('/profile', authenticateToken, generalRateLimit, async (req: AuthRequ
 });
 
 // ダッシュボード情報取得
-router.get('/dashboard', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/dashboard', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     log.info('🚀 USER ROUTES DASHBOARD API CALLED');
     const userId = req.user?._id;

@@ -10,7 +10,7 @@ const router: ExpressRouter = Router();
 const adminRateLimit = createRateLimiter('admin');
 
 // ヘルスチェックAPI（管理者のみ）
-router.get('/health', authenticateToken, adminRateLimit, async (req: Request, res: Response) => {
+router.get('/health', adminRateLimit, authenticateToken, async (req: Request, res: Response) => {
   try {
     // 管理者権限チェック（仮実装）
     // TODO: 実際の管理者権限チェックを実装
@@ -29,7 +29,7 @@ router.get('/health', authenticateToken, adminRateLimit, async (req: Request, re
 });
 
 // 監視データ取得API（管理者のみ）
-router.get('/monitoring', authenticateToken, adminRateLimit, async (req: Request, res: Response) => {
+router.get('/monitoring', adminRateLimit, authenticateToken, async (req: Request, res: Response) => {
   try {
     // 管理者権限チェック（仮実装）
     // TODO: 実際の管理者権限チェックを実装

@@ -20,8 +20,8 @@ const adminRateLimit = createRateLimiter('admin');
 
 // キャラクター作成（管理者のみ）
 router.post('/', 
-  authenticateToken,
   adminRateLimit,
+  authenticateToken,
   validate({ body: characterSchemas.create }),
   async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -96,7 +96,7 @@ router.post('/',
 });
 
 // キャラクター一覧取得
-router.get('/', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const locale = (req.query.locale as string) || 'ja';
     const characterType = (req.query.characterType as string) || 'all';
@@ -211,7 +211,7 @@ router.get('/', authenticateToken, generalRateLimit, async (req: AuthRequest, re
 });
 
 // 親密度画像取得（/:idより前に定義する必要あり）
-router.get('/:id/affinity-images', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/:id/affinity-images', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     log.debug('Affinity images request', {
       characterId: req.params.id,
@@ -287,7 +287,7 @@ router.get('/:id/affinity-images', authenticateToken, generalRateLimit, async (r
 });
 
 // 翻訳データ取得（/:idより前に定義する必要あり）
-router.get('/:id/translations', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/:id/translations', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const character = await CharacterModel.findById(req.params.id);
     
@@ -323,7 +323,7 @@ router.get('/:id/translations', authenticateToken, generalRateLimit, async (req:
 });
 
 // 翻訳データ保存（/:idより前に定義する必要あり）
-router.put('/:id/translations', authenticateToken, adminRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:id/translations', adminRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者トークンを明示的にチェック
     const adminToken = req.cookies?.adminAccessToken;
@@ -435,7 +435,7 @@ router.put('/:id/translations', authenticateToken, adminRateLimit, async (req: A
 });
 
 // 個別キャラクター取得
-router.get('/:id', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/:id', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const character = await CharacterModel.findById(req.params.id);
     
@@ -527,7 +527,7 @@ router.put('/:id',
 });
 
 // キャラクター削除（論理削除）
-router.delete('/:id', authenticateToken, adminRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
+router.delete('/:id', adminRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Check if user has write permission (only super_admin can delete characters)
     if (!hasWritePermission(req)) {
@@ -561,7 +561,7 @@ router.delete('/:id', authenticateToken, adminRateLimit, async (req: AuthRequest
 });
 
 // 画像アップロードAPI（管理者のみ）
-router.post('/upload/image', authenticateToken, adminRateLimit, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/upload/image', adminRateLimit, authenticateToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Check if user has write permission (only super_admin can upload images)
     if (!hasWritePermission(req)) {

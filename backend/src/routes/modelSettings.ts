@@ -56,7 +56,7 @@ router.get('/', generalRateLimit, async (req: AuthRequest, res: Response) => {
 /**
  * 現在のモデル設定取得
  */
-router.get('/current', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response) => {
+router.get('/current', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const currentModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
     const modelInfo = AVAILABLE_MODELS.find(m => m.id === currentModel);
@@ -81,7 +81,7 @@ router.get('/current', authenticateToken, generalRateLimit, async (req: AuthRequ
 /**
  * モデル設定変更
  */
-router.post('/set-model', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/set-model', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { model } = req.body;
     
@@ -116,7 +116,7 @@ router.post('/set-model', authenticateToken, generalRateLimit, async (req: AuthR
 /**
  * モデル別料金シミュレーション
  */
-router.post('/simulate', authenticateToken, generalRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/simulate', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { model, purchaseAmount } = req.body;
     
