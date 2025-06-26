@@ -1,6 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 echo "🔍 機密情報チェックを実行中..."
 
 # gitleaksがインストールされているか確認
