@@ -3,8 +3,12 @@ import { Router, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { authenticateToken } from '../middleware/auth';
 import { TokenPackModel } from '../models/TokenPackModel';
+import { createRateLimiter } from '../middleware/rateLimiter';
 
 const router: Router = Router();
+
+// Rate limiter
+const adminRateLimit = createRateLimiter('admin');
 
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {
@@ -30,7 +34,7 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
 };
 
 // トークンパック一覧取得
-router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
@@ -89,7 +93,7 @@ router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, r
 });
 
 // トークンパック作成
-router.post('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
       name,
@@ -151,7 +155,7 @@ router.post('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, 
 });
 
 // トークンパック更新
-router.put('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -193,7 +197,7 @@ router.put('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest
 });
 
 // トークンパック削除
-router.delete('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.delete('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 
@@ -217,7 +221,7 @@ router.delete('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequ
 });
 
 // 個別トークンパック取得
-router.get('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 

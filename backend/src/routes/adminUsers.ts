@@ -7,8 +7,13 @@ import { validate, validateObjectId } from '../middleware/validation';
 import { adminSchemas } from '../validation/schemas';
 import log from '../utils/logger';
 import { sendErrorResponse, ClientErrorCode } from '../utils/errorResponse';
+import { createRateLimiter } from '../middleware/rateLimiter';
+import { escapeRegex } from '../utils/escapeRegex';
 
 const router: Router = Router();
+
+// Rate limiter
+const adminRateLimit = createRateLimiter('admin');
 
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {
@@ -38,6 +43,7 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
 
 // 管理者用ユーザー一覧取得
 router.get('/', 
+  adminRateLimit,
   authenticateToken, 
   authenticateAdmin, 
   validate({ query: adminSchemas.searchUsers }),
@@ -57,11 +63,12 @@ router.get('/',
     };
 
     if (search) {
+      const escapedSearch = escapeRegex(search);
       query.$and = [
         {
           $or: [
-            { name: new RegExp(search, 'i') },
-            { email: new RegExp(search, 'i') }
+            { name: new RegExp(escapedSearch, 'i') },
+            { email: new RegExp(escapedSearch, 'i') }
           ]
         }
       ];
@@ -128,6 +135,7 @@ router.get('/',
 
 // 個別ユーザーのトークン残高リセット
 router.post('/:userId/reset-tokens', 
+  adminRateLimit,
   authenticateToken, 
   authenticateAdmin,
   validateObjectId('userId'),
@@ -176,7 +184,7 @@ router.post('/:userId/reset-tokens',
 });
 
 // ユーザーのステータス変更（アクティブ/非アクティブ/停止）
-router.put('/:userId/status', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:userId/status', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
     const { status } = req.body;
@@ -225,7 +233,7 @@ router.put('/:userId/status', authenticateToken, authenticateAdmin, async (req: 
 });
 
 // 管理者向けユーザー詳細取得
-router.get('/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     

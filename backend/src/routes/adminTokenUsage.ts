@@ -3,8 +3,12 @@ import { Router, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { authenticateToken } from '../middleware/auth';
 import { UserModel } from '../models/UserModel';
+import { createRateLimiter } from '../middleware/rateLimiter';
 
 const router: Router = Router();
+
+// Rate limiter
+const adminRateLimit = createRateLimiter('admin');
 
 // 既存のTokenUsageモデルを使用
 const TokenUsageModel = require('../../models/TokenUsage');
@@ -33,7 +37,7 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
 };
 
 // トークン使用状況一覧取得
-router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
@@ -142,7 +146,7 @@ router.get('/', authenticateToken, authenticateAdmin, async (req: AuthRequest, r
 });
 
 // 日別トークン使用統計（一時的に簡略化）
-router.get('/daily-stats', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/daily-stats', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     console.log('🔍 Daily token usage stats query (simplified)');
     
@@ -158,7 +162,7 @@ router.get('/daily-stats', authenticateToken, authenticateAdmin, async (req: Aut
 });
 
 // キャラクター別トークン使用統計（一時的に簡略化）
-router.get('/character-stats', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/character-stats', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     console.log('🔍 Character token usage stats query (simplified)');
     

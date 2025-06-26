@@ -7,11 +7,17 @@ import { UserNotificationReadStatusModel } from '../models/UserNotificationReadS
 import { UserModel } from '../models/UserModel';
 import { AdminNotificationReadStatusModel } from '../models/AdminNotificationReadStatusModel';
 import { getRedisPublisher } from '../../lib/redis';
+import { createRateLimiter } from '../middleware/rateLimiter';
+import { escapeRegex } from '../utils/escapeRegex';
 
 const router: Router = Router();
 
+// Rate limiters
+const generalRateLimit = createRateLimiter('general');
+const adminRateLimit = createRateLimiter('admin');
+
 // ユーザー向けお知らせ一覧取得
-router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!._id;
     const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
@@ -93,7 +99,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
 });
 
 // 未読お知らせ件数取得
-router.get('/unread-count', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/unread-count', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!._id;
 
@@ -132,7 +138,7 @@ router.get('/unread-count', authenticateToken, async (req: AuthRequest, res: Res
 });
 
 // お知らせ既読マーク
-router.post('/:id/read', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/:id/read', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!._id;
     const notificationId = req.params.id;
@@ -198,7 +204,7 @@ router.post('/:id/read', authenticateToken, async (req: AuthRequest, res: Respon
 });
 
 // 全お知らせ既読マーク
-router.post('/read-all', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/read-all', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!._id;
 
@@ -257,7 +263,7 @@ router.post('/read-all', authenticateToken, async (req: AuthRequest, res: Respon
 // ========== 管理者用エンドポイント ==========
 
 // デバッグ用: 現在のユーザー情報確認
-router.get('/debug/user', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/debug/user', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     console.log('🔍 Debug user info:', {
       hasUser: !!req.user,
@@ -314,7 +320,7 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
 };
 
 // 管理者用未読通知数取得
-router.get('/admin/unread-count', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/admin/unread-count', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const adminId = req.user?._id;
     if (!adminId) {
@@ -346,7 +352,7 @@ router.get('/admin/unread-count', authenticateToken, authenticateAdmin, async (r
 });
 
 // 管理者用お知らせ一覧取得
-router.get('/admin', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/admin', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
@@ -367,11 +373,12 @@ router.get('/admin', authenticateToken, authenticateAdmin, async (req: AuthReque
     }
     if (isActive !== undefined) query.isActive = isActive === 'true';
     if (search) {
+      const escapedSearch = escapeRegex(search);
       query.$or = [
-        { 'title.ja': new RegExp(search, 'i') },
-        { 'title.en': new RegExp(search, 'i') },
-        { 'message.ja': new RegExp(search, 'i') },
-        { 'message.en': new RegExp(search, 'i') }
+        { 'title.ja': new RegExp(escapedSearch, 'i') },
+        { 'title.en': new RegExp(escapedSearch, 'i') },
+        { 'message.ja': new RegExp(escapedSearch, 'i') },
+        { 'message.en': new RegExp(escapedSearch, 'i') }
       ];
     }
 
@@ -424,7 +431,7 @@ router.get('/admin', authenticateToken, authenticateAdmin, async (req: AuthReque
 });
 
 // お知らせ作成
-router.post('/admin', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/admin', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
       title,
@@ -519,7 +526,7 @@ router.post('/admin', authenticateToken, authenticateAdmin, async (req: AuthRequ
 });
 
 // 個別お知らせ取得
-router.get('/admin/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const notification = await NotificationModel.findById(req.params.id)
       .populate('createdBy', 'name email')
@@ -539,7 +546,7 @@ router.get('/admin/:id', authenticateToken, authenticateAdmin, async (req: AuthR
 });
 
 // お知らせ更新
-router.put('/admin/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
       title,
@@ -587,7 +594,7 @@ router.put('/admin/:id', authenticateToken, authenticateAdmin, async (req: AuthR
 });
 
 // お知らせ削除
-router.delete('/admin/:id', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.delete('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const notification = await NotificationModel.findByIdAndDelete(req.params.id);
 
@@ -610,7 +617,7 @@ router.delete('/admin/:id', authenticateToken, authenticateAdmin, async (req: Au
 });
 
 // お知らせ統計取得
-router.get('/admin/:id/stats', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/admin/:id/stats', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const notificationId = req.params.id;
 
@@ -686,7 +693,7 @@ router.get('/admin/:id/stats', authenticateToken, authenticateAdmin, async (req:
 });
 
 // 管理者用通知既読マーク
-router.post('/admin/:id/read', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/admin/:id/read', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const notificationId = req.params.id;
     const adminId = req.user?._id;
@@ -721,7 +728,7 @@ router.post('/admin/:id/read', authenticateToken, authenticateAdmin, async (req:
 });
 
 // 管理者用通知一括既読マーク
-router.post('/admin/read-all', authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/admin/read-all', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const adminId = req.user?._id;
 

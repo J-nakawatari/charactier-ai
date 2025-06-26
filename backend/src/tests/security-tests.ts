@@ -20,8 +20,10 @@ const results: TestResult[] = [];
 // Helper function to log test results
 function logTest(test: string, passed: boolean, details: string, severity?: TestResult['severity']) {
   const emoji = passed ? '✅' : '❌';
-  console.log(`${emoji} ${test}: ${details}`);
-  results.push({ test, passed, details, severity });
+  // Sanitize details to avoid logging sensitive data
+  const sanitizedDetails = details.replace(/password['":\s]*[^\s,}]*/gi, 'password: [REDACTED]');
+  console.log(`${emoji} ${test}: ${sanitizedDetails}`);
+  results.push({ test, passed, details: sanitizedDetails, severity });
 }
 
 // Test 1: SQL Injection attempts

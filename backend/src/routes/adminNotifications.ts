@@ -6,11 +6,16 @@ import { NotificationModel } from '../models/NotificationModel';
 import { AdminNotificationReadStatusModel } from '../models/AdminNotificationReadStatusModel';
 import { sendErrorResponse, ClientErrorCode } from '../utils/errorResponse';
 import log from '../utils/logger';
+import { createRateLimiter } from '../middleware/rateLimiter';
+import { escapeRegex } from '../utils/escapeRegex';
 
 const router: Router = Router();
 
+// レートリミッターを作成
+const adminRateLimit = createRateLimiter('admin');
+
 // 管理者用お知らせ一覧取得（システム通知など）
-router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/', authenticateToken, adminRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -48,7 +53,8 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
 
     // 検索フィルター
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search as string, 'i');
+      const escapedSearch = escapeRegex(req.query.search as string);
+      const searchRegex = new RegExp(escapedSearch, 'i');
       query.$or = [
         { 'title.ja': searchRegex },
         { 'title.en': searchRegex },
@@ -106,7 +112,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
 });
 
 // お知らせ作成
-router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/', authenticateToken, adminRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -206,7 +212,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
 });
 
 // 管理者用お知らせ既読マーク
-router.post('/:id/read', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/:id/read', authenticateToken, adminRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -254,7 +260,7 @@ router.post('/:id/read', authenticateToken, async (req: AuthRequest, res: Respon
 });
 
 // 管理者用統計情報取得
-router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/stats', authenticateToken, adminRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -326,7 +332,7 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response):
 });
 
 // お知らせ更新
-router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:id', authenticateToken, adminRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -414,7 +420,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
 });
 
 // お知らせ削除
-router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.delete('/:id', authenticateToken, adminRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -458,7 +464,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
 });
 
 // お知らせ詳細取得
-router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/:id', authenticateToken, adminRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -493,7 +499,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
 });
 
 // 最近のエラーログ取得（デバッグ用）
-router.get('/debug/recent-errors', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/debug/recent-errors', authenticateToken, adminRateLimit, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {

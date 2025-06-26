@@ -8,11 +8,17 @@ import { validate, validateObjectId } from '../middleware/validation';
 import { characterSchemas } from '../validation/schemas';
 import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
 import log from '../utils/logger';
+import { createRateLimiter } from '../middleware/rateLimiter';
+import { escapeRegex } from '../utils/escapeRegex';
 
 const router: Router = Router();
 
+// Rate limiters
+const adminRateLimit = createRateLimiter('admin');
+const uploadRateLimit = createRateLimiter('upload');
+
 // 管理者用キャラクター一覧取得（統計情報付き）
-router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/', adminRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -59,7 +65,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
 
     // キーワード検索
     if (keyword) {
-      const searchTerm = keyword.toLowerCase();
+      const searchTerm = escapeRegex(keyword.toLowerCase());
       query.$or = [
         { 'name.ja': { $regex: searchTerm, $options: 'i' } },
         { 'name.en': { $regex: searchTerm, $options: 'i' } },
@@ -186,7 +192,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
 });
 
 // 個別キャラクター取得（詳細統計付き）
-router.get('/:id', authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -294,7 +300,7 @@ router.get('/:id', authenticateToken, validateObjectId('id'), async (req: AuthRe
 });
 
 // キャラクターのアクティブ/非アクティブ切り替え
-router.patch('/:id/toggle-active', authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+router.patch('/:id/toggle-active', adminRateLimit, authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 書き込み権限チェック（super_adminのみ）
     if (!hasWritePermission(req)) {
@@ -338,7 +344,7 @@ router.patch('/:id/toggle-active', authenticateToken, validateObjectId('id'), as
 });
 
 // キャラクター作成（管理者用）
-router.post('/', authenticateToken, validate({ body: characterSchemas.create }), async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/', adminRateLimit, authenticateToken, validate({ body: characterSchemas.create }), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 書き込み権限チェック（super_adminのみ）
     if (!hasWritePermission(req)) {
@@ -411,7 +417,7 @@ router.post('/', authenticateToken, validate({ body: characterSchemas.create }),
 });
 
 // キャラクター更新（管理者用）
-router.put('/:id', authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 書き込み権限チェック（super_adminのみ）
     if (!hasWritePermission(req)) {
@@ -454,7 +460,7 @@ router.put('/:id', authenticateToken, validateObjectId('id'), async (req: AuthRe
 });
 
 // 画像アップロード（管理者用）
-router.post('/upload/image', authenticateToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/upload/image', uploadRateLimit, authenticateToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 書き込み権限チェック（super_adminのみ）
     if (!hasWritePermission(req)) {

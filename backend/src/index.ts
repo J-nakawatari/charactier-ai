@@ -1901,6 +1901,15 @@ routeRegistry.define('POST', `${API_PREFIX}/user/select-character`, authenticate
       return;
     }
 
+    // Validate characterId is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(characterId)) {
+      res.status(400).json({
+        error: 'Invalid character ID',
+        message: '無効なキャラクターIDです'
+      });
+      return;
+    }
+
     // キャラクターの存在確認
     const character = await CharacterModel.findById(characterId);
     if (!character) {
@@ -4085,8 +4094,11 @@ app.post(`${API_PREFIX}/admin/create-admin`, authenticateToken, async (req: Auth
 
   try {
     if (isMongoConnected) {
+      // Sanitize email input
+      const sanitizedEmail = email.toLowerCase().trim();
+      
       // 既存の管理者をチェック
-      const existingAdmin = await AdminModel.findOne({ email });
+      const existingAdmin = await AdminModel.findOne({ email: { $eq: sanitizedEmail } });
       if (existingAdmin) {
         sendErrorResponse(res, 409, ClientErrorCode.ALREADY_EXISTS, 'Email already exists');
         return;
@@ -6003,8 +6015,16 @@ app.get(`${API_PREFIX}/admin/errors`, authenticateToken, async (req: AuthRequest
     // フィルタ条件の構築
     const filter: any = { timestamp: { $gte: startDate } };
     if (resolved !== undefined) filter.resolved = resolved === 'true';
-    if (errorType) filter.errorType = errorType;
-    if (statusCode) filter.statusCode = parseInt(statusCode as string);
+    if (errorType) {
+      // Sanitize errorType to prevent NoSQL injection
+      filter.errorType = { $eq: String(errorType).trim() };
+    }
+    if (statusCode) {
+      const parsedStatusCode = parseInt(statusCode as string);
+      if (!isNaN(parsedStatusCode)) {
+        filter.statusCode = { $eq: parsedStatusCode };
+      }
+    }
 
     // デバッグ: フィルタとドキュメント数を確認
     const totalDocs = await APIErrorModel.countDocuments();
