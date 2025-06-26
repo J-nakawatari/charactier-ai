@@ -3039,21 +3039,34 @@ app.post(`${API_PREFIX}/purchase/create-checkout-session`, authenticateToken, as
       const origin = req.headers.origin || req.headers.referer?.replace(/\/[^/]*$/, '') || 'https://charactier-ai.com';
       const baseUrl = origin.includes('localhost') ? 'http://localhost:3000' : origin;
       
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: [
-          {
-            price: priceId,
-            quantity: 1,
-          },
-        ],
-        mode: 'payment',
-        success_url: `${baseUrl}/ja/purchase/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/ja/purchase/cancel`,
-        metadata: {
-          userId: userId || req.user._id,
-          priceId: priceId
-        }
+      // Idempotency Key の生成
+      const { getOrCreateIdempotencyKey, stripeWithIdempotency } = await import('./services/stripeIdempotency');
+      const idempotencyKey = getOrCreateIdempotencyKey(
+        req.headers,
+        userId || req.user._id,
+        'checkout_token',
+        priceId
+      );
+
+      const session = await stripeWithIdempotency(idempotencyKey, async () => {
+        return await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          line_items: [
+            {
+              price: priceId,
+              quantity: 1,
+            },
+          ],
+          mode: 'payment',
+          success_url: `${baseUrl}/ja/purchase/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${baseUrl}/ja/purchase/cancel`,
+          metadata: {
+            userId: userId || req.user._id,
+            priceId: priceId
+          }
+        }, {
+          idempotencyKey: idempotencyKey
+        });
       });
       
       console.log("Checkout session created:", {
@@ -3173,22 +3186,35 @@ app.post(`${API_PREFIX}/purchase/create-character-checkout-session`, authenticat
     const origin = req.headers.origin || req.headers.referer?.replace(/\/[^/]*$/, '') || 'https://charactier-ai.com';
     const baseUrl = origin.includes('localhost') ? 'http://localhost:3000' : origin;
     
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: `${baseUrl}/ja/purchase/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/ja/characters`,
-      metadata: {
-        userId: req.user._id.toString(),
-        characterId: characterId,
-        purchaseType: 'character'
-      }
+    // Idempotency Key の生成
+    const { getOrCreateIdempotencyKey, stripeWithIdempotency } = await import('./services/stripeIdempotency');
+    const idempotencyKey = getOrCreateIdempotencyKey(
+      req.headers,
+      req.user._id.toString(),
+      'checkout_character',
+      characterId
+    );
+
+    const session = await stripeWithIdempotency(idempotencyKey, async () => {
+      return await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        success_url: `${baseUrl}/ja/purchase/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/ja/characters`,
+        metadata: {
+          userId: req.user._id.toString(),
+          characterId: characterId,
+          purchaseType: 'character'
+        }
+      }, {
+        idempotencyKey: idempotencyKey
+      });
     });
     
     console.log("Character checkout session created:", {

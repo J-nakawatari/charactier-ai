@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { UserModel, IUser } from '../models/UserModel';
 import { AdminModel, IAdmin } from '../models/AdminModel';
 import log from '../utils/logger';
+import { getDecryptedJwtSecret, generateEncryptedAccessToken, generateEncryptedRefreshToken, verifyEncryptedToken } from '../services/jwtEncryption';
 
 // JWT認証用の拡張Request型
 export interface AuthRequest extends Request {
@@ -89,19 +90,23 @@ export const authenticateToken = async (
     }
 
 
-    // JWT を検証
-    const JWT_SECRET = process.env.JWT_SECRET;
-    if (!JWT_SECRET) {
-      log.error('JWT_SECRET not configured', undefined);
-      res.status(500).json({ 
-        error: 'Authentication configuration error',
-        message: '認証設定エラー'
-      });
-      return;
+    // JWT を検証（暗号化対応）
+    let decoded: { userId: string };
+    try {
+      decoded = verifyEncryptedToken(token) as { userId: string };
+    } catch (jwtError) {
+      // 暗号化トークンの検証に失敗した場合、従来の方法を試す（移行期間用）
+      const JWT_SECRET = process.env.JWT_SECRET;
+      if (!JWT_SECRET) {
+        log.error('JWT_SECRET not configured', undefined);
+        res.status(500).json({ 
+          error: 'Authentication configuration error',
+          message: '認証設定エラー'
+        });
+        return;
+      }
+      decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     }
-
-    // トークンをデコード
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     log.info('✅ JWT DECODED SUCCESSFULLY', { 
       userId: decoded.userId,
       tokenSource: token === req.cookies?.adminAccessToken ? 'adminCookie' : 
@@ -237,32 +242,42 @@ export const authenticateToken = async (
 
 // mockAuth removed - using JWT authentication only
 
-// JWT生成ヘルパー関数
+// JWT生成ヘルパー関数（暗号化対応）
 export const generateAccessToken = (userId: string): string => {
-  const JWT_SECRET = process.env.JWT_SECRET;
-  if (!JWT_SECRET) {
-    throw new Error('JWT_SECRET not configured');
+  try {
+    // 暗号化版を優先
+    return generateEncryptedAccessToken(userId);
+  } catch (error) {
+    // フォールバック: 従来の方法
+    const JWT_SECRET = process.env.JWT_SECRET;
+    if (!JWT_SECRET) {
+      throw new Error('JWT_SECRET not configured');
+    }
+    return jwt.sign(
+      { userId }, 
+      JWT_SECRET, 
+      { expiresIn: '24h' }
+    );
   }
-
-  return jwt.sign(
-    { userId }, 
-    JWT_SECRET, 
-    { expiresIn: '24h' }
-  );
 };
 
-// リフレッシュトークン生成ヘルパー関数
+// リフレッシュトークン生成ヘルパー関数（暗号化対応）
 export const generateRefreshToken = (userId: string): string => {
-  const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
-  if (!JWT_REFRESH_SECRET) {
-    throw new Error('JWT_REFRESH_SECRET not configured');
+  try {
+    // 暗号化版を優先
+    return generateEncryptedRefreshToken(userId);
+  } catch (error) {
+    // フォールバック: 従来の方法
+    const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+    if (!JWT_REFRESH_SECRET) {
+      throw new Error('JWT_REFRESH_SECRET not configured');
+    }
+    return jwt.sign(
+      { userId }, 
+      JWT_REFRESH_SECRET, 
+      { expiresIn: '7d' }
+    );
   }
-
-  return jwt.sign(
-    { userId }, 
-    JWT_REFRESH_SECRET, 
-    { expiresIn: '7d' }
-  );
 };
 
 // Helper function to check if admin is moderator (read-only)
