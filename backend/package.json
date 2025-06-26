@@ -13,6 +13,8 @@
         "test:security": "ts-node src/tests/security-tests.ts",
         "test:load": "ts-node src/tests/load-tests.ts",
         "check-api-duplicates": "node ../scripts/check-api-duplicates.js",
+        "check:password-migration": "ts-node scripts/migrate-passwords-to-argon2.ts",
+        "setup:jwt-encryption": "ts-node scripts/setup-jwt-encryption.ts",
         "precommit": "npm run lint && npm run type-check && npm run check-api-duplicates"
     },
     "devDependencies": {
@@ -37,6 +39,7 @@
         "@types/joi": "^17.2.2",
         "@types/jsonwebtoken": "^9.0.10",
         "@types/multer": "^1.4.13",
+        "argon2": "^0.43.0",
         "axios": "^1.10.0",
         "bcrypt": "^6.0.0",
         "bcryptjs": "^3.0.2",

@@ -1782,8 +1782,8 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
     }
 
     // 現在のパスワードを確認
-    const bcrypt = require('bcryptjs');
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const { verifyPassword, hashPassword, validatePasswordStrength } = await import('./services/passwordHash');
+    const isCurrentPasswordValid = await verifyPassword(currentPassword, user.password);
     if (!isCurrentPasswordValid) {
       res.status(401).json({
         error: 'Invalid current password',
@@ -1792,9 +1792,19 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
       return;
     }
 
-    // 新しいパスワードをハッシュ化
-    const saltRounds = 12;
-    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+    // 新しいパスワードの強度チェック
+    const passwordStrength = validatePasswordStrength(newPassword);
+    if (!passwordStrength.isValid) {
+      res.status(400).json({
+        error: 'Weak password',
+        message: 'パスワードが弱すぎます',
+        errors: passwordStrength.errors
+      });
+      return;
+    }
+
+    // 新しいパスワードをハッシュ化（Argon2id）
+    const hashedNewPassword = await hashPassword(newPassword);
 
     // パスワードを更新
     await UserModel.findByIdAndUpdate(userId, {
@@ -4082,10 +4092,17 @@ app.post(`${API_PREFIX}/admin/create-admin`, authenticateToken, async (req: Auth
         return;
       }
 
-      // パスワードをハッシュ化
-      const bcrypt = require('bcryptjs');
-      const saltRounds = 12;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
+      // パスワードをハッシュ化（Argon2id）
+      const { hashPassword, validatePasswordStrength } = await import('./services/passwordHash');
+      
+      // パスワード強度チェック
+      const passwordStrength = validatePasswordStrength(password);
+      if (!passwordStrength.isValid) {
+        sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, passwordStrength.errors.join(', '));
+        return;
+      }
+      
+      const hashedPassword = await hashPassword(password);
 
       // 新しい管理者を作成
       const newAdmin = new AdminModel({
@@ -6819,8 +6836,8 @@ routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateTo
     }
 
     // 現在のパスワードを確認
-    const bcrypt = require('bcryptjs');
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const { verifyPassword, hashPassword, validatePasswordStrength } = await import('./services/passwordHash');
+    const isCurrentPasswordValid = await verifyPassword(currentPassword, user.password);
     if (!isCurrentPasswordValid) {
       res.status(400).json({ 
         error: 'Invalid current password',
@@ -6829,9 +6846,19 @@ routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateTo
       return;
     }
 
-    // 新しいパスワードをハッシュ化
-    const saltRounds = 12;
-    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+    // 新しいパスワードの強度チェック
+    const passwordStrength = validatePasswordStrength(newPassword);
+    if (!passwordStrength.isValid) {
+      res.status(400).json({
+        error: 'Weak password',
+        message: 'パスワードが弱すぎます',
+        errors: passwordStrength.errors
+      });
+      return;
+    }
+
+    // 新しいパスワードをハッシュ化（Argon2id）
+    const hashedNewPassword = await hashPassword(newPassword);
 
     // パスワードを更新
     await UserModel.findByIdAndUpdate(req.user._id, {
