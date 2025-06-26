@@ -1,0 +1,35 @@
+echo "🔍 機密情報チェックを実行中..."
+
+# gitleaksがインストールされているか確認
+if ! command -v gitleaks &> /dev/null; then
+    echo "❌ gitleaksがインストールされていません"
+    echo "📦 インストール方法:"
+    echo ""
+    echo "  macOS:    brew install gitleaks"
+    echo "  Ubuntu:   sudo apt install gitleaks"
+    echo "  Windows:  scoop install gitleaks"
+    echo ""
+    echo "または https://github.com/gitleaks/gitleaks/releases からダウンロード"
+    echo ""
+    echo "⚠️  一時的にスキップするには: git commit --no-verify"
+    exit 1
+fi
+
+# ステージングされたファイルのみをチェック
+gitleaks protect --staged --verbose --config .gitleaks.toml
+
+if [ $? -eq 0 ]; then
+    echo "✅ 機密情報チェック完了 - 問題ありません"
+else
+    echo ""
+    echo "❌ 機密情報が検出されました！"
+    echo ""
+    echo "対処方法:"
+    echo "1. 検出されたファイルから機密情報を削除"
+    echo "2. 環境変数を使用するように修正"
+    echo "3. .envファイルに移動（.gitignoreに含まれていることを確認）"
+    echo ""
+    echo "⚠️  どうしてもコミットが必要な場合: git commit --no-verify"
+    echo "   （非推奨 - セキュリティリスクがあります）"
+    exit 1
+fi
