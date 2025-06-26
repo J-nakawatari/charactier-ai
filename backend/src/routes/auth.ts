@@ -2,6 +2,7 @@ import type { AuthRequest } from '../types/express';
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import escapeHtml from 'escape-html';
 import { UserModel } from '../models/UserModel';
 import { AdminModel } from '../models/AdminModel';
 import { generateAccessToken, generateRefreshToken, authenticateToken } from '../middleware/auth';
@@ -14,6 +15,242 @@ import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../uti
 import { hashPassword, verifyPassword, needsRehash, validatePasswordStrength } from '../services/passwordHash';
 
 const router: Router = Router();
+
+// Helper function to safely get locale
+function getSafeLocale(locale: string | undefined): 'ja' | 'en' {
+  return locale === 'ja' ? 'ja' : 'en';
+}
+
+// Helper function to generate email verification HTML response
+function generateEmailVerificationHTML(
+  type: 'success' | 'error' | 'already-verified' | 'expired' | 'server-error',
+  locale: 'ja' | 'en',
+  userData?: {
+    userInfo?: any;
+    accessToken?: string;
+    refreshToken?: string;
+    frontendUrl?: string;
+  }
+): string {
+  const messages = {
+    success: {
+      title: locale === 'ja' ? '認証完了！' : 'Verified!',
+      message: locale === 'ja' ? 'メールアドレスが確認されました。' : 'Your email has been verified successfully.',
+      buttonText: locale === 'ja' ? '今すぐセットアップを開始' : 'Start Setup Now',
+      redirectMessage: locale === 'ja' ? '3秒後にセットアップ画面に移動します...' : 'Redirecting to setup in 3 seconds...',
+      iconColor: '#10b981'
+    },
+    error: {
+      title: locale === 'ja' ? 'エラー' : 'Error',
+      message: locale === 'ja' ? '無効なリクエストです。' : 'Invalid request.',
+      buttonText: locale === 'ja' ? 'ホームに戻る' : 'Back to Home',
+      iconColor: '#f59e0b'
+    },
+    'already-verified': {
+      title: locale === 'ja' ? '認証済み' : 'Already Verified',
+      message: locale === 'ja' ? 'このメールアドレスは既に認証されています。' : 'This email address has already been verified.',
+      buttonText: locale === 'ja' ? 'セットアップページへ' : 'Go to Setup',
+      iconColor: '#f59e0b'
+    },
+    expired: {
+      title: locale === 'ja' ? '認証エラー' : 'Verification Error',
+      message: locale === 'ja' ? 'リンクが無効か、有効期限が切れています。' : 'The link is invalid or has expired.',
+      buttonText: locale === 'ja' ? '新規登録画面へ' : 'Back to Registration',
+      iconColor: '#ef4444'
+    },
+    'server-error': {
+      title: locale === 'ja' ? 'サーバーエラー' : 'Server Error',
+      message: locale === 'ja' ? '申し訳ございません。エラーが発生しました。時間をおいて再度お試しください。' : 'Sorry, an error occurred. Please try again later.',
+      buttonText: locale === 'ja' ? 'ホームに戻る' : 'Back to Home',
+      iconColor: '#6b7280'
+    }
+  };
+
+  const config = messages[type];
+  const frontendUrl = userData?.frontendUrl || (process.env.NODE_ENV === 'production' 
+    ? 'https://charactier-ai.com' 
+    : 'http://localhost:3000');
+
+  const successScript = type === 'success' && userData ? `
+    <script>
+      // ユーザー情報とトークンをlocalStorageに保存
+      (function() {
+        try {
+          // ユーザー情報を保存
+          localStorage.setItem('user', JSON.stringify(${JSON.stringify(userData.userInfo)}));
+          localStorage.setItem('accessToken', '${userData.accessToken}');
+          localStorage.setItem('refreshToken', '${userData.refreshToken}');
+          console.log('✅ User data saved to localStorage');
+        } catch (error) {
+          console.error('❌ Failed to save user data:', error);
+        }
+      })();
+      
+      // 3秒後にリダイレクト
+      window.onload = function() {
+        setTimeout(function() {
+          window.location.href = '${frontendUrl}/${locale}/setup';
+        }, 3000);
+      };
+    </script>
+  ` : '';
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(config.title)}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: linear-gradient(to bottom right, #f3e8ff, #dbeafe);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      padding: 32px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    .icon-wrapper {
+      width: 80px;
+      height: 80px;
+      background-color: ${config.iconColor};
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+    .icon {
+      width: 40px;
+      height: 40px;
+      fill: white;
+    }
+    h1 {
+      color: #1f2937;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .message {
+      color: #4b5563;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .button {
+      display: inline-block;
+      background-color: #7c3aed;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+    .button:hover {
+      background-color: #6d28d9;
+    }
+    .redirect-message {
+      color: #6b7280;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+    .error-box {
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .error-text {
+      color: #dc2626;
+      font-size: 14px;
+    }
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .button-primary {
+      background-color: #7c3aed;
+      color: white;
+    }
+    .button-primary:hover {
+      background-color: #6d28d9;
+    }
+    .button-secondary {
+      background-color: #f3f4f6;
+      color: #374151;
+    }
+    .button-secondary:hover {
+      background-color: #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon-wrapper">
+      ${type === 'success' ? `
+      <svg class="icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+      </svg>
+      ` : type === 'expired' ? `
+      <svg class="icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+      </svg>
+      ` : type === 'server-error' ? `
+      <svg class="icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+      </svg>
+      ` : `
+      <svg class="icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+      </svg>
+      `}
+    </div>
+    <h1>${escapeHtml(config.title)}</h1>
+    <p class="message">
+      ${escapeHtml(config.message)}
+    </p>
+    ${type === 'expired' ? `
+    <div class="error-box">
+      <p class="error-text">
+        ${locale === 'ja' ? 'リンクの有効期限は24時間です。' : 'Verification links are valid for 24 hours.'}
+      </p>
+    </div>
+    <div class="button-group">
+      <a href="/${locale}/register" class="button button-primary">
+        ${escapeHtml(config.buttonText)}
+      </a>
+      <a href="/${locale}/login" class="button button-secondary">
+        ${locale === 'ja' ? 'ログイン画面へ' : 'Go to Login'}
+      </a>
+    </div>
+    ` : `
+    <a href="${type === 'success' ? `${frontendUrl}/${locale}/setup` : type === 'already-verified' ? `/${locale}/setup` : `/${locale}`}" class="button">
+      ${escapeHtml(config.buttonText)}
+    </a>
+    `}
+    ${type === 'success' && 'redirectMessage' in config ? `<p class="redirect-message">${escapeHtml(config.redirectMessage)}</p>` : ''}
+  </div>
+  ${successScript}
+</body>
+</html>`;
+}
 
 // ユーザー登録（メール認証付き）
 router.post('/register', 
@@ -445,96 +682,7 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
 
     if (!token || typeof token !== 'string') {
       // エラーページをHTMLで返す
-      res.status(400).send(`
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${locale === 'ja' ? 'エラー' : 'Error'}</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
-      background: linear-gradient(to bottom right, #f3e8ff, #dbeafe);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      padding: 32px;
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-    }
-    .icon-wrapper {
-      width: 80px;
-      height: 80px;
-      background-color: #f59e0b;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 24px;
-    }
-    .icon {
-      width: 40px;
-      height: 40px;
-      fill: white;
-    }
-    h1 {
-      color: #1f2937;
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-    .message {
-      color: #4b5563;
-      line-height: 1.6;
-      margin-bottom: 24px;
-    }
-    .button {
-      display: inline-block;
-      background-color: #7c3aed;
-      color: white;
-      padding: 12px 24px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background-color 0.2s;
-    }
-    .button:hover {
-      background-color: #6d28d9;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="icon-wrapper">
-      <svg class="icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-      </svg>
-    </div>
-    <h1>${locale === 'ja' ? 'エラー' : 'Error'}</h1>
-    <p class="message">
-      ${locale === 'ja' ? '無効なリクエストです。' : 'Invalid request.'}
-    </p>
-    <a href="/${locale}" class="button">
-      ${locale === 'ja' ? 'ホームに戻る' : 'Back to Home'}
-    </a>
-  </div>
-</body>
-</html>
-      `);
+      res.status(400).send(generateEmailVerificationHTML('error', getSafeLocale(locale as string)));
       return;
     }
 
@@ -546,131 +694,7 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
 
     if (!user) {
       log.warn('Email verification failed - invalid or expired token', { token });
-      res.status(404).send(`
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${locale === 'ja' ? '認証エラー' : 'Verification Error'}</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
-      background: linear-gradient(to bottom right, #f3e8ff, #dbeafe);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      padding: 32px;
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-    }
-    .icon-wrapper {
-      width: 80px;
-      height: 80px;
-      background-color: #ef4444;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 24px;
-    }
-    .icon {
-      width: 40px;
-      height: 40px;
-      fill: white;
-    }
-    h1 {
-      color: #1f2937;
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-    .message {
-      color: #4b5563;
-      line-height: 1.6;
-      margin-bottom: 24px;
-    }
-    .error-box {
-      background-color: #fef2f2;
-      border: 1px solid #fecaca;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 24px;
-    }
-    .error-text {
-      color: #dc2626;
-      font-size: 14px;
-    }
-    .button-group {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .button {
-      display: block;
-      padding: 12px 24px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-    .button-primary {
-      background-color: #7c3aed;
-      color: white;
-    }
-    .button-primary:hover {
-      background-color: #6d28d9;
-    }
-    .button-secondary {
-      background-color: #f3f4f6;
-      color: #374151;
-    }
-    .button-secondary:hover {
-      background-color: #e5e7eb;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="icon-wrapper">
-      <svg class="icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-      </svg>
-    </div>
-    <h1>${locale === 'ja' ? '認証エラー' : 'Verification Error'}</h1>
-    <p class="message">
-      ${locale === 'ja' ? 'リンクが無効か、有効期限が切れています。' : 'The link is invalid or has expired.'}
-    </p>
-    <div class="error-box">
-      <p class="error-text">
-        ${locale === 'ja' ? 'リンクの有効期限は24時間です。' : 'Verification links are valid for 24 hours.'}
-      </p>
-    </div>
-    <div class="button-group">
-      <a href="/${locale}/register" class="button button-primary">
-        ${locale === 'ja' ? '新規登録画面へ' : 'Back to Registration'}
-      </a>
-      <a href="/${locale}/login" class="button button-secondary">
-        ${locale === 'ja' ? 'ログイン画面へ' : 'Go to Login'}
-      </a>
-    </div>
-  </div>
-</body>
-</html>
-      `);
+      res.status(404).send(generateEmailVerificationHTML('expired', getSafeLocale(locale as string)));
       return;
     }
 
@@ -681,7 +705,8 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
       const frontendUrl = process.env.NODE_ENV === 'production' 
         ? 'https://charactier-ai.com' 
         : 'http://localhost:3000';
-      res.redirect(`${frontendUrl}/${locale}/setup`);
+      const safeLocale = getSafeLocale(locale as string);
+      res.redirect(`${frontendUrl}/${safeLocale}/setup`);
       return;
     }
 
@@ -737,219 +762,17 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
     const frontendUrl = process.env.NODE_ENV === 'production' 
       ? 'https://charactier-ai.com' 
       : 'http://localhost:3000';
-    res.send(`
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${locale === 'ja' ? '認証完了' : 'Email Verified'}</title>
-  <script>
-    // ユーザー情報とトークンをlocalStorageに保存
-    (function() {
-      try {
-        // ユーザー情報を保存
-        localStorage.setItem('user', JSON.stringify(${JSON.stringify(userInfo)}));
-        localStorage.setItem('accessToken', '${accessToken}');
-        localStorage.setItem('refreshToken', '${refreshToken}');
-        console.log('✅ User data saved to localStorage');
-      } catch (error) {
-        console.error('❌ Failed to save user data:', error);
-      }
-    })();
-    
-    // 3秒後にリダイレクト
-    window.onload = function() {
-      setTimeout(function() {
-        window.location.href = '${frontendUrl}/${locale}/setup';
-      }, 3000);
-    };
-  </script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
-      background: linear-gradient(to bottom right, #f3e8ff, #dbeafe);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      padding: 32px;
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-    }
-    .icon-wrapper {
-      width: 80px;
-      height: 80px;
-      background-color: #10b981;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 24px;
-    }
-    .icon {
-      width: 40px;
-      height: 40px;
-      fill: white;
-    }
-    h1 {
-      color: #1f2937;
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-    .message {
-      color: #4b5563;
-      line-height: 1.6;
-      margin-bottom: 24px;
-    }
-    .countdown {
-      color: #6b7280;
-      font-size: 14px;
-      margin-bottom: 16px;
-    }
-    .button {
-      display: inline-block;
-      background-color: #7c3aed;
-      color: white;
-      padding: 12px 24px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background-color 0.2s;
-    }
-    .button:hover {
-      background-color: #6d28d9;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="icon-wrapper">
-      <svg class="icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-      </svg>
-    </div>
-    <h1>${locale === 'ja' ? '認証完了！' : 'Verified!'}</h1>
-    <p class="message">
-      ${locale === 'ja' ? 'メールアドレスが確認されました。' : 'Your email has been verified successfully.'}
-    </p>
-    <p class="countdown" id="countdown">
-      ${locale === 'ja' ? '3秒後にセットアップ画面に移動します...' : 'Redirecting to setup in 3 seconds...'}
-    </p>
-    <a href="${frontendUrl}/${locale}/setup" class="button">
-      ${locale === 'ja' ? '今すぐセットアップを開始' : 'Start Setup Now'}
-    </a>
-  </div>
-</body>
-</html>
-    `);
+    res.send(generateEmailVerificationHTML('success', getSafeLocale(locale as string), {
+      userInfo,
+      accessToken,
+      refreshToken,
+      frontendUrl
+    }));
 
   } catch (error) {
     const errorCode = mapErrorToClientCode(error);
     log.error('Email verification error', error);
-    res.status(500).send(`
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${locale === 'ja' ? 'サーバーエラー' : 'Server Error'}</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
-      background: linear-gradient(to bottom right, #f3e8ff, #dbeafe);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      padding: 32px;
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-    }
-    .icon-wrapper {
-      width: 80px;
-      height: 80px;
-      background-color: #6b7280;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 24px;
-    }
-    .icon {
-      width: 40px;
-      height: 40px;
-      fill: white;
-    }
-    h1 {
-      color: #1f2937;
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-    .message {
-      color: #4b5563;
-      line-height: 1.6;
-      margin-bottom: 24px;
-    }
-    .button {
-      display: inline-block;
-      background-color: #7c3aed;
-      color: white;
-      padding: 12px 24px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background-color 0.2s;
-    }
-    .button:hover {
-      background-color: #6d28d9;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="icon-wrapper">
-      <svg class="icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-      </svg>
-    </div>
-    <h1>${locale === 'ja' ? 'サーバーエラー' : 'Server Error'}</h1>
-    <p class="message">
-      ${locale === 'ja' ? '申し訳ございません。エラーが発生しました。時間をおいて再度お試しください。' : 'Sorry, an error occurred. Please try again later.'}
-    </p>
-    <a href="/${locale}" class="button">
-      ${locale === 'ja' ? 'ホームに戻る' : 'Back to Home'}
-    </a>
-  </div>
-</body>
-</html>
-    `);
+    res.status(500).send(generateEmailVerificationHTML('server-error', getSafeLocale(locale as string)));
   }
 });
 

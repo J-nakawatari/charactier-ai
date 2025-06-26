@@ -354,8 +354,22 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
       return;
     }
 
-    // 更新データを準備
-    const updateData: any = {
+    // 更新データを準備（型安全に）
+    interface UpdateData {
+      updatedBy: mongoose.Types.ObjectId;
+      updatedAt: Date;
+      title?: string;
+      message?: string;
+      type?: string;
+      isPinned?: boolean;
+      priority?: number;
+      targetCondition?: any;
+      validFrom?: Date;
+      validUntil?: Date;
+      isActive?: boolean;
+    }
+
+    const updateData: UpdateData = {
       updatedBy: new mongoose.Types.ObjectId(req.admin._id.toString()),
       updatedAt: new Date()
     };
@@ -370,11 +384,11 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
     if (validUntil) updateData.validUntil = new Date(validUntil);
     if (isActive !== undefined) updateData.isActive = isActive;
 
-    // お知らせを更新
+    // お知らせを更新（$setオペレータを明示的に使用）
     const updatedNotification = await NotificationModel.findByIdAndUpdate(
       notificationId,
-      updateData,
-      { new: true }
+      { $set: updateData },
+      { new: true, runValidators: true }
     );
 
     log.info('Notification updated', {

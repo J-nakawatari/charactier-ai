@@ -3,8 +3,18 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import log from '../utils/logger';
 import { UserModel } from '../models/UserModel';
 import { CharacterModel } from '../models/CharacterModel';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
+
+// Debug routes rate limiter
+const debugRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // Limit each IP to 50 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Debug endpoint to check authentication and cookies
 router.get('/auth-status', (req: Request, res: Response) => {
@@ -152,7 +162,7 @@ router.get('/auth-routes', (req: Request, res: Response) => {
 });
 
 // デバッグ用：親密度詳細情報取得
-router.get('/affinity-details/:userId', async (req: Request, res: Response): Promise<void> => {
+router.get('/affinity-details/:userId', debugRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
     

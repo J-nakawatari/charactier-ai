@@ -5,6 +5,11 @@ import path from 'path';
 // Define sensitive fields that should be sanitized
 const SENSITIVE_FIELDS = [
   'password',
+  'passwordStrength',
+  'newPassword',
+  'oldPassword',
+  'currentPassword',
+  'confirmPassword',
   'token',
   'accessToken',
   'refreshToken',
@@ -164,26 +169,62 @@ const logger = createLogger();
 // Helper functions for structured logging
 export const log = {
   debug: (message: string, meta?: any) => {
-    logger.debug(message, sanitizeData(meta));
+    // Double-check for password-related fields
+    const safeMeta = meta && typeof meta === 'object' ? 
+      Object.keys(meta).reduce((acc, key) => {
+        if (!SENSITIVE_FIELDS.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
+          acc[key] = meta[key];
+        }
+        return acc;
+      }, {} as any) : meta;
+    
+    logger.debug(message, sanitizeData(safeMeta));
   },
   
   info: (message: string, meta?: any) => {
-    logger.info(message, sanitizeData(meta));
+    // Double-check for password-related fields
+    const safeMeta = meta && typeof meta === 'object' ? 
+      Object.keys(meta).reduce((acc, key) => {
+        if (!SENSITIVE_FIELDS.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
+          acc[key] = meta[key];
+        }
+        return acc;
+      }, {} as any) : meta;
+    
+    logger.info(message, sanitizeData(safeMeta));
   },
   
   warn: (message: string, meta?: any) => {
-    logger.warn(message, sanitizeData(meta));
+    // Double-check for password-related fields
+    const safeMeta = meta && typeof meta === 'object' ? 
+      Object.keys(meta).reduce((acc, key) => {
+        if (!SENSITIVE_FIELDS.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
+          acc[key] = meta[key];
+        }
+        return acc;
+      }, {} as any) : meta;
+    
+    logger.warn(message, sanitizeData(safeMeta));
   },
   
   error: (message: string, error?: Error | any, meta?: any) => {
+    // Double-check for password-related fields
+    const safeMeta = meta && typeof meta === 'object' ? 
+      Object.keys(meta).reduce((acc, key) => {
+        if (!SENSITIVE_FIELDS.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
+          acc[key] = meta[key];
+        }
+        return acc;
+      }, {} as any) : meta;
+    
     const errorMeta = error instanceof Error ? {
       error: {
         message: error.message,
         stack: process.env.NODE_ENV === 'production' ? undefined : error.stack,
         name: error.name
       },
-      ...sanitizeData(meta)
-    } : sanitizeData({ error, ...meta });
+      ...sanitizeData(safeMeta)
+    } : sanitizeData({ error, ...safeMeta });
     
     logger.error(message, errorMeta);
   },
