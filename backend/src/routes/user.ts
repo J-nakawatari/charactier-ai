@@ -193,7 +193,8 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
           } : null,
         level: affinity.level || 0,
         experience: affinity.experience || 0,
-        experienceToNext: affinity.experienceToNext || 100,
+        experienceToNext: affinity.experienceToNext || 10,
+        maxExperience: 100, // 固定値（現在のレベルシステムでは常に100）
         emotionalState: affinity.emotionalState || 'neutral',
         relationshipType: affinity.relationshipType || 'stranger',
         trustLevel: affinity.trustLevel || 0,
@@ -204,7 +205,9 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
         currentStreak: affinity.currentStreak || 0,
         maxStreak: affinity.maxStreak || 0,
         unlockedRewards: affinity.unlockedRewards || [],
-        nextRewardLevel: affinity.nextRewardLevel || 10
+        unlockedImages: affinity.unlockedImages || [], // 解放済み画像のリスト
+        nextRewardLevel: affinity.nextRewardLevel || 10,
+        nextUnlockLevel: Math.floor((affinity.level || 0) / 10 + 1) * 10 // 次の画像解放レベル
         };
       }) : [],
       notifications: [], // TODO: 実装が必要
