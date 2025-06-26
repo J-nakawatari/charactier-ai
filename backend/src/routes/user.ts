@@ -55,6 +55,7 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
 // ダッシュボード情報取得
 router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    log.info('🚀 USER ROUTES DASHBOARD API CALLED');
     const userId = req.user?._id;
     if (!userId) {
       sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
@@ -80,20 +81,20 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
       user.affinities = [];
     }
     
-    // 親密度データが取得できない場合は、別のクエリで取得を試みる
-    if (!user.affinities || user.affinities.length === 0) {
-      log.info('No affinities in user object, trying separate query');
-      const userWithAffinities = await UserModel.findById(userId)
-        .select('affinities')
-        .populate('affinities.character', '_id name imageCharacterSelect imageChatAvatar')
-        .lean();
-      
-      if (userWithAffinities && userWithAffinities.affinities) {
-        log.info('Found affinities in separate query:', {
-          count: userWithAffinities.affinities.length
-        });
-        user.affinities = userWithAffinities.affinities;
-      }
+    // 親密度データを常に別のクエリで取得（populate含む）
+    log.info('Fetching affinities with populate');
+    const userWithAffinities = await UserModel.findById(userId)
+      .select('affinities')
+      .populate('affinities.character', '_id name imageCharacterSelect imageChatAvatar')
+      .lean();
+    
+    if (userWithAffinities && userWithAffinities.affinities) {
+      log.info('Found affinities in separate query:', {
+        count: userWithAffinities.affinities.length,
+        firstAffinity: userWithAffinities.affinities[0],
+        hasCharacterData: !!(userWithAffinities.affinities[0]?.character && typeof userWithAffinities.affinities[0].character === 'object')
+      });
+      user.affinities = userWithAffinities.affinities;
     }
 
     // 購入済みキャラクター取得
@@ -175,12 +176,21 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
         } : null,
         activeChats: activeChatsCount
       },
-      affinities: user.affinities ? user.affinities.map((affinity: any) => ({
-        character: affinity.character ? {
-          _id: affinity.character._id || affinity.character,
-          name: affinity.character.name || { ja: 'Unknown', en: 'Unknown' },
-          imageCharacterSelect: affinity.character.imageCharacterSelect || affinity.character.imageChatAvatar || '/uploads/placeholder.png'
-        } : null,
+      affinities: user.affinities ? user.affinities.map((affinity: any) => {
+        // デバッグ: affinity.characterの内容を確認
+        log.info('Processing affinity:', {
+          characterId: affinity.character?._id || affinity.character,
+          characterType: typeof affinity.character,
+          hasName: !!affinity.character?.name,
+          characterData: affinity.character
+        });
+        
+        return {
+          character: affinity.character ? {
+            _id: affinity.character._id || affinity.character,
+            name: affinity.character.name || { ja: 'Unknown', en: 'Unknown' },
+            imageCharacterSelect: affinity.character.imageCharacterSelect || affinity.character.imageChatAvatar || '/uploads/placeholder.png'
+          } : null,
         level: affinity.level || 0,
         experience: affinity.experience || 0,
         experienceToNext: affinity.experienceToNext || 100,
@@ -195,7 +205,8 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
         maxStreak: affinity.maxStreak || 0,
         unlockedRewards: affinity.unlockedRewards || [],
         nextRewardLevel: affinity.nextRewardLevel || 10
-      })) : [],
+        };
+      }) : [],
       notifications: [], // TODO: 実装が必要
       badges: [], // TODO: 実装が必要
       analytics: {
