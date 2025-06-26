@@ -71,6 +71,7 @@ import { requestLoggingMiddleware, securityAuditMiddleware } from './middleware/
 import { sendErrorResponse, ClientErrorCode } from './utils/errorResponse';
 import { ServerMonitor } from './monitoring/ServerMonitor';
 import { API_PREFIX } from './config/api';
+import { csrfProtection } from './services/csrfProtection';
 
 // PM2が環境変数を注入するため、dotenv.config()は不要
 // 開発環境の場合のみdotenvを使用（PM2を使わない場合）
@@ -829,6 +830,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Cookie parser設定
 app.use(cookieParser());
+
+// CSRF保護を適用（Stripe webhook後、他のルート前）
+app.use(csrfProtection);
 
 // Debug routes
 // 一時的に本番環境でも有効化（問題解決後は削除すること）
