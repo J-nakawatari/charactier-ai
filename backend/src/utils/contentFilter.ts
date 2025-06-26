@@ -3,6 +3,8 @@
  */
 
 import { createBlockedWordNotification } from './adminNotificationCreator';
+import { checkContentWithOpenAI, enhanceJapaneseModeration } from '../services/openaiModeration';
+import log from './logger';
 
 // 禁止用語リスト
 const BLOCKED_WORDS = {
@@ -37,6 +39,8 @@ export interface ContentFilterResult {
   detectedWord?: string;
   reason?: string;
   violationType?: 'blocked_word' | 'openai_moderation';
+  moderationCategories?: string[];
+  moderationScores?: Record<string, number>;
 }
 
 /**
@@ -68,7 +72,37 @@ export function checkBlockedWords(message: string, userId?: string, username?: s
 }
 
 /**
+ * OpenAI Moderation APIチェック
+ */
+export async function checkOpenAIModeration(message: string): Promise<ContentFilterResult> {
+  try {
+    // OpenAI Moderation APIでチェック
+    const moderationResult = await checkContentWithOpenAI(message);
+    
+    // 日本語特有のパターンでチェックを強化
+    const enhancedResult = enhanceJapaneseModeration(moderationResult, message);
+    
+    if (!enhancedResult.safe) {
+      return {
+        isBlocked: true,
+        reason: enhancedResult.message || 'メッセージに不適切な内容が含まれています',
+        violationType: 'openai_moderation',
+        moderationCategories: enhancedResult.categories,
+        moderationScores: enhancedResult.scores
+      };
+    }
+    
+    return { isBlocked: false };
+  } catch (error) {
+    log.error('OpenAI Moderation check failed', error);
+    // エラー時は安全側に倒す（通過させる）
+    return { isBlocked: false };
+  }
+}
+
+/**
  * メッセージバリデーション（統合チェック）
+ * 同期版（後方互換性のため残す）
  */
 export function validateMessage(message: string, userId?: string, username?: string): {
   allowed: boolean;
@@ -99,6 +133,39 @@ export function validateMessage(message: string, userId?: string, username?: str
       reason: blockedCheck.reason || 'メッセージに不適切な内容が含まれています',
       violationType: blockedCheck.violationType,
       detectedWord: blockedCheck.detectedWord
+    };
+  }
+  
+  return { allowed: true };
+}
+
+/**
+ * メッセージバリデーション（非同期版）
+ * OpenAI Moderation APIを含む完全なチェック
+ */
+export async function validateMessageAsync(message: string, userId?: string, username?: string): Promise<{
+  allowed: boolean;
+  reason?: string;
+  violationType?: string;
+  detectedWord?: string;
+  moderationCategories?: string[];
+  moderationScores?: Record<string, number>;
+}> {
+  // 1. 同期チェック（基本バリデーション + 禁止用語）
+  const syncResult = validateMessage(message, userId, username);
+  if (!syncResult.allowed) {
+    return syncResult;
+  }
+  
+  // 2. OpenAI Moderation APIチェック
+  const moderationResult = await checkOpenAIModeration(message);
+  if (moderationResult.isBlocked) {
+    return {
+      allowed: false,
+      reason: moderationResult.reason,
+      violationType: moderationResult.violationType,
+      moderationCategories: moderationResult.moderationCategories,
+      moderationScores: moderationResult.moderationScores
     };
   }
   

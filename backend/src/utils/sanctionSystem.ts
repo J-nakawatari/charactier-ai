@@ -23,7 +23,8 @@ export interface ViolationData {
   originalMessage: string;
   violationReason: string;
   detectedWords?: string[];
-  moderationCategories?: any;
+  moderationCategories?: string[];
+  moderationScores?: Record<string, number>;
   severity?: number;
   ipAddress?: string;
   userAgent?: string;
@@ -53,7 +54,8 @@ export async function recordViolation(violationData: ViolationData): Promise<IVi
     originalMessage,
     violationReason,
     detectedWords = [],
-    moderationCategories = null,
+    moderationCategories = [],
+    moderationScores = {},
     severity = 1,
     ipAddress = null,
     userAgent = null
@@ -66,6 +68,7 @@ export async function recordViolation(violationData: ViolationData): Promise<IVi
     reason: violationReason,
     detectedWord: detectedWords[0],
     moderationCategories,
+    moderationScores,
     severityLevel: severity,
     ipAddress,
     userAgent,
