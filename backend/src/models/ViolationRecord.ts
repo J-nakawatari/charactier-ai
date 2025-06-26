@@ -10,7 +10,8 @@ export interface IViolationRecord extends Document {
   userAgent: string;
   timestamp: Date;
   messageContent: string;
-  moderationCategories?: Map<string, boolean>;
+  moderationCategories?: string[];
+  moderationScores?: Record<string, number>;
   isResolved: boolean;
   resolvedBy?: mongoose.Types.ObjectId;
   resolvedAt?: Date;
@@ -73,8 +74,11 @@ const violationRecordSchema = new Schema<IViolationRecord>({
     maxlength: 2000
   },
   moderationCategories: {
-    type: Map,
-    of: Boolean,
+    type: [String],
+    default: []
+  },
+  moderationScores: {
+    type: Schema.Types.Mixed,
     default: {}
   },
   isResolved: {

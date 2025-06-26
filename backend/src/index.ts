@@ -398,16 +398,34 @@ if (missingEnvVars.length > 0) {
 connectMongoDB();
 
 // CORS設定（Webhookの前に設定）
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? (process.env.ALLOWED_ORIGINS || 'https://charactier-ai.com,https://www.charactier-ai.com').split(',')
+  : [
+      'http://localhost:3000', 
+      'http://localhost:3001',
+      'https://charactier-ai.com',
+      'https://www.charactier-ai.com'
+    ];
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000', 
-    'http://localhost:3001',
-    'https://charactier-ai.com',
-    'https://www.charactier-ai.com'
-  ],
+  origin: function (origin, callback) {
+    // origin が undefined の場合は同一オリジンリクエスト（Postman等も許可）
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      log.warn('CORS blocked request', {
+        origin,
+        allowedOrigins,
+        userAgent: this.headers?.['user-agent'],
+        ip: this.ip
+      });
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'x-auth-token', 'stripe-signature']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'x-auth-token', 'stripe-signature'],
+  maxAge: 86400 // プリフライトリクエストのキャッシュ時間（24時間）
 }));
 
 // エラーロギング用ミドルウェア（CORS後、認証前に設定）
@@ -2197,8 +2215,8 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
 
 
     // 🔥 禁止用語フィルタリング（制裁状態に関係なく先に実行）
-    const { validateMessage: tsValidateMessage } = await import('./utils/contentFilter');
-    const validation = tsValidateMessage(message.trim());
+    const { validateMessageAsync } = await import('./utils/contentFilter');
+    const validation = await validateMessageAsync(message.trim(), req.user._id, dbUser.name);
     if (!validation.allowed) {
       
       try {
@@ -2210,7 +2228,9 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
           violationReason: validation.reason || 'メッセージに不適切な内容が含まれています',
           detectedWords: validation.detectedWord ? [validation.detectedWord] : [],
           ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
-          userAgent: req.get('User-Agent') || 'unknown'
+          userAgent: req.get('User-Agent') || 'unknown',
+          moderationCategories: validation.moderationCategories,
+          moderationScores: validation.moderationScores
         });
         
         // 2. 制裁を適用
