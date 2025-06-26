@@ -2112,7 +2112,10 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
       affinity: {
         level: characterAffinity?.level || chatData.currentAffinity || 0,
         experience: characterAffinity?.experience || chatData.totalTokensUsed || 0,
-        mood: characterAffinity?.emotionalState || 'neutral'
+        mood: characterAffinity?.emotionalState || 'neutral',
+        // 経験値システムの追加フィールド
+        experienceToNext: characterAffinity?.experienceToNext || 10,
+        nextLevelExp: 1000 // 現在のレベルシステムでは固定値
       },
       unlockedGalleryImages: characterAffinity?.unlockedRewards || []
     };

@@ -108,7 +108,7 @@ export default function ChatPage() {
           affinity: {
             level: apiData.userState?.affinity?.level || 0,
             currentExp: apiData.userState?.affinity?.experience || 0,
-            nextLevelExp: 1000, // TODO: バックエンドから計算
+            nextLevelExp: apiData.userState?.affinity?.nextLevelExp || 1000, // バックエンドから取得
             unlockedIllustrations: apiData.userState?.unlockedGalleryImages || [],
             currentMood: apiData.userState?.affinity?.mood || 'neutral'
           },

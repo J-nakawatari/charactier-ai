@@ -113,12 +113,14 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
     let totalMessages = 0;
     let totalTokensUsed = 0;
     const characterMessageCount: { [key: string]: number } = {};
+    const characterTokensUsed: { [key: string]: number } = {}; // キャラクターごとのトークン使用量
     
     chats.forEach(chat => {
       totalMessages += chat.messages.length;
       totalTokensUsed += chat.totalTokensUsed;
       const charId = chat.characterId.toString();
       characterMessageCount[charId] = (characterMessageCount[charId] || 0) + chat.messages.length;
+      characterTokensUsed[charId] = (characterTokensUsed[charId] || 0) + chat.totalTokensUsed;
     });
 
     // お気に入りキャラクター（最も多くメッセージを送ったキャラクター）
@@ -185,6 +187,15 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
           characterData: affinity.character
         });
         
+        // キャラクターIDを取得
+        const charId = affinity.character?._id || affinity.character;
+        const charIdString = charId?.toString();
+        
+        // このキャラクターの実際のトークン使用量を経験値として使用
+        const actualExperience = charIdString && characterTokensUsed[charIdString] 
+          ? characterTokensUsed[charIdString] 
+          : (affinity.experience || 0);
+        
         return {
           character: affinity.character ? {
             _id: affinity.character._id || affinity.character,
@@ -192,9 +203,9 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
             imageCharacterSelect: affinity.character.imageCharacterSelect || affinity.character.imageChatAvatar || '/uploads/placeholder.png'
           } : null,
         level: affinity.level || 0,
-        experience: affinity.experience || 0,
+        experience: actualExperience, // 実際のトークン使用量を経験値として使用
         experienceToNext: affinity.experienceToNext || 10,
-        maxExperience: 100, // 固定値（現在のレベルシステムでは常に100）
+        maxExperience: 1000, // チャット画面と統一（固定値）
         emotionalState: affinity.emotionalState || 'neutral',
         relationshipType: affinity.relationshipType || 'stranger',
         trustLevel: affinity.trustLevel || 0,
