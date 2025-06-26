@@ -11,6 +11,7 @@ import { validate } from '../middleware/validation';
 import { authSchemas } from '../validation/schemas';
 import log from '../utils/logger';
 import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
+import { hashPassword, verifyPassword, needsRehash, validatePasswordStrength } from '../services/passwordHash';
 
 const router: Router = Router();
 
@@ -39,9 +40,17 @@ router.post('/register',
       return;
     }
 
-    // パスワードをハッシュ化
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // パスワード強度チェック
+    const passwordStrength = validatePasswordStrength(password);
+    if (!passwordStrength.isValid) {
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, {
+        errors: passwordStrength.errors
+      });
+      return;
+    }
+
+    // パスワードをハッシュ化（Argon2id）
+    const hashedPassword = await hashPassword(password);
 
     // メール認証トークンを生成
     const verificationToken = generateVerificationToken();
@@ -109,12 +118,24 @@ router.post('/login',
       return;
     }
 
-    // パスワードを確認
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    // パスワードを確認（Argon2id/bcrypt両対応）
+    const isValidPassword = await verifyPassword(password, user.password);
     if (!isValidPassword) {
       log.warn('Login attempt with invalid password', { email, userId: user._id.toString() });
       sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
       return;
+    }
+
+    // パスワードハッシュの移行が必要な場合
+    if (needsRehash(user.password)) {
+      try {
+        const newHash = await hashPassword(password);
+        await UserModel.findByIdAndUpdate(user._id, { password: newHash });
+        log.info('Password hash migrated to Argon2id', { userId: user._id.toString() });
+      } catch (migrationError) {
+        log.error('Password hash migration failed', migrationError);
+        // 移行に失敗してもログインは続行
+      }
     }
 
     // アクティブユーザーかチェック
