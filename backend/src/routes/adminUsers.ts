@@ -17,11 +17,13 @@ const adminRateLimit = createRateLimiter('admin');
 
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {
-  log.debug('Admin authentication check for users API', {
+  log.info('Admin authentication check for users API', {
     hasAdmin: !!req.admin,
     adminId: req.admin?._id?.toString(),
+    adminEmail: req.admin?.email,
     path: req.path,
-    originalUrl: req.originalUrl
+    originalUrl: req.originalUrl,
+    method: req.method
   });
 
   // 管理者パスなので req.admin をチェック
@@ -139,6 +141,15 @@ router.post('/:userId/reset-tokens',
   validate({ body: adminSchemas.updateUserBalance }),
   async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    log.info('Token reset request received', {
+      adminId: req.admin?._id,
+      adminRole: req.admin?.role,
+      hasAdmin: !!req.admin,
+      targetUserId: req.params.userId,
+      newBalance: req.body.newBalance,
+      path: req.originalUrl
+    });
+
     const { userId } = req.params;
     const { newBalance } = req.body;
 
