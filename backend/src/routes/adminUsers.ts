@@ -163,7 +163,7 @@ router.post('/:userId/reset-tokens',
       userId: req.params.userId, 
       previousBalance, 
       newBalance,
-      adminId: req.user?._id 
+      adminId: req.admin?._id 
     });
 
     res.json({
@@ -184,15 +184,16 @@ router.post('/:userId/reset-tokens',
 });
 
 // ユーザーのステータス変更（アクティブ/非アクティブ/停止）
-router.put('/:userId/status', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:userId/status', 
+  adminRateLimit, 
+  authenticateToken, 
+  authenticateAdmin,
+  validateObjectId('userId'),
+  validate({ body: adminSchemas.updateUserStatus }),
+  async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
     const { status } = req.body;
-
-    if (!['active', 'inactive', 'suspended'].includes(status)) {
-      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Invalid status value');
-      return;
-    }
 
     const user = await UserModel.findById(userId);
     if (!user) {
@@ -214,7 +215,7 @@ router.put('/:userId/status', adminRateLimit, authenticateToken, authenticateAdm
 
     await UserModel.findByIdAndUpdate(req.params.userId, updateData);
 
-    log.info('User status updated', { userId: req.params.userId, status, adminId: req.user?._id });
+    log.info('User status updated', { userId: req.params.userId, status, adminId: req.admin?._id });
 
     res.json({
       success: true,

@@ -226,6 +226,13 @@ export const adminSchemas = {
     enabled: Joi.boolean().required(),
     costPerInput: Joi.number().min(0).optional(),
     costPerOutput: Joi.number().min(0).optional()
+  }),
+
+  updateUserStatus: Joi.object({
+    status: Joi.string().valid('active', 'inactive', 'suspended').required().messages({
+      'any.required': 'ステータスの指定が必要です',
+      'any.only': '有効なステータスを指定してください'
+    })
   })
 };
 
