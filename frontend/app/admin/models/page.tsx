@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/contexts/ToastContext';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminFetch, adminPost } from '@/utils/admin-api';
 import { Settings, Cpu, DollarSign, RotateCcw, Info } from 'lucide-react';
 
 interface ModelInfo {
@@ -61,13 +61,7 @@ export default function ModelsPage() {
 
     setIsChanging(true);
     try {
-      const response = await adminFetch('/api/v1/admin/models/set-model', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ model: selectedModel })
-      });
+      const response = await adminPost('/api/v1/admin/models/set-model', { model: selectedModel });
 
       if (response.ok) {
         const data = await response.json();
