@@ -142,13 +142,15 @@ export default function NotificationDetailPage() {
   // 既読率計算
   const getReadRate = () => {
     if (!notification || notification.totalTargetUsers === 0) return 0;
-    return Math.round((notification.totalReads / notification.totalTargetUsers) * 100);
+    const rate = Math.round((notification.totalReads / notification.totalTargetUsers) * 100);
+    return Math.min(rate, 100); // 100%を超えないように制限
   };
 
   // 表示率計算
   const getViewRate = () => {
     if (!notification || notification.totalTargetUsers === 0) return 0;
-    return Math.round((notification.totalViews / notification.totalTargetUsers) * 100);
+    const rate = Math.round((notification.totalViews / notification.totalTargetUsers) * 100);
+    return Math.min(rate, 100); // 100%を超えないように制限
   };
 
   if (isLoading) {

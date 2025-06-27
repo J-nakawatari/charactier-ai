@@ -232,7 +232,8 @@ export default function NotificationsManagementPage() {
   // 既読率計算
   const getReadRate = (notification: Notification) => {
     if (notification.totalTargetUsers === 0) return 0;
-    return Math.round((notification.totalReads / notification.totalTargetUsers) * 100);
+    const rate = Math.round((notification.totalReads / notification.totalTargetUsers) * 100);
+    return Math.min(rate, 100); // 100%を超えないように制限
   };
 
   if (isLoading) {
