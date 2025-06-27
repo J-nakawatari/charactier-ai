@@ -158,7 +158,19 @@ router.post('/', adminRateLimit, authenticateToken, authenticateAdmin, async (re
 router.put('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    
+    // NoSQL injection防止: 許可されたフィールドのみを明示的に指定
+    const allowedFields = [
+      'name', 'tokens', 'price', 'bonusTokens', 'description', 
+      'isActive', 'validUntil', 'displayOrder', 'isRecommended'
+    ];
+
+    const updateData: any = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    }
 
     // tokenPerYenを再計算
     if (updateData.tokens && updateData.price) {
