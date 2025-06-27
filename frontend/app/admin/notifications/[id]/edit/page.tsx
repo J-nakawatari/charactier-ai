@@ -94,27 +94,30 @@ export default function EditNotificationPage() {
 
       const data = await response.json();
       console.log('取得したお知らせデータ:', data);
-      setNotification(data);
+      
+      // APIレスポンスから実際のnotificationデータを取得
+      const notificationData = data.notification || data;
+      setNotification(notificationData);
       
       // フォームデータに反映
       setFormData({
-        titleJa: data.title?.ja || '',
-        titleEn: data.title?.en || '',
-        messageJa: data.message?.ja || '',
-        messageEn: data.message?.en || '',
-        type: data.type || 'info',
-        isActive: data.isActive ?? true,
-        isPinned: data.isPinned ?? false,
-        priority: data.priority || 0,
-        targetType: data.targetCondition?.type || 'all',
-        validFrom: data.validFrom ? new Date(data.validFrom).toISOString().slice(0, 16) : '',
-        validUntil: data.validUntil ? new Date(data.validUntil).toISOString().slice(0, 16) : '',
-        userIds: data.targetCondition?.userIds?.join(',') || '',
-        minLevel: data.targetCondition?.minLevel || 0,
-        maxLevel: data.targetCondition?.maxLevel || 100,
-        hasPurchases: data.targetCondition?.hasPurchases || false,
-        registeredAfter: data.targetCondition?.registeredAfter ? new Date(data.targetCondition.registeredAfter).toISOString().slice(0, 10) : '',
-        registeredBefore: data.targetCondition?.registeredBefore ? new Date(data.targetCondition.registeredBefore).toISOString().slice(0, 10) : ''
+        titleJa: notificationData.title?.ja || '',
+        titleEn: notificationData.title?.en || '',
+        messageJa: notificationData.message?.ja || '',
+        messageEn: notificationData.message?.en || '',
+        type: notificationData.type || 'info',
+        isActive: notificationData.isActive ?? true,
+        isPinned: notificationData.isPinned ?? false,
+        priority: notificationData.priority || 0,
+        targetType: notificationData.targetCondition?.type || 'all',
+        validFrom: notificationData.validFrom ? new Date(notificationData.validFrom).toISOString().slice(0, 16) : '',
+        validUntil: notificationData.validUntil ? new Date(notificationData.validUntil).toISOString().slice(0, 16) : '',
+        userIds: notificationData.targetCondition?.userIds?.join(',') || '',
+        minLevel: notificationData.targetCondition?.minLevel || 0,
+        maxLevel: notificationData.targetCondition?.maxLevel || 100,
+        hasPurchases: notificationData.targetCondition?.hasPurchases || false,
+        registeredAfter: notificationData.targetCondition?.registeredAfter ? new Date(notificationData.targetCondition.registeredAfter).toISOString().slice(0, 10) : '',
+        registeredBefore: notificationData.targetCondition?.registeredBefore ? new Date(notificationData.targetCondition.registeredBefore).toISOString().slice(0, 10) : ''
       });
       
       setError(null);
