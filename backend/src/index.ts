@@ -2919,9 +2919,15 @@ const validateTokenPriceRatio = async (tokens: number, price: number): Promise<b
 
 
 // Stripe Price API endpoint
-app.get(`${API_PREFIX}/admin/stripe/price/:priceId`, authenticateToken, createRateLimiter('admin'), async (req: Request, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/stripe/price/:priceId`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   
-  if (!req.user) {
+  // 管理者認証チェック
+  if (!req.admin) {
+    log.warn('Admin access denied for stripe price API', { 
+      hasAdmin: !!req.admin,
+      hasUser: !!req.user,
+      path: req.originalUrl 
+    });
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }
@@ -3340,9 +3346,15 @@ app.get(`${API_PREFIX}/purchase/events/:sessionId`, async (req: Request, res: Re
 });
 
 // Stripe価格情報取得API（商品IDまたは価格IDに対応・管理者専用）
-app.get(`${API_PREFIX}/admin/stripe/product-price/:id`, authenticateToken, createRateLimiter('admin'), async (req: Request, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/stripe/product-price/:id`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   
-  if (!req.user) {
+  // 管理者認証チェック
+  if (!req.admin) {
+    log.warn('Admin access denied for stripe price API', { 
+      hasAdmin: !!req.admin,
+      hasUser: !!req.user,
+      path: req.originalUrl 
+    });
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }
