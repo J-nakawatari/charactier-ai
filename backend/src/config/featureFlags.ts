@@ -22,13 +22,7 @@ export interface FeatureFlags {
   LOG_UNKNOWN_FIELDS: boolean;
 }
 
-// デフォルト値
-const defaultFlags: FeatureFlags = {
-  SECURE_COOKIE_AUTH: false,
-  CSRF_SAMESITE_STRICT: false,
-  STRICT_JOI_VALIDATION: false,
-  LOG_UNKNOWN_FIELDS: false
-};
+// デフォルト値は getFeatureFlags() 内で直接設定
 
 // Cookie設定の型定義
 export interface CookieOptions {

@@ -111,7 +111,7 @@ router.get('/',
         createdAt: user.createdAt.toISOString() // createdAtフィールドも追加
     }));
 
-    console.log(`✅ Fetched ${formattedUsers.length} users for admin`);
+    log.info('Fetched users for admin', { count: formattedUsers.length });
 
     res.json({
       users: formattedUsers,
@@ -263,7 +263,7 @@ router.get('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (
       const UserTokenPack = require('../../../models/UserTokenPack');
       actualTokenBalance = await UserTokenPack.calculateUserTokenBalance(user._id);
     } catch (error) {
-      console.error('TokenPack calculation error:', error);
+      log.error('TokenPack calculation error', error);
     }
 
     res.json({

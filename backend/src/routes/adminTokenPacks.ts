@@ -87,7 +87,7 @@ router.get('/', adminRateLimit, authenticateToken, authenticateAdmin, async (req
     });
 
   } catch (error) {
-    console.error('❌ Error fetching admin token packs:', error);
+    log.error('Error fetching admin token packs', error);
     res.status(500).json({ error: 'トークンパック一覧の取得に失敗しました' });
   }
 });
@@ -235,7 +235,7 @@ router.get('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (
     res.json(tokenPack);
 
   } catch (error) {
-    console.error('❌ Error fetching token pack:', error);
+    log.error('Error fetching token pack', error);
     res.status(500).json({ error: 'トークンパックの取得に失敗しました' });
   }
 });
