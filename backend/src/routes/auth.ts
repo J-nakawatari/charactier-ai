@@ -1,4 +1,5 @@
 import type { AuthRequest } from '../types/express';
+import { generateEmailVerificationHTML } from '../utils/emailTemplates';
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -7,13 +8,14 @@ import { UserModel } from '../models/UserModel';
 import { AdminModel } from '../models/AdminModel';
 import { generateAccessToken, generateRefreshToken, authenticateToken } from '../middleware/auth';
 import { sendVerificationEmail, generateVerificationToken, isDisposableEmail } from '../utils/sendEmail';
-import { registrationRateLimit } from '../middleware/registrationLimit';
+import { registrationRateLimit, consumeRegistrationLimit } from '../middleware/registrationLimit';
 import { createRateLimiter } from '../middleware/rateLimiter';
 import { validate } from '../middleware/validation';
 import { authSchemas } from '../validation/schemas';
 import log from '../utils/logger';
 import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
 import { hashPassword, verifyPassword, needsRehash, validatePasswordStrength } from '../services/passwordHash';
+import { getCookieConfig, getRefreshCookieConfig, getFeatureFlags } from '../config/featureFlags';
 
 const router: Router = Router();
 
@@ -27,7 +29,9 @@ function getSafeLocale(locale: string | undefined): 'ja' | 'en' {
 }
 
 // Helper function to generate email verification HTML response
-function generateEmailVerificationHTML(
+// XSS脆弱性のため、この関数は使用しない（emailTemplates.tsを使用）
+/*
+function generateEmailVerificationHTML_DEPRECATED(
   type: 'success' | 'error' | 'already-verified' | 'expired' | 'server-error',
   locale: 'ja' | 'en',
   userData?: {
@@ -256,6 +260,7 @@ function generateEmailVerificationHTML(
 </body>
 </html>`;
 }
+*/
 
 // ユーザー登録（メール認証付き）
 router.post('/register', 
@@ -329,6 +334,12 @@ router.post('/register',
         });
       }
       // メール送信に失敗してもユーザー登録は続行（セキュリティのため）
+    }
+
+    // 登録成功時にレート制限をカウント
+    const clientIP = (req as any).clientIP;
+    if (clientIP) {
+      await consumeRegistrationLimit(clientIP);
     }
 
     // レスポンス（トークンは返さない）
@@ -412,26 +423,19 @@ router.post('/login',
       isSetupCompleteType: typeof user.isSetupComplete
     });
 
-    // Cookie設定（本番環境では secure: true にする）
+    // Feature Flag取得
+    const flags = getFeatureFlags();
+
+    // Cookie設定（Feature Flag対応）
     const isProduction = process.env.NODE_ENV === 'production';
     const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
-    const cookieOptions = {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'lax' as const : 'strict' as const,
-      maxAge: 24 * 60 * 60 * 1000, // 24時間
-      domain: cookieDomain,
-      path: '/'
-    };
+    const cookieOptions = getCookieConfig(isProduction);
+    const refreshCookieOptions = getRefreshCookieConfig(isProduction);
     
-    const refreshCookieOptions = {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'lax' as const : 'strict' as const,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
-      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
-      path: '/'
-    };
+    if (cookieDomain) {
+      cookieOptions.domain = cookieDomain;
+      refreshCookieOptions.domain = cookieDomain;
+    }
     
     // Cookieにトークンを設定（ユーザー用）
     res.cookie('userAccessToken', accessToken, cookieOptions);
@@ -448,14 +452,24 @@ router.post('/login',
     
     log.debug('Sending user response', { userId: user._id.toString(), isSetupComplete: userResponse.isSetupComplete });
     
-    res.json({
-      message: 'ログインしました',
-      user: userResponse,
-      tokens: {
-        accessToken,
-        refreshToken
-      }
-    });
+    // レスポンス（Feature Flag対応）
+    if (flags.SECURE_COOKIE_AUTH) {
+      // 新方式: トークンをレスポンスに含めない
+      res.json({
+        message: 'ログインしました',
+        user: userResponse
+      });
+    } else {
+      // 従来方式: トークンをレスポンスに含める
+      res.json({
+        message: 'ログインしました',
+        user: userResponse,
+        tokens: {
+          accessToken,
+          refreshToken
+        }
+      });
+    }
 
   } catch (error) {
     const errorCode = mapErrorToClientCode(error);
@@ -463,14 +477,30 @@ router.post('/login',
   }
 });
 
-// トークンリフレッシュ
+// トークンリフレッシュ（Feature Flag対応）
 router.post('/refresh', 
   authRateLimit,
   validate({ body: authSchemas.refreshToken }),
   async (req: Request, res: Response): Promise<void> => {
   try {
-    // Cookieまたはボディからリフレッシュトークンを取得（ユーザー用と管理者用の両方をチェック）
-    const refreshToken = req.cookies?.refreshToken || req.cookies?.userRefreshToken || req.cookies?.adminRefreshToken || req.body.refreshToken;
+    const flags = getFeatureFlags();
+    
+    // Feature Flagに基づいてリフレッシュトークンの取得方法を切り替え
+    let refreshToken: string | undefined;
+    
+    if (flags.SECURE_COOKIE_AUTH) {
+      // 新方式: HttpOnly Cookieから取得（ボディからは取得しない）
+      refreshToken = req.cookies?.refreshToken || req.cookies?.userRefreshToken || req.cookies?.adminRefreshToken;
+      
+      if (!refreshToken) {
+        log.warn('No refresh token found in cookies');
+        sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
+        return;
+      }
+    } else {
+      // 従来方式: Cookieまたはボディから取得
+      refreshToken = req.cookies?.refreshToken || req.cookies?.userRefreshToken || req.cookies?.adminRefreshToken || req.body.refreshToken;
+    }
 
     // リフレッシュトークンを検証
     const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
@@ -488,22 +518,30 @@ router.post('/refresh',
       // 管理者用の新しいアクセストークンを生成
       const newAccessToken = generateAccessToken(admin._id.toString());
       
-      // Cookie設定
+      // Cookie設定（Feature Flag対応）
       const isProduction = process.env.NODE_ENV === 'production';
+      const cookieOptions = getCookieConfig(isProduction);
       const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
-      const cookieOptions = {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'lax' as const : 'strict' as const,
-        maxAge: 24 * 60 * 60 * 1000 // 24時間
-      };
+      if (cookieDomain) {
+        cookieOptions.domain = cookieDomain;
+      }
       
-      // Cookieに新しいアクセストークンを設定
-      res.cookie('accessToken', newAccessToken, cookieOptions);
+      // 管理者用クッキー名で設定
+      res.cookie('adminAccessToken', newAccessToken, cookieOptions);
       
-      res.json({
-        accessToken: newAccessToken
-      });
+      // レスポンス（Feature Flag対応）
+      if (flags.SECURE_COOKIE_AUTH) {
+        // 新方式: トークンをレスポンスに含めない
+        res.json({
+          success: true,
+          message: 'トークンが更新されました'
+        });
+      } else {
+        // 従来方式: トークンをレスポンスに含める
+        res.json({
+          accessToken: newAccessToken
+        });
+      }
       return;
     }
 
@@ -518,23 +556,30 @@ router.post('/refresh',
     // 新しいアクセストークンを生成
     const newAccessToken = generateAccessToken(user._id.toString());
     
-    // Cookie設定
+    // Cookie設定（Feature Flag対応）
     const isProduction = process.env.NODE_ENV === 'production';
-    const cookieOptions = {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'lax' as const : 'strict' as const,
-      maxAge: 24 * 60 * 60 * 1000, // 24時間
-      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
-      path: '/'
-    };
+    const cookieOptions = getCookieConfig(isProduction);
+    const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
+    if (cookieDomain) {
+      cookieOptions.domain = cookieDomain;
+    }
     
-    // Cookieに新しいアクセストークンを設定
-    res.cookie('accessToken', newAccessToken, cookieOptions);
+    // ユーザー用クッキー名で設定
+    res.cookie('userAccessToken', newAccessToken, cookieOptions);
 
-    res.json({
-      accessToken: newAccessToken
-    });
+    // レスポンス（Feature Flag対応）
+    if (flags.SECURE_COOKIE_AUTH) {
+      // 新方式: トークンをレスポンスに含めない
+      res.json({
+        success: true,
+        message: 'トークンが更新されました'
+      });
+    } else {
+      // 従来方式: トークンをレスポンスに含める
+      res.json({
+        accessToken: newAccessToken
+      });
+    }
 
   } catch (error) {
     log.error('Token refresh error', error);
@@ -686,9 +731,26 @@ router.post('/user/setup-complete', generalRateLimit, authenticateToken, async (
 
 // メールアドレス認証
 router.get('/verify-email', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
-  const { token, locale = 'ja' } = req.query;
+  // URLパラメータを取得（SendGridのエンコーディング問題対策）
+  let { token, locale = 'ja' } = req.query;
+  
+  // もしlocaleがundefinedまたは文字列でない場合、req.pathから取得を試みる
+  // これは&amp;がエンコードされた場合の対策
+  if (!locale && req.originalUrl) {
+    const match = req.originalUrl.match(/locale=([^&]+)/);
+    if (match) {
+      locale = match[1];
+    }
+  }
   
   try {
+    // ログ出力でデバッグ
+    log.info('Email verification request', {
+      originalUrl: req.originalUrl,
+      queryParams: req.query,
+      token: token ? token.toString().substring(0, 10) + '...' : 'missing',
+      locale: locale
+    });
 
     if (!token || typeof token !== 'string') {
       // エラーページをHTMLで返す
@@ -733,25 +795,17 @@ router.get('/verify-email', generalRateLimit, async (req: Request, res: Response
     const accessToken = generateAccessToken(user._id.toString());
     const refreshToken = generateRefreshToken(user._id.toString());
     
-    // Cookie設定
+    // Cookie設定（Feature Flag対応）
     const isProduction = process.env.NODE_ENV === 'production';
-    const cookieOptions = {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'lax' as const : 'strict' as const,
-      maxAge: 24 * 60 * 60 * 1000, // 24時間
-      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
-      path: '/'
-    };
+    const cookieOptions = getCookieConfig(isProduction);
+    const refreshCookieOptions = getRefreshCookieConfig(isProduction);
     
-    const refreshCookieOptions = {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'lax' as const : 'strict' as const,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
-      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
-      path: '/'
-    };
+    // ドメインを追加（必要な場合）
+    const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
+    if (cookieDomain) {
+      cookieOptions.domain = cookieDomain;
+      refreshCookieOptions.domain = cookieDomain;
+    }
     
     // Cookieにトークンを設定（ユーザー用）
     res.cookie('userAccessToken', accessToken, cookieOptions);
@@ -772,12 +826,21 @@ router.get('/verify-email', generalRateLimit, async (req: Request, res: Response
     const frontendUrl = process.env.NODE_ENV === 'production' 
       ? 'https://charactier-ai.com' 
       : 'http://localhost:3000';
-    res.send(generateEmailVerificationHTML('success', getSafeLocale(locale as string), {
+    
+    const html = generateEmailVerificationHTML('success', getSafeLocale(locale as string), {
       userInfo,
       accessToken,
       refreshToken,
       frontendUrl
-    }));
+    });
+    
+    // デバッグ: 生成されたHTMLの一部をログ出力
+    log.debug('Generated email verification HTML preview', {
+      buttonUrlSnippet: html.match(/href="([^"]+)"/)?.[1] || 'not found',
+      redirectUrlSnippet: html.match(/window\.location\.href = '([^']+)'/)?.[1] || 'not found'
+    });
+    
+    res.send(html);
 
   } catch (error) {
     const errorCode = mapErrorToClientCode(error);
@@ -885,7 +948,10 @@ router.post('/admin/login', authRateLimit, async (req: Request, res: Response): 
     const accessToken = generateAccessToken(adminId.toString());
     const refreshToken = generateRefreshToken(adminId.toString());
     
-    // Cookie設定
+    // Feature Flag取得
+    const flags = getFeatureFlags();
+    
+    // Cookie設定（Feature Flag対応）
     const isProduction = process.env.NODE_ENV === 'production';
     const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
     
@@ -895,26 +961,17 @@ router.post('/admin/login', authRateLimit, async (req: Request, res: Response): 
       nodeEnv: process.env.NODE_ENV,
       envCookieDomain: process.env.COOKIE_DOMAIN,
       requestOrigin: req.headers.origin,
-      requestHost: req.headers.host
+      requestHost: req.headers.host,
+      secureAuth: flags.SECURE_COOKIE_AUTH
     });
     
-    const cookieOptions = {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'lax' as const : 'strict' as const,
-      maxAge: 24 * 60 * 60 * 1000, // 24時間
-      domain: cookieDomain,
-      path: '/'
-    };
+    const cookieOptions = getCookieConfig(isProduction);
+    const refreshCookieOptions = getRefreshCookieConfig(isProduction);
     
-    const refreshCookieOptions = {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'lax' as const : 'strict' as const,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
-      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
-      path: '/'
-    };
+    if (cookieDomain) {
+      cookieOptions.domain = cookieDomain;
+      refreshCookieOptions.domain = cookieDomain;
+    }
     
     // Cookieにトークンを設定（管理者用）
     res.cookie('adminAccessToken', accessToken, cookieOptions);
@@ -922,20 +979,36 @@ router.post('/admin/login', authRateLimit, async (req: Request, res: Response): 
 
     log.info('Admin login successful', { adminId: admin._id.toString(), email: admin.email, role: admin.role });
 
-    res.status(200).json({
-      message: '管理者ログインが成功しました',
-      tokens: {
-        accessToken,
-        refreshToken
-      },
-      user: {
-        _id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role,
-        isAdmin: true // フロントエンド互換性のため
-      }
-    });
+    // レスポンス（Feature Flag対応）
+    if (flags.SECURE_COOKIE_AUTH) {
+      // 新方式: トークンをレスポンスに含めない
+      res.status(200).json({
+        message: '管理者ログインが成功しました',
+        user: {
+          _id: admin._id,
+          name: admin.name,
+          email: admin.email,
+          role: admin.role,
+          isAdmin: true // フロントエンド互換性のため
+        }
+      });
+    } else {
+      // 従来方式: トークンをレスポンスに含める
+      res.status(200).json({
+        message: '管理者ログインが成功しました',
+        tokens: {
+          accessToken,
+          refreshToken
+        },
+        user: {
+          _id: admin._id,
+          name: admin.name,
+          email: admin.email,
+          role: admin.role,
+          isAdmin: true // フロントエンド互換性のため
+        }
+      });
+    }
 
   } catch (error) {
     const errorCode = mapErrorToClientCode(error);
@@ -1069,11 +1142,21 @@ router.post('/create-admin', authRateLimit, async (req: Request, res: Response):
   }
 });
 
-// 管理者トークンリフレッシュ
+// 管理者トークンリフレッシュ（Feature Flag対応）
 router.post('/admin/refresh', authRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
-    // 管理者用リフレッシュトークンをCookieから取得
-    const refreshToken = req.cookies?.adminRefreshToken;
+    const flags = getFeatureFlags();
+    
+    // Feature Flagに基づいてリフレッシュトークンの取得方法を切り替え
+    let refreshToken: string | undefined;
+    
+    if (flags.SECURE_COOKIE_AUTH) {
+      // 新方式: HttpOnly Cookieから取得（ボディからは取得しない）
+      refreshToken = req.cookies?.adminRefreshToken;
+    } else {
+      // 従来方式: Cookieまたはボディから取得
+      refreshToken = req.cookies?.adminRefreshToken || req.body.refreshToken;
+    }
 
     if (!refreshToken) {
       log.warn('Admin refresh token missing');
@@ -1105,26 +1188,33 @@ router.post('/admin/refresh', authRateLimit, async (req: Request, res: Response)
     // 新しいアクセストークンを生成
     const newAccessToken = generateAccessToken(admin._id.toString());
     
-    // Cookie設定
+    // Cookie設定（Feature Flag対応）
     const isProduction = process.env.NODE_ENV === 'production';
-    const cookieOptions = {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'lax' as const : 'strict' as const,
-      maxAge: 24 * 60 * 60 * 1000, // 24時間
-      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
-      path: '/'
-    };
+    const cookieOptions = getCookieConfig(isProduction);
+    const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
+    if (cookieDomain) {
+      cookieOptions.domain = cookieDomain;
+    }
     
     // Cookieに新しいアクセストークンを設定（管理者用）
     res.cookie('adminAccessToken', newAccessToken, cookieOptions);
     
     log.info('Admin token refreshed successfully', { adminId: admin._id.toString() });
     
-    res.json({
-      accessToken: newAccessToken,
-      message: '管理者トークンが更新されました'
-    });
+    // レスポンス（Feature Flag対応）
+    if (flags.SECURE_COOKIE_AUTH) {
+      // 新方式: トークンをレスポンスに含めない
+      res.json({
+        success: true,
+        message: '管理者トークンが更新されました'
+      });
+    } else {
+      // 従来方式: トークンをレスポンスに含める
+      res.json({
+        accessToken: newAccessToken,
+        message: '管理者トークンが更新されました'
+      });
+    }
 
   } catch (error) {
     log.error('Admin token refresh error', error);

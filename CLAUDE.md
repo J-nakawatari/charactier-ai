@@ -256,7 +256,7 @@ Nginx (SSL終端) →
 - `/frontend/app/[locale]/setup/page.tsx` - セットアップページ
 - `/frontend/utils/auth.ts` - 認証ユーティリティ
 
-## 最近のセキュリティ改善（2025-06-26）
+## 最近のセキュリティ改善（2025-06-27更新）
 
 ### 実装済みのセキュリティ対策
 1. **CORS設定**: 本番ドメインのみに制限
@@ -268,10 +268,32 @@ Nginx (SSL終端) →
 7. **レート制限**: 全APIエンドポイントに適用
 8. **NoSQLインジェクション対策**: $eq演算子とフィールドホワイトリスト
 9. **正規表現インジェクション対策**: escapeRegex関数でReDoS防止
+10. **CSRF保護**: ダブルサブミットクッキーパターンで実装済み
+11. **XSS対策強化**（2025-06-27）: 
+    - メール認証HTMLをHandlebarsテンプレート化
+    - チャットメッセージのサニタイズ（sanitize-html）
+    - 既存データのマイグレーション: `npm run xss:migrate`
 
-### 破壊的変更のため保留中
-- CSRF保護（クライアント側の変更が必要）
-- より厳格なHTMLサニタイゼーション
+### 2025-06-27 セキュリティ強化完了
+- **JWT保存方式の改善**: Feature Flag（SECURE_COOKIE_AUTH）で段階的移行
+- **CSRF SameSite Strict**: Feature Flag（CSRF_SAMESITE_STRICT）で制御
+- **Joi検証の厳格化**: Feature Flag（STRICT_JOI_VALIDATION）で制御
+- **セキュリティテストCI統合**: GitHub Actionsで自動実行
+
+### Feature Flags設定
+```bash
+# JWT保存方式 (true: HttpOnly Cookie, false: LocalStorage)
+FEATURE_SECURE_COOKIE_AUTH=false
+
+# CSRF SameSite設定 (true: strict, false: lax)
+FEATURE_CSRF_SAMESITE_STRICT=false
+
+# Joi検証強化 (true: 厳格モード, false: 従来モード)
+FEATURE_STRICT_JOI_VALIDATION=false
+
+# 不明フィールドの警告ログ (true: 有効, false: 無効)
+FEATURE_LOG_UNKNOWN_FIELDS=false
+```
 
 ## トラブルシューティング
 

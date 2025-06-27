@@ -84,3 +84,24 @@ uploads/images/*
 
 # Archived files
 _archived/
+
+# ----------------------
+# Security related files
+# ----------------------
+# Security test files
+backend/src/tests/security-tests.ts
+backend/test-*.js
+backend/scripts/*_check.sh
+backend/scripts/test-*.ts
+
+# Security documentation with sensitive details
+docs/security-*.md
+!docs/security-headers.md  # Keep general security headers doc
+docs/load-test-*.md
+
+# Deployment scripts
+deploy-*.sh
+
+# Test scripts with hardcoded credentials
+scripts/test-*.js
+scripts/test-*.sh

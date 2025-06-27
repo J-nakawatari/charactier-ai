@@ -18,6 +18,7 @@ import { AdminModel, IAdmin } from './models/AdminModel';
 import { ChatModel, IChat, IMessage } from './models/ChatModel';
 import { CharacterModel, ICharacter } from './models/CharacterModel';
 import { PurchaseHistoryModel } from './models/PurchaseHistoryModel';
+import { sanitizeChatMessage } from './utils/htmlSanitizer';
 import { NotificationModel } from './models/NotificationModel';
 import { UserNotificationReadStatusModel } from './models/UserNotificationReadStatusModel';
 import { authenticateToken, AuthRequest, isModerator, hasWritePermission } from './middleware/auth';
@@ -832,6 +833,21 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Cookie parser設定
 app.use(cookieParser());
 
+// HTMLエンコードされたURLパラメータを修正するミドルウェア
+// SendGridのテンプレートで&amp;にエンコードされる問題に対処
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.originalUrl && req.originalUrl.includes('&amp;')) {
+    const correctedUrl = req.originalUrl.replace(/&amp;/g, '&');
+    log.info('Correcting HTML-encoded URL', {
+      originalUrl: req.originalUrl,
+      correctedUrl: correctedUrl
+    });
+    // 修正されたURLにリダイレクト
+    return res.redirect(correctedUrl);
+  }
+  next();
+});
+
 // CSRF保護を適用（Stripe webhook後、他のルート前）
 app.use(csrfProtection);
 
@@ -882,6 +898,7 @@ app.get('/api/auth/verify-email', (req: Request, res: Response) => {
   res.redirect(301, `${API_PREFIX}/auth/verify-email?token=${token}&locale=${locale}`);
 });
 
+
 // ユーザールート
 app.use(`${API_PREFIX}/user`, userRoutes);
 
@@ -896,6 +913,10 @@ app.use(`${API_PREFIX}/admin/system-settings`, systemSettingsRoutes);
 
 // システム監視ルート（管理者のみ）
 app.use(`${API_PREFIX}/admin/system`, systemRoutes);
+
+// Feature Flagルート（公開）
+import featureFlagsRoutes from './routes/featureFlags';
+app.use(`${API_PREFIX}/feature-flags`, featureFlagsRoutes);
 
 // 管理者ルート - その他
 import adminUsersRoutes from './routes/adminUsers';
@@ -2395,7 +2416,7 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
         const userMsg: IMessage = {
           _id: userMessage._id,
           role: 'user',
-          content: userMessage.content,
+          content: sanitizeChatMessage(userMessage.content), // XSS対策: HTMLをサニタイズ
           timestamp: new Date(), // 現在時刻を直接使用
           tokensUsed: 0
         };
@@ -2403,7 +2424,7 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
         const assistantMsg: IMessage = {
           _id: assistantMessage._id,
           role: 'assistant',
-          content: assistantMessage.content,
+          content: sanitizeChatMessage(assistantMessage.content), // XSS対策: HTMLをサニタイズ
           timestamp: new Date(), // 現在時刻を直接使用
           tokensUsed: aiResponse.tokensUsed,
           metadata: {
@@ -2703,8 +2724,14 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
         }
 
         res.json({
-          userMessage,
-          aiResponse: assistantMessage,
+          userMessage: {
+            ...userMessage,
+            content: sanitizeChatMessage(userMessage.content) // XSS対策: レスポンスもサニタイズ
+          },
+          aiResponse: {
+            ...assistantMessage,
+            content: sanitizeChatMessage(assistantMessage.content) // XSS対策: レスポンスもサニタイズ
+          },
           affinity: {
             characterId,
             level: newAffinity,
@@ -7065,3 +7092,6 @@ app.listen(PORT, async () => {
   // 💱 初回起動時に為替レートを初期化
   await initializeExchangeRate();
 });
+
+// テスト用にエクスポート
+export { app };

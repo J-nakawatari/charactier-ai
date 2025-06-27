@@ -7,7 +7,7 @@ import { Users, Search, Filter } from 'lucide-react';
 import CharacterGrid from '@/components/characters/CharacterGrid';
 import CharacterFilters from '@/components/characters/CharacterFilters';
 import UserSidebar from '@/components/user/UserSidebar';
-import { getAuthHeaders } from '@/utils/auth';
+import { getAuthHeadersSync } from '@/utils/auth';
 import { handleFetchError } from '@/utils/errorHandler';
 
 interface Character {
@@ -62,7 +62,7 @@ function CharactersPageContent({
     try {
       // APIを再度有効化
       const response = await fetch('/api/v1/user/profile', {
-        headers: getAuthHeaders(),
+        headers: getAuthHeadersSync(),
       });
       
       if (response.ok) {
@@ -123,7 +123,7 @@ function CharactersPageContent({
 
       const response = await fetch(`/api/v1/characters?${queryParams}`, {
         headers: {
-          ...getAuthHeaders(),
+          ...getAuthHeadersSync(),
           'Cache-Control': 'no-store'
         },
         cache: 'no-store'

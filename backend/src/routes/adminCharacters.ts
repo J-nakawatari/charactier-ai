@@ -485,7 +485,6 @@ router.post('/upload/image', uploadRateLimit, authenticateToken, uploadImage.sin
       hasAdmin: !!req.admin,
       adminRole: req.admin?.role,
       adminId: req.admin?._id,
-      hasUser: !!req.user,
       path: req.path
     });
     
@@ -493,7 +492,7 @@ router.post('/upload/image', uploadRateLimit, authenticateToken, uploadImage.sin
     if (!hasWritePermission(req)) {
       log.warn('Image upload permission denied', {
         adminRole: req.admin?.role,
-        userId: req.user?._id
+        adminId: req.admin?._id
       });
       sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Only super admin can upload images');
       return;

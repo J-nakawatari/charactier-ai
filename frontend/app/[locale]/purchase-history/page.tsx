@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { getAuthHeaders } from '@/utils/auth';
+import { getAuthHeadersSync } from '@/utils/auth';
 import { ShoppingCart, Calendar, CreditCard, Package, Filter, Download, RefreshCw } from 'lucide-react';
 import UserSidebar from '@/components/user/UserSidebar';
 
@@ -50,7 +50,7 @@ export default function PurchaseHistoryPage() {
       try {
         setIsLoading(true);
         const response = await fetch('/api/v1/user/purchase-history', {
-          headers: getAuthHeaders(),
+          headers: getAuthHeadersSync(),
         });
 
         if (!response.ok) {

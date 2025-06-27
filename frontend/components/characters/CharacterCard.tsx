@@ -13,7 +13,7 @@ import { BaseCharacter } from '../../types/common';
 import { API_BASE_URL } from '@/libs/constants';
 import { getSafeImageUrl } from '@/utils/imageUtils';
 import { getPersonalityPresetLabel, getPersonalityTagLabel } from '@/lib/characterConstants';
-import { getAuthHeaders } from '@/utils/auth';
+import { getAuthHeadersSync } from '@/utils/auth';
 
 interface Character extends BaseCharacter {
   affinityStats?: {
@@ -73,7 +73,7 @@ export default function CharacterCard({
       console.log('🛒 キャラクター購入リクエスト開始:', character._id);
 
       // キャラクター購入のチェックアウトセッション作成（直接バックエンドアクセス）
-      const authHeaders = getAuthHeaders();
+      const authHeaders = getAuthHeadersSync();
       const headers: Record<string, string> = {
         ...(authHeaders as Record<string, string>),
         ...(token && { 'Authorization': `Bearer ${token}` })

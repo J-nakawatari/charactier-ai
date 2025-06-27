@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { getAuthHeaders } from '@/utils/auth';
+import { getAuthHeadersSync } from '@/utils/auth';
 import { 
   MessageSquare, 
   Database, 
@@ -94,7 +94,7 @@ export default function ChatDiagnosticsPage() {
       setError(null);
       
       const response = await fetch(`/api/v1/debug/chat-diagnostics/${characterId}`, {
-        headers: getAuthHeaders()
+        headers: getAuthHeadersSync()
       });
       
       if (!response.ok) {

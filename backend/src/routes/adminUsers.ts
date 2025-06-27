@@ -17,20 +17,19 @@ const adminRateLimit = createRateLimiter('admin');
 
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {
-  log.debug('Admin authentication check for users API', {
+  log.info('Admin authentication check for users API', {
     hasAdmin: !!req.admin,
-    hasUser: !!req.user,
     adminId: req.admin?._id?.toString(),
-    userId: req.user?._id?.toString(),
+    adminEmail: req.admin?.email,
     path: req.path,
-    originalUrl: req.originalUrl
+    originalUrl: req.originalUrl,
+    method: req.method
   });
 
   // 管理者パスなので req.admin をチェック
   if (!req.admin) {
     log.warn('Admin access denied - no admin in request', { 
       hasAdmin: !!req.admin,
-      hasUser: !!req.user,
       path: req.originalUrl 
     });
     sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
@@ -142,6 +141,15 @@ router.post('/:userId/reset-tokens',
   validate({ body: adminSchemas.updateUserBalance }),
   async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    log.info('Token reset request received', {
+      adminId: req.admin?._id,
+      adminRole: req.admin?.role,
+      hasAdmin: !!req.admin,
+      targetUserId: req.params.userId,
+      newBalance: req.body.newBalance,
+      path: req.originalUrl
+    });
+
     const { userId } = req.params;
     const { newBalance } = req.body;
 
@@ -163,7 +171,7 @@ router.post('/:userId/reset-tokens',
       userId: req.params.userId, 
       previousBalance, 
       newBalance,
-      adminId: req.user?._id 
+      adminId: req.admin?._id 
     });
 
     res.json({
@@ -184,15 +192,16 @@ router.post('/:userId/reset-tokens',
 });
 
 // ユーザーのステータス変更（アクティブ/非アクティブ/停止）
-router.put('/:userId/status', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:userId/status', 
+  adminRateLimit, 
+  authenticateToken, 
+  authenticateAdmin,
+  validateObjectId('userId'),
+  validate({ body: adminSchemas.updateUserStatus }),
+  async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
     const { status } = req.body;
-
-    if (!['active', 'inactive', 'suspended'].includes(status)) {
-      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Invalid status value');
-      return;
-    }
 
     const user = await UserModel.findById(userId);
     if (!user) {
@@ -214,7 +223,7 @@ router.put('/:userId/status', adminRateLimit, authenticateToken, authenticateAdm
 
     await UserModel.findByIdAndUpdate(req.params.userId, updateData);
 
-    log.info('User status updated', { userId: req.params.userId, status, adminId: req.user?._id });
+    log.info('User status updated', { userId: req.params.userId, status, adminId: req.admin?._id });
 
     res.json({
       success: true,

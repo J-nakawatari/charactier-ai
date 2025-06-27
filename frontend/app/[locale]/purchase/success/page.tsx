@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, ArrowLeft, Coins } from 'lucide-react';
-import { getAuthHeaders } from '@/utils/auth';
+import { getAuthHeadersSync } from '@/utils/auth';
 
 function PurchaseSuccessContent() {
   const searchParams = useSearchParams();
@@ -32,7 +32,7 @@ function PurchaseSuccessContent() {
       
       // 最新のユーザー情報を取得
       const userResponse = await fetch('/api/v1/auth/user', {
-        headers: getAuthHeaders()
+        headers: getAuthHeadersSync()
       });
       
       if (!userResponse.ok) {
@@ -45,7 +45,7 @@ function PurchaseSuccessContent() {
       // 購入履歴から最新の購入情報を取得
       try {
         const historyResponse = await fetch('/api/v1/user/purchase-history', {
-          headers: getAuthHeaders()
+          headers: getAuthHeadersSync()
         });
         
         if (historyResponse.ok) {
@@ -79,7 +79,7 @@ function PurchaseSuccessContent() {
                 if (characterId) {
                   try {
                     const characterResponse = await fetch(`/api/v1/characters/${characterId}`, {
-                      headers: getAuthHeaders()
+                      headers: getAuthHeadersSync()
                     });
                     
                     if (characterResponse.ok) {
