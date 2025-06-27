@@ -41,7 +41,10 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
   console.log('AffinitySection received:', { affinities, length: affinities?.length || 0 });
   
   const getProgressPercentage = (experience: number, maxExperience: number) => {
-    return maxExperience > 0 ? (experience / maxExperience) * 100 : 0;
+    if (maxExperience <= 0) return 0;
+    const percentage = (experience / maxExperience) * 100;
+    // 100%を超えないように制限
+    return Math.min(percentage, 100);
   };
 
   const isUnlockAvailable = (level: number, nextUnlockLevel: number, unlockedImages: string[]) => {
