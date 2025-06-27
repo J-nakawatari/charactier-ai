@@ -16,6 +16,17 @@ Handlebars.registerHelper('escapeHtml', (str: string) => {
     .replace(/\//g, '&#x2F;');
 });
 
+// URL用の安全なヘルパー（スラッシュをエスケープしない）
+Handlebars.registerHelper('escapeUrl', (url: string) => {
+  if (typeof url !== 'string') return '';
+  // URLの基本的な検証
+  if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+    return '';
+  }
+  // URLエンコーディングは不要（既に適切な形式のURL）
+  return url;
+});
+
 // JSON を安全に文字列化するヘルパー
 Handlebars.registerHelper('safeJson', (obj: any) => {
   if (!obj) return '{}';
@@ -120,7 +131,7 @@ const emailVerificationTemplate = Handlebars.compile(`<!DOCTYPE html>
     
     // リダイレクト処理
     window.onload = function() {
-      const redirectUrl = '{{escapeHtml redirectUrl}}';
+      const redirectUrl = '{{escapeUrl redirectUrl}}';
       if (redirectUrl) {
         setTimeout(function() {
           window.location.href = redirectUrl;
@@ -150,7 +161,7 @@ const emailVerificationTemplate = Handlebars.compile(`<!DOCTYPE html>
     <h1>{{escapeHtml title}}</h1>
     <p>{{escapeHtml message}}</p>
     {{#if buttonUrl}}
-    <a href="{{escapeHtml buttonUrl}}" class="button">{{escapeHtml buttonText}}</a>
+    <a href="{{escapeUrl buttonUrl}}" class="button">{{escapeHtml buttonText}}</a>
     {{/if}}
     {{#if showRedirectMessage}}
     <p class="redirect-message">{{escapeHtml redirectMessage}}</p>

@@ -793,12 +793,21 @@ router.get('/verify-email', generalRateLimit, async (req: Request, res: Response
     const frontendUrl = process.env.NODE_ENV === 'production' 
       ? 'https://charactier-ai.com' 
       : 'http://localhost:3000';
-    res.send(generateEmailVerificationHTML('success', getSafeLocale(locale as string), {
+    
+    const html = generateEmailVerificationHTML('success', getSafeLocale(locale as string), {
       userInfo,
       accessToken,
       refreshToken,
       frontendUrl
-    }));
+    });
+    
+    // デバッグ: 生成されたHTMLの一部をログ出力
+    log.debug('Generated email verification HTML preview', {
+      buttonUrlSnippet: html.match(/href="([^"]+)"/)?.[1] || 'not found',
+      redirectUrlSnippet: html.match(/window\.location\.href = '([^']+)'/)?.[1] || 'not found'
+    });
+    
+    res.send(html);
 
   } catch (error) {
     const errorCode = mapErrorToClientCode(error);
