@@ -1,7 +1,7 @@
 /**
  * チャット履歴のページネーション管理ユーティリティ
  */
-import { getAuthHeaders } from './auth';
+import { getAuthHeadersSync } from './auth';
 
 export interface PaginationState {
   currentPage: number;
@@ -59,7 +59,7 @@ export class ChatPaginationService {
     
     try {
       const response = await fetch(`/api/v1/chats/${this.characterId}?page=1&limit=${this.messagesPerPage}`, {
-        headers: getAuthHeaders()
+        headers: getAuthHeadersSync()
       });
 
       if (!response.ok) {
@@ -101,7 +101,7 @@ export class ChatPaginationService {
       const response = await fetch(
         `/api/chats/${this.characterId}?page=${nextPage}&limit=${this.messagesPerPage}`,
         {
-          headers: getAuthHeaders()
+          headers: getAuthHeadersSync()
         }
       );
 

@@ -19,7 +19,7 @@ import AdvancedChatIndicators from './AdvancedChatIndicators';
 import { useRealtimeChat, useTypingDebounce, useChatConnectionStatus } from '@/hooks/useRealtimeChat';
 import { useAffinityStore } from '@/store/affinityStore';
 import { getMoodBackgroundGradient } from '@/utils/moodUtils';
-import { getAuthHeaders } from '@/utils/auth';
+import { getAuthHeadersSync } from '@/utils/auth';
 import { getSafeImageUrl } from '@/utils/imageUtils';
 import { validateMessageBeforeSend } from '@/utils/contentFilter';
 import * as gtag from '@/lib/gtag';
@@ -191,7 +191,7 @@ export const ChatLayout = memo(function ChatLayout({
     try {
       // TODO: 適切なユーザー情報取得APIに変更
       const response = await fetch('/api/v1/user/profile', {
-        headers: getAuthHeaders()
+        headers: getAuthHeadersSync()
       });
       if (response.ok) {
         const userData = await response.json();

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Coins, AlertTriangle, Plus, Info } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { getAuthHeaders, getCurrentUser } from '@/utils/auth';
+import { getAuthHeadersSync, getCurrentUser } from '@/utils/auth';
 
 interface TokenBarProps {
   lastMessageCost: number;

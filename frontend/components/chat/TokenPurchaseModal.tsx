@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Coins, Zap, CreditCard, Loader2 } from 'lucide-react';
-import { getCurrentUser, getAuthHeaders } from '@/utils/auth';
+import { getCurrentUser, getAuthHeadersSync } from '@/utils/auth';
 import { useLocale } from '@/hooks/useLocale';
 import { PriceDisplay } from '@/components/common/PriceDisplay';
 import { LocalizedText } from '@/components/common/LocalizedText';
@@ -56,7 +56,7 @@ export function TokenPurchaseModal({
       setLoading(true);
       
       // 認証ヘッダーを取得
-      const headers = getAuthHeaders();
+      const headers = getAuthHeadersSync();
       
       const response = await fetch('/api/v1/token-packs?isActive=true', {
         headers
@@ -91,7 +91,7 @@ export function TokenPurchaseModal({
       // Stripe Checkout Session作成
       const response = await fetch('/api/v1/purchase/create-checkout-session', {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: getAuthHeadersSync(),
         body: JSON.stringify({ 
           priceId: pack.priceId,
           userId: getCurrentUser()?._id

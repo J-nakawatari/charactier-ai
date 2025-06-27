@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ChatLayout } from '@/components/chat/ChatLayout';
-import { getAuthHeaders, getCurrentUser, isDevelopment } from '@/utils/auth';
+import { getAuthHeadersSync, getCurrentUser, isDevelopment } from '@/utils/auth';
 import { handleApiError, formatViolationMessage, getSanctionSeverity } from '@/utils/errorHandler';
 import { useToast } from '@/contexts/ToastContext';
 import { validateMessageBeforeSend } from '@/utils/contentFilter';
@@ -72,7 +72,7 @@ export default function ChatPage() {
         // 実際のAPI呼び出し
         const response = await fetch(`/api/v1/chats/${characterId}?locale=${locale}`, {
           method: 'GET',
-          headers: getAuthHeaders()
+          headers: getAuthHeadersSync()
         });
         
         if (!response.ok) {
@@ -250,7 +250,7 @@ export default function ChatPage() {
       // API呼び出し
       const response = await fetch(`/api/v1/chats/${characterId}/messages`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: getAuthHeadersSync(),
         body: JSON.stringify({
           message: message,
           sessionId: `session-${Date.now()}`

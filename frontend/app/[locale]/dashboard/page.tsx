@@ -11,7 +11,7 @@ import RecentChatHistory from '@/components/user/RecentChatHistory';
 import PurchaseHistorySummary from '@/components/user/PurchaseHistorySummary';
 import BadgeGallery from '@/components/user/BadgeGallery';
 import AnalyticsCharts from '@/components/user/AnalyticsCharts';
-import { getAuthHeaders } from '@/utils/auth';
+import { getAuthHeadersSync } from '@/utils/auth';
 // 将来実装用コンポーネント（現在は非表示）
 // import EnhancedAnalyticsSection from '@/components/future-features/EnhancedAnalyticsSection';
 // import AchievementSystem from '@/components/future-features/AchievementSystem';
@@ -55,7 +55,7 @@ export default function DashboardPage() {
         setIsLoading(true);
         
         const response = await fetch('/api/v1/user/dashboard', {
-          headers: getAuthHeaders()
+          headers: getAuthHeadersSync()
         });
 
         if (!response.ok) {
