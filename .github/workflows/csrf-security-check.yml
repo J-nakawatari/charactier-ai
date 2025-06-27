@@ -22,7 +22,9 @@ jobs:
     
     - name: Install dependencies
       working-directory: ./backend
-      run: npm ci
+      run: |
+        # npm ciが失敗する場合はnpm installを使用
+        npm ci || npm install
     
     - name: Install Jest and testing dependencies
       working-directory: ./backend
@@ -32,8 +34,19 @@ jobs:
     - name: Run CSRF Security Check
       working-directory: ./backend
       run: |
+        # デバッグ情報
+        echo "Current directory: $(pwd)"
+        echo "Files in scripts directory:"
+        ls -la scripts/
+        
+        # スクリプトの実行
         chmod +x scripts/csrf_check.sh
-        ./scripts/csrf_check.sh
+        ./scripts/csrf_check.sh || {
+          echo "Test failed. Checking environment..."
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          exit 1
+        }
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
