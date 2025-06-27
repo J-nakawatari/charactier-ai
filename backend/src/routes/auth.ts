@@ -565,8 +565,8 @@ router.post('/refresh',
 
 // ユーザープロフィール更新
 router.put('/user/profile', 
-  authenticateToken,
   generalRateLimit,
+  authenticateToken,
   validate({ body: authSchemas.updateProfile }),
   async (req: Request, res: Response): Promise<void> => {
   try {
@@ -1023,7 +1023,7 @@ router.post('/admin/logout', generalRateLimit, async (req: Request, res: Respons
 });
 
 // 管理者作成（開発用）
-router.post('/create-admin', async (req: Request, res: Response): Promise<void> => {
+router.post('/create-admin', authRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     const adminEmail = 'newadmin@charactier.ai';
     const adminPassword = 'NewSecureAdmin2024';
@@ -1070,7 +1070,7 @@ router.post('/create-admin', async (req: Request, res: Response): Promise<void> 
 });
 
 // 管理者トークンリフレッシュ
-router.post('/admin/refresh', async (req: Request, res: Response): Promise<void> => {
+router.post('/admin/refresh', authRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     // 管理者用リフレッシュトークンをCookieから取得
     const refreshToken = req.cookies?.adminRefreshToken;
