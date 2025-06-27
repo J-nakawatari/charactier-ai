@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { ArrowLeft, User, Mail, Lock, Shield } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminFetch, adminPost } from '@/utils/admin-api';
 
 export default function CreateAdminPage() {
   const router = useRouter();
@@ -74,17 +74,11 @@ export default function CreateAdminPage() {
     try {
       setIsLoading(true);
       
-      const response = await adminFetch(`${API_BASE_URL}/api/v1/admin/create-admin`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          password: formData.password,
-          role: formData.role
-        })
+      const response = await adminPost(`${API_BASE_URL}/api/v1/admin/create-admin`, {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        role: formData.role
       });
 
       const data = await response.json();

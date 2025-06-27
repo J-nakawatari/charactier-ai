@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { ensureUserNameString } from '@/utils/userUtils';
 import { API_BASE_URL } from '@/lib/api-config';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminFetch, adminDelete } from '@/utils/admin-api';
 
 // Inline type definitions
 interface User {
@@ -203,12 +203,7 @@ export default function UserDetailPage() {
     }
     
     try {
-      const response = await adminFetch(`${API_BASE_URL}/api/v1/admin/users/${user.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await adminDelete(`${API_BASE_URL}/api/v1/admin/users/${user.id}`);
 
       if (!response.ok) {
         throw new Error('ユーザー削除に失敗しました');

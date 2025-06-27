@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { Plus, Shield, User, Mail, Calendar, MoreVertical, Edit, Trash2 } from 'lucide-react';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminFetch, adminDelete } from '@/utils/admin-api';
 
 interface Admin {
   _id: string;
@@ -93,9 +93,7 @@ export default function AdminListPage() {
     }
 
     try {
-      const response = await adminFetch(`/api/v1/admin/admins/${adminId}`, {
-        method: 'DELETE'
-      });
+      const response = await adminDelete(`/api/v1/admin/admins/${adminId}`);
 
       if (!response.ok) {
         throw new Error(`削除エラー: ${response.status}`);

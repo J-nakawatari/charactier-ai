@@ -8,7 +8,7 @@ import TokenPackTable, { TokenPackTableRef } from '@/components/admin/TokenPackT
 import TokenPackModal from '@/components/admin/TokenPackModal';
 import { useToast } from '@/contexts/ToastContext';
 import { Search, Filter, Plus, Download, CreditCard, Package, Users, TrendingUp } from 'lucide-react';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminFetch } from '@/utils/admin-api';
 // Mock imports removed - will use actual API data
 
 interface TokenPack {

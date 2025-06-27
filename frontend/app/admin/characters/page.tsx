@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import CharacterStats from '@/components/admin/CharacterStats';
 import CharacterManagementTable from '@/components/admin/CharacterManagementTable';
 import { useToast } from '@/contexts/ToastContext';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminFetch, adminPost } from '@/utils/admin-api';
 import { Search, Filter, Plus, Download, Users, RefreshCw } from 'lucide-react';
 
 interface Character {
@@ -77,12 +77,7 @@ export default function CharactersPage() {
     try {
       setUpdatingStats(true);
       
-      const response = await adminFetch('/api/v1/admin/characters/update-stats', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await adminPost('/api/v1/admin/characters/update-stats', {});
       
       if (response.ok) {
         const data = await response.json();
