@@ -18,6 +18,7 @@ import { AdminModel, IAdmin } from './models/AdminModel';
 import { ChatModel, IChat, IMessage } from './models/ChatModel';
 import { CharacterModel, ICharacter } from './models/CharacterModel';
 import { PurchaseHistoryModel } from './models/PurchaseHistoryModel';
+import { sanitizeChatMessage } from './utils/htmlSanitizer';
 import { NotificationModel } from './models/NotificationModel';
 import { UserNotificationReadStatusModel } from './models/UserNotificationReadStatusModel';
 import { authenticateToken, AuthRequest, isModerator, hasWritePermission } from './middleware/auth';
@@ -2395,7 +2396,7 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
         const userMsg: IMessage = {
           _id: userMessage._id,
           role: 'user',
-          content: userMessage.content,
+          content: sanitizeChatMessage(userMessage.content), // XSS対策: HTMLをサニタイズ
           timestamp: new Date(), // 現在時刻を直接使用
           tokensUsed: 0
         };
@@ -2403,7 +2404,7 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
         const assistantMsg: IMessage = {
           _id: assistantMessage._id,
           role: 'assistant',
-          content: assistantMessage.content,
+          content: sanitizeChatMessage(assistantMessage.content), // XSS対策: HTMLをサニタイズ
           timestamp: new Date(), // 現在時刻を直接使用
           tokensUsed: aiResponse.tokensUsed,
           metadata: {
