@@ -150,6 +150,9 @@ const csrfProtectionInstance = new CsrfProtection({
     '/api/v1/debug', // デバッグエンドポイント
     '/api/v1/auth/login', // ログイン（CSRFトークン取得前）
     '/api/v1/auth/register', // 新規登録（CSRFトークン取得前）
+    '/api/v1/auth/verify-email', // メール認証
+    '/api/v1/auth/google', // Google認証
+    '/api/v1/auth/setup', // 初回セットアップ
     '/api/v1/admin' // 管理画面（一時的に無効化）
   ]
 });
