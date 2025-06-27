@@ -34,7 +34,7 @@ export default function AnalyticsSettingsPage() {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const response = await adminFetch('/api/v1/admin/system-settings/google-analytics');
+      const response = await fetch('/api/v1/system-settings/google-analytics');
 
       if (response.ok) {
         const data = await response.json();
