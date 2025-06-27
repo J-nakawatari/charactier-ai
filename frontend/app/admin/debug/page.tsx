@@ -16,13 +16,13 @@ export default function DebugPage() {
       setError('');
       
       // Check cookie status
-      const statusResponse = await adminGet('/api/debug/auth-status');
+      const statusResponse = await adminGet('/api/v1/debug/auth-status');
       const statusData = await statusResponse.json();
       setAuthStatus(statusData);
       
       // Try authenticated endpoint
       try {
-        const testResponse = await adminGet('/api/debug/auth-test');
+        const testResponse = await adminGet('/api/v1/debug/auth-test');
         const testData = await testResponse.json();
         setAuthTest(testData);
       } catch (err) {
