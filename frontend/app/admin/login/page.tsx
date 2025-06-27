@@ -25,7 +25,7 @@ export default function AdminLoginPage() {
       setIsLoading(true);
       setError('');
 
-      const response = await fetch(`${API_BASE_URL}/auth/admin/login`, {
+      const response = await fetch('/api/v1/auth/admin/login', {
         method: 'POST',
         credentials: 'include', // クッキーを受信
         headers: {
