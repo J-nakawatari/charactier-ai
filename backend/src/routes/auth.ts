@@ -8,7 +8,7 @@ import { UserModel } from '../models/UserModel';
 import { AdminModel } from '../models/AdminModel';
 import { generateAccessToken, generateRefreshToken, authenticateToken } from '../middleware/auth';
 import { sendVerificationEmail, generateVerificationToken, isDisposableEmail } from '../utils/sendEmail';
-import { registrationRateLimit } from '../middleware/registrationLimit';
+import { registrationRateLimit, consumeRegistrationLimit } from '../middleware/registrationLimit';
 import { createRateLimiter } from '../middleware/rateLimiter';
 import { validate } from '../middleware/validation';
 import { authSchemas } from '../validation/schemas';
@@ -334,6 +334,12 @@ router.post('/register',
         });
       }
       // メール送信に失敗してもユーザー登録は続行（セキュリティのため）
+    }
+
+    // 登録成功時にレート制限をカウント
+    const clientIP = (req as any).clientIP;
+    if (clientIP) {
+      await consumeRegistrationLimit(clientIP);
     }
 
     // レスポンス（トークンは返さない）
