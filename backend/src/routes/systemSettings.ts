@@ -47,7 +47,7 @@ router.get('/google-analytics', generalRateLimit, async (req: any, res: Response
 router.post('/google-analytics', adminRateLimit, authenticateToken, authenticateAdmin, async (req: any, res: Response): Promise<void> => {
   try {
     const { measurementId, trackingCode, isActive } = req.body;
-    const adminId = req.user?._id;
+    const adminId = req.admin?._id;
 
     // 測定IDの検証
     if (!measurementId || !measurementId.match(/^G-[A-Z0-9]{10}$/)) {
