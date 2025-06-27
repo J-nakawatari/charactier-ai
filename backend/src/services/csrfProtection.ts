@@ -147,7 +147,9 @@ const csrfProtectionInstance = new CsrfProtection({
     '/api/v1/webhooks/stripe', // Stripe Webhook
     '/api/v1/notifications/stream', // SSE endpoints
     '/api/v1/health', // ヘルスチェック
-    '/api/v1/debug' // デバッグエンドポイント
+    '/api/v1/debug', // デバッグエンドポイント
+    '/api/v1/auth/login', // ログイン（CSRFトークン取得前）
+    '/api/v1/auth/register' // 新規登録（CSRFトークン取得前）
   ]
 });
 
