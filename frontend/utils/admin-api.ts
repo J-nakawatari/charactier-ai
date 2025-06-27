@@ -20,9 +20,13 @@ export async function adminFetch(endpoint: string, options: AdminApiOptions = {}
   });
   
   // デフォルトヘッダーを設定
-  const defaultHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+  const defaultHeaders: Record<string, string> = {};
+  
+  // FormDataの場合はContent-Typeを設定しない（ブラウザが自動設定）
+  const isFormData = options.body instanceof FormData;
+  if (!isFormData) {
+    defaultHeaders['Content-Type'] = 'application/json';
+  }
   
   // CSRFトークンを取得
   const token = Cookies.get('XSRF-TOKEN');
