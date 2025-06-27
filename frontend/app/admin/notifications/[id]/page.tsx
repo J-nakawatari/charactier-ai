@@ -229,7 +229,7 @@ export default function NotificationDetailPage() {
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
                     <h2 className="text-xl font-bold text-gray-900">
-                      {notification.title.ja}
+                      {notification?.title?.ja || 'タイトルなし'}
                     </h2>
                     {notification.isPinned && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -254,16 +254,16 @@ export default function NotificationDetailPage() {
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">日本語</h4>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <h5 className="font-medium text-gray-900 mb-2">{notification.title.ja}</h5>
-                    <p className="text-gray-700 whitespace-pre-wrap">{notification.message.ja}</p>
+                    <h5 className="font-medium text-gray-900 mb-2">{notification?.title?.ja || 'タイトルなし'}</h5>
+                    <p className="text-gray-700 whitespace-pre-wrap">{notification?.message?.ja || 'メッセージなし'}</p>
                   </div>
                 </div>
 
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">English</h4>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <h5 className="font-medium text-gray-900 mb-2">{notification.title.en}</h5>
-                    <p className="text-gray-700 whitespace-pre-wrap">{notification.message.en}</p>
+                    <h5 className="font-medium text-gray-900 mb-2">{notification?.title?.en || 'No title'}</h5>
+                    <p className="text-gray-700 whitespace-pre-wrap">{notification?.message?.en || 'No message'}</p>
                   </div>
                 </div>
               </div>
