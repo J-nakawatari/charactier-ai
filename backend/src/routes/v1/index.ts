@@ -15,7 +15,7 @@ v1Router.use('/auth', authRoutes);
 v1Router.use('/characters', characterRoutes);
 v1Router.use('/admin/models', modelRoutes);
 v1Router.use('/notifications', notificationRoutes);
-v1Router.use('/system-settings', systemSettingsRoutes);
+v1Router.use('/admin/system-settings', systemSettingsRoutes);
 v1Router.use('/admin/system', systemRoutes);
 v1Router.use('/debug', debugRoutes);
 v1Router.use('/user', userRoutes);

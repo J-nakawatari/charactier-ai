@@ -34,7 +34,7 @@ export default function AnalyticsSettingsPage() {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const response = await adminFetch('/api/v1/system-settings/google-analytics');
+      const response = await adminFetch('/api/v1/admin/system-settings/google-analytics');
 
       if (response.ok) {
         const data = await response.json();
@@ -70,7 +70,7 @@ export default function AnalyticsSettingsPage() {
     setMessage(null);
 
     try {
-      const response = await adminPost('/api/v1/system-settings/google-analytics', settings);
+      const response = await adminPost('/api/v1/admin/system-settings/google-analytics', settings);
 
       if (response.ok) {
         setMessage({ type: 'success', text: 'Google Analytics設定を保存しました' });
@@ -94,7 +94,7 @@ export default function AnalyticsSettingsPage() {
     }
 
     try {
-      const response = await adminDelete('/api/v1/system-settings/google-analytics');
+      const response = await adminDelete('/api/v1/admin/system-settings/google-analytics');
 
       if (response.ok) {
         setSettings({ measurementId: '', trackingCode: '', isActive: false });

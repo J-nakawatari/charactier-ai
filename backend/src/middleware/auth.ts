@@ -21,11 +21,8 @@ export const authenticateToken = async (
     // 1. パスに基づいて適切なクッキーを選択
     // req.originalUrl を使用して完全なパスを確認（/api/v1/admin/...）
     const fullPath = req.originalUrl || req.url;
-    // 管理者パスの判定: /admin/ または /system-settings を含む、またはrefererが管理画面
-    const referer = req.headers.referer || '';
-    const isAdminPath = fullPath.includes('/admin/') || 
-                       fullPath.includes('/system-settings') || 
-                       referer.includes('/admin/');
+    // 管理者パスの判定: /admin/ を含む
+    const isAdminPath = fullPath.includes('/admin/');
     let token: string | undefined;
     
     // 管理者パスの場合は管理者用クッキー、それ以外はユーザー用クッキーを確認
