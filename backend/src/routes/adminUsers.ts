@@ -97,12 +97,21 @@ router.get('/',
     const total = await UserModel.countDocuments(query);
     const totalPages = Math.ceil(total / limit);
 
+    // デバッグ: 取得したユーザー数とサンプルデータ
+    log.info('Admin users fetched', {
+      totalUsers: users.length,
+      sampleUsers: users.slice(0, 3).map(u => ({
+        email: u.email,
+        accountStatus: u.accountStatus,
+        isActive: u.isActive
+      }))
+    });
+
     // レスポンス用にデータを整形
-    const formattedUsers = users.map(user => {
-      // デバッグ用: accountStatusの実際の値をログ出力
-      if (user.accountStatus !== 'active') {
-        log.info('User status debug', {
-          userId: user._id.toString(),
+    const formattedUsers = users.map((user, index) => {
+      // デバッグ用: 全ユーザーのaccountStatusをログ出力（最初の5件のみ）
+      if (index < 5) {
+        log.info('User status mapping', {
           email: user.email,
           accountStatus: user.accountStatus,
           isActive: user.isActive,
