@@ -28,7 +28,9 @@ function getSafeLocale(locale: string | undefined): 'ja' | 'en' {
 }
 
 // Helper function to generate email verification HTML response
-function generateEmailVerificationHTML(
+// XSS脆弱性のため、この関数は使用しない（emailTemplates.tsを使用）
+/*
+function generateEmailVerificationHTML_DEPRECATED(
   type: 'success' | 'error' | 'already-verified' | 'expired' | 'server-error',
   locale: 'ja' | 'en',
   userData?: {
@@ -257,6 +259,7 @@ function generateEmailVerificationHTML(
 </body>
 </html>`;
 }
+*/
 
 // ユーザー登録（メール認証付き）
 router.post('/register', 

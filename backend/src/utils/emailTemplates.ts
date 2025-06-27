@@ -182,24 +182,28 @@ export function generateEmailVerificationHTML(
       title: locale === 'ja' ? 'エラー' : 'Error',
       message: locale === 'ja' ? '無効なリクエストです。' : 'Invalid request.',
       buttonText: locale === 'ja' ? 'ホームに戻る' : 'Back to Home',
+      redirectMessage: '',
       iconColor: '#f59e0b'
     },
     'already-verified': {
       title: locale === 'ja' ? '認証済み' : 'Already Verified',
       message: locale === 'ja' ? 'このメールアドレスは既に認証されています。' : 'This email address has already been verified.',
       buttonText: locale === 'ja' ? 'セットアップページへ' : 'Go to Setup',
+      redirectMessage: '',
       iconColor: '#f59e0b'
     },
     expired: {
       title: locale === 'ja' ? '認証エラー' : 'Verification Error',
       message: locale === 'ja' ? 'リンクが無効か、有効期限が切れています。' : 'The link is invalid or has expired.',
       buttonText: locale === 'ja' ? '新規登録画面へ' : 'Back to Registration',
+      redirectMessage: '',
       iconColor: '#ef4444'
     },
     'server-error': {
       title: locale === 'ja' ? 'サーバーエラー' : 'Server Error',
       message: locale === 'ja' ? '申し訳ございません。エラーが発生しました。時間をおいて再度お試しください。' : 'Sorry, an error occurred. Please try again later.',
       buttonText: locale === 'ja' ? 'ホームに戻る' : 'Back to Home',
+      redirectMessage: '',
       iconColor: '#6b7280'
     }
   };
