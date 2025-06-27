@@ -163,7 +163,8 @@ const csrfProtectionInstance = new CsrfProtection({
     '/api/v1/auth/login', // ユーザーログイン（CSRFトークン取得前）
     '/api/v1/auth/register', // 新規登録（CSRFトークン取得前）
     '/api/v1/auth/verify-email', // メール認証（外部リンクから）
-    '/api/v1/auth/admin/login' // 管理者ログイン（CSRFトークン取得前）
+    '/api/v1/auth/admin/login', // 管理者ログイン（CSRFトークン取得前）
+    '/api/v1/characters' // キャラクター翻訳更新（一時的）
   ]
 });
 
