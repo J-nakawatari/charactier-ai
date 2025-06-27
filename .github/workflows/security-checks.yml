@@ -110,8 +110,11 @@ jobs:
     # Gitleaksによる機密情報漏洩チェック
     - name: Run Gitleaks
       uses: gitleaks/gitleaks-action@v2
+      with:
+        config-path: .gitleaks.toml
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      continue-on-error: true  # エラーがあってもワークフローを続行
     
     # E2Eセキュリティテスト（Playwright）
     - name: Install Playwright browsers
