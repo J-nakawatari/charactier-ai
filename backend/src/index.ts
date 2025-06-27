@@ -862,6 +862,15 @@ app.use(`${API_PREFIX}/upload`, createRateLimiter('upload'));
 // 一般的なAPI（標準的な制限）
 app.use(API_PREFIX, createRateLimiter('general'));
 
+// CSRFトークン取得エンドポイント
+app.get(`${API_PREFIX}/csrf-token`, (req: Request, res: Response) => {
+  // CSRFミドルウェアがGETリクエストで自動的にトークンをcookieに設定する
+  res.json({ 
+    success: true,
+    message: 'CSRF token has been set in cookie'
+  });
+});
+
 // 認証ルート
 app.use(`${API_PREFIX}/auth`, authRoutes);
 

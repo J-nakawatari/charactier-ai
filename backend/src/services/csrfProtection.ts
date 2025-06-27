@@ -82,9 +82,6 @@ class CsrfProtection {
 
   middleware() {
     return (req: Request, res: Response, next: NextFunction): void => {
-      // 一時的に全てのリクエストをスキップ
-      return next();
-      
       // スキップするルートかチェック
       if (this.options.skipRoutes.some(route => req.path.startsWith(route))) {
         return next();
@@ -147,14 +144,13 @@ const csrfProtectionInstance = new CsrfProtection({
     secure: process.env.NODE_ENV === 'production'
   },
   skipRoutes: [
-    '/api/v1/webhooks', // 全てのWebhook
+    '/api/v1/webhooks/stripe', // Stripe Webhook
     '/api/v1/notifications/stream', // SSE endpoints
     '/api/v1/health', // ヘルスチェック
     '/api/v1/debug', // デバッグエンドポイント
-    '/api/v1/auth', // 全ての認証エンドポイント（一時的）
-    '/api/v1/admin', // 管理画面（一時的に無効化）
-    '/api/v1/tokens/purchase', // トークン購入（一時的）
-    '/api/v1/stripe' // Stripe関連（一時的）
+    '/api/v1/auth/login', // ログイン（CSRFトークン取得前）
+    '/api/v1/auth/register', // 新規登録（CSRFトークン取得前）
+    '/api/v1/auth/verify-email' // メール認証（外部リンクから）
   ]
 });
 
