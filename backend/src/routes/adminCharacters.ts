@@ -450,10 +450,10 @@ router.put('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), as
       }
     }
 
-    // 更新データを適用
+    // 更新データを適用（NoSQL injection防止のため$set使用）
     const updatedCharacter = await CharacterModel.findByIdAndUpdate(
       req.params.id,
-      updateData,
+      { $set: updateData },
       { new: true, runValidators: true }
     );
 

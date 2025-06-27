@@ -174,7 +174,7 @@ router.put('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (
 
     const tokenPack = await TokenPackModel.findByIdAndUpdate(
       id,
-      updateData,
+      { $set: updateData },
       { new: true, runValidators: true }
     );
 
