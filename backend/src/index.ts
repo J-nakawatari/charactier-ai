@@ -833,6 +833,21 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Cookie parser設定
 app.use(cookieParser());
 
+// HTMLエンコードされたURLパラメータを修正するミドルウェア
+// SendGridのテンプレートで&amp;にエンコードされる問題に対処
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.originalUrl && req.originalUrl.includes('&amp;')) {
+    const correctedUrl = req.originalUrl.replace(/&amp;/g, '&');
+    log.info('Correcting HTML-encoded URL', {
+      originalUrl: req.originalUrl,
+      correctedUrl: correctedUrl
+    });
+    // 修正されたURLにリダイレクト
+    return res.redirect(correctedUrl);
+  }
+  next();
+});
+
 // CSRF保護を適用（Stripe webhook後、他のルート前）
 app.use(csrfProtection);
 
@@ -882,6 +897,7 @@ app.get('/api/auth/verify-email', (req: Request, res: Response) => {
   const { token, locale = 'ja' } = req.query;
   res.redirect(301, `${API_PREFIX}/auth/verify-email?token=${token}&locale=${locale}`);
 });
+
 
 // ユーザールート
 app.use(`${API_PREFIX}/user`, userRoutes);

@@ -690,9 +690,26 @@ router.post('/user/setup-complete', generalRateLimit, authenticateToken, async (
 
 // メールアドレス認証
 router.get('/verify-email', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
-  const { token, locale = 'ja' } = req.query;
+  // URLパラメータを取得（SendGridのエンコーディング問題対策）
+  let { token, locale = 'ja' } = req.query;
+  
+  // もしlocaleがundefinedまたは文字列でない場合、req.pathから取得を試みる
+  // これは&amp;がエンコードされた場合の対策
+  if (!locale && req.originalUrl) {
+    const match = req.originalUrl.match(/locale=([^&]+)/);
+    if (match) {
+      locale = match[1];
+    }
+  }
   
   try {
+    // ログ出力でデバッグ
+    log.info('Email verification request', {
+      originalUrl: req.originalUrl,
+      queryParams: req.query,
+      token: token ? token.toString().substring(0, 10) + '...' : 'missing',
+      locale: locale
+    });
 
     if (!token || typeof token !== 'string') {
       // エラーページをHTMLで返す

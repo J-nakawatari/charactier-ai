@@ -21,7 +21,10 @@ export async function sendVerificationEmail(
   const baseUrl = process.env.NODE_ENV === 'production' 
     ? 'https://charactier-ai.com' 
     : (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
-  const verifyUrl = `${baseUrl}/api/v1/auth/verify-email?token=${token}&locale=${locale}`;
+  // URLを構築（SendGridのHTMLエンコーディング問題を回避）
+  // トークンとロケールは個別にテンプレートに渡し、テンプレート側で組み立てる
+  const verifyBaseUrl = `${baseUrl}/api/v1/auth/verify-email`;
+  const verifyUrl = `${verifyBaseUrl}?token=${token}&locale=${locale}`;
 
   // デバッグ情報を出力
   log.debug('Preparing to send verification email', {
@@ -32,7 +35,9 @@ export async function sendVerificationEmail(
     nodeEnv: process.env.NODE_ENV,
     hasSendGridKey: !!process.env.SENDGRID_API_KEY,
     hasFromEmail: !!process.env.SENDGRID_FROM_EMAIL,
-    hasTemplateId: !!process.env.SENDGRID_VERIFICATION_TEMPLATE_ID
+    hasTemplateId: !!process.env.SENDGRID_VERIFICATION_TEMPLATE_ID,
+    verifyUrl: verifyUrl,
+    verifyBaseUrl: verifyBaseUrl
   });
 
   // 開発環境では実際に送信しない
@@ -72,6 +77,10 @@ export async function sendVerificationEmail(
         
         // 共通データ
         verifyUrl: verifyUrl,
+        // URLパラメータを別々に送信（SendGridテンプレート内でのエンコーディング問題を回避）
+        verifyToken: token,
+        verifyLocale: locale,
+        verifyBaseUrl: verifyBaseUrl,
         
         // 日本語テキスト
         subjectJa: '【Charactier AI】メールアドレスの確認をお願いします',
