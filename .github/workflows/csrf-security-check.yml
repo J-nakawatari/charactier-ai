@@ -11,55 +11,20 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v3
       with:
-        node-version: '20'
+        node-version: '18'
     
-    - name: Check directory structure
+    - name: Install backend dependencies
       run: |
-        echo "Repository root:"
-        ls -la
-        echo "Backend directory:"
-        ls -la backend/
-        
-    - name: Install dependencies
-      working-directory: ./backend
-      run: |
-        echo "Installing dependencies..."
+        cd backend
         npm install
     
-    - name: Install Jest and testing dependencies
-      working-directory: ./backend
+    - name: Run CSRF tests
       run: |
-        npm install --save-dev jest @types/jest ts-jest supertest @types/supertest
-    
-    - name: Run CSRF Security Check
-      working-directory: ./backend
-      run: |
-        # デバッグ情報
-        echo "Current directory: $(pwd)"
-        echo "Files in scripts directory:"
-        ls -la scripts/
-        
-        # スクリプトの実行
+        cd backend
         chmod +x scripts/csrf_check.sh
-        ./scripts/csrf_check.sh || {
-          echo "Test failed. Checking environment..."
-          echo "Node version: $(node --version)"
-          echo "NPM version: $(npm --version)"
-          exit 1
-        }
-    
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      if: failure()
-      with:
-        name: csrf-test-results
-        path: |
-          backend/tests/csrf/*.spec.ts
-          backend/scripts/csrf_check.sh
-        retention-days: 7
-        if-no-files-found: warn
+        ./scripts/csrf_check.sh
