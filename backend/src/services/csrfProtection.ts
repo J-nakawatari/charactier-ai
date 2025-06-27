@@ -162,8 +162,7 @@ const csrfProtectionInstance = new CsrfProtection({
     '/api/v1/debug', // デバッグエンドポイント
     '/api/v1/auth/login', // ログイン（CSRFトークン取得前）
     '/api/v1/auth/register', // 新規登録（CSRFトークン取得前）
-    '/api/v1/auth/verify-email', // メール認証（外部リンクから）
-    '/api/v1/admin/characters' // 管理画面キャラクター編集（一時的）
+    '/api/v1/auth/verify-email' // メール認証（外部リンクから）
   ]
 });
 
