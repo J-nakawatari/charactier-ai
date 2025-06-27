@@ -21,6 +21,7 @@ export const authenticateToken = async (
     // 1. パスに基づいて適切なクッキーを選択
     // req.originalUrl を使用して完全なパスを確認（/api/v1/admin/...）
     const fullPath = req.originalUrl || req.url;
+    // 管理者パスの判定: /admin/ を含む
     const isAdminPath = fullPath.includes('/admin/');
     let token: string | undefined;
     
@@ -288,5 +289,10 @@ export const isModerator = (req: AuthRequest): boolean => {
 // Helper function to check if admin has write permissions
 export const hasWritePermission = (req: AuthRequest): boolean => {
   // Only super_admin has write permissions
-  return req.admin?.role === 'super_admin' || req.user?.role === 'super_admin';
+  // 管理者パスの場合はreq.adminをチェック
+  if (req.admin) {
+    return req.admin.role === 'super_admin';
+  }
+  // ユーザーパスの場合はreq.userをチェック（通常はsuper_adminロールを持たない）
+  return req.user?.role === 'super_admin';
 };

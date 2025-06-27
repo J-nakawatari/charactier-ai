@@ -1,3 +1,5 @@
+import Cookies from 'js-cookie';
+
 interface AdminApiOptions extends RequestInit {
   // Additional options can be added here
 }
@@ -17,12 +19,30 @@ export async function adminFetch(endpoint: string, options: AdminApiOptions = {}
     credentials: 'include'
   });
   
+  // デフォルトヘッダーを設定
+  const defaultHeaders: Record<string, string> = {};
+  
+  // FormDataの場合はContent-Typeを設定しない（ブラウザが自動設定）
+  const isFormData = options.body instanceof FormData;
+  if (!isFormData) {
+    defaultHeaders['Content-Type'] = 'application/json';
+  }
+  
+  // CSRFトークンを取得
+  const token = Cookies.get('XSRF-TOKEN');
+  const method = (options.method || 'GET').toUpperCase();
+  
+  // POST, PUT, PATCH, DELETEリクエストにCSRFトークンを追加
+  if (token && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    defaultHeaders['X-CSRF-Token'] = token;
+  }
+  
   const response = await fetch(url, {
     ...options,
     credentials: 'include', // Always include cookies
     headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
+      ...defaultHeaders,
+      ...(options.headers as Record<string, string> || {})
     },
   });
 

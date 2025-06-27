@@ -8,7 +8,7 @@ import { compressImage, isImageSizeValid, formatFileSize } from '@/utils/imageCo
 import ImageCropper from '@/components/admin/ImageCropper';
 import { ArrowLeft, Save, X, Upload } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminFetch, adminPost } from '@/utils/admin-api';
 import { 
   PERSONALITY_PRESETS, 
   PERSONALITY_TAGS, 
@@ -245,13 +245,7 @@ export default function CharacterNewPage() {
         payloadSize: JSON.stringify(payload).length
       });
 
-      const response = await adminFetch(`${API_BASE_URL}/api/v1/admin/characters`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+      const response = await adminPost(`${API_BASE_URL}/api/v1/admin/characters`, payload);
 
       const responseData = await response.json();
 

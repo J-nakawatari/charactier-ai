@@ -480,8 +480,21 @@ router.put('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), as
 // 画像アップロード（管理者用）
 router.post('/upload/image', uploadRateLimit, authenticateToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // デバッグ：認証情報を確認
+    log.debug('Image upload request', {
+      hasAdmin: !!req.admin,
+      adminRole: req.admin?.role,
+      adminId: req.admin?._id,
+      hasUser: !!req.user,
+      path: req.path
+    });
+    
     // 書き込み権限チェック（super_adminのみ）
     if (!hasWritePermission(req)) {
+      log.warn('Image upload permission denied', {
+        adminRole: req.admin?.role,
+        userId: req.user?._id
+      });
       sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Only super admin can upload images');
       return;
     }

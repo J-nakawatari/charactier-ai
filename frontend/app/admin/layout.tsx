@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/admin/Sidebar';
 import TopBar from '@/components/admin/TopBar';
+import CsrfTokenInitializer from '@/components/CsrfTokenInitializer';
 
 export default function AdminLayout({
   children,
@@ -81,6 +82,8 @@ export default function AdminLayout({
           {children}
         </main>
       </div>
+      {/* CSRFトークン初期化 */}
+      <CsrfTokenInitializer />
     </>
   );
 }

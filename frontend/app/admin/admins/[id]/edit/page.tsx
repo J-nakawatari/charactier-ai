@@ -6,7 +6,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { API_BASE_URL } from '@/lib/api-config';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminFetch, adminPut } from '@/utils/admin-api';
 
 interface AdminForm {
   name: string;
@@ -71,13 +71,7 @@ export default function EditAdminPage() {
     setSaving(true);
 
     try {
-      const response = await adminFetch(`${API_BASE_URL}/api/v1/admin/admins/${adminId}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
+      const response = await adminPut(`${API_BASE_URL}/api/v1/admin/admins/${adminId}`, formData);
 
       if (!response.ok) {
         throw new Error(`API Error: ${response.status}`);

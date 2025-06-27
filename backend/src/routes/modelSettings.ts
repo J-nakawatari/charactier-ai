@@ -3,11 +3,40 @@ import { Router, Response, NextFunction } from 'express';
 import { authenticateToken } from '../middleware/auth';
 import { calcTokensToGive, validateModel } from '../config/tokenConfig';
 import { createRateLimiter } from '../middleware/rateLimiter';
+import { sendErrorResponse, ClientErrorCode } from '../utils/errorResponse';
+import log from '../utils/logger';
 
 const router: Router = Router();
 
 // レートリミッターを作成
 const generalRateLimit = createRateLimiter('general');
+const adminRateLimit = createRateLimiter('admin');
+
+// 管理者認証ミドルウェア
+const authenticateAdmin = (req: AuthRequest, res: Response, next: NextFunction): void => {
+  log.debug('Admin authentication check for model settings', {
+    hasAdmin: !!req.admin,
+    hasUser: !!req.user,
+    adminId: req.admin?._id?.toString(),
+    userId: req.user?._id?.toString(),
+    path: req.path,
+    originalUrl: req.originalUrl
+  });
+
+  // 管理者パスなので req.admin をチェック
+  if (!req.admin) {
+    log.warn('Admin access denied for model settings', { 
+      hasAdmin: !!req.admin,
+      hasUser: !!req.user,
+      path: req.originalUrl 
+    });
+    sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
+    return;
+  }
+  
+  log.debug('Admin access granted for model settings', { adminId: req.admin._id?.toString() });
+  next();
+};
 
 // 利用可能なモデル一覧
 const AVAILABLE_MODELS = [
@@ -56,7 +85,7 @@ router.get('/', generalRateLimit, async (req: AuthRequest, res: Response) => {
 /**
  * 現在のモデル設定取得
  */
-router.get('/current', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/current', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const currentModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
     const modelInfo = AVAILABLE_MODELS.find(m => m.id === currentModel);
@@ -81,7 +110,7 @@ router.get('/current', generalRateLimit, authenticateToken, async (req: AuthRequ
 /**
  * モデル設定変更
  */
-router.post('/set-model', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/set-model', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { model } = req.body;
     
@@ -116,7 +145,7 @@ router.post('/set-model', generalRateLimit, authenticateToken, async (req: AuthR
 /**
  * モデル別料金シミュレーション
  */
-router.post('/simulate', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/simulate', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { model, purchaseAmount } = req.body;
     

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { adminAuthenticatedFetch } from '@/utils/auth';
+import { adminFetch } from '@/utils/admin-api';
 import { 
   Edit, 
   Users, 
@@ -73,14 +73,18 @@ export default function NotificationDetailPage() {
     try {
       setIsLoading(true);
       
-      const response = await adminAuthenticatedFetch(`/api/v1/admin/notifications/${notificationId}`);
+      const response = await adminFetch(`/api/v1/admin/notifications/${notificationId}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
-      setNotification(data);
+      console.log('お知らせ詳細データ:', data);
+      
+      // APIレスポンスから実際のnotificationデータを取得
+      const notificationData = data.notification || data;
+      setNotification(notificationData);
       setError(null);
     } catch (error) {
       console.error('お知らせ取得エラー:', error);
@@ -138,13 +142,15 @@ export default function NotificationDetailPage() {
   // 既読率計算
   const getReadRate = () => {
     if (!notification || notification.totalTargetUsers === 0) return 0;
-    return Math.round((notification.totalReads / notification.totalTargetUsers) * 100);
+    const rate = Math.round((notification.totalReads / notification.totalTargetUsers) * 100);
+    return Math.min(rate, 100); // 100%を超えないように制限
   };
 
   // 表示率計算
   const getViewRate = () => {
     if (!notification || notification.totalTargetUsers === 0) return 0;
-    return Math.round((notification.totalViews / notification.totalTargetUsers) * 100);
+    const rate = Math.round((notification.totalViews / notification.totalTargetUsers) * 100);
+    return Math.min(rate, 100); // 100%を超えないように制限
   };
 
   if (isLoading) {
@@ -229,7 +235,7 @@ export default function NotificationDetailPage() {
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
                     <h2 className="text-xl font-bold text-gray-900">
-                      {notification.title.ja}
+                      {notification?.title?.ja || 'タイトルなし'}
                     </h2>
                     {notification.isPinned && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -254,16 +260,16 @@ export default function NotificationDetailPage() {
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">日本語</h4>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <h5 className="font-medium text-gray-900 mb-2">{notification.title.ja}</h5>
-                    <p className="text-gray-700 whitespace-pre-wrap">{notification.message.ja}</p>
+                    <h5 className="font-medium text-gray-900 mb-2">{notification?.title?.ja || 'タイトルなし'}</h5>
+                    <p className="text-gray-700 whitespace-pre-wrap">{notification?.message?.ja || 'メッセージなし'}</p>
                   </div>
                 </div>
 
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">English</h4>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <h5 className="font-medium text-gray-900 mb-2">{notification.title.en}</h5>
-                    <p className="text-gray-700 whitespace-pre-wrap">{notification.message.en}</p>
+                    <h5 className="font-medium text-gray-900 mb-2">{notification?.title?.en || 'No title'}</h5>
+                    <p className="text-gray-700 whitespace-pre-wrap">{notification?.message?.en || 'No message'}</p>
                   </div>
                 </div>
               </div>

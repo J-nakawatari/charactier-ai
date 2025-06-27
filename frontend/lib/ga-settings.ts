@@ -22,7 +22,7 @@ export async function getActiveGAId(): Promise<string | null> {
 
     // 開発環境またはランタイムでは動的に取得
     const apiUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-    const response = await fetch(`${apiUrl}/api/system-settings/google-analytics`, {
+    const response = await fetch(`${apiUrl}/api/v1/system-settings/google-analytics`, {
       // ビルド時のエラーを防ぐため、キャッシュ設定を削除
       headers: {
         'Content-Type': 'application/json',

@@ -28,6 +28,7 @@ import adminNotificationsRoutes from './routes/adminNotifications';
 import modelRoutes from './routes/modelSettings';
 import notificationRoutes from './routes/notifications';
 import systemSettingsRoutes from './routes/systemSettings';
+import publicSystemSettingsRoutes from './routes/publicSystemSettings';
 import systemRoutes from './routes/system';
 import debugRoutes from './routes/debug';
 import userRoutes from './routes/user';
@@ -71,6 +72,7 @@ import { requestLoggingMiddleware, securityAuditMiddleware } from './middleware/
 import { sendErrorResponse, ClientErrorCode } from './utils/errorResponse';
 import { ServerMonitor } from './monitoring/ServerMonitor';
 import { API_PREFIX } from './config/api';
+import { csrfProtection } from './services/csrfProtection';
 
 // PM2が環境変数を注入するため、dotenv.config()は不要
 // 開発環境の場合のみdotenvを使用（PM2を使わない場合）
@@ -824,11 +826,14 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
 });
 
 // JSON body parser (AFTER Stripe webhook)
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Cookie parser設定
 app.use(cookieParser());
+
+// CSRF保護を適用（Stripe webhook後、他のルート前）
+app.use(csrfProtection);
 
 // Debug routes
 // 一時的に本番環境でも有効化（問題解決後は削除すること）
@@ -858,6 +863,15 @@ app.use(`${API_PREFIX}/upload`, createRateLimiter('upload'));
 // 一般的なAPI（標準的な制限）
 app.use(API_PREFIX, createRateLimiter('general'));
 
+// CSRFトークン取得エンドポイント
+app.get(`${API_PREFIX}/csrf-token`, (req: Request, res: Response) => {
+  // CSRFミドルウェアがGETリクエストで自動的にトークンをcookieに設定する
+  res.json({ 
+    success: true,
+    message: 'CSRF token has been set in cookie'
+  });
+});
+
 // 認証ルート
 app.use(`${API_PREFIX}/auth`, authRoutes);
 
@@ -874,8 +888,11 @@ app.use(`${API_PREFIX}/user`, userRoutes);
 // 管理者ルート - モデル設定
 app.use(`${API_PREFIX}/admin/models`, modelRoutes);
 
-// システム設定ルート
-app.use(`${API_PREFIX}/system-settings`, systemSettingsRoutes);
+// 公開システム設定ルート（認証不要）
+app.use(`${API_PREFIX}/system-settings`, publicSystemSettingsRoutes);
+
+// 管理者用システム設定ルート
+app.use(`${API_PREFIX}/admin/system-settings`, systemSettingsRoutes);
 
 // システム監視ルート（管理者のみ）
 app.use(`${API_PREFIX}/admin/system`, systemRoutes);
@@ -2906,9 +2923,15 @@ const validateTokenPriceRatio = async (tokens: number, price: number): Promise<b
 
 
 // Stripe Price API endpoint
-app.get(`${API_PREFIX}/admin/stripe/price/:priceId`, authenticateToken, createRateLimiter('admin'), async (req: Request, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/stripe/price/:priceId`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   
-  if (!req.user) {
+  // 管理者認証チェック
+  if (!req.admin) {
+    log.warn('Admin access denied for stripe price API', { 
+      hasAdmin: !!req.admin,
+      hasUser: !!req.user,
+      path: req.originalUrl 
+    });
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }
@@ -3327,9 +3350,15 @@ app.get(`${API_PREFIX}/purchase/events/:sessionId`, async (req: Request, res: Re
 });
 
 // Stripe価格情報取得API（商品IDまたは価格IDに対応・管理者専用）
-app.get(`${API_PREFIX}/admin/stripe/product-price/:id`, authenticateToken, createRateLimiter('admin'), async (req: Request, res: Response): Promise<void> => {
+app.get(`${API_PREFIX}/admin/stripe/product-price/:id`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   
-  if (!req.user) {
+  // 管理者認証チェック
+  if (!req.admin) {
+    log.warn('Admin access denied for stripe price API', { 
+      hasAdmin: !!req.admin,
+      hasUser: !!req.user,
+      path: req.originalUrl 
+    });
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }

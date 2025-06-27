@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { adminAuthenticatedFetch } from '@/utils/auth';
+import { adminPost } from '@/utils/admin-api';
 import { 
   Save, 
   ArrowLeft, 
@@ -87,13 +87,7 @@ export default function NewNotificationPage() {
       // デバッグ用ログ
       console.log('送信データ:', requestData);
 
-      const response = await adminAuthenticatedFetch('/api/v1/admin/notifications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestData)
-      });
+      const response = await adminPost('/api/v1/admin/notifications', requestData);
 
       if (!response.ok) {
         const errorData = await response.json();

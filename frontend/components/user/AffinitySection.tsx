@@ -41,7 +41,10 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
   console.log('AffinitySection received:', { affinities, length: affinities?.length || 0 });
   
   const getProgressPercentage = (experience: number, maxExperience: number) => {
-    return maxExperience > 0 ? (experience / maxExperience) * 100 : 0;
+    if (maxExperience <= 0) return 0;
+    const percentage = (experience / maxExperience) * 100;
+    // 100%を超えないように制限
+    return Math.min(percentage, 100);
   };
 
   const isUnlockAvailable = (level: number, nextUnlockLevel: number, unlockedImages: string[]) => {
@@ -115,18 +118,18 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
                     : 'Unknown Character'}
                 </h4>
 
-                {/* 経験値バー */}
+                {/* 経験値バー（暫定対応：レベルの小数点部分を進行度として表示） */}
                 <div className="mb-2">
                   <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                    <span>{t('experienceProgress', { current: affinity.experience, max: affinity.maxExperience })}</span>
-                    <span>{t('expNeeded', { needed: affinity.experienceToNext })}</span>
+                    <span>Lv.{Math.floor(affinity.level)} → Lv.{Math.floor(affinity.level) + 1}</span>
+                    <span>{Math.round((affinity.level % 1) * 100)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="h-2 rounded-full transition-all duration-300"
                       style={{ 
-                        backgroundColor: affinity.character.themeColor,
-                        width: `${getProgressPercentage(affinity.experience, affinity.maxExperience)}%`
+                        backgroundColor: affinity.character.themeColor || '#8B5CF6',
+                        width: `${(affinity.level % 1) * 100}%`
                       }}
                     />
                   </div>

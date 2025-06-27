@@ -6,6 +6,7 @@ import GoogleAnalyticsScript from '@/components/GoogleAnalyticsScript';
 import { getActiveGAId } from '@/lib/ga-settings';
 import { Suspense } from 'react';
 import '../globals.css';
+import CsrfTokenInitializer from '@/components/CsrfTokenInitializer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -43,6 +44,8 @@ export default async function LocaleLayout({
         <Suspense fallback={null}>
           <GoogleAnalyticsScript />
         </Suspense>
+        {/* CSRFトークン初期化 */}
+        <CsrfTokenInitializer />
       </body>
     </html>
   );

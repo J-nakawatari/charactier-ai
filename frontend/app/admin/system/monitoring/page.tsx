@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminFetch } from '@/utils/admin-api';
 import { AlertCircle, Server, Activity, Users, Clock, Zap, RefreshCw, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 

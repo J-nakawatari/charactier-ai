@@ -28,26 +28,12 @@ const authenticateAdmin = (req: any, res: Response, next: any) => {
   next();
 };
 
-// Google Analytics設定の取得（公開API - 認証不要）
-router.get('/google-analytics', generalRateLimit, async (req: any, res: Response): Promise<void> => {
-  try {
-    const settings = await SystemSettingsModel.findOne({ key: 'google_analytics' });
-    
-    res.json({
-      settings: settings?.value || null,
-      isActive: settings?.isActive || false
-    });
-  } catch (error) {
-    console.error('GA設定取得エラー:', error);
-    res.status(500).json({ error: 'Google Analytics設定の取得に失敗しました' });
-  }
-});
 
 // Google Analytics設定の更新
 router.post('/google-analytics', adminRateLimit, authenticateToken, authenticateAdmin, async (req: any, res: Response): Promise<void> => {
   try {
     const { measurementId, trackingCode, isActive } = req.body;
-    const adminId = req.user?._id;
+    const adminId = req.admin?._id;
 
     // 測定IDの検証
     if (!measurementId || !measurementId.match(/^G-[A-Z0-9]{10}$/)) {

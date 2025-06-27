@@ -24,20 +24,46 @@ export interface AuthState {
  * 認証ヘッダーを取得
  */
 export function getAuthHeaders(): HeadersInit {
-  // HttpOnlyクッキーで認証するため、Authorizationヘッダーは不要
-  return {
+  const headers: HeadersInit = {
     'Content-Type': 'application/json'
   };
+  
+  // CSRFトークンを追加
+  if (typeof window !== 'undefined') {
+    const csrfToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('XSRF-TOKEN='))
+      ?.split('=')[1];
+    
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
+  }
+  
+  return headers;
 }
 
 /**
  * 管理画面専用の認証ヘッダーを取得（HttpOnlyクッキー使用のため、Authorizationヘッダーは不要）
  */
 export function getAdminAuthHeaders(): HeadersInit {
-  // HttpOnlyクッキーで認証するため、Authorizationヘッダーは不要
-  return {
+  const headers: HeadersInit = {
     'Content-Type': 'application/json'
   };
+  
+  // CSRFトークンを追加
+  if (typeof window !== 'undefined') {
+    const csrfToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('XSRF-TOKEN='))
+      ?.split('=')[1];
+    
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
+  }
+  
+  return headers;
 }
 
 /**

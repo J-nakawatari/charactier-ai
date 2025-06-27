@@ -47,7 +47,7 @@ export default function UsersPage() {
   // Debug function to test cookies
   const testCookies = async () => {
     try {
-      const response = await adminGet('/api/debug/auth-status');
+      const response = await adminGet('/api/v1/debug/auth-status');
       const data = await response.json();
       console.log('🍪 Cookie Test Results:', data);
       success('クッキーテスト', 'Check console for results');

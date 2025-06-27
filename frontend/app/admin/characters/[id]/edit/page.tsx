@@ -11,7 +11,7 @@ import ImageCropper from '@/components/admin/ImageCropper';
 import TranslationEditor from '@/components/admin/TranslationEditor';
 import { ArrowLeft, Save, X, Upload } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
-import { adminFetch } from '@/utils/admin-fetch';
+import { adminFetch, adminPut } from '@/utils/admin-api';
 import { 
   PERSONALITY_PRESETS, 
   PERSONALITY_TAGS, 
@@ -281,9 +281,6 @@ export default function CharacterEditPage() {
       console.log('🔍 Sending translation data:', translationData);
       const translationSaveResponse = await adminFetch(`${API_BASE_URL}/api/v1/characters/${characterId}/translations`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify(translationData)
       });
       
@@ -342,13 +339,7 @@ export default function CharacterEditPage() {
       console.log('  imageChatBackgroundUrl:', formData.imageChatBackgroundUrl);
       console.log('  imageChatAvatarUrl:', formData.imageChatAvatarUrl);
       
-      const basicSaveResponse = await adminFetch(`${API_BASE_URL}/api/v1/admin/characters/${characterId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(basicData)
-      });
+      const basicSaveResponse = await adminPut(`${API_BASE_URL}/api/v1/admin/characters/${characterId}`, basicData);
       
       if (basicSaveResponse.ok) {
         console.log('✅ 基本情報、翻訳データ、ギャラリー画像を保存しました');

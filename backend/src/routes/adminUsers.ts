@@ -80,7 +80,7 @@ router.get('/',
       } else if (status === 'inactive') {
         query.accountStatus = 'inactive';
       } else if (status === 'suspended') {
-        query.accountStatus = 'suspended';
+        query.accountStatus = { $in: ['suspended', 'account_suspended', 'banned'] };
       }
     }
 
@@ -99,17 +99,17 @@ router.get('/',
 
     // レスポンス用にデータを整形
     const formattedUsers = users.map(user => ({
-      id: user._id.toString(),
-      _id: user._id.toString(), // フロントエンドが期待する_idフィールドを追加
-      name: user.name || '名前未設定',
-      email: user.email,
-      status: user.accountStatus === 'suspended' ? 'suspended' : (user.isActive ? 'active' : 'inactive'),
-      isTrialUser: !user.isSetupComplete,
-      tokenBalance: user.tokenBalance || 0,
-      totalSpent: user.totalSpent || 0,
-      chatCount: user.totalChatMessages || 0,
-      lastLogin: user.lastLogin ? user.lastLogin.toISOString() : user.createdAt.toISOString(),
-      createdAt: user.createdAt.toISOString() // createdAtフィールドも追加
+        id: user._id.toString(),
+        _id: user._id.toString(), // フロントエンドが期待する_idフィールドを追加
+        name: user.name || '名前未設定',
+        email: user.email,
+        status: (user.accountStatus === 'suspended' || user.accountStatus === 'account_suspended' || user.accountStatus === 'banned') ? 'suspended' : (user.isActive ? 'active' : 'inactive'),
+        isTrialUser: !user.isSetupComplete,
+        tokenBalance: user.tokenBalance || 0,
+        totalSpent: user.totalSpent || 0,
+        chatCount: user.totalChatMessages || 0,
+        lastLogin: user.lastLogin ? user.lastLogin.toISOString() : user.createdAt.toISOString(),
+        createdAt: user.createdAt.toISOString() // createdAtフィールドも追加
     }));
 
     console.log(`✅ Fetched ${formattedUsers.length} users for admin`);
