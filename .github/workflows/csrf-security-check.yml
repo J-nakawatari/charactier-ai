@@ -17,14 +17,19 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: backend/package-lock.json
     
+    - name: Check directory structure
+      run: |
+        echo "Repository root:"
+        ls -la
+        echo "Backend directory:"
+        ls -la backend/
+        
     - name: Install dependencies
       working-directory: ./backend
       run: |
-        # npm ciが失敗する場合はnpm installを使用
-        npm ci || npm install
+        echo "Installing dependencies..."
+        npm install
     
     - name: Install Jest and testing dependencies
       working-directory: ./backend

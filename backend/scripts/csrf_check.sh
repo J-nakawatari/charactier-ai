@@ -7,7 +7,7 @@ echo '============================'
 # 1. Jest単体テストの実行
 echo ''
 echo '1️⃣ Running Jest unit tests...'
-if npm run test -- tests/csrf/*.spec.ts 2>/dev/null; then
+if npx jest tests/csrf/*.spec.ts 2>/dev/null; then
   echo '✅ CSRF unit tests PASSED'
 else
   echo '❌ CSRF unit tests FAILED'
