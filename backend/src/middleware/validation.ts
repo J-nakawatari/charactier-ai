@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
 import { ClientErrorCode, getSafeValidationMessage } from '../utils/errorResponse';
 import log from '../utils/logger';
+import { getJoiValidationOptions, getFeatureFlags } from '../config/featureFlags';
 
 export interface ValidationOptions {
   body?: Joi.Schema;
@@ -17,13 +18,13 @@ export interface ValidationOptions {
 export function validate(schemas: ValidationOptions) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      // Feature Flagに基づいたJoi検証オプションを取得
+      const validationOptions = getJoiValidationOptions();
+      const flags = getFeatureFlags();
+      
       // Body検証
       if (schemas.body) {
-        const { error, value } = schemas.body.validate(req.body, {
-          abortEarly: false,
-          stripUnknown: true,
-          convert: true
-        });
+        const { error, value, warning } = schemas.body.validate(req.body, validationOptions);
 
         if (error) {
           // Log detailed validation errors internally
@@ -38,6 +39,15 @@ export function validate(schemas: ValidationOptions) {
             method: req.method,
             body: req.body
           });
+        
+        // 不明フィールドの警告ログ（Feature Flagが有効な場合）
+        if (flags.LOG_UNKNOWN_FIELDS && warning) {
+          log.warn('⚠️ Unknown fields detected in request body', {
+            path: req.path,
+            method: req.method,
+            unknownFields: warning.details.map(d => d.path.join('.'))
+          });
+        }
 
           // Send safe error message to client
           const safeMessage = getSafeValidationMessage(error.details);
@@ -53,11 +63,7 @@ export function validate(schemas: ValidationOptions) {
 
       // Query検証
       if (schemas.query) {
-        const { error, value } = schemas.query.validate(req.query, {
-          abortEarly: false,
-          stripUnknown: true,
-          convert: true
-        });
+        const { error, value, warning } = schemas.query.validate(req.query, validationOptions);
 
         if (error) {
           // Log detailed validation errors internally
@@ -68,6 +74,15 @@ export function validate(schemas: ValidationOptions) {
             })),
             path: req.path
           });
+        
+        // 不明フィールドの警告ログ（Feature Flagが有効な場合）
+        if (flags.LOG_UNKNOWN_FIELDS && warning) {
+          log.warn('⚠️ Unknown fields detected in query params', {
+            path: req.path,
+            method: req.method,
+            unknownFields: warning.details.map(d => d.path.join('.'))
+          });
+        }
 
           // Send safe error message to client
           const safeMessage = getSafeValidationMessage(error.details);
@@ -83,10 +98,9 @@ export function validate(schemas: ValidationOptions) {
 
       // Params検証
       if (schemas.params) {
-        const { error, value } = schemas.params.validate(req.params, {
-          abortEarly: false,
-          stripUnknown: false,
-          convert: true
+        const { error, value, warning } = schemas.params.validate(req.params, {
+          ...validationOptions,
+          stripUnknown: false // paramsは常にstripUnknown: false
         });
 
         if (error) {
@@ -98,6 +112,15 @@ export function validate(schemas: ValidationOptions) {
             })),
             path: req.path
           });
+        
+        // 不明フィールドの警告ログ（Feature Flagが有効な場合）
+        if (flags.LOG_UNKNOWN_FIELDS && warning) {
+          log.warn('⚠️ Unknown fields detected in params', {
+            path: req.path,
+            method: req.method,
+            unknownFields: warning.details.map(d => d.path.join('.'))
+          });
+        }
 
           // Send safe error message to client
           const safeMessage = getSafeValidationMessage(error.details);

@@ -117,7 +117,7 @@ export function getJoiValidationOptions() {
     abortEarly: false,
     stripUnknown: !flags.STRICT_JOI_VALIDATION, // 厳格モードでは不明フィールドを削除しない
     allowUnknown: !flags.STRICT_JOI_VALIDATION, // 厳格モードでは不明フィールドを許可しない
-    presence: 'required',
+    presence: 'required' as const,
     convert: true
   };
 }
