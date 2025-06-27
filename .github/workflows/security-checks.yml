@@ -9,6 +9,11 @@ on:
     # 毎週月曜日の朝9時（JST）に実行
     - cron: '0 0 * * 1'
 
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
 jobs:
   security-tests:
     runs-on: ubuntu-latest
