@@ -80,7 +80,7 @@ router.get('/',
       } else if (status === 'inactive') {
         query.accountStatus = 'inactive';
       } else if (status === 'suspended') {
-        query.accountStatus = 'suspended';
+        query.accountStatus = { $in: ['suspended', 'account_suspended'] };
       }
     }
 
@@ -103,7 +103,7 @@ router.get('/',
       _id: user._id.toString(), // フロントエンドが期待する_idフィールドを追加
       name: user.name || '名前未設定',
       email: user.email,
-      status: user.accountStatus === 'suspended' ? 'suspended' : (user.isActive ? 'active' : 'inactive'),
+      status: (user.accountStatus === 'suspended' || user.accountStatus === 'account_suspended') ? 'suspended' : (user.isActive ? 'active' : 'inactive'),
       isTrialUser: !user.isSetupComplete,
       tokenBalance: user.tokenBalance || 0,
       totalSpent: user.totalSpent || 0,
