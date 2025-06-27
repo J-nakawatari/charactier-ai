@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { app } from '../../index';
-import { ChatMessageModel } from '../../models/ChatMessageModel';
+import { ChatModel } from '../../models/ChatModel';
 import { UserModel } from '../../models/UserModel';
 
 describe('XSS Protection Tests', () => {
@@ -30,7 +30,7 @@ describe('XSS Protection Tests', () => {
   afterAll(async () => {
     // テストデータをクリーンアップ
     await UserModel.deleteOne({ _id: testUser._id });
-    await ChatMessageModel.deleteMany({ userId: testUser._id });
+    await ChatModel.deleteMany({ userId: testUser._id });
   });
 
   describe('Chat Message Sanitization', () => {

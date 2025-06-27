@@ -7092,3 +7092,6 @@ app.listen(PORT, async () => {
   // 💱 初回起動時に為替レートを初期化
   await initializeExchangeRate();
 });
+
+// テスト用にエクスポート
+export { app };
