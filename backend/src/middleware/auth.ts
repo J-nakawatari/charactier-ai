@@ -288,5 +288,10 @@ export const isModerator = (req: AuthRequest): boolean => {
 // Helper function to check if admin has write permissions
 export const hasWritePermission = (req: AuthRequest): boolean => {
   // Only super_admin has write permissions
-  return req.admin?.role === 'super_admin' || req.user?.role === 'super_admin';
+  // 管理者パスの場合はreq.adminをチェック
+  if (req.admin) {
+    return req.admin.role === 'super_admin';
+  }
+  // ユーザーパスの場合はreq.userをチェック（通常はsuper_adminロールを持たない）
+  return req.user?.role === 'super_admin';
 };
