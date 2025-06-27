@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { adminAuthenticatedFetch } from '@/utils/auth';
+import { adminFetch } from '@/utils/admin-api';
 import { 
   Edit, 
   Users, 
@@ -73,7 +73,7 @@ export default function NotificationDetailPage() {
     try {
       setIsLoading(true);
       
-      const response = await adminAuthenticatedFetch(`/api/v1/admin/notifications/${notificationId}`);
+      const response = await adminFetch(`/api/v1/admin/notifications/${notificationId}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

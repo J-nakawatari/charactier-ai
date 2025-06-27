@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { adminAuthenticatedFetch } from '@/utils/auth';
+import { adminFetch, adminPost, adminDelete } from '@/utils/admin-api';
 import { 
   Bell, 
   Plus, 
@@ -104,7 +104,7 @@ export default function NotificationsManagementPage() {
       if (filters.isActive !== '') queryParams.append('isActive', filters.isActive);
       if (filters.search) queryParams.append('search', filters.search);
 
-      const response = await adminAuthenticatedFetch(`/api/v1/admin/notifications?${queryParams}`);
+      const response = await adminFetch(`/api/v1/admin/notifications?${queryParams}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -128,9 +128,7 @@ export default function NotificationsManagementPage() {
     if (!confirm('このお知らせを削除しますか？')) return;
 
     try {
-      const response = await adminAuthenticatedFetch(`/api/v1/admin/notifications/${id}`, {
-        method: 'DELETE'
-      });
+      const response = await adminDelete(`/api/v1/admin/notifications/${id}`);
 
       if (!response.ok) {
         throw new Error(`削除に失敗しました: ${response.status}`);
@@ -151,9 +149,7 @@ export default function NotificationsManagementPage() {
   // 通知を既読にする
   const markAsRead = async (notificationId: string) => {
     try {
-      const response = await adminAuthenticatedFetch(`/api/v1/admin/notifications/${notificationId}/read`, {
-        method: 'POST'
-      });
+      const response = await adminPost(`/api/v1/admin/notifications/${notificationId}/read`, {});
 
       if (response.ok) {
         // ローカル状態を更新
@@ -177,9 +173,7 @@ export default function NotificationsManagementPage() {
   // 一括既読
   const markAllAsRead = async () => {
     try {
-      const response = await adminAuthenticatedFetch('/api/v1/admin/notifications/read-all', {
-        method: 'POST'
-      });
+      const response = await adminPost('/api/v1/admin/notifications/read-all', {});
 
       if (response.ok) {
         // 全ての通知を既読に更新

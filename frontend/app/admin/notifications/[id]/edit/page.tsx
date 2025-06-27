@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { adminAuthenticatedFetch } from '@/utils/auth';
+import { adminFetch, adminPut } from '@/utils/admin-api';
 import { 
   ArrowLeft, 
   Save, 
@@ -86,13 +86,14 @@ export default function EditNotificationPage() {
     try {
       setIsLoading(true);
       
-      const response = await adminAuthenticatedFetch(`/api/v1/admin/notifications/${notificationId}`);
+      const response = await adminFetch(`/api/v1/admin/notifications/${notificationId}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('取得したお知らせデータ:', data);
       setNotification(data);
       
       // フォームデータに反映
@@ -184,13 +185,7 @@ export default function EditNotificationPage() {
         validUntil: formData.validUntil ? new Date(formData.validUntil).toISOString() : undefined
       };
       
-      const response = await adminAuthenticatedFetch(`/api/v1/admin/notifications/${notificationId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updateData)
-      });
+      const response = await adminPut(`/api/v1/admin/notifications/${notificationId}`, updateData);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -257,6 +252,9 @@ export default function EditNotificationPage() {
       </div>
     );
   }
+
+  console.log('レンダリング時のnotification:', notification);
+  console.log('レンダリング時のformData:', formData);
 
   return (
     <div className="min-h-dvh bg-gray-50 py-8">
