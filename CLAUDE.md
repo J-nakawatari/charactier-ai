@@ -274,10 +274,26 @@ Nginx (SSL終端) →
     - チャットメッセージのサニタイズ（sanitize-html）
     - 既存データのマイグレーション: `npm run xss:migrate`
 
-### セキュリティ強化作業中（feature/fix-breaking-security-warnings）
-- JWT保存方式の改善（httpOnly Cookie化）
-- CSRF SameSite Strictへの移行
-- Joi検証の厳格化
+### 2025-06-27 セキュリティ強化完了
+- **JWT保存方式の改善**: Feature Flag（SECURE_COOKIE_AUTH）で段階的移行
+- **CSRF SameSite Strict**: Feature Flag（CSRF_SAMESITE_STRICT）で制御
+- **Joi検証の厳格化**: Feature Flag（STRICT_JOI_VALIDATION）で制御
+- **セキュリティテストCI統合**: GitHub Actionsで自動実行
+
+### Feature Flags設定
+```bash
+# JWT保存方式 (true: HttpOnly Cookie, false: LocalStorage)
+FEATURE_SECURE_COOKIE_AUTH=false
+
+# CSRF SameSite設定 (true: strict, false: lax)
+FEATURE_CSRF_SAMESITE_STRICT=false
+
+# Joi検証強化 (true: 厳格モード, false: 従来モード)
+FEATURE_STRICT_JOI_VALIDATION=false
+
+# 不明フィールドの警告ログ (true: 有効, false: 無効)
+FEATURE_LOG_UNKNOWN_FIELDS=false
+```
 
 ## トラブルシューティング
 

@@ -2244,6 +2244,46 @@ paths:
   # System APIs
   # ===================
   
+  /api/v1/feature-flags/public:
+    get:
+      summary: 公開Feature Flag取得
+      description: |
+        現在有効なFeature Flagを取得します。
+        フロントエンドがJWT保存方式などの設定を確認するために使用します。
+      tags: [System]
+      responses:
+        '200':
+          description: Feature Flag一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  flags:
+                    type: object
+                    properties:
+                      SECURE_COOKIE_AUTH:
+                        type: boolean
+                        description: JWT保存方式 (true=HttpOnly Cookie, false=LocalStorage)
+                        example: false
+                    additionalProperties: false
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Failed to fetch feature flags"
+  
   /api/health:
     get:
       summary: ヘルスチェック
