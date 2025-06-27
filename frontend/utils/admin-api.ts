@@ -19,24 +19,27 @@ export async function adminFetch(endpoint: string, options: AdminApiOptions = {}
     credentials: 'include'
   });
   
-  // CSRFトークンを追加
-  const headers: Record<string, string> = {
+  // デフォルトヘッダーを設定
+  const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string> || {}),
   };
   
+  // CSRFトークンを取得
   const token = Cookies.get('XSRF-TOKEN');
   const method = (options.method || 'GET').toUpperCase();
   
   // POST, PUT, PATCH, DELETEリクエストにCSRFトークンを追加
   if (token && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-    headers['X-CSRF-Token'] = token;
+    defaultHeaders['X-CSRF-Token'] = token;
   }
   
   const response = await fetch(url, {
     ...options,
     credentials: 'include', // Always include cookies
-    headers,
+    headers: {
+      ...defaultHeaders,
+      ...(options.headers as Record<string, string> || {})
+    },
   });
 
   // Handle unauthorized responses
