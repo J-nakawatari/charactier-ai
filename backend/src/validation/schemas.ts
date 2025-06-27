@@ -216,6 +216,7 @@ export const adminSchemas = {
 
   searchUsers: Joi.object({
     search: Joi.string().trim().optional(),
+    status: Joi.string().valid('active', 'inactive', 'suspended').optional(),
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(100).default(20)
   }),
