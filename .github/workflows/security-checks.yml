@@ -33,18 +33,18 @@ jobs:
         node-version: '18'
         cache: 'npm'
         cache-dependency-path: |
-          backend/package-lock.json
-          frontend/package-lock.json
+          backend/package.json
+          frontend/package.json
     
     - name: Install backend dependencies
       run: |
         cd backend
-        npm ci
+        npm install
     
     - name: Install frontend dependencies
       run: |
         cd frontend
-        npm ci
+        npm install
     
     - name: Create test environment file
       run: |
