@@ -118,21 +118,18 @@ export default function AffinitySection({ affinities, locale }: AffinitySectionP
                     : 'Unknown Character'}
                 </h4>
 
-                {/* 経験値バー */}
+                {/* 経験値バー（暫定対応：レベルの小数点部分を進行度として表示） */}
                 <div className="mb-2">
                   <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                    <span>{t('experienceProgress', { 
-                      current: Math.min(affinity.experience, affinity.maxExperience), 
-                      max: affinity.maxExperience 
-                    })}</span>
-                    <span>{t('expNeeded', { needed: Math.max(0, affinity.maxExperience - affinity.experience) })}</span>
+                    <span>Lv.{Math.floor(affinity.level)} → Lv.{Math.floor(affinity.level) + 1}</span>
+                    <span>{Math.round((affinity.level % 1) * 100)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="h-2 rounded-full transition-all duration-300"
                       style={{ 
                         backgroundColor: affinity.character.themeColor || '#8B5CF6',
-                        width: `${getProgressPercentage(affinity.experience, affinity.maxExperience)}%`
+                        width: `${(affinity.level % 1) * 100}%`
                       }}
                     />
                   </div>
