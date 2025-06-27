@@ -215,11 +215,11 @@ export const adminSchemas = {
   }),
 
   searchUsers: Joi.object({
-    search: Joi.string().trim().optional(),
-    status: Joi.string().valid('active', 'inactive', 'suspended').optional(),
-    page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(100).default(20)
-  }),
+    search: Joi.string().trim().allow('').optional(),
+    status: Joi.string().valid('active', 'inactive', 'suspended').allow('').optional(),
+    page: Joi.number().integer().min(1).optional().default(1),
+    limit: Joi.number().integer().min(1).max(100).optional().default(20)
+  }).options({ allowUnknown: true }),
 
   updateModelSettings: Joi.object({
     model: Joi.string().valid('gpt-3.5-turbo', 'gpt-4o-mini').required(),

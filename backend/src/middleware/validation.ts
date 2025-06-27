@@ -67,7 +67,7 @@ export function validate(schemas: ValidationOptions) {
 
         if (error) {
           // Log detailed validation errors internally
-          log.warn('Query validation error', {
+          log.debug('Query validation error', {
             errors: error.details.map(detail => ({
               field: detail.path.join('.'),
               message: detail.message,
@@ -76,8 +76,7 @@ export function validate(schemas: ValidationOptions) {
             })),
             path: req.path,
             method: req.method,
-            query: req.query,
-            validationOptions: validationOptions
+            query: req.query
           });
         
         // 不明フィールドの警告ログ（Feature Flagが有効な場合）
