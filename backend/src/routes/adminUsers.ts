@@ -19,9 +19,7 @@ const adminRateLimit = createRateLimiter('admin');
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {
   log.debug('Admin authentication check for users API', {
     hasAdmin: !!req.admin,
-    hasUser: !!req.user,
     adminId: req.admin?._id?.toString(),
-    userId: req.user?._id?.toString(),
     path: req.path,
     originalUrl: req.originalUrl
   });
@@ -30,7 +28,6 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
   if (!req.admin) {
     log.warn('Admin access denied - no admin in request', { 
       hasAdmin: !!req.admin,
-      hasUser: !!req.user,
       path: req.originalUrl 
     });
     sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
