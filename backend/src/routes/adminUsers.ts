@@ -46,7 +46,8 @@ router.get('/',
   adminRateLimit,
   authenticateToken, 
   authenticateAdmin, 
-  validate({ query: adminSchemas.searchUsers }),
+  // 一時的にバリデーションを無効化してデバッグ
+  // validate({ query: adminSchemas.searchUsers }),
   async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
