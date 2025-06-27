@@ -463,8 +463,8 @@ router.get('/:id', generalRateLimit, authenticateToken, async (req: AuthRequest,
 
 // キャラクター更新（管理者のみ）
 router.put('/:id', 
-  authenticateToken,
   adminRateLimit,
+  authenticateToken,
   validateObjectId('id'),
   validate({ body: characterSchemas.update }),
   async (req: AuthRequest, res: Response): Promise<void> => {
