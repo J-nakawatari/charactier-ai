@@ -281,9 +281,6 @@ export default function CharacterEditPage() {
       console.log('🔍 Sending translation data:', translationData);
       const translationSaveResponse = await adminFetch(`${API_BASE_URL}/api/v1/characters/${characterId}/translations`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify(translationData)
       });
       
