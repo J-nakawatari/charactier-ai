@@ -28,6 +28,7 @@ import adminNotificationsRoutes from './routes/adminNotifications';
 import modelRoutes from './routes/modelSettings';
 import notificationRoutes from './routes/notifications';
 import systemSettingsRoutes from './routes/systemSettings';
+import publicSystemSettingsRoutes from './routes/publicSystemSettings';
 import systemRoutes from './routes/system';
 import debugRoutes from './routes/debug';
 import userRoutes from './routes/user';
@@ -887,8 +888,11 @@ app.use(`${API_PREFIX}/user`, userRoutes);
 // 管理者ルート - モデル設定
 app.use(`${API_PREFIX}/admin/models`, modelRoutes);
 
-// システム設定ルート
-app.use(`${API_PREFIX}/system-settings`, systemSettingsRoutes);
+// 公開システム設定ルート（認証不要）
+app.use(`${API_PREFIX}/system-settings`, publicSystemSettingsRoutes);
+
+// 管理者用システム設定ルート
+app.use(`${API_PREFIX}/admin/system-settings`, systemSettingsRoutes);
 
 // システム監視ルート（管理者のみ）
 app.use(`${API_PREFIX}/admin/system`, systemRoutes);
