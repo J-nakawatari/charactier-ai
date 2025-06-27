@@ -1,0 +1,161 @@
+name: Security Checks
+
+on:
+  push:
+    branches: [ main, develop, 'feature/security-*' ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # 毎週月曜日の朝9時（JST）に実行
+    - cron: '0 0 * * 1'
+
+jobs:
+  security-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          backend/package-lock.json
+          frontend/package-lock.json
+    
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm ci
+    
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Create test environment file
+      run: |
+        cd backend
+        cp .env.example .env.test
+        echo "NODE_ENV=test" >> .env.test
+        echo "REDIS_URL=redis://localhost:6379" >> .env.test
+        echo "JWT_SECRET=test-secret-key-for-ci" >> .env.test
+        echo "JWT_REFRESH_SECRET=test-refresh-secret-key-for-ci" >> .env.test
+    
+    # XSS保護テスト
+    - name: Run XSS protection tests
+      run: |
+        cd backend
+        npm run test:security:xss || true
+    
+    # CSRF保護テスト
+    - name: Run CSRF protection tests
+      run: |
+        cd backend
+        chmod +x scripts/csrf_check.sh
+        ./scripts/csrf_check.sh
+    
+    # レート制限テスト
+    - name: Run rate limiting tests
+      run: |
+        cd backend
+        npm run test:security:ratelimit || true
+    
+    # 入力検証テスト
+    - name: Run input validation tests
+      run: |
+        cd backend
+        npm run test:security:validation || true
+    
+    # Feature Flag検証
+    - name: Test Feature Flags
+      run: |
+        cd backend
+        # Feature Flagが正しく動作するか検証
+        FEATURE_SECURE_COOKIE_AUTH=true npm run test:security:features || true
+        FEATURE_CSRF_SAMESITE_STRICT=true npm run test:security:features || true
+        FEATURE_STRICT_JOI_VALIDATION=true npm run test:security:features || true
+        FEATURE_LOG_UNKNOWN_FIELDS=true npm run test:security:features || true
+    
+    # セキュリティヘッダーチェック
+    - name: Check security headers
+      run: |
+        cd backend
+        npm run test:security:headers || true
+    
+    # 依存関係の脆弱性チェック
+    - name: Run npm audit
+      run: |
+        echo "=== Backend Dependencies ==="
+        cd backend
+        npm audit --production || true
+        
+        echo "=== Frontend Dependencies ==="
+        cd ../frontend
+        npm audit --production || true
+    
+    # Gitleaksによる機密情報漏洩チェック
+    - name: Run Gitleaks
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    # E2Eセキュリティテスト（Playwright）
+    - name: Install Playwright browsers
+      run: |
+        cd frontend
+        npx playwright install chromium
+    
+    - name: Run E2E security tests
+      run: |
+        cd backend
+        npm run dev &
+        BACKEND_PID=$!
+        
+        cd ../frontend
+        npm run build
+        npm run start &
+        FRONTEND_PID=$!
+        
+        # サーバー起動を待つ
+        sleep 30
+        
+        # E2Eテスト実行
+        npm run test:e2e:security || true
+        
+        # プロセスを終了
+        kill $BACKEND_PID $FRONTEND_PID || true
+    
+    # テスト結果の集約
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-test-results
+        path: |
+          backend/test-results/
+          frontend/test-results/
+          backend/coverage/
+    
+    # Slackへの通知（オプション）
+    - name: Notify results
+      if: failure()
+      run: |
+        echo "Security tests failed! Check the logs for details."
+        # Slack webhook URLが設定されている場合は通知を送信
+        # curl -X POST -H 'Content-type: application/json' \
+        #   --data '{"text":"⚠️ Security tests failed in ${{ github.repository }}"}' \
+        #   ${{ secrets.SLACK_WEBHOOK_URL }}
