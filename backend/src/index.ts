@@ -835,15 +835,42 @@ app.use(cookieParser());
 
 // HTMLエンコードされたURLパラメータを修正するミドルウェア
 // SendGridのテンプレートで&amp;にエンコードされる問題に対処
-app.use((req: Request, res: Response, next: NextFunction) => {
+app.use((req: any, res: Response, next: NextFunction): void => {
   if (req.originalUrl && req.originalUrl.includes('&amp;')) {
     const correctedUrl = req.originalUrl.replace(/&amp;/g, '&');
+    
+    // セキュリティ検証: 同一ホスト内のURLのみ許可
+    try {
+      const parsedUrl = new URL(correctedUrl, `${req.protocol}://${req.get('host')}`);
+      const requestHost = req.get('host');
+      
+      // 同一ホストであることを確認
+      if (parsedUrl.hostname !== requestHost?.split(':')[0]) {
+        log.warn('Blocked potential redirect attack', {
+          originalUrl: req.originalUrl,
+          correctedUrl: correctedUrl,
+          targetHost: parsedUrl.hostname,
+          requestHost: requestHost
+        });
+        res.status(400).json({ error: 'Invalid redirect URL' });
+        return;
+      }
+    } catch (error) {
+      // URL解析エラーの場合は安全な処理
+      log.warn('URL parsing error during redirect validation', {
+        originalUrl: req.originalUrl,
+        correctedUrl: correctedUrl,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+    
     log.info('Correcting HTML-encoded URL', {
       originalUrl: req.originalUrl,
       correctedUrl: correctedUrl
     });
     // 修正されたURLにリダイレクト
-    return res.redirect(correctedUrl);
+    res.redirect(correctedUrl);
+    return;
   }
   next();
 });
@@ -1503,8 +1530,8 @@ routeRegistry.define('PUT', `${API_PREFIX}/user/profile`, authenticateToken, cre
 
     const user = await UserModel.findByIdAndUpdate(
       userId,
-      updateData,
-      { new: true, select: '-password -emailVerificationToken' }
+      { $set: updateData },
+      { new: true, runValidators: true, select: '-password -emailVerificationToken' }
     );
 
     if (!user) {
@@ -1961,8 +1988,8 @@ routeRegistry.define('POST', `${API_PREFIX}/user/select-character`, authenticate
     // ユーザーの選択キャラクターを更新
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
-      { selectedCharacter: characterId },
-      { new: true, select: '-password' }
+      { $set: { selectedCharacter: characterId } },
+      { new: true, runValidators: true, select: '-password' }
     );
 
     if (!updatedUser) {
@@ -2028,12 +2055,12 @@ app.post(`${API_PREFIX}/user/setup-complete`, authenticateToken, createRateLimit
 
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
-      { 
+      { $set: { 
         name: name.trim(),
         selectedCharacter: selectedCharacterId,
         isSetupComplete: true
-      },
-      { new: true, select: '-password' }
+      }},
+      { new: true, runValidators: true, select: '-password' }
     );
 
     if (!updatedUser) {
@@ -3902,17 +3929,17 @@ routeRegistry.define('PUT', `${API_PREFIX}/admin/users/:id/status`, authenticate
       // 違反記録も削除（完全な復活）
       try {
         await ViolationRecordModel.deleteMany({ userId: id });
-        console.log(`Deleted violation records for user ${id} on account restoration`);
+        log.info('Deleted violation records for user on account restoration', { userId: id });
       } catch (violationDeleteError) {
-        console.error('Error deleting violation records:', violationDeleteError);
+        log.error('Error deleting violation records', violationDeleteError);
         // 違反記録削除に失敗してもアカウント復活は続行
       }
     }
 
     const user = await UserModel.findByIdAndUpdate(
       id,
-      updateData,
-      { new: true, select: '-password' }
+      { $set: updateData },
+      { new: true, runValidators: true, select: '-password' }
     );
 
     if (!user) {
