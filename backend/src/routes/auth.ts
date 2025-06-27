@@ -15,6 +15,7 @@ import { authSchemas } from '../validation/schemas';
 import log from '../utils/logger';
 import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
 import { hashPassword, verifyPassword, needsRehash, validatePasswordStrength } from '../services/passwordHash';
+import { getCookieConfig, getRefreshCookieConfig } from '../config/featureFlags';
 
 const router: Router = Router();
 
@@ -754,25 +755,17 @@ router.get('/verify-email', generalRateLimit, async (req: Request, res: Response
     const accessToken = generateAccessToken(user._id.toString());
     const refreshToken = generateRefreshToken(user._id.toString());
     
-    // Cookie設定
+    // Cookie設定（Feature Flag対応）
     const isProduction = process.env.NODE_ENV === 'production';
-    const cookieOptions = {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'lax' as const : 'strict' as const,
-      maxAge: 24 * 60 * 60 * 1000, // 24時間
-      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
-      path: '/'
-    };
+    const cookieOptions = getCookieConfig(isProduction);
+    const refreshCookieOptions = getRefreshCookieConfig(isProduction);
     
-    const refreshCookieOptions = {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'lax' as const : 'strict' as const,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
-      domain: process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined),
-      path: '/'
-    };
+    // ドメインを追加（必要な場合）
+    const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
+    if (cookieDomain) {
+      cookieOptions.domain = cookieDomain;
+      refreshCookieOptions.domain = cookieDomain;
+    }
     
     // Cookieにトークンを設定（ユーザー用）
     res.cookie('userAccessToken', accessToken, cookieOptions);

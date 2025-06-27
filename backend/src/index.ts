@@ -914,6 +914,10 @@ app.use(`${API_PREFIX}/admin/system-settings`, systemSettingsRoutes);
 // システム監視ルート（管理者のみ）
 app.use(`${API_PREFIX}/admin/system`, systemRoutes);
 
+// Feature Flagルート（公開）
+import featureFlagsRoutes from './routes/featureFlags';
+app.use(`${API_PREFIX}/feature-flags`, featureFlagsRoutes);
+
 // 管理者ルート - その他
 import adminUsersRoutes from './routes/adminUsers';
 import adminTokenPacksRoutes from './routes/adminTokenPacks';

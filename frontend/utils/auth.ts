@@ -1,10 +1,11 @@
 /**
  * 認証ユーティリティ
- * JWT認証システム
+ * JWT認証システム（Feature Flag対応）
  */
 
 import { API_BASE_URL } from '@/lib/api-config';
 import * as gtag from '@/lib/gtag';
+import { getFeatureFlags } from './featureFlags';
 
 export interface AuthUser {
   _id: string;
@@ -21,9 +22,43 @@ export interface AuthState {
 }
 
 /**
- * 認証ヘッダーを取得
+ * 認証ヘッダーを取得（Feature Flag対応）
  */
-export function getAuthHeaders(): HeadersInit {
+export async function getAuthHeaders(): Promise<HeadersInit> {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json'
+  };
+  
+  const flags = await getFeatureFlags();
+  
+  // CSRFトークンを追加
+  if (typeof window !== 'undefined') {
+    const csrfToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('XSRF-TOKEN='))
+      ?.split('=')[1];
+    
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
+  }
+  
+  // 従来方式の場合はAuthorizationヘッダーも追加
+  if (!flags.SECURE_COOKIE_AUTH) {
+    const token = getAccessToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+  
+  return headers;
+}
+
+/**
+ * 同期版の認証ヘッダー取得（後方互換性のため）
+ * 注意: Feature Flagを考慮しない
+ */
+export function getAuthHeadersSync(): HeadersInit {
   const headers: HeadersInit = {
     'Content-Type': 'application/json'
   };
@@ -198,9 +233,29 @@ export function setRefreshToken(token: string): void {
 }
 
 /**
- * 認証済みかどうかの判定
+ * 認証済みかどうかの判定（Feature Flag対応）
  */
-export function isAuthenticated(): boolean {
+export async function isAuthenticated(): Promise<boolean> {
+  const flags = await getFeatureFlags();
+  
+  if (flags.SECURE_COOKIE_AUTH) {
+    // HttpOnly Cookie方式: サーバーサイドで検証が必要
+    // ここではユーザー情報の存在のみ確認
+    const user = getCurrentUser();
+    return !!user;
+  } else {
+    // 従来方式: LocalStorageのトークンとユーザー情報を確認
+    const token = getAccessToken();
+    const user = getCurrentUser();
+    return !!(token && user);
+  }
+}
+
+/**
+ * 同期版の認証チェック（後方互換性のため）
+ * 注意: Feature Flagを考慮しない簡易チェック
+ */
+export function isAuthenticatedSync(): boolean {
   const token = getAccessToken();
   const user = getCurrentUser();
   return !!(token && user);
@@ -258,10 +313,10 @@ export function isDevelopment(): boolean {
 }
 
 /**
- * 認証が必要なAPIリクエスト
+ * 認証が必要なAPIリクエスト（Feature Flag対応）
  */
 export async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  const headers = getAuthHeaders();
+  const headers = await getAuthHeaders();
   
   // 相対URLの場合は API_BASE_URL を付加
   const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
@@ -280,7 +335,7 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
     const refreshed = await refreshToken();
     if (refreshed) {
       // リフレッシュ成功時は再リクエスト
-      const newHeaders = getAuthHeaders();
+      const newHeaders = await getAuthHeaders();
       return fetch(fullUrl, {
         ...options,
         credentials: 'include', // クッキーを送信

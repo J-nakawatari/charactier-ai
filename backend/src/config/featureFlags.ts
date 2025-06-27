@@ -30,6 +30,16 @@ const defaultFlags: FeatureFlags = {
   LOG_UNKNOWN_FIELDS: false
 };
 
+// Cookie設定の型定義
+export interface CookieOptions {
+  httpOnly: boolean;
+  secure: boolean;
+  sameSite: 'strict' | 'lax' | 'none';
+  maxAge: number;
+  path: string;
+  domain?: string;
+}
+
 // 環境変数からFeature Flagを読み込む
 export function getFeatureFlags(): FeatureFlags {
   const flags: FeatureFlags = {
@@ -58,41 +68,45 @@ export function isFeatureEnabled(flagName: keyof FeatureFlags): boolean {
 }
 
 // Cookie設定を取得（Feature Flagに基づく）
-export function getCookieConfig(isProduction: boolean = process.env.NODE_ENV === 'production') {
+export function getCookieConfig(isProduction: boolean = process.env.NODE_ENV === 'production'): CookieOptions {
   const flags = getFeatureFlags();
   
   if (flags.SECURE_COOKIE_AUTH) {
     // 新方式: httpOnly + secure + sameSite
-    return {
+    const options: CookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: flags.CSRF_SAMESITE_STRICT ? 'strict' as const : 'lax' as const,
+      sameSite: flags.CSRF_SAMESITE_STRICT ? 'strict' : 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24時間
       path: '/'
     };
+    return options;
   } else {
     // 従来方式: フロントエンドからアクセス可能
-    return {
+    const options: CookieOptions = {
       httpOnly: false,
       secure: isProduction,
-      sameSite: 'lax' as const,
+      sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24時間
       path: '/'
     };
+    return options;
   }
 }
 
 // リフレッシュトークンのCookie設定
-export function getRefreshCookieConfig(isProduction: boolean = process.env.NODE_ENV === 'production') {
+export function getRefreshCookieConfig(isProduction: boolean = process.env.NODE_ENV === 'production'): CookieOptions {
   const flags = getFeatureFlags();
   
-  return {
+  const options: CookieOptions = {
     httpOnly: true, // リフレッシュトークンは常にhttpOnly
     secure: isProduction,
-    sameSite: flags.CSRF_SAMESITE_STRICT ? 'strict' as const : 'lax' as const,
+    sameSite: flags.CSRF_SAMESITE_STRICT ? 'strict' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
     path: '/'
   };
+  
+  return options;
 }
 
 // Joi検証オプションを取得
