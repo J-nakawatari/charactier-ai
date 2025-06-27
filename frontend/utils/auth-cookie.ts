@@ -16,9 +16,9 @@ export const USE_COOKIE_AUTH = process.env.NEXT_PUBLIC_USE_COOKIE_AUTH === 'true
  * 認証ヘッダーを取得（Cookie認証対応版）
  */
 export function getAuthHeaders(): HeadersInit {
-  // Cookie認証が無効な場合は既存の実装を使用
+  // Cookie認証が無効な場合は既存の実装を使用（同期版を使用）
   if (!USE_COOKIE_AUTH) {
-    return authUtils.getAuthHeaders();
+    return authUtils.getAuthHeadersSync();
   }
 
   // Cookie認証が有効な場合、credentialsを含める
@@ -102,7 +102,7 @@ export async function logoutWithCookie(): Promise<void> {
  */
 export async function verifyToken(): Promise<boolean> {
   if (!USE_COOKIE_AUTH) {
-    return authUtils.isAuthenticated();
+    return authUtils.isAuthenticatedSync();
   }
 
   try {
