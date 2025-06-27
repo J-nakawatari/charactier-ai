@@ -68,6 +68,8 @@ router.get('/', adminRateLimit, authenticateToken, async (req: AuthRequest, res:
       .sort({ isPinned: -1, priority: -1, createdAt: -1 })
       .skip(offset)
       .limit(limit)
+      .populate('createdBy', 'name email')
+      .populate('updatedBy', 'name email')
       .lean();
 
     // 管理者の既読状況を取得
