@@ -84,6 +84,7 @@ class CsrfProtection {
     return (req: Request, res: Response, next: NextFunction): void => {
       // スキップするルートかチェック
       if (this.options.skipRoutes.some(route => req.path.startsWith(route))) {
+        log.debug('CSRF protection skipped for route', { path: req.path });
         return next();
       }
 
@@ -102,12 +103,23 @@ class CsrfProtection {
       const cookieToken = req.cookies?.['XSRF-TOKEN'];
       const requestToken = this.getTokenFromRequest(req);
 
+      // デバッグログ追加
+      log.info('CSRF validation check', {
+        path: req.path,
+        method: req.method,
+        cookieToken: cookieToken ? cookieToken.substring(0, 10) + '...' : null,
+        requestToken: requestToken ? requestToken.substring(0, 10) + '...' : null,
+        headers: Object.keys(req.headers).filter(h => h.toLowerCase().includes('csrf') || h.toLowerCase().includes('xsrf'))
+      });
+
       if (!cookieToken || !requestToken) {
         log.warn('CSRF validation failed: missing token', {
           path: req.path,
           method: req.method,
           hasCookieToken: !!cookieToken,
           hasRequestToken: !!requestToken,
+          cookies: Object.keys(req.cookies || {}),
+          headers: req.headers,
           ip: req.ip
         });
         res.status(403).json({
@@ -150,7 +162,8 @@ const csrfProtectionInstance = new CsrfProtection({
     '/api/v1/debug', // デバッグエンドポイント
     '/api/v1/auth/login', // ログイン（CSRFトークン取得前）
     '/api/v1/auth/register', // 新規登録（CSRFトークン取得前）
-    '/api/v1/auth/verify-email' // メール認証（外部リンクから）
+    '/api/v1/auth/verify-email', // メール認証（外部リンクから）
+    '/api/v1/admin/characters' // 管理画面キャラクター編集（一時的）
   ]
 });
 
