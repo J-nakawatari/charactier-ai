@@ -80,7 +80,11 @@ export default function NotificationDetailPage() {
       }
 
       const data = await response.json();
-      setNotification(data);
+      console.log('お知らせ詳細データ:', data);
+      
+      // APIレスポンスから実際のnotificationデータを取得
+      const notificationData = data.notification || data;
+      setNotification(notificationData);
       setError(null);
     } catch (error) {
       console.error('お知らせ取得エラー:', error);
