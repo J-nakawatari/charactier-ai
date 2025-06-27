@@ -2704,8 +2704,14 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
         }
 
         res.json({
-          userMessage,
-          aiResponse: assistantMessage,
+          userMessage: {
+            ...userMessage,
+            content: sanitizeChatMessage(userMessage.content) // XSS対策: レスポンスもサニタイズ
+          },
+          aiResponse: {
+            ...assistantMessage,
+            content: sanitizeChatMessage(assistantMessage.content) // XSS対策: レスポンスもサニタイズ
+          },
           affinity: {
             characterId,
             level: newAffinity,
