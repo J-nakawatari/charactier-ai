@@ -33,7 +33,7 @@ interface APIError {
 
 export default function ErrorStatsPage() {
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState('24h');
+  const [timeRange, setTimeRange] = useState('all');
   const [errorStats, setErrorStats] = useState<ErrorStat | null>(null);
   const [recentErrors, setRecentErrors] = useState<APIError[]>([]);
   const [selectedError, setSelectedError] = useState<APIError | null>(null);
@@ -132,6 +132,7 @@ export default function ErrorStatsPage() {
               <option value="24h">過去24時間</option>
               <option value="7d">過去7日間</option>
               <option value="30d">過去30日間</option>
+              <option value="all">全期間</option>
             </select>
             
             {/* 更新ボタン */}
