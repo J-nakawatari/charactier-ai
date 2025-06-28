@@ -167,7 +167,7 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
       }
       
       // キャッシュ検索（親密度レベル±5で検索）
-      const affinityRange = 2; // より厳密な親密度範囲でキャッシュを検索
+      const affinityRange = 5; // API消費を抑えるため範囲を広めに設定
       
       const cachedPrompt = await CharacterPromptCache.findOne({
         userId: userId,
@@ -1763,7 +1763,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
       }
       
       // キャッシュ検索（親密度レベル±5で検索）
-      const affinityRange = 2; // より厳密な親密度範囲でキャッシュを検索
+      const affinityRange = 5; // API消費を抑えるため範囲を広めに設定
       const cachedPrompts = await CharacterPromptCache.find({
         userId: userId,
         characterId: characterId,
