@@ -75,6 +75,12 @@ export function getAuthHeadersSync(): HeadersInit {
     }
   }
   
+  // LocalStorageからアクセストークンを取得して追加
+  const accessToken = getAccessToken();
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+  
   return headers;
 }
 
