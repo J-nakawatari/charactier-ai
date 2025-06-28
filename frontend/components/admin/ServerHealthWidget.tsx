@@ -45,7 +45,7 @@ export default function ServerHealthWidget() {
 
   useEffect(() => {
     fetchHealthStatus();
-    const interval = setInterval(fetchHealthStatus, 30000); // 30秒ごとに更新
+    const interval = setInterval(fetchHealthStatus, 300000); // 5分ごとに更新（レート制限対策）
     return () => clearInterval(interval);
   }, []);
 

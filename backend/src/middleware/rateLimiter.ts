@@ -32,9 +32,9 @@ export const rateLimitConfigs = {
     blockDuration: 3600
   },
   
-  // 管理者API
+  // 管理者API（レート制限を緩和）
   admin: {
-    points: 200,
+    points: 500,    // 200から500に増加
     duration: 60,
     blockDuration: 60
   },

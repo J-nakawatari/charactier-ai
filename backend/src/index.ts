@@ -7152,10 +7152,24 @@ app.get(`${API_PREFIX}/debug/user-violations/:userId`, authenticateToken, create
 
 
 
+// テスト用エンドポイント（開発環境のみ）
+if (process.env.NODE_ENV !== 'production') {
+  app.post(`${API_PREFIX}/test/long-request`, async (req: Request, res: Response) => {
+    console.log('🧪 Long request started...');
+    
+    // 5秒かかるリクエストをシミュレート
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
+    console.log('🧪 Long request completed!');
+    res.json({ message: 'Long request completed successfully!' });
+  });
+}
+
 // グローバルエラーハンドリングミドルウェア（最後に設定）
 app.use(errorLoggingMiddleware);
 
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
   
   // 🎭 MoodEngine Cronジョブを開始
   startAllMoodJobs();
@@ -7166,6 +7180,43 @@ app.listen(PORT, async () => {
   // 💱 初回起動時に為替レートを初期化
   await initializeExchangeRate();
 });
+
+// Graceful Shutdown の実装
+const gracefulShutdown = (signal: string) => {
+  console.log(`\n${signal} received. Starting graceful shutdown...`);
+  
+  // 新しい接続を受け付けない
+  server.close(() => {
+    console.log('✅ HTTP server closed');
+    
+    // MongoDB接続を閉じる
+    mongoose.connection.close().then(() => {
+      console.log('✅ MongoDB connection closed');
+      
+      // Redisクライアントを閉じる
+      getRedisClient().then(client => {
+        client.quit().then(() => {
+          console.log('✅ Redis connection closed');
+          console.log('👋 Graceful shutdown completed');
+          process.exit(0);
+        });
+      }).catch(() => {
+        // Redisエラーは無視して終了
+        process.exit(0);
+      });
+    });
+  });
+  
+  // 30秒でタイムアウト
+  setTimeout(() => {
+    console.error('⚠️ Graceful shutdown timeout, forcing exit');
+    process.exit(1);
+  }, 30000);
+};
+
+// シグナルハンドラーの設定
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // テスト用にエクスポート
 export { app };

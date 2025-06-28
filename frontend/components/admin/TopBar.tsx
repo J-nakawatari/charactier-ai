@@ -77,13 +77,13 @@ export default function TopBar() {
 
     fetchNotifications();
     
-    // 認証エラーでなければ30秒ごとに更新
+    // 認証エラーでなければ5分ごとに更新（レート制限対策）
     if (shouldContinue) {
       interval = setInterval(() => {
         if (shouldContinue) {
           fetchNotifications();
         }
-      }, 30000);
+      }, 300000); // 30秒から5分に変更
     }
     
     return () => {
