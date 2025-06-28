@@ -56,7 +56,8 @@ log() {
 
 # 現在のアクティブポートを確認
 get_active_port() {
-    grep -E "^\s*server\s+127\.0\.0\.1:" "$NGINX_UPSTREAM_CONF" | grep -v "#" | head -1 | grep -oE ":[0-9]+" | tr -d ":"
+    # backendブロック内のserverディレクティブのみを取得
+    awk '/upstream backend/,/^}/' "$NGINX_UPSTREAM_CONF" | grep -E "^\s*server\s+127\.0\.0\.1:" | grep -v "#" | head -1 | grep -oE ":[0-9]+" | tr -d ":"
 }
 
 # サービス名を取得
