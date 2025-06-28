@@ -8,8 +8,8 @@ User=root
 WorkingDirectory=/var/www/charactier-ai/backend
 Environment="NODE_ENV=production"
 Environment="PORT=5000"
-Environment="PATH=/home/jun/.nvm/versions/node/v22.16.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-ExecStart=/home/jun/.nvm/versions/node/v22.16.0/bin/node /var/www/charactier-ai/backend/dist/index.js
+Environment="PATH=/root/.nvm/versions/node/v22.16.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/root/.nvm/versions/node/v22.16.0/bin/node /var/www/charactier-ai/backend/dist/src/index.js
 ExecReload=/bin/kill -USR2 $MAINPID
 Restart=on-failure
 RestartSec=10
