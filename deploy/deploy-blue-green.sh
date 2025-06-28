@@ -5,10 +5,24 @@
 
 set -e  # エラーがあれば即座に停止
 
-# NVMを使用している場合のNode.jsパス設定
-export NVM_DIR="/home/jun/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-export PATH="/home/jun/.nvm/versions/node/v22.16.0/bin:$PATH"
+# Node.jsのパスを直接指定
+NODE_BIN="/home/jun/.nvm/versions/node/v22.16.0/bin/node"
+NPM_BIN="/home/jun/.nvm/versions/node/v22.16.0/bin/npm"
+
+# バイナリが存在するか確認
+if [ ! -f "$NPM_BIN" ]; then
+    echo "❌ npmが見つかりません: $NPM_BIN"
+    echo "Node.jsのパスを確認してください。"
+    exit 1
+fi
+
+# エイリアスとして設定（スクリプト内で npm として使用可能）
+npm() {
+    "$NPM_BIN" "$@"
+}
+node() {
+    "$NODE_BIN" "$@"
+}
 
 # 設定
 PROJECT_DIR="/var/www/charactier-ai"
@@ -86,7 +100,9 @@ main() {
     # 2. コードを更新
     print_yellow "📥 最新のコードを取得中..."
     cd "$PROJECT_DIR"
-    git pull origin main
+    # 現在のブランチから最新を取得
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    git pull origin "$CURRENT_BRANCH"
     
     # 3. バックエンドのビルド
     print_yellow "🔨 バックエンドをビルド中..."
