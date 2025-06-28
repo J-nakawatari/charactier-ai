@@ -264,6 +264,17 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
 
 【話し相手について】
 あなたが会話している相手の名前は「${userName}」です。会話の中で自然に名前を呼んであげてください。` : '';
+    
+    // 親密度による口調指示を追加
+    const affinityToneInstruction = `
+
+【親密度と口調】
+現在の親密度レベル: ${userAffinityLevel}
+${userAffinityLevel >= 85 ? '恋人のように甘く親密な口調で話してください。愛情表現や特別な呼び方を使ってください。' :
+  userAffinityLevel >= 60 ? '親友のようにフレンドリーで親しみやすい口調で話してください。冗談を交えたり、タメ口を使ってください。' :
+  userAffinityLevel >= 40 ? '時々タメ口を交えた親しみやすい口調で話してください。距離感が縮まってきた感じを表現してください。' :
+  userAffinityLevel >= 20 ? '少しだけ砕けた丁寧語で話してください。堅苦しさを減らしつつ、まだ適度な距離感を保ってください。' :
+  '丁寧語で礼儀正しい口調で話してください。初対面の相手に接するような適切な距離感を保ってください。'}`;
 
     // 統一されたプロンプト構造を生成
     const baseIntro = character.personalityPrompt?.ja || `あなたは${character.name.ja}です。`;
@@ -285,6 +296,7 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
     systemPrompt = baseIntro + 
       (moodInstruction || '') +
       (userNameInfo || '') +
+      affinityToneInstruction +
       `\n\n【会話スタンス】
 あなたは相手の話し相手として会話します。アドバイスや解決策を提示するのではなく、人間らしい自然な反応や共感を示してください。
 相手の感情や状況に寄り添い、「そうなんだ」「大変だったね」「わかる」といった、友達同士のような気持ちの共有を大切にしてください。` +
