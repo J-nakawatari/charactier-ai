@@ -74,6 +74,7 @@ import { sendErrorResponse, ClientErrorCode } from './utils/errorResponse';
 import { ServerMonitor } from './monitoring/ServerMonitor';
 import { API_PREFIX } from './config/api';
 import { csrfProtection } from './services/csrfProtection';
+import { stripeWebhookRateLimit } from './middleware/stripeWebhookRateLimit';
 
 // PM2が環境変数を注入するため、dotenv.config()は不要
 // 開発環境の場合のみdotenvを使用（PM2を使わない場合）
@@ -450,7 +451,7 @@ app.use(securityAuditMiddleware);
 
 // ⚠️ IMPORTANT: Stripe webhook MUST come BEFORE express.json()
 // Stripe webhook endpoint (needs raw body)
-app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req: Request, res: Response): Promise<void> => {
+app.post('/webhook/stripe', stripeWebhookRateLimit, express.raw({ type: 'application/json' }), async (req: Request, res: Response): Promise<void> => {
   
   const sig = req.headers['stripe-signature'] as string;
   let event: Stripe.Event;
