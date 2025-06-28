@@ -4,6 +4,8 @@ import { UserModel, IUser } from '../models/UserModel';
 import { AdminModel, IAdmin } from '../models/AdminModel';
 import log from '../utils/logger';
 import { generateEncryptedAccessToken, generateEncryptedRefreshToken, verifyEncryptedToken } from '../services/jwtEncryption';
+import { COOKIE_NAMES } from '../config/cookieConfig';
+import { verifyCompactToken } from '../utils/jwtUtils';
 
 // JWT認証用の拡張Request型
 export interface AuthRequest extends Request {
@@ -27,10 +29,10 @@ export const authenticateToken = async (
     
     // 管理者パスの場合は管理者用クッキー、それ以外はユーザー用クッキーを確認
     if (isAdminPath) {
-      token = req.cookies?.adminAccessToken;
+      token = req.cookies?.[COOKIE_NAMES.ADMIN_ACCESS] || req.cookies?.adminAccessToken;
     } else {
       // ユーザーAPIの場合、ユーザートークンのみを使用（管理者トークンは使わない）
-      token = req.cookies?.userAccessToken;
+      token = req.cookies?.[COOKIE_NAMES.USER_ACCESS] || req.cookies?.userAccessToken;
     }
     
     // 2. Cookieになければ、Authorization ヘッダーまたは x-auth-token ヘッダーから JWT を取得
@@ -94,22 +96,32 @@ export const authenticateToken = async (
     }
 
 
-    // JWT を検証（暗号化対応）
-    let decoded: { userId: string };
+    // JWT を検証
+    let decoded: any;
     try {
-      decoded = verifyEncryptedToken(token) as { userId: string };
-    } catch {
-      // 暗号化トークンの検証に失敗した場合、従来の方法を試す（移行期間用）
-      const JWT_SECRET = process.env.JWT_SECRET;
-      if (!JWT_SECRET) {
-        log.error('JWT_SECRET not configured', undefined);
-        res.status(500).json({ 
-          error: 'Authentication configuration error',
-          message: '認証設定エラー'
-        });
-        return;
+      // まずコンパクトトークンとして検証
+      decoded = verifyCompactToken(token, false);
+      // コンパクトトークンの場合、idフィールドをuserIdにマッピング
+      if (decoded.id) {
+        decoded.userId = decoded.id;
       }
-      decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    } catch {
+      try {
+        // 暗号化トークンとして検証
+        decoded = verifyEncryptedToken(token) as { userId: string };
+      } catch {
+        // 従来の方法を試す（移行期間用）
+        const JWT_SECRET = process.env.JWT_SECRET;
+        if (!JWT_SECRET) {
+          log.error('JWT_SECRET not configured', undefined);
+          res.status(500).json({ 
+            error: 'Authentication configuration error',
+            message: '認証設定エラー'
+          });
+          return;
+        }
+        decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+      }
     }
     log.info('✅ JWT DECODED SUCCESSFULLY', { 
       userId: decoded.userId,

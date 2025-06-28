@@ -16,6 +16,15 @@ import log from '../utils/logger';
 import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
 import { hashPassword, verifyPassword, needsRehash, validatePasswordStrength } from '../services/passwordHash';
 import { getCookieConfig, getRefreshCookieConfig, getFeatureFlags } from '../config/featureFlags';
+import { generateCompactAccessToken, generateCompactRefreshToken } from '../utils/jwtUtils';
+import { 
+  COOKIE_NAMES,
+  getAccessTokenCookieOptions,
+  getRefreshTokenCookieOptions,
+  clearAllAuthCookies,
+  estimateCookieSize,
+  COOKIE_SIZE_WARNING_THRESHOLD
+} from '../config/cookieConfig';
 
 const router: Router = Router();
 
@@ -411,9 +420,9 @@ router.post('/login',
       return;
     }
 
-    // JWTトークンを生成
-    const accessToken = generateAccessToken(user._id.toString());
-    const refreshToken = generateRefreshToken(user._id.toString());
+    // コンパクトなJWTトークンを生成
+    const accessToken = generateCompactAccessToken(user._id.toString(), 'user', '15m');
+    const refreshToken = generateCompactRefreshToken(user._id.toString(), 'user', '7d');
 
     log.info('User logged in', { userId: user._id.toString(), email: user.email });
     log.debug('User login details', {
@@ -426,20 +435,32 @@ router.post('/login',
     // Feature Flag取得
     const flags = getFeatureFlags();
 
-    // Cookie設定（Feature Flag対応）
+    // 古いCookieを削除
+    clearAllAuthCookies(res);
+
+    // 新しいCookie設定
     const isProduction = process.env.NODE_ENV === 'production';
-    const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
-    const cookieOptions = getCookieConfig(isProduction);
-    const refreshCookieOptions = getRefreshCookieConfig(isProduction);
-    
-    if (cookieDomain) {
-      cookieOptions.domain = cookieDomain;
-      refreshCookieOptions.domain = cookieDomain;
-    }
+    const accessCookieOptions = getAccessTokenCookieOptions(isProduction);
+    const refreshCookieOptions = getRefreshTokenCookieOptions(isProduction);
     
     // Cookieにトークンを設定（ユーザー用）
-    res.cookie('userAccessToken', accessToken, cookieOptions);
-    res.cookie('userRefreshToken', refreshToken, refreshCookieOptions);
+    res.cookie(COOKIE_NAMES.USER_ACCESS, accessToken, accessCookieOptions);
+    res.cookie(COOKIE_NAMES.USER_REFRESH, refreshToken, refreshCookieOptions);
+    
+    // Cookieサイズの確認
+    const cookieSize = estimateCookieSize({
+      [COOKIE_NAMES.USER_ACCESS]: accessToken,
+      [COOKIE_NAMES.USER_REFRESH]: refreshToken,
+      [COOKIE_NAMES.CSRF_TOKEN]: req.cookies?.[COOKIE_NAMES.CSRF_TOKEN] || ''
+    });
+    
+    if (cookieSize > COOKIE_SIZE_WARNING_THRESHOLD) {
+      log.warn('Cookie size exceeds warning threshold', {
+        userId: user._id.toString(),
+        cookieSize,
+        threshold: COOKIE_SIZE_WARNING_THRESHOLD
+      });
+    }
     
     // ログイン成功レスポンス
     const userResponse = {
@@ -943,39 +964,40 @@ router.post('/admin/login', authRateLimit, async (req: Request, res: Response): 
     admin.lastLogin = new Date();
     await admin.save();
 
-    // JWTトークン生成（管理者専用）
+    // コンパクトなJWTトークン生成（管理者専用）
     const adminId = admin._id as string;
-    const accessToken = generateAccessToken(adminId.toString());
-    const refreshToken = generateRefreshToken(adminId.toString());
+    const accessToken = generateCompactAccessToken(adminId.toString(), 'admin', '15m');
+    const refreshToken = generateCompactRefreshToken(adminId.toString(), 'admin', '7d');
     
     // Feature Flag取得
     const flags = getFeatureFlags();
     
-    // Cookie設定（Feature Flag対応）
+    // 古いCookieを削除
+    clearAllAuthCookies(res);
+    
+    // 新しいCookie設定
     const isProduction = process.env.NODE_ENV === 'production';
-    const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
-    
-    log.info('🍪 ADMIN COOKIE SETTINGS', {
-      isProduction,
-      cookieDomain,
-      nodeEnv: process.env.NODE_ENV,
-      envCookieDomain: process.env.COOKIE_DOMAIN,
-      requestOrigin: req.headers.origin,
-      requestHost: req.headers.host,
-      secureAuth: flags.SECURE_COOKIE_AUTH
-    });
-    
-    const cookieOptions = getCookieConfig(isProduction);
-    const refreshCookieOptions = getRefreshCookieConfig(isProduction);
-    
-    if (cookieDomain) {
-      cookieOptions.domain = cookieDomain;
-      refreshCookieOptions.domain = cookieDomain;
-    }
+    const accessCookieOptions = getAccessTokenCookieOptions(isProduction);
+    const refreshCookieOptions = getRefreshTokenCookieOptions(isProduction);
     
     // Cookieにトークンを設定（管理者用）
-    res.cookie('adminAccessToken', accessToken, cookieOptions);
-    res.cookie('adminRefreshToken', refreshToken, refreshCookieOptions);
+    res.cookie(COOKIE_NAMES.ADMIN_ACCESS, accessToken, accessCookieOptions);
+    res.cookie(COOKIE_NAMES.ADMIN_REFRESH, refreshToken, refreshCookieOptions);
+    
+    // Cookieサイズの確認
+    const cookieSize = estimateCookieSize({
+      [COOKIE_NAMES.ADMIN_ACCESS]: accessToken,
+      [COOKIE_NAMES.ADMIN_REFRESH]: refreshToken,
+      [COOKIE_NAMES.CSRF_TOKEN]: req.cookies?.[COOKIE_NAMES.CSRF_TOKEN] || ''
+    });
+    
+    if (cookieSize > COOKIE_SIZE_WARNING_THRESHOLD) {
+      log.warn('Admin cookie size exceeds warning threshold', {
+        adminId: admin._id.toString(),
+        cookieSize,
+        threshold: COOKIE_SIZE_WARNING_THRESHOLD
+      });
+    }
 
     log.info('Admin login successful', { adminId: admin._id.toString(), email: admin.email, role: admin.role });
 
@@ -1044,20 +1066,8 @@ router.get('/verify-token', authRateLimit, authenticateToken, async (req: AuthRe
 // ログアウト
 router.post('/logout', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
-    // すべての認証関連Cookieをクリア（ユーザー用と管理者用の両方）
-    const isProduction = process.env.NODE_ENV === 'production';
-    const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
-    const clearOptions = {
-      domain: cookieDomain,
-      path: '/'
-    };
-    
-    res.clearCookie('accessToken', clearOptions);
-    res.clearCookie('refreshToken', clearOptions);
-    res.clearCookie('userAccessToken', clearOptions);
-    res.clearCookie('userRefreshToken', clearOptions);
-    res.clearCookie('adminAccessToken', clearOptions);
-    res.clearCookie('adminRefreshToken', clearOptions);
+    // すべての認証関連Cookieをクリア
+    clearAllAuthCookies(res);
     
     res.json({
       success: true,
@@ -1072,16 +1082,8 @@ router.post('/logout', generalRateLimit, async (req: Request, res: Response): Pr
 // 管理者ログアウト
 router.post('/admin/logout', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
-    // 管理者用Cookieをクリア
-    const isProduction = process.env.NODE_ENV === 'production';
-    const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
-    const clearOptions = {
-      domain: cookieDomain,
-      path: '/'
-    };
-    
-    res.clearCookie('adminAccessToken', clearOptions);
-    res.clearCookie('adminRefreshToken', clearOptions);
+    // すべての認証関連Cookieをクリア
+    clearAllAuthCookies(res);
     
     log.info('Admin logout successful');
     

@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { Request, Response, NextFunction } from 'express';
 import log from '../utils/logger';
+import { COOKIE_NAMES, getCsrfTokenCookieOptions } from '../config/cookieConfig';
 
 interface CsrfOptions {
   cookie?: {
@@ -39,16 +40,9 @@ class CsrfProtection {
   }
 
   setTokenCookie(res: Response, token: string): void {
-    const cookieOptions = {
-      httpOnly: this.options.cookie.httpOnly,
-      sameSite: this.options.cookie.sameSite as any,
-      secure: this.options.cookie.secure,
-      path: this.options.cookie.path,
-      domain: this.options.cookie.domain,
-      maxAge: this.TOKEN_EXPIRY
-    };
-
-    res.cookie('XSRF-TOKEN', token, cookieOptions);
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = getCsrfTokenCookieOptions(isProduction);
+    res.cookie(COOKIE_NAMES.CSRF_TOKEN, token, cookieOptions);
   }
 
   getTokenFromRequest(req: Request): string | null {
@@ -91,7 +85,7 @@ class CsrfProtection {
       // GETリクエスト等はトークンを生成・設定するだけ
       if (this.options.ignoreMethods.includes(req.method.toUpperCase())) {
         // 既存のトークンがない場合は新規生成
-        if (!req.cookies?.['XSRF-TOKEN']) {
+        if (!req.cookies?.[COOKIE_NAMES.CSRF_TOKEN]) {
           const token = this.generateToken();
           this.setTokenCookie(res, token);
           log.debug('CSRF token generated for GET request', { path: req.path });
@@ -100,7 +94,7 @@ class CsrfProtection {
       }
 
       // POST/PUT/DELETE等の検証
-      const cookieToken = req.cookies?.['XSRF-TOKEN'];
+      const cookieToken = req.cookies?.[COOKIE_NAMES.CSRF_TOKEN];
       const requestToken = this.getTokenFromRequest(req);
 
       // デバッグログ追加
