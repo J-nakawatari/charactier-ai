@@ -167,7 +167,7 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
       }
       
       // キャッシュ検索（親密度レベル±5で検索）
-      const affinityRange = 5;
+      const affinityRange = 2; // より厳密な親密度範囲でキャッシュを検索
       
       const cachedPrompt = await CharacterPromptCache.findOne({
         userId: userId,
@@ -199,6 +199,32 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
           systemPrompt = systemPrompt.replace(
             '【会話スタンス】',
             userNameInfo + '\n\n【会話スタンス】'
+          );
+        }
+        
+        // 親密度による口調指示を動的に追加/更新
+        const affinityToneInstruction = `
+
+【親密度と口調】
+現在の親密度レベル: ${userAffinityLevel}
+${userAffinityLevel >= 85 ? '恋人のように甘く親密な口調で話してください。愛情表現や特別な呼び方を使ってください。' :
+  userAffinityLevel >= 60 ? '親友のようにフレンドリーで親しみやすい口調で話してください。冗談を交えたり、タメ口を使ってください。' :
+  userAffinityLevel >= 40 ? '時々タメ口を交えた親しみやすい口調で話してください。距離感が縮まってきた感じを表現してください。' :
+  userAffinityLevel >= 20 ? '少しだけ砕けた丁寧語で話してください。堅苦しさを減らしつつ、まだ適度な距離感を保ってください。' :
+  '丁寧語で礼儀正しい口調で話してください。初対面の相手に接するような適切な距離感を保ってください。'}`;
+        
+        // 既存の親密度セクションを置換または追加
+        if (systemPrompt.includes('【親密度と口調】')) {
+          // 既存のセクションを更新
+          systemPrompt = systemPrompt.replace(
+            /【親密度と口調】[\s\S]*?(?=\n\n【|$)/,
+            affinityToneInstruction.trim()
+          );
+        } else {
+          // 新規追加（会話スタンスの前に挿入）
+          systemPrompt = systemPrompt.replace(
+            '【会話スタンス】',
+            affinityToneInstruction + '\n\n【会話スタンス】'
           );
         }
         
@@ -1737,7 +1763,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
       }
       
       // キャッシュ検索（親密度レベル±5で検索）
-      const affinityRange = 5;
+      const affinityRange = 2; // より厳密な親密度範囲でキャッシュを検索
       const cachedPrompts = await CharacterPromptCache.find({
         userId: userId,
         characterId: characterId,
