@@ -24,7 +24,7 @@ log() {
 # 現在のアクティブポートを確認
 get_active_port() {
     # backendブロック内のserverディレクティブのみを取得
-    awk '/upstream backend/,/^}/' "$NGINX_UPSTREAM_CONF" | grep -E "^\s*server\s+127\.0\.0\.1:" | grep -v "#" | head -1 | grep -oE ":[0-9]+" | tr -d ":"
+    sed -n '/upstream backend/,/^}/p' "$NGINX_UPSTREAM_CONF" | grep -E "^\s*server\s+127\.0\.0\.1:" | grep -v "#" | head -1 | grep -oE ":[0-9]+" | tr -d ":"
 }
 
 main() {
