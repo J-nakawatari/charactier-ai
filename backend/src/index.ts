@@ -3,8 +3,12 @@ import YAML from 'yamljs';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-// PM2が環境変数を注入するため、dotenvは不要
-// import dotenv from 'dotenv';
+// PM2が環境変数を注入するため、dotenvは不要（PM2使用時）
+// systemd使用時は有効化が必要
+import dotenv from 'dotenv';
+if (!process.env.PM2_HOME) {
+  dotenv.config();
+}
 import path from 'path';
 import fs from 'fs';
 import Stripe from 'stripe';
