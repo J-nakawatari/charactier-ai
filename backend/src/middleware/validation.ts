@@ -232,6 +232,22 @@ export function sanitizeHtml(input: string): string {
     .replace(/'/g, '&#x27;')
     .replace(/\//g, '&#x2F;');
   
+  // 最終チェック: 危険なパターンが残っていないか確認
+  const dangerousPatterns = [
+    /<script/i,
+    /<style/i,
+    /<iframe/i,
+    /javascript:/i,
+    /on\w+\s*=/i
+  ];
+  
+  for (const pattern of dangerousPatterns) {
+    if (pattern.test(sanitized)) {
+      // 危険なパターンが見つかった場合は空文字を返す
+      return '';
+    }
+  }
+  
   return sanitized.trim();
 }
 

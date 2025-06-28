@@ -3754,8 +3754,11 @@ routeRegistry.define('GET', `${API_PREFIX}/admin/users`, authenticateToken, crea
       }
       
       // ステータスフィルター（管理者は停止ユーザーも含めて表示）
-      if (status && status !== 'all') {
-        query.accountStatus = status;
+      const allowedStatuses = ['active', 'suspended', 'deleted', 'pending', 'all'];
+      if (status && allowedStatuses.includes(status as string)) {
+        if (status !== 'all') {
+          query.accountStatus = { $eq: status };
+        }
       }
       
       const totalUsers = await UserModel.countDocuments(query);
