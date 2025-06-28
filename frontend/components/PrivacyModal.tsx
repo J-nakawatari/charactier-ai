@@ -66,6 +66,8 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
               <li>{t('section2.item2')}</li>
               <li>{t('section2.item3')}</li>
               <li>{t('section2.item4')}</li>
+              <li>{t('section2.item5')}</li>
+              <li>{t('section2.item6')}</li>
             </ul>
 
             <h3 className="text-xl font-semibold mb-4">{t('section3.title')}</h3>
@@ -140,6 +142,11 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
             <h3 className="text-xl font-semibold mb-4">{t('section7.title')}</h3>
             <p className="text-gray-700 mb-6 whitespace-pre-wrap">
               {t('section7.content')}
+            </p>
+
+            <h3 className="text-xl font-semibold mb-4">{t('section8.title')}</h3>
+            <p className="text-gray-700 mb-6 whitespace-pre-wrap">
+              {t('section8.content')}
             </p>
           </div>
         </div>

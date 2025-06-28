@@ -87,10 +87,13 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
             </ol>
 
             <h3 className="text-xl font-semibold mb-4">{t('article6.title')}</h3>
+            <p className="text-gray-700 mb-2">{t('article6.intro')}</p>
             <ol className="list-decimal pl-6 text-gray-700 mb-6">
               <li>{t('article6.item1')}</li>
               <li>{t('article6.item2')}</li>
               <li>{t('article6.item3')}</li>
+              <li>{t('article6.item4')}</li>
+              <li>{t('article6.item5')}</li>
             </ol>
 
             <h3 className="text-xl font-semibold mb-4">{t('article7.title')}</h3>
@@ -115,6 +118,21 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
             <h3 className="text-xl font-semibold mb-4">{t('article10.title')}</h3>
             <p className="text-gray-700 mb-6 whitespace-pre-wrap">
               {t('article10.content')}
+            </p>
+
+            <h3 className="text-xl font-semibold mb-4">{t('article11.title')}</h3>
+            <p className="text-gray-700 mb-6 whitespace-pre-wrap">
+              {t('article11.content')}
+            </p>
+
+            <h3 className="text-xl font-semibold mb-4">{t('article12.title')}</h3>
+            <p className="text-gray-700 mb-6 whitespace-pre-wrap">
+              {t('article12.content')}
+            </p>
+
+            <h3 className="text-xl font-semibold mb-4">{t('article13.title')}</h3>
+            <p className="text-gray-700 mb-6 whitespace-pre-wrap">
+              {t('article13.content')}
             </p>
           </div>
         </div>
