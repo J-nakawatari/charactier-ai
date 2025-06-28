@@ -27,7 +27,23 @@ const SENSITIVE_FIELDS = [
   'creditCard',
   'cvv',
   'ssn',
-  'bankAccount'
+  'bankAccount',
+  'email',
+  'phone',
+  'address',
+  'privateKey',
+  'sessionId',
+  'bearer'
+];
+
+// Patterns that indicate sensitive data
+const SENSITIVE_PATTERNS = [
+  /^sk_[a-zA-Z0-9]{24,}$/,  // Stripe secret key
+  /^pk_[a-zA-Z0-9]{24,}$/,  // Stripe public key
+  /^[A-Za-z0-9+/]{40,}={0,2}$/,  // Base64 encoded secrets
+  /^[0-9a-f]{64}$/i,  // SHA256 hashes
+  /^[0-9a-f]{128}$/i,  // SHA512 hashes
+  /Bearer\s+[A-Za-z0-9\-._~+/]+=*/,  // Bearer tokens
 ];
 
 // Sanitize sensitive data from objects
@@ -71,10 +87,23 @@ function sanitizeData(data: any, visited = new WeakSet()): any {
     } else if (typeof value === 'object' && value !== null) {
       sanitized[key] = sanitizeData(value, visited);
     } else if (typeof value === 'string') {
-      // Check for patterns that look like tokens or secrets
-      if (value.length > 20 && /^[A-Za-z0-9+/=._-]+$/.test(value)) {
-        // Might be a token, show only first and last 4 characters
-        sanitized[key] = `${value.substring(0, 4)}...${value.substring(value.length - 4)}`;
+      // Check against sensitive patterns
+      let isSensitive = false;
+      for (const pattern of SENSITIVE_PATTERNS) {
+        if (pattern.test(value)) {
+          isSensitive = true;
+          break;
+        }
+      }
+      
+      if (isSensitive) {
+        sanitized[key] = '[REDACTED]';
+      } else if (value.length > 30 && /^[A-Za-z0-9+/=._-]+$/.test(value)) {
+        // Potentially sensitive long string
+        sanitized[key] = `[TRUNCATED: ${value.length} chars]`;
+      } else if (value.includes('password') || value.includes('secret') || value.includes('token')) {
+        // String contains sensitive keywords
+        sanitized[key] = '[REDACTED]';
       } else {
         sanitized[key] = value;
       }
@@ -169,64 +198,102 @@ const logger = createLogger();
 // Helper functions for structured logging
 export const log = {
   debug: (message: string, meta?: any) => {
-    // Double-check for password-related fields
-    const safeMeta = meta && typeof meta === 'object' ? 
-      Object.keys(meta).reduce((acc, key) => {
-        if (!SENSITIVE_FIELDS.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
-          acc[key] = meta[key];
-        }
-        return acc;
-      }, {} as any) : meta;
+    // Skip debug logs in production
+    if (process.env.NODE_ENV === 'production') return;
     
-    logger.debug(message, sanitizeData(safeMeta));
+    if (!meta) {
+      logger.debug(message);
+      return;
+    }
+    
+    // Apply strict sanitization
+    const sanitized = typeof meta === 'object' ? sanitizeData(meta) : meta;
+    logger.debug(message, sanitized);
   },
   
   info: (message: string, meta?: any) => {
-    // Double-check for password-related fields
-    const safeMeta = meta && typeof meta === 'object' ? 
-      Object.keys(meta).reduce((acc, key) => {
-        if (!SENSITIVE_FIELDS.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
-          acc[key] = meta[key];
-        }
-        return acc;
-      }, {} as any) : meta;
+    if (!meta) {
+      logger.info(message);
+      return;
+    }
     
-    logger.info(message, sanitizeData(safeMeta));
+    // Apply sanitization and ensure no sensitive data
+    const sanitized = typeof meta === 'object' ? sanitizeData(meta) : meta;
+    logger.info(message, sanitized);
   },
   
   warn: (message: string, meta?: any) => {
-    // Double-check for password-related fields
-    const safeMeta = meta && typeof meta === 'object' ? 
-      Object.keys(meta).reduce((acc, key) => {
-        if (!SENSITIVE_FIELDS.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
-          acc[key] = meta[key];
-        }
-        return acc;
-      }, {} as any) : meta;
+    // Ensure no sensitive data is logged
+    if (!meta) {
+      logger.warn(message);
+      return;
+    }
     
-    logger.warn(message, sanitizeData(safeMeta));
+    // Deep sanitization with complete removal of sensitive fields
+    const sanitized = typeof meta === 'object' ? sanitizeData(meta) : meta;
+    
+    // Final check - ensure no sensitive patterns remain
+    const finalSanitized = JSON.parse(JSON.stringify(sanitized, (key, value) => {
+      if (typeof value === 'string' && value.length > 20) {
+        // Check for potential secrets/tokens
+        if (/^[A-Za-z0-9+/=._-]{40,}$/.test(value) || 
+            value.includes('secret') || 
+            value.includes('token') ||
+            value.includes('key')) {
+          return '[REDACTED]';
+        }
+      }
+      return value;
+    }));
+    
+    logger.warn(message, finalSanitized);
   },
   
   error: (message: string, error?: Error | any, meta?: any) => {
-    // Double-check for password-related fields
-    const safeMeta = meta && typeof meta === 'object' ? 
-      Object.keys(meta).reduce((acc, key) => {
-        if (!SENSITIVE_FIELDS.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
-          acc[key] = meta[key];
-        }
-        return acc;
-      }, {} as any) : meta;
+    // Build error metadata safely
+    let errorData: any = {};
     
-    const errorMeta = error instanceof Error ? {
-      error: {
+    if (error instanceof Error) {
+      errorData = {
         message: error.message,
-        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack,
-        name: error.name
-      },
-      ...sanitizeData(safeMeta)
-    } : sanitizeData({ error, ...safeMeta });
+        name: error.name,
+        // Only include stack trace in development
+        ...(process.env.NODE_ENV !== 'production' && { stack: error.stack })
+      };
+    } else if (error) {
+      errorData = sanitizeData(error);
+    }
     
-    logger.error(message, errorMeta);
+    // Sanitize additional metadata
+    const additionalMeta = meta ? sanitizeData(meta) : {};
+    
+    // Combine and perform final sanitization
+    const combinedMeta = { error: errorData, ...additionalMeta };
+    
+    // Final security check - remove any remaining sensitive patterns
+    const finalSanitized = JSON.parse(JSON.stringify(combinedMeta, (key, value) => {
+      // Remove any key that might contain sensitive info
+      if (typeof key === 'string' && 
+          SENSITIVE_FIELDS.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
+        return '[REDACTED]';
+      }
+      
+      // Check string values for potential secrets
+      if (typeof value === 'string' && value.length > 20) {
+        if (/^[A-Za-z0-9+/=._-]{40,}$/.test(value) || 
+            /[A-Za-z0-9]{32,}/.test(value) ||
+            value.includes('secret') || 
+            value.includes('token') ||
+            value.includes('password') ||
+            value.includes('key')) {
+          return '[REDACTED]';
+        }
+      }
+      
+      return value;
+    }));
+    
+    logger.error(message, finalSanitized);
   },
 
   // Special logger for API requests
