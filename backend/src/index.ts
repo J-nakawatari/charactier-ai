@@ -2659,8 +2659,12 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
           const currentLevel = Math.floor(newAffinity);
           
           
-          if (currentLevel > previousLevel) {
-            // レベルアップが発生
+          // 10レベルごとにレベルアップ通知を出す
+          const previous10Level = Math.floor(previousLevel / 10) * 10;
+          const current10Level = Math.floor(currentLevel / 10) * 10;
+          
+          if (current10Level > previous10Level && currentLevel % 10 === 0) {
+            // 10の倍数のレベルに到達した場合のみ通知
             levelUpInfo = {
               previousLevel,
               newLevel: currentLevel,
