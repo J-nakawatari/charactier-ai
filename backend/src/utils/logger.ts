@@ -326,21 +326,23 @@ export const log = {
 
   // Special logger for security events
   security: (event: string, meta?: any) => {
+    const sanitized = meta ? sanitizeData(meta) : {};
     logger.warn(`SECURITY: ${event}`, {
       type: 'SECURITY_EVENT',
       event,
-      ...sanitizeData(meta)
+      ...sanitized
     });
   },
 
   // Special logger for audit events
   audit: (action: string, userId: string, meta?: any) => {
+    const sanitized = meta ? sanitizeData(meta) : {};
     logger.info(`AUDIT: ${action}`, {
       type: 'AUDIT_EVENT',
       action,
       userId,
       timestamp: new Date().toISOString(),
-      ...sanitizeData(meta)
+      ...sanitized
     });
   }
 };
