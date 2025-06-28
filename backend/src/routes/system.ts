@@ -9,8 +9,25 @@ const router: ExpressRouter = Router();
 // レートリミッターを作成
 const adminRateLimit = createRateLimiter('admin');
 
-// ヘルスチェックAPI（管理者のみ）
-router.get('/health', adminRateLimit, authenticateToken, async (req: Request, res: Response) => {
+// シンプルなヘルスチェック（認証不要、デプロイメント用）
+router.get('/health', async (req: Request, res: Response) => {
+  try {
+    // 基本的なヘルスチェック
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// 詳細なヘルスチェックAPI（管理者のみ）
+router.get('/health/detailed', adminRateLimit, authenticateToken, async (req: Request, res: Response) => {
   try {
     // 管理者権限チェック（仮実装）
     // TODO: 実際の管理者権限チェックを実装

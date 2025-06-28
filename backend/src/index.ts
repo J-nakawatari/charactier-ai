@@ -906,6 +906,15 @@ app.use((req: any, res: Response, next: NextFunction): void => {
 // CSRF保護を適用（Stripe webhook後、他のルート前）
 app.use(csrfProtection);
 
+// ヘルスチェックエンドポイント（デプロイメント用、認証不要）
+app.get(`${API_PREFIX}/health`, (req: Request, res: Response) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // Debug routes
 // 一時的に本番環境でも有効化（問題解決後は削除すること）
 routeRegistry.mount(`${API_PREFIX}/debug`, debugRoutes);
