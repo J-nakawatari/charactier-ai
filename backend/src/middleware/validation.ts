@@ -187,23 +187,29 @@ export function sanitizeHtml(input: string): string {
     .replace(/'/g, '&#x27;')
     .replace(/\//g, '&#x2F;');
   
-  // 危険なスキーマを単一の置換で除去（g,s,mフラグで完全に処理）
-  sanitized = sanitized.replace(
-    /(javascript|data|vbscript|blob|file|about)\s*:/gim,
-    ''
-  );
-  
-  // イベントハンドラの完全な除去（単一の包括的な正規表現）
-  sanitized = sanitized.replace(
-    /\b(on\w+)\s*=\s*["']?[^"'>]*["']?/gim,
-    ''
-  );
-  
-  // 危険なタグ名の完全な除去（単一の包括的な正規表現）
-  sanitized = sanitized.replace(
-    /\b(script|style|iframe|object|embed|applet|form|input|button|textarea|select|option|optgroup|fieldset|label|output|keygen|datalist|meter|progress|command|menu|dialog|details|summary)\b/gim,
-    ''
-  );
+  // 危険なパターンを繰り返し除去（完全にクリーンになるまで）
+  let previousSanitized = '';
+  while (previousSanitized !== sanitized) {
+    previousSanitized = sanitized;
+    
+    // 危険なスキーマを除去
+    sanitized = sanitized.replace(
+      /(javascript|data|vbscript|blob|file|about)\s*:/gim,
+      ''
+    );
+    
+    // イベントハンドラを除去
+    sanitized = sanitized.replace(
+      /\b(on\w+)\s*=\s*["']?[^"'>]*["']?/gim,
+      ''
+    );
+    
+    // 危険なタグ名を除去
+    sanitized = sanitized.replace(
+      /\b(script|style|iframe|object|embed|applet|form|input|button|textarea|select|option|optgroup|fieldset|label|output|keygen|datalist|meter|progress|command|menu|dialog|details|summary)\b/gim,
+      ''
+    );
+  }
   
   return sanitized.trim();
 }
