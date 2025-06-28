@@ -178,7 +178,7 @@ export function validateObjectId(paramName: string = 'id') {
 export function sanitizeHtml(input: string): string {
   if (!input || typeof input !== 'string') return '';
   
-  // HTMLエンティティをエスケープ（完全なサニタイズ）
+  // ステップ1: HTMLエンティティをエスケープ
   let sanitized = input
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -187,28 +187,38 @@ export function sanitizeHtml(input: string): string {
     .replace(/'/g, '&#x27;')
     .replace(/\//g, '&#x2F;');
   
-  // 危険なパターンを繰り返し除去（完全にクリーンになるまで）
-  let previousSanitized = '';
-  while (previousSanitized !== sanitized) {
-    previousSanitized = sanitized;
+  // ステップ2: 危険な文字列パターンを完全に除去
+  // 'on' を含むすべてのイベントハンドラ関連の文字列を除去
+  const eventHandlerPattern = /\b(on\w*)/gi;
+  const dangerousProtocols = /(javascript|data|vbscript|blob|file|about):/gi;
+  const dangerousTags = /(script|style|iframe|object|embed|applet|form|input|button|textarea|select|option|optgroup|fieldset|label|output|keygen|datalist|meter|progress|command|menu|dialog|details|summary)/gi;
+  
+  // ループで完全にクリーンになるまで繰り返す
+  let iterationCount = 0;
+  const maxIterations = 10; // 無限ループ防止
+  
+  let previousLength;
+  do {
+    previousLength = sanitized.length;
     
-    // 危険なスキーマを除去
-    sanitized = sanitized.replace(
-      /(javascript|data|vbscript|blob|file|about)\s*:/gim,
-      ''
-    );
+    // イベントハンドラ名を完全に除去
+    sanitized = sanitized.replace(eventHandlerPattern, '');
     
-    // イベントハンドラを除去
-    sanitized = sanitized.replace(
-      /\b(on\w+)\s*=\s*["']?[^"'>]*["']?/gim,
-      ''
-    );
+    // 危険なプロトコルを除去
+    sanitized = sanitized.replace(dangerousProtocols, '');
     
     // 危険なタグ名を除去
-    sanitized = sanitized.replace(
-      /\b(script|style|iframe|object|embed|applet|form|input|button|textarea|select|option|optgroup|fieldset|label|output|keygen|datalist|meter|progress|command|menu|dialog|details|summary)\b/gim,
-      ''
-    );
+    sanitized = sanitized.replace(dangerousTags, '');
+    
+    // = や クォートの後に残った 'on' を除去
+    sanitized = sanitized.replace(/=\s*["']?\s*(on)/gi, '=');
+    
+    iterationCount++;
+  } while (previousLength !== sanitized.length && iterationCount < maxIterations);
+  
+  // ステップ3: 最終チェック - まだ 'on' が含まれている場合は空文字を返す
+  if (/\bon/i.test(sanitized)) {
+    return '';
   }
   
   return sanitized.trim();

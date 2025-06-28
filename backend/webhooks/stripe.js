@@ -62,7 +62,14 @@ const verifyStripeSignature = (req, res, next) => {
     
   } catch (error) {
     console.error('❌ Stripe署名検証エラー:', error.message);
-    return res.status(400).send(`Webhook Error: ${error.message}`);
+    // エラーメッセージをHTMLエスケープしてXSSを防止
+    const safeErrorMessage = error.message
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+    return res.status(400).send(`Webhook Error: ${safeErrorMessage}`);
   }
 };
 
