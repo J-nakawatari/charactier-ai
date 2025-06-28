@@ -6,6 +6,7 @@ After=network.target mongodb.service
 Type=simple
 User=root
 WorkingDirectory=/var/www/charactier-ai/backend
+EnvironmentFile=/var/www/charactier-ai/backend/.env
 Environment="NODE_ENV=production"
 Environment="PORT=5001"
 Environment="PATH=/root/.nvm/versions/node/v22.16.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
