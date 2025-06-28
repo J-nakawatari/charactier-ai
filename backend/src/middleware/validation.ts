@@ -187,41 +187,65 @@ export function sanitizeHtml(input: string): string {
     .replace(/'/g, '&#x27;')
     .replace(/\//g, '&#x2F;');
   
-  // ステップ2: 危険な文字列パターンを完全に除去
-  // 'on' を含むすべてのイベントハンドラ関連の文字列を除去
-  const eventHandlerPattern = /\b(on\w*)/gi;
-  const dangerousProtocols = /(javascript|data|vbscript|blob|file|about):/gi;
-  const dangerousTags = /(script|style|iframe|object|embed|applet|form|input|button|textarea|select|option|optgroup|fieldset|label|output|keygen|datalist|meter|progress|command|menu|dialog|details|summary)/gi;
+  // ステップ2: 文字単位でのフィルタリング
+  // 危険なパターンを文字単位で検出して除去
+  const filtered: string[] = [];
+  let i = 0;
   
-  // ループで完全にクリーンになるまで繰り返す
-  let iterationCount = 0;
-  const maxIterations = 10; // 無限ループ防止
-  
-  let previousLength;
-  do {
-    previousLength = sanitized.length;
+  while (i < sanitized.length) {
+    let skip = false;
     
-    // イベントハンドラ名を完全に除去
-    sanitized = sanitized.replace(eventHandlerPattern, '');
+    // 'on'で始まるイベントハンドラを検出
+    if (sanitized.substring(i, i + 2).toLowerCase() === 'on') {
+      // 単語境界のチェック
+      const prevChar = i > 0 ? sanitized[i - 1] : ' ';
+      if (/\W/.test(prevChar) || i === 0) {
+        // 'on'で始まる単語全体をスキップ
+        i += 2;
+        while (i < sanitized.length && /\w/.test(sanitized[i])) {
+          i++;
+        }
+        skip = true;
+      }
+    }
     
-    // 危険なプロトコルを除去
-    sanitized = sanitized.replace(dangerousProtocols, '');
+    // 危険なプロトコルを検出
+    const protocols = ['javascript:', 'data:', 'vbscript:', 'blob:', 'file:', 'about:'];
+    for (const protocol of protocols) {
+      if (sanitized.substring(i).toLowerCase().startsWith(protocol)) {
+        i += protocol.length;
+        skip = true;
+        break;
+      }
+    }
     
-    // 危険なタグ名を除去
-    sanitized = sanitized.replace(dangerousTags, '');
+    // 危険なタグを検出
+    const tags = ['script', 'style', 'iframe', 'object', 'embed', 'applet', 
+                  'form', 'input', 'button', 'textarea', 'select', 'option',
+                  'optgroup', 'fieldset', 'label', 'output', 'keygen', 'datalist',
+                  'meter', 'progress', 'command', 'menu', 'dialog', 'details', 'summary'];
     
-    // = や クォートの後に残った 'on' を除去
-    sanitized = sanitized.replace(/=\s*["']?\s*(on)/gi, '=');
+    for (const tag of tags) {
+      const substr = sanitized.substring(i).toLowerCase();
+      if (substr.startsWith(tag)) {
+        // 単語境界のチェック
+        const prevChar = i > 0 ? sanitized[i - 1] : ' ';
+        const nextChar = i + tag.length < sanitized.length ? sanitized[i + tag.length] : ' ';
+        if ((/\W/.test(prevChar) || i === 0) && /\W/.test(nextChar)) {
+          i += tag.length;
+          skip = true;
+          break;
+        }
+      }
+    }
     
-    iterationCount++;
-  } while (previousLength !== sanitized.length && iterationCount < maxIterations);
-  
-  // ステップ3: 最終チェック - まだ 'on' が含まれている場合は空文字を返す
-  if (/\bon/i.test(sanitized)) {
-    return '';
+    if (!skip) {
+      filtered.push(sanitized[i]);
+      i++;
+    }
   }
   
-  return sanitized.trim();
+  return filtered.join('').trim();
 }
 
 /**
