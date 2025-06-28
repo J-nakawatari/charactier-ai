@@ -68,7 +68,7 @@ export default function StatsCards({ stats }: StatsCardsProps) {
     {
       title: 'APIエラー',
       value: safeStats.apiErrors.toString(),
-      subValue: '24時間',
+      subValue: '全期間累計',
       icon: AlertTriangle,
       trend: formatTrend(safeStats.trends?.apiErrorTrend),
       trendUp: false, // エラーは減少が良いので常にfalse

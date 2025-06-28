@@ -33,7 +33,7 @@ export default function AdminDashboard() {
           adminAuthenticatedFetch('/api/v1/admin/token-analytics/overview'),
           adminAuthenticatedFetch('/api/v1/admin/users'),
           adminAuthenticatedFetch('/api/v1/admin/characters'), // 管理者用キャラクター一覧API
-          adminAuthenticatedFetch('/api/v1/admin/error-stats?range=24h'), // APIエラー統計
+          adminAuthenticatedFetch('/api/v1/admin/error-stats?range=all'), // APIエラー統計（全期間）
           adminAuthenticatedFetch('/api/v1/admin/dashboard/stats'), // 新しい統合ダッシュボード統計API
           adminAuthenticatedFetch('/api/v1/admin/notifications?limit=5') // 管理者用通知API
         ]);

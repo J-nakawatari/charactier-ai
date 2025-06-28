@@ -5989,9 +5989,16 @@ app.get(`${API_PREFIX}/admin/error-stats`, authenticateToken, createRateLimiter(
     
     // デバッグ: APIErrorModelのドキュメント数を確認
     const totalErrorCount = await APIErrorModel.countDocuments();
+    
+    // 最新のエラーのタイムスタンプを確認
+    const latestError = await APIErrorModel.findOne().sort({ timestamp: -1 }).select('timestamp');
+    const oldestError = await APIErrorModel.findOne().sort({ timestamp: 1 }).select('timestamp');
+    
     log.info('🔍 Error Stats Debug', {
       timeRange,
       totalErrorCount,
+      latestErrorDate: latestError?.timestamp,
+      oldestErrorDate: oldestError?.timestamp,
       adminId: req.admin._id
     });
     
@@ -6011,10 +6018,15 @@ app.get(`${API_PREFIX}/admin/error-stats`, authenticateToken, createRateLimiter(
       }
     });
     
-    // エラー統計にtotalRequestsを追加
+    // エラー統計にtotalRequestsと全体のエラー数を追加
     const enhancedStats = {
       ...errorStats,
-      totalRequests: performanceStats.totalRequests
+      totalRequests: performanceStats.totalRequests,
+      totalDocsInDB: totalErrorCount,
+      dateRange: {
+        oldest: oldestError?.timestamp,
+        latest: latestError?.timestamp
+      }
     };
     
     res.json({

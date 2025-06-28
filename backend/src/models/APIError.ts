@@ -100,7 +100,7 @@ APIErrorSchema.index({ resolved: 1, timestamp: -1 });
 
 // 統計取得用の静的メソッド
 APIErrorSchema.statics.getErrorStats = async function(timeRange: string = '24h') {
-  let startDate: Date;
+  let startDate: Date | null = null;
   const endDate = new Date();
 
   switch (timeRange) {
@@ -116,15 +116,22 @@ APIErrorSchema.statics.getErrorStats = async function(timeRange: string = '24h')
     case '30d':
       startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       break;
+    case 'all':
+      // 全期間のデータを取得
+      startDate = null;
+      break;
     default:
       startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
   }
 
+  const matchCondition: any = {};
+  if (startDate) {
+    matchCondition.timestamp = { $gte: startDate, $lte: endDate };
+  }
+
   const pipeline = [
     {
-      $match: {
-        timestamp: { $gte: startDate, $lte: endDate }
-      }
+      $match: matchCondition
     },
     {
       $group: {
