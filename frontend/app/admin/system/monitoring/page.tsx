@@ -10,6 +10,11 @@ interface MonitoringData {
     start: string;
     end: string;
   };
+  statsWindow?: {
+    start: string;
+    durationMinutes: number;
+    note: string;
+  };
   requestStats: {
     total: number;
     byIp: Array<{
@@ -158,9 +163,9 @@ export default function SystemMonitoringPage() {
             {data.statsWindow && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-sm text-blue-800">
-                  <span className="font-semibold">統計期間:</span> {data.statsWindow.note}
+                  <span className="font-semibold">統計期間:</span> {data.statsWindow?.note}
                   <br />
-                  現在の統計は {formatDate(data.statsWindow.start)} から収集されています（{data.statsWindow.durationMinutes}分間）
+                  現在の統計は {formatDate(data.statsWindow?.start || '')} から収集されています（{data.statsWindow?.durationMinutes || 0}分間）
                 </p>
               </div>
             )}
