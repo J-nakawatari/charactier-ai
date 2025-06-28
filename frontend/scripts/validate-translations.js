@@ -18,6 +18,9 @@ function flattenMessages(messages, prefix = '') {
     
     if (typeof value === 'string') {
       flattened[newKey] = value;
+    } else if (Array.isArray(value)) {
+      // 配列も有効な値として扱う
+      flattened[newKey] = JSON.stringify(value);
     } else if (typeof value === 'object' && value !== null) {
       Object.assign(flattened, flattenMessages(value, newKey));
     }
@@ -30,16 +33,45 @@ function flattenMessages(messages, prefix = '') {
 function extractUsedKeys(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
   const keys = new Set();
+  const namespaceAliases = new Map(); // 例: tFooter -> footer
   
   // useTranslations('namespace') パターン
-  const namespaceMatches = content.matchAll(/useTranslations\(['"]([^'"]+)['"]\)/g);
+  const namespaceMatches = content.matchAll(/const\s+(\w+)\s*=\s*useTranslations\(['"]([^'"]+)['"]\)/g);
   for (const match of namespaceMatches) {
-    const namespace = match[1];
+    const varName = match[1];
+    const namespace = match[2];
+    namespaceAliases.set(varName, namespace);
+  }
+  
+  // 通常のuseTranslations('namespace')パターン（変数に代入されていない場合）
+  const simpleNamespaceMatches = content.matchAll(/useTranslations\(['"]([^'"]+)['"]\)/g);
+  for (const match of simpleNamespaceMatches) {
+    if (!content.includes(`const`) || !content.includes(`= useTranslations('${match[1]}')`)) {
+      namespaceAliases.set('t', match[1]);
+    }
+  }
+  
+  // t('key') または tFooter('key') パターン
+  const keyMatches = content.matchAll(/\b(\w+)\(['"]([^'"]+)['"]/g);
+  for (const keyMatch of keyMatches) {
+    const varName = keyMatch[1];
+    const key = keyMatch[2];
     
-    // t('key') パターン
-    const keyMatches = content.matchAll(/\bt\(['"]([^'"]+)['"]/g);
-    for (const keyMatch of keyMatches) {
-      keys.add(`${namespace}.${keyMatch[1]}`);
+    if (namespaceAliases.has(varName)) {
+      const namespace = namespaceAliases.get(varName);
+      keys.add(`${namespace}.${key}`);
+    }
+  }
+  
+  // t.raw('key') パターン
+  const rawKeyMatches = content.matchAll(/\b(\w+)\.raw\(['"]([^'"]+)['"]\)/g);
+  for (const keyMatch of rawKeyMatches) {
+    const varName = keyMatch[1];
+    const key = keyMatch[2];
+    
+    if (namespaceAliases.has(varName)) {
+      const namespace = namespaceAliases.get(varName);
+      keys.add(`${namespace}.${key}`);
     }
   }
   
