@@ -2340,6 +2340,26 @@ paths:
         '200':
           description: OK
 
+  /api/v1/ping:
+    get:
+      summary: Ping (v1)
+      tags: [System]
+      responses:
+        '200':
+          description: Pong
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: pong
+    
+    head:
+      summary: Ping (HEAD) (v1)
+      tags: [System]
+      responses:
+        '200':
+          description: OK
+
   /api/admin/system/stats:
     get:
       summary: システム統計（管理者のみ）
@@ -2781,6 +2801,34 @@ paths:
         '401':
           $ref: '#/components/responses/AuthenticationError'
 
+  /api/v1/notifications/stream:
+    get:
+      summary: 通知リアルタイムストリーム（SSE）
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+      description: |
+        Server-Sent Events (SSE) を使用して通知の更新をリアルタイムで受信します。
+        接続を維持し、新しい通知や既読状態の変更を即座に配信します。
+      responses:
+        '200':
+          description: SSEストリーム
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: |
+                  イベント形式:
+                  - event: notification
+                  - data: { "type": "new", "notification": {...} }
+                  
+                  または
+                  
+                  - event: unreadCount
+                  - data: { "count": 5 }
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
   # ===================
   # Webhook APIs
   # ===================
@@ -2789,6 +2837,9 @@ paths:
     post:
       summary: Stripe Webhook
       tags: [System]
+      description: |
+        Stripeからの支払いイベントを受け取るWebhookエンドポイント。
+        レート制限: 60リクエスト/分
       requestBody:
         required: true
         content:
@@ -2810,6 +2861,8 @@ paths:
           description: 無効なペイロード
         '401':
           description: 署名検証失敗
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
   # ===================
   # Debug APIs (開発環境のみ)

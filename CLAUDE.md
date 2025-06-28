@@ -256,7 +256,7 @@ Nginx (SSL終端) →
 - `/frontend/app/[locale]/setup/page.tsx` - セットアップページ
 - `/frontend/utils/auth.ts` - 認証ユーティリティ
 
-## 最近のセキュリティ改善（2025-06-27更新）
+## 最近のセキュリティ改善（2025-06-28更新）
 
 ### 実装済みのセキュリティ対策
 1. **CORS設定**: 本番ドメインのみに制限
@@ -274,11 +274,16 @@ Nginx (SSL終端) →
     - チャットメッセージのサニタイズ（sanitize-html）
     - 既存データのマイグレーション: `npm run xss:migrate`
 
-### 2025-06-27 セキュリティ強化完了
-- **JWT保存方式の改善**: Feature Flag（SECURE_COOKIE_AUTH）で段階的移行
-- **CSRF SameSite Strict**: Feature Flag（CSRF_SAMESITE_STRICT）で制御
-- **Joi検証の厳格化**: Feature Flag（STRICT_JOI_VALIDATION）で制御
-- **セキュリティテストCI統合**: GitHub Actionsで自動実行
+### 2025-06-28 GitHub Code Scanning対応完了
+- **36個のセキュリティ警告を0に削減**
+  - NoSQLインジェクション: MongoDBクエリの完全サニタイズ
+  - クリアテキストロギング: 機密情報の多層フィルタリング
+  - XSS脆弱性: HTML/JSサニタイズの包括的実装
+  - パスインジェクション: パス正規化と検証
+  - URLリダイレクト検証: 厳格なパス検証
+  - Stripeレート制限: express-rate-limit追加
+- **SARIF分析ツール**: `scripts/checkAlerts.mjs`で警告を自動分類
+- **CI/CD統合**: GitHub ActionsでCodeQLとセキュリティテスト自動実行
 
 ### Feature Flags設定
 ```bash
