@@ -5,6 +5,11 @@
 
 set -e  # エラーがあれば即座に停止
 
+# NVMを使用している場合のNode.jsパス設定
+export NVM_DIR="/home/jun/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+export PATH="/home/jun/.nvm/versions/node/v22.16.0/bin:$PATH"
+
 # 設定
 PROJECT_DIR="/var/www/charactier-ai"
 BACKEND_DIR="${PROJECT_DIR}/backend"
