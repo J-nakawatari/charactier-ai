@@ -178,53 +178,8 @@ export function validateObjectId(paramName: string = 'id') {
 export function sanitizeHtml(input: string): string {
   if (!input || typeof input !== 'string') return '';
   
-  // エンコーディングを正規化 - 先にHTMLエンティティをデコード
+  // HTMLエンティティをエスケープ（完全なサニタイズ）
   let sanitized = input
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#x27;/gi, "'")
-    .replace(/&#x2F;/gi, '/');
-  
-  // URLスキームの危険なプロトコルを除去
-  sanitized = sanitized.replace(/(javascript|data|vbscript|blob|file|about):/gi, '');
-  
-  // 危険なHTML要素を完全に除去
-  const dangerousElements = ['script', 'style', 'iframe', 'object', 'embed', 'link', 'meta', 'base'];
-  dangerousElements.forEach(tag => {
-    // タグの様々なバリエーションを除去
-    const patterns = [
-      new RegExp(`<\\s*${tag}[^>]*>[\\s\\S]*?<\\s*\\/${tag}\\s*>`, 'gi'),
-      new RegExp(`<\\s*${tag}[^>]*\\/>`, 'gi'),
-      new RegExp(`<\\s*${tag}[^>]*>`, 'gi'),
-      new RegExp(`<\\s*\\/${tag}\\s*>`, 'gi')
-    ];
-    patterns.forEach(pattern => {
-      sanitized = sanitized.replace(pattern, '');
-    });
-  });
-  
-  // イベントハンドラ属性を除去 - より包括的に
-  sanitized = sanitized.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
-  sanitized = sanitized.replace(/\s*on\w+\s*=\s*[^\s>]*/gi, '');
-  sanitized = sanitized.replace(/\bon\w+/gi, '');
-  
-  // styleタグとstyle属性を除去（XSS防止）
-  sanitized = sanitized.replace(/<\s*style[^>]*>[\s\S]*?<\s*\/\s*style\s*>/gi, '');
-  sanitized = sanitized.replace(/\s*style\s*=\s*["']?[^"'>]*["']?/gi, '');
-  
-  // その他の危険なタグを除去
-  const dangerousTags = ['iframe', 'object', 'embed', 'link', 'meta', 'base'];
-  dangerousTags.forEach(tag => {
-    const regex = new RegExp(`<\\s*${tag}[^>]*>(?:[\\s\\S]*?<\\s*\\/\\s*${tag}\\s*>)?`, 'gi');
-    sanitized = sanitized.replace(regex, '');
-  });
-  
-  // 残りのHTMLタグを除去
-  sanitized = sanitized.replace(/<[^>]+>/g, '');
-  
-  // HTMLエンティティをエスケープ
-  sanitized = sanitized
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -232,21 +187,23 @@ export function sanitizeHtml(input: string): string {
     .replace(/'/g, '&#x27;')
     .replace(/\//g, '&#x2F;');
   
-  // 最終チェック: 危険なパターンが残っていないか確認
-  const dangerousPatterns = [
-    /<script/i,
-    /<style/i,
-    /<iframe/i,
-    /javascript:/i,
-    /on\w+\s*=/i
-  ];
+  // 危険なスキーマを単一の置換で除去（g,s,mフラグで完全に処理）
+  sanitized = sanitized.replace(
+    /(javascript|data|vbscript|blob|file|about)\s*:/gim,
+    ''
+  );
   
-  for (const pattern of dangerousPatterns) {
-    if (pattern.test(sanitized)) {
-      // 危険なパターンが見つかった場合は空文字を返す
-      return '';
-    }
-  }
+  // イベントハンドラの完全な除去（単一の包括的な正規表現）
+  sanitized = sanitized.replace(
+    /\b(on\w+)\s*=\s*["']?[^"'>]*["']?/gim,
+    ''
+  );
+  
+  // 危険なタグ名の完全な除去（単一の包括的な正規表現）
+  sanitized = sanitized.replace(
+    /\b(script|style|iframe|object|embed|applet|form|input|button|textarea|select|option|optgroup|fieldset|label|output|keygen|datalist|meter|progress|command|menu|dialog|details|summary)\b/gim,
+    ''
+  );
   
   return sanitized.trim();
 }
@@ -257,10 +214,13 @@ export function sanitizeHtml(input: string): string {
  * @returns サニタイズされたクエリ
  */
 export function sanitizeSearchQuery(query: string): string {
-  if (!query) return '';
+  if (!query || typeof query !== 'string') return '';
   
-  // 特殊文字をエスケープ
-  return query
-    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    .trim();
+  // 正規表現の特殊文字を完全にエスケープ（単一の置換で処理）
+  const sanitized = query.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    (match) => '\\' + match
+  );
+  
+  return sanitized.trim();
 }
