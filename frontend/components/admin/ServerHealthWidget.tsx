@@ -137,7 +137,7 @@ export default function ServerHealthWidget() {
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">エラー率</span>
+          <span className="text-sm text-gray-600">エラー率（過去1時間）</span>
           <span className={`text-sm font-medium ${health && health.errorRate > 5 ? 'text-red-600' : 'text-gray-900'}`}>
             {health ? `${health.errorRate.toFixed(1)}%` : '-'}
           </span>
