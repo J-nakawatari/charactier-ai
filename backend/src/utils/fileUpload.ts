@@ -48,10 +48,21 @@ export const optimizeImage = (width: number = 800, height: number = 800, quality
         return;
       }
 
-      const tmpPath = req.file.path + '.tmp';
+      // Validate and sanitize file path
+      const filePath = path.resolve(req.file.path);
+      const uploadDir = path.dirname(filePath);
+      const fileName = path.basename(filePath);
+      
+      // Ensure the file is within the expected upload directory
+      const expectedUploadDir = path.resolve(path.join(__dirname, '../../../../uploads/images'));
+      if (!filePath.startsWith(expectedUploadDir)) {
+        return next(new Error('Invalid file path'));
+      }
+      
+      const tmpPath = path.join(uploadDir, fileName + '.tmp');
       
       // 入力画像の形式を確認
-      const inputMeta = await sharp(req.file.path).metadata();
+      const inputMeta = await sharp(filePath).metadata();
       // log('🔍 Input image metadata:', {
       //   format: inputMeta.format,
       //   channels: inputMeta.channels,
@@ -60,7 +71,7 @@ export const optimizeImage = (width: number = 800, height: number = 800, quality
       // });
 
       // 透過情報を保持しつつ全ての画像を処理
-      const sharpInstance = sharp(req.file.path)
+      const sharpInstance = sharp(filePath)
         .ensureAlpha() // アルファチャンネルを確実に保持
         .resize(width, height, { 
           fit: 'inside',
@@ -87,7 +98,7 @@ export const optimizeImage = (width: number = 800, height: number = 800, quality
       //   space: outputMeta.space
       // });
         
-      await fs.promises.rename(tmpPath, req.file.path);
+      await fs.promises.rename(tmpPath, filePath);
       next();
     } catch (err) {
       next(err);

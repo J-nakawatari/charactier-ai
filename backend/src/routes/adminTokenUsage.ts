@@ -52,22 +52,37 @@ router.get('/', adminRateLimit, authenticateToken, authenticateAdmin, async (req
     // クエリ構築
     const query: any = {};
 
-    if (userId) {
-      query.userId = new mongoose.Types.ObjectId(userId);
+    // Validate and sanitize userId
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      query.userId = { $eq: new mongoose.Types.ObjectId(userId) };
     }
 
-    if (characterId) {
-      query.characterId = new mongoose.Types.ObjectId(characterId);
+    // Validate and sanitize characterId
+    if (characterId && mongoose.Types.ObjectId.isValid(characterId)) {
+      query.characterId = { $eq: new mongoose.Types.ObjectId(characterId) };
     }
 
-    if (usageType) {
-      query.usageType = usageType;
+    // Validate usageType
+    const allowedUsageTypes = ['chat', 'generation', 'moderation', 'other'];
+    if (usageType && allowedUsageTypes.includes(usageType)) {
+      query.usageType = { $eq: usageType };
     }
 
+    // Validate date range
     if (dateFrom || dateTo) {
       query.createdAt = {};
-      if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
-      if (dateTo) query.createdAt.$lte = new Date(dateTo);
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        if (!isNaN(fromDate.getTime())) {
+          query.createdAt.$gte = fromDate;
+        }
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        if (!isNaN(toDate.getTime())) {
+          query.createdAt.$lte = toDate;
+        }
+      }
     }
 
     const skip = (page - 1) * limit;

@@ -234,19 +234,30 @@ export const log = {
     
     // Final check - ensure no sensitive patterns remain
     const finalSanitized = JSON.parse(JSON.stringify(sanitized, (key, value) => {
+      // Immediately redact any key containing sensitive keywords
+      if (typeof key === 'string') {
+        const lowerKey = key.toLowerCase();
+        if (SENSITIVE_FIELDS.some(field => lowerKey.includes(field.toLowerCase()))) {
+          return '[REDACTED]';
+        }
+      }
+      
       if (typeof value === 'string' && value.length > 20) {
         // Check for potential secrets/tokens
         if (/^[A-Za-z0-9+/=._-]{40,}$/.test(value) || 
             value.includes('secret') || 
             value.includes('token') ||
-            value.includes('key')) {
+            value.includes('key') ||
+            value.includes('password')) {
           return '[REDACTED]';
         }
       }
       return value;
     }));
     
-    logger.warn(message, finalSanitized);
+    // Additional safety: ensure the message itself doesn't contain sensitive data
+    const safeMeta = typeof finalSanitized === 'object' ? finalSanitized : { data: '[SANITIZED]' };
+    logger.warn(message, safeMeta);
   },
   
   error: (message: string, error?: Error | any, meta?: any) => {
@@ -293,7 +304,9 @@ export const log = {
       return value;
     }));
     
-    logger.error(message, finalSanitized);
+    // Additional safety: ensure the object is safe to log
+    const safeMeta = typeof finalSanitized === 'object' ? finalSanitized : { data: '[SANITIZED]' };
+    logger.error(message, safeMeta);
   },
 
   // Special logger for API requests

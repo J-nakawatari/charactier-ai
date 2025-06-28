@@ -178,13 +178,43 @@ export function validateObjectId(paramName: string = 'id') {
 export function sanitizeHtml(input: string): string {
   if (!input) return input;
   
-  // 基本的なHTMLタグとスクリプトを除去
-  return input
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<[^>]+>/g, '')
-    .replace(/javascript:/gi, '')
-    .replace(/on\w+\s*=/gi, '')
-    .trim();
+  // エンコーディングを正規化
+  let sanitized = input;
+  
+  // URLスキームの危険なプロトコルを除去
+  sanitized = sanitized.replace(/(javascript|data|vbscript|blob|file|about):/gi, '');
+  
+  // scriptタグを完全に除去（スペースや改行を含む場合も対応）
+  sanitized = sanitized.replace(/<\s*script[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi, '');
+  sanitized = sanitized.replace(/<\s*script[^>]*\/?\s*>/gi, '');
+  
+  // イベントハンドラ属性を除去（on*=）
+  sanitized = sanitized.replace(/\s*on\w+\s*=\s*["']?[^"'>]*["']?/gi, '');
+  
+  // styleタグとstyle属性を除去（XSS防止）
+  sanitized = sanitized.replace(/<\s*style[^>]*>[\s\S]*?<\s*\/\s*style\s*>/gi, '');
+  sanitized = sanitized.replace(/\s*style\s*=\s*["']?[^"'>]*["']?/gi, '');
+  
+  // その他の危険なタグを除去
+  const dangerousTags = ['iframe', 'object', 'embed', 'link', 'meta', 'base'];
+  dangerousTags.forEach(tag => {
+    const regex = new RegExp(`<\\s*${tag}[^>]*>(?:[\\s\\S]*?<\\s*\\/\\s*${tag}\\s*>)?`, 'gi');
+    sanitized = sanitized.replace(regex, '');
+  });
+  
+  // 残りのHTMLタグを除去
+  sanitized = sanitized.replace(/<[^>]+>/g, '');
+  
+  // HTMLエンティティをエスケープ
+  sanitized = sanitized
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+  
+  return sanitized.trim();
 }
 
 /**

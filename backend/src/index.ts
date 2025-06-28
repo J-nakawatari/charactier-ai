@@ -868,6 +868,17 @@ app.use((req: any, res: Response, next: NextFunction): void => {
       originalUrl: req.originalUrl,
       correctedUrl: correctedUrl
     });
+    // 最終確認: 相対パスであることを確認
+    if (!correctedUrl.startsWith('/')) {
+      log.warn('Invalid redirect path - must start with /', {
+        originalUrl: req.originalUrl,
+        correctedUrl: correctedUrl,
+        ip: req.ip
+      });
+      res.status(400).json({ error: 'Invalid redirect path' });
+      return;
+    }
+    
     // 安全な相対パスのみリダイレクト
     res.redirect(correctedUrl);
     return;

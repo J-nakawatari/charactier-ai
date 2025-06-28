@@ -1,0 +1,93 @@
+[
+  {
+    "file": "backend/src/routes/adminSecurity.ts",
+    "line": 249,
+    "rule": "js/sql-injection",
+    "pattern": "/findByIdAndUpdate\\s*\\(\\s*([^,]+),\\s*([^,]+),/",
+    "replacement": "findByIdAndUpdate($1, { $set: $2 },"
+  },
+  {
+    "file": "backend/src/routes/adminSecurity.ts",
+    "line": 243,
+    "rule": "js/sql-injection",
+    "pattern": "/findByIdAndUpdate\\s*\\(\\s*([^,]+),\\s*([^,]+),/",
+    "replacement": "findByIdAndUpdate($1, { $set: $2 },"
+  },
+  {
+    "file": "backend/src/index.ts",
+    "line": 3208,
+    "rule": "js/sql-injection",
+    "pattern": "/findByIdAndUpdate\\s*\\(\\s*([^,]+),\\s*([^,]+),/",
+    "replacement": "findByIdAndUpdate($1, { $set: $2 },"
+  },
+  {
+    "file": "backend/src/routes/notifications.ts",
+    "line": 89,
+    "rule": "js/sql-injection",
+    "pattern": "/findByIdAndUpdate\\s*\\(\\s*([^,]+),\\s*([^,]+),/",
+    "replacement": "findByIdAndUpdate($1, { $set: $2 },"
+  },
+  {
+    "file": "backend/src/routes/notifications.ts",
+    "line": 45,
+    "rule": "js/sql-injection",
+    "pattern": "/findByIdAndUpdate\\s*\\(\\s*([^,]+),\\s*([^,]+),/",
+    "replacement": "findByIdAndUpdate($1, { $set: $2 },"
+  },
+  {
+    "file": "backend/src/routes/adminTokenUsage.ts",
+    "line": 84,
+    "rule": "js/sql-injection",
+    "pattern": "/findByIdAndUpdate\\s*\\(\\s*([^,]+),\\s*([^,]+),/",
+    "replacement": "findByIdAndUpdate($1, { $set: $2 },"
+  },
+  {
+    "file": "backend/src/routes/adminTokenUsage.ts",
+    "line": 76,
+    "rule": "js/sql-injection",
+    "pattern": "/findByIdAndUpdate\\s*\\(\\s*([^,]+),\\s*([^,]+),/",
+    "replacement": "findByIdAndUpdate($1, { $set: $2 },"
+  },
+  {
+    "file": "backend/routes/user.js",
+    "line": 34,
+    "rule": "js/sql-injection",
+    "pattern": "/findByIdAndUpdate\\s*\\(\\s*([^,]+),\\s*([^,]+),/",
+    "replacement": "findByIdAndUpdate($1, { $set: $2 },"
+  },
+  {
+    "file": "backend/src/index.ts",
+    "line": 3737,
+    "rule": "js/sql-injection",
+    "pattern": "/findByIdAndUpdate\\s*\\(\\s*([^,]+),\\s*([^,]+),/",
+    "replacement": "findByIdAndUpdate($1, { $set: $2 },"
+  },
+  {
+    "file": "backend/src/index.ts",
+    "line": 3736,
+    "rule": "js/sql-injection",
+    "pattern": "/findByIdAndUpdate\\s*\\(\\s*([^,]+),\\s*([^,]+),/",
+    "replacement": "findByIdAndUpdate($1, { $set: $2 },"
+  },
+  {
+    "file": "backend/src/index.ts",
+    "line": 2047,
+    "rule": "js/sql-injection",
+    "pattern": "/findByIdAndUpdate\\s*\\(\\s*([^,]+),\\s*([^,]+),/",
+    "replacement": "findByIdAndUpdate($1, { $set: $2 },"
+  },
+  {
+    "file": "backend/services/tokenService.js",
+    "line": 194,
+    "rule": "js/sql-injection",
+    "pattern": "/findByIdAndUpdate\\s*\\(\\s*([^,]+),\\s*([^,]+),/",
+    "replacement": "findByIdAndUpdate($1, { $set: $2 },"
+  },
+  {
+    "file": "backend/services/tokenService.js",
+    "line": 76,
+    "rule": "js/sql-injection",
+    "pattern": "/findByIdAndUpdate\\s*\\(\\s*([^,]+),\\s*([^,]+),/",
+    "replacement": "findByIdAndUpdate($1, { $set: $2 },"
+  }
+]

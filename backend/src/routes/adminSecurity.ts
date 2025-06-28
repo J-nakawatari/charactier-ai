@@ -219,22 +219,40 @@ router.get('/violations/search', securityRateLimit, authenticateToken, authentic
     
     const query: any = {};
     
+    // Validate and sanitize userId
     if (userId && mongoose.Types.ObjectId.isValid(userId as string)) {
-      query.userId = new mongoose.Types.ObjectId(userId as string);
+      query.userId = { $eq: new mongoose.Types.ObjectId(userId as string) };
     }
     
-    if (violationType) {
-      query.violationType = violationType;
+    // Validate violationType from allowed values
+    const allowedViolationTypes = ['inappropriate_content', 'spam', 'harassment', 'other'];
+    if (violationType && allowedViolationTypes.includes(violationType as string)) {
+      query.violationType = { $eq: violationType };
     }
     
+    // Validate severity as integer
     if (severity) {
-      query.severityLevel = parseInt(severity as string);
+      const severityInt = parseInt(severity as string);
+      if (!isNaN(severityInt) && severityInt >= 1 && severityInt <= 10) {
+        query.severityLevel = { $eq: severityInt };
+      }
     }
     
+    // Validate date range
     if (startDate || endDate) {
       query.timestamp = {};
-      if (startDate) query.timestamp.$gte = new Date(startDate as string);
-      if (endDate) query.timestamp.$lte = new Date(endDate as string);
+      if (startDate) {
+        const start = new Date(startDate as string);
+        if (!isNaN(start.getTime())) {
+          query.timestamp.$gte = start;
+        }
+      }
+      if (endDate) {
+        const end = new Date(endDate as string);
+        if (!isNaN(end.getTime())) {
+          query.timestamp.$lte = end;
+        }
+      }
     }
     
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);

@@ -148,7 +148,7 @@ router.get('/', adminRateLimit, authenticateToken, async (req: AuthRequest, res:
         const stats = userStats[0] || { totalUsers: 0, averageLevel: 0, maxLevel: 0 };
 
         // 購入統計を取得（有料キャラクターの場合）
-        let purchaseStats = { totalPurchases: 0, totalRevenue: 0 };
+        const purchaseStats = { totalPurchases: 0, totalRevenue: 0 };
         if (character.characterAccessType === 'purchaseOnly') {
           const purchasedUsers = await UserModel.countDocuments({
             purchasedCharacters: character._id

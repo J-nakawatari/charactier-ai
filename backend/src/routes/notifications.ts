@@ -37,8 +37,10 @@ router.get('/', generalRateLimit, authenticateToken, async (req: AuthRequest, re
       ]
     };
 
-    if (type) {
-      baseQuery.type = type;
+    // Validate notification type
+    const allowedTypes = ['system', 'campaign', 'update', 'maintenance', 'general'];
+    if (type && allowedTypes.includes(type)) {
+      baseQuery.type = { $eq: type };
     }
 
     // お知らせを取得

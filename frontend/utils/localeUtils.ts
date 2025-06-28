@@ -95,6 +95,19 @@ export function changeLanguage(newLocale: SupportedLocale, currentPath?: string)
   const pathname = currentPath || window.location.pathname;
   const newPath = replaceLocaleInPath(pathname, newLocale);
   
+  // Validate the new path to prevent XSS
+  const sanitizedPath = newPath.replace(/[<>'"]/g, '');
+  if (sanitizedPath !== newPath) {
+    console.error('Invalid path detected');
+    return;
+  }
+  
+  // Ensure the path is relative (starts with /)
+  if (!sanitizedPath.startsWith('/')) {
+    console.error('Path must be relative');
+    return;
+  }
+  
   // ページ遷移（フルリロードで確実に言語変更を適用）
-  window.location.href = newPath;
+  window.location.href = sanitizedPath;
 }
