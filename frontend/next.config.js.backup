@@ -1,7 +1,5 @@
-// 強化版i18n設定を使用（本番環境でMISSING_MESSAGEエラーを解決）
-const useEnhancedI18n = process.env.USE_ENHANCED_I18N === 'true' || process.env.NODE_ENV === 'production';
-const i18nConfig = useEnhancedI18n ? './i18n-enhanced.ts' : './i18n.ts';
-const withNextIntl = require('next-intl/plugin')(i18nConfig);
+// 元のnext.config.jsのバックアップ
+const withNextIntl = require('next-intl/plugin')('./i18n.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -31,11 +29,11 @@ const nextConfig = {
   async rewrites() {
     // 本番環境対応: 環境変数からバックエンドURLを取得
     const isProduction = process.env.NODE_ENV === 'production';
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL ||
                       (isProduction ? 'https://charactier-ai.com' : 'http://localhost:5000');
-    
+
     console.log('🔗 Backend URL:', backendUrl);
-    
+
     return [
       // フロントエンドAPIルートを優先（Next.js API routes）
       {

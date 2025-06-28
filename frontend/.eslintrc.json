@@ -7,6 +7,27 @@
         "selector": "TemplateLiteral[quasis.0.value.raw*='/api/']",
         "message": "直書き '/api/' は禁止。API_BASE_URL を使うか '/api/v1/' に統一してください。"
       }
-    ]
-  }
+    ],
+    "@typescript-eslint/no-unused-vars": "off",
+    "no-console": ["warn", { "allow": ["warn", "error", "info"] }]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["next-intl"],
+                "importNames": ["useTranslations"],
+                "message": "Use useTranslations from '@/hooks/useTranslations' instead to ensure type safety"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

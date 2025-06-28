@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run validate:translations && next build",
+    "build:no-validate": "next build",
     "start": "next start",
     "lint": "next lint",
     "prepare": "husky",
     "test:e2e": "playwright test",
-    "test:e2e:security": "playwright test --grep @security"
+    "test:e2e:security": "playwright test --grep @security",
+    "validate:translations": "node scripts/validate-translations.js"
   },
   "dependencies": {
     "@types/js-cookie": "^3.0.6",
