@@ -164,6 +164,9 @@
     "appDescription": "AI Character Chat",
     "user": "User",
     "tokenBalance": "Talk Tickets: {count, number}",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "commercialTransactions": "Legal Information",
     "termsModal": {
       "title": "Terms of Service",
       "lastUpdated": "Last updated: January 1, 2025",

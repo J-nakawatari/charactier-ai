@@ -164,6 +164,9 @@
     "appDescription": "AIキャラクターチャット",
     "user": "ユーザー",
     "tokenBalance": "トークチケット: {count, number}",
+    "termsOfService": "利用規約",
+    "privacyPolicy": "プライバシーポリシー",
+    "commercialTransactions": "特定商取引法に基づく表記",
     "termsModal": {
       "title": "利用規約",
       "lastUpdated": "最終更新日: 2025年1月1日",
