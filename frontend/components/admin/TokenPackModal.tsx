@@ -99,7 +99,7 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
 
     setPriceLoading(true);
     try {
-      const apiUrl = `/api/admin/stripe/price/${encodeURIComponent(priceIdInput)}`;
+      const apiUrl = `/api/v1/admin/stripe/price/${encodeURIComponent(priceIdInput)}`;
       console.log('🔗 Stripe Price API 呼び出し開始:', {
         priceId: priceIdInput,
         url: apiUrl,
@@ -207,12 +207,12 @@ export default function TokenPackModal({ isOpen, onClose, onSave, editingPack }:
     try {
       const method = editingPack ? 'PUT' : 'POST';
       const url = editingPack 
-        ? `/api/admin/token-packs/${editingPack._id}`
-        : '/api/admin/token-packs';
+        ? `/api/v1/admin/token-packs/${editingPack._id}`
+        : '/api/v1/admin/token-packs';
 
       const backendUrl = editingPack 
-        ? `/api/admin/token-packs/${editingPack._id}`
-        : `/api/admin/token-packs`;
+        ? `/api/v1/admin/token-packs/${editingPack._id}`
+        : `/api/v1/admin/token-packs`;
 
       const response = await adminFetch(backendUrl, {
         method,
