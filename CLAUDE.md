@@ -88,19 +88,29 @@ npm run start            # 本番サーバー起動
 npm run lint             # ESLintチェック
 ```
 
-### 本番サーバー管理
+### 本番サーバー管理（Blue-Greenデプロイメント）
 ```bash
-# サービス管理
-sudo systemctl status charactier-backend charactier-frontend
-sudo systemctl restart charactier-backend
-sudo systemctl restart charactier-frontend
+# サービス状態確認
+sudo systemctl status charactier-backend-blue charactier-backend-green
+sudo systemctl status charactier-frontend
 
 # ログ確認
-sudo journalctl -u charactier-backend -f
+sudo journalctl -u charactier-backend-blue -f
+sudo journalctl -u charactier-backend-green -f
 sudo journalctl -u charactier-frontend -f
 
-# デプロイ
-git pull  # 自動的にビルド・再起動される
+# 🚀 デプロイメント手順
+# 1. コード更新
+git pull origin main  # または feature/branch-name
+
+# 2. Blue-Greenデプロイ実行（ゼロダウンタイム）
+sudo ./deploy/deploy-blue-green.sh
+
+# 3. 問題があった場合のロールバック
+sudo ./deploy/rollback-blue-green.sh
+
+# 現在のアクティブ環境確認
+sed -n '/upstream backend/,/^}/p' /etc/nginx/conf.d/charactier-backend-upstream.conf | grep "server 127.0.0.1:" | grep -v "#"
 ```
 
 ## 厳守ルール
