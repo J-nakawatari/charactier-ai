@@ -101,7 +101,7 @@ docs/security-*.md
 docs/load-test-*.md
 
 # Deployment scripts
-deploy-*.sh
+# deploy-*.sh  # Blue-Green deployment scripts are now tracked
 
 # Test scripts with hardcoded credentials
 scripts/test-*.js
