@@ -5,14 +5,26 @@
 
 set -e  # エラーがあれば即座に停止
 
-# Node.jsのパスを直接指定
-NODE_BIN="/home/jun/.nvm/versions/node/v22.16.0/bin/node"
-NPM_BIN="/home/jun/.nvm/versions/node/v22.16.0/bin/npm"
-
-# バイナリが存在するか確認
-if [ ! -f "$NPM_BIN" ]; then
-    echo "❌ npmが見つかりません: $NPM_BIN"
-    echo "Node.jsのパスを確認してください。"
+# Node.jsのパスを環境に応じて検出
+# 1. コマンドがすでに利用可能な場合
+if command -v npm &> /dev/null; then
+    NPM_BIN=$(command -v npm)
+    NODE_BIN=$(command -v node)
+# 2. 一般的なnvmの場所から探す
+elif [ -s "$HOME/.nvm/nvm.sh" ]; then
+    export NVM_DIR="$HOME/.nvm"
+    \. "$NVM_DIR/nvm.sh"
+    NPM_BIN=$(command -v npm)
+    NODE_BIN=$(command -v node)
+# 3. システムのNode.jsを探す
+elif [ -f "/usr/bin/npm" ]; then
+    NPM_BIN="/usr/bin/npm"
+    NODE_BIN="/usr/bin/node"
+else
+    echo "❌ Node.jsが見つかりません。"
+    echo "以下のいずれかの方法でインストールしてください："
+    echo "  - nvm install node"
+    echo "  - sudo apt install nodejs npm"
     exit 1
 fi
 
