@@ -176,27 +176,38 @@ export function validateObjectId(paramName: string = 'id') {
  * @returns サニタイズされた文字列
  */
 export function sanitizeHtml(input: string): string {
-  if (!input) return input;
+  if (!input || typeof input !== 'string') return '';
   
-  // エンコーディングを正規化
-  let sanitized = input;
+  // エンコーディングを正規化 - 先にHTMLエンティティをデコード
+  let sanitized = input
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#x27;/gi, "'")
+    .replace(/&#x2F;/gi, '/');
   
   // URLスキームの危険なプロトコルを除去
   sanitized = sanitized.replace(/(javascript|data|vbscript|blob|file|about):/gi, '');
   
-  // scriptタグを完全に除去（様々なバリエーションに対応）
-  // 複数回実行して入れ子や変形パターンも除去
-  let prevLength;
-  do {
-    prevLength = sanitized.length;
-    sanitized = sanitized.replace(/<\s*\/?\s*script[^>]*>/gi, '');
-    sanitized = sanitized.replace(/<\s*script[\s\S]*?<\s*\/\s*script\s*>/gi, '');
-    sanitized = sanitized.replace(/script/gi, '');
-  } while (sanitized.length !== prevLength);
+  // 危険なHTML要素を完全に除去
+  const dangerousElements = ['script', 'style', 'iframe', 'object', 'embed', 'link', 'meta', 'base'];
+  dangerousElements.forEach(tag => {
+    // タグの様々なバリエーションを除去
+    const patterns = [
+      new RegExp(`<\\s*${tag}[^>]*>[\\s\\S]*?<\\s*\\/${tag}\\s*>`, 'gi'),
+      new RegExp(`<\\s*${tag}[^>]*\\/>`, 'gi'),
+      new RegExp(`<\\s*${tag}[^>]*>`, 'gi'),
+      new RegExp(`<\\s*\\/${tag}\\s*>`, 'gi')
+    ];
+    patterns.forEach(pattern => {
+      sanitized = sanitized.replace(pattern, '');
+    });
+  });
   
-  // イベントハンドラ属性を除去（on*=）- より厳密なパターン
-  sanitized = sanitized.replace(/\bon\w+\s*=\s*["']?[^"'>]*["']?/gi, '');
-  sanitized = sanitized.replace(/\bon\w+/gi, ''); // on* だけのパターンも除去
+  // イベントハンドラ属性を除去 - より包括的に
+  sanitized = sanitized.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
+  sanitized = sanitized.replace(/\s*on\w+\s*=\s*[^\s>]*/gi, '');
+  sanitized = sanitized.replace(/\bon\w+/gi, '');
   
   // styleタグとstyle属性を除去（XSS防止）
   sanitized = sanitized.replace(/<\s*style[^>]*>[\s\S]*?<\s*\/\s*style\s*>/gi, '');

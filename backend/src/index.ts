@@ -2052,7 +2052,7 @@ app.post(`${API_PREFIX}/user/setup-complete`, authenticateToken, createRateLimit
       return;
     }
 
-    if (!selectedCharacterId) {
+    if (!selectedCharacterId || !mongoose.Types.ObjectId.isValid(selectedCharacterId)) {
       res.status(400).json({
         error: 'Character selection required',
         message: 'キャラクターを選択してください'
@@ -3218,10 +3218,10 @@ app.post(`${API_PREFIX}/purchase/create-character-checkout-session`, authenticat
 
   const { characterId } = req.body;
   
-  if (!characterId) {
+  if (!characterId || !mongoose.Types.ObjectId.isValid(characterId)) {
     res.status(400).json({ 
       success: false,
-      message: 'Character ID is required' 
+      message: 'Valid Character ID is required' 
     });
     return;
   }

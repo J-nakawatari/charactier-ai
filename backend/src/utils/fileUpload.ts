@@ -99,12 +99,16 @@ export const optimizeImage = (width: number = 800, height: number = 800, quality
       // });
         
       // Final path validation before rename
-      const finalPath = path.resolve(filePath);
-      if (!finalPath.startsWith(expectedUploadDir)) {
-        throw new Error('Invalid final file path');
+      const sanitizedTmpPath = path.normalize(path.resolve(tmpPath));
+      const sanitizedFinalPath = path.normalize(path.resolve(filePath));
+      
+      // Both paths must be within upload directory
+      if (!sanitizedTmpPath.startsWith(expectedUploadDir) || 
+          !sanitizedFinalPath.startsWith(expectedUploadDir)) {
+        throw new Error('Invalid file path');
       }
       
-      await fs.promises.rename(tmpPath, finalPath);
+      await fs.promises.rename(sanitizedTmpPath, sanitizedFinalPath);
       next();
     } catch (err) {
       next(err);
