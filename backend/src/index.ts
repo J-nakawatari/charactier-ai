@@ -4409,7 +4409,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/admin/admins/:id`, authenticateToken,
 
     const updatedAdmin = await AdminModel.findByIdAndUpdate(
       id,
-      updateData,
+      { $set: updateData },
       { new: true, select: '-password', runValidators: true }
     );
 
@@ -4666,12 +4666,12 @@ app.post(`${API_PREFIX}/admin/resolve-violation/:id`, authenticateToken, createR
     
     const violation = await ViolationRecord.findByIdAndUpdate(
       id,
-      {
+      { $set: {
         isResolved: true,
         resolvedBy: req.user?._id,
         resolvedAt: new Date(),
         adminNotes: notes || '管理者により解決済み'
-      },
+      }},
       { new: true }
     );
 
@@ -6966,8 +6966,8 @@ routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateTo
 
     // パスワードを更新
     await UserModel.findByIdAndUpdate(req.user._id, {
-      password: hashedNewPassword
-    });
+      $set: { password: hashedNewPassword }
+    }, { runValidators: true });
 
     res.json({
       success: true,
@@ -7019,11 +7019,13 @@ routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticate
 
     // 論理削除を実行（物理削除ではなく、アクセス不可にする）
     await UserModel.findByIdAndUpdate(req.user._id, {
-      isActive: false,
-      accountStatus: 'deleted',
-      email: `deleted_${Date.now()}_${user.email}`, // メールアドレスを無効化
-      deletedAt: new Date()
-    });
+      $set: {
+        isActive: false,
+        accountStatus: 'deleted',
+        email: `deleted_${Date.now()}_${user.email}`, // メールアドレスを無効化
+        deletedAt: new Date()
+      }
+    }, { runValidators: true });
 
     // 関連データの無効化
     try {
