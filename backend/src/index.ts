@@ -1079,7 +1079,7 @@ routeRegistry.define('GET', `${API_PREFIX}/notifications/stream`, authenticateTo
   let handleNotificationUpdate: any = null;
   
   try {
-    const { getRedisSubscriber } = require('./lib/redis');
+    const { getRedisSubscriber } = require('../lib/redis');
     redisSubscriber = getRedisSubscriber();
     const notificationChannel = `notifications:user:${userId}`;
     
