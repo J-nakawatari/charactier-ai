@@ -879,6 +879,18 @@ app.use((req: any, res: Response, next: NextFunction): void => {
       return;
     }
     
+    // 最終確認: API_PREFIXで始まることを確認
+    if (!correctedUrl.startsWith(API_PREFIX)) {
+      log.warn('Invalid redirect path - must start with API_PREFIX', {
+        originalUrl: req.originalUrl,
+        correctedUrl: correctedUrl,
+        API_PREFIX: API_PREFIX,
+        ip: req.ip
+      });
+      res.status(400).json({ error: 'Invalid redirect path' });
+      return;
+    }
+    
     // 安全な相対パスのみリダイレクト
     res.redirect(correctedUrl);
     return;
@@ -3732,10 +3744,12 @@ routeRegistry.define('GET', `${API_PREFIX}/admin/users`, authenticateToken, crea
       };
       
       // 検索フィルター
-      if (search) {
+      if (search && typeof search === 'string') {
+        // 正規表現をエスケープ
+        const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         query.$or = [
-          { name: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
+          { name: { $regex: escapedSearch, $options: 'i' } },
+          { email: { $regex: escapedSearch, $options: 'i' } }
         ];
       }
       
@@ -4275,10 +4289,12 @@ app.get(`${API_PREFIX}/admin/admins`, authenticateToken, createRateLimiter('admi
       const query: any = {};
       
       // 検索フィルター
-      if (search) {
+      if (search && typeof search === 'string') {
+        // 正規表現をエスケープ
+        const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         query.$or = [
-          { name: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
+          { name: { $regex: escapedSearch, $options: 'i' } },
+          { email: { $regex: escapedSearch, $options: 'i' } }
         ];
       }
 

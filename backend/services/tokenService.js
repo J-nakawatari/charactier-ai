@@ -73,9 +73,15 @@ class TokenService {
       await tokenPack.save();
       
       // 4. User.tokenBalance を更新
-      await User.findByIdAndUpdate(userId, {
-        $inc: { tokenBalance: tokensToGive }
-      }, { new: true });
+      await User.findByIdAndUpdate(
+        userId, 
+        { $inc: { tokenBalance: tokensToGive } },
+        { 
+          new: true,
+          runValidators: true,
+          strict: true
+        }
+      );
       
       console.log(`✅ ユーザー ${userId} に ${tokensToGive} トークンを付与しました`);
       console.log(`💳 Stripeセッション: ${stripeSessionId}`);

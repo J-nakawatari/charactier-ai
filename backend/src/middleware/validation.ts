@@ -184,12 +184,19 @@ export function sanitizeHtml(input: string): string {
   // URLスキームの危険なプロトコルを除去
   sanitized = sanitized.replace(/(javascript|data|vbscript|blob|file|about):/gi, '');
   
-  // scriptタグを完全に除去（スペースや改行を含む場合も対応）
-  sanitized = sanitized.replace(/<\s*script[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi, '');
-  sanitized = sanitized.replace(/<\s*script[^>]*\/?\s*>/gi, '');
+  // scriptタグを完全に除去（様々なバリエーションに対応）
+  // 複数回実行して入れ子や変形パターンも除去
+  let prevLength;
+  do {
+    prevLength = sanitized.length;
+    sanitized = sanitized.replace(/<\s*\/?\s*script[^>]*>/gi, '');
+    sanitized = sanitized.replace(/<\s*script[\s\S]*?<\s*\/\s*script\s*>/gi, '');
+    sanitized = sanitized.replace(/script/gi, '');
+  } while (sanitized.length !== prevLength);
   
-  // イベントハンドラ属性を除去（on*=）
-  sanitized = sanitized.replace(/\s*on\w+\s*=\s*["']?[^"'>]*["']?/gi, '');
+  // イベントハンドラ属性を除去（on*=）- より厳密なパターン
+  sanitized = sanitized.replace(/\bon\w+\s*=\s*["']?[^"'>]*["']?/gi, '');
+  sanitized = sanitized.replace(/\bon\w+/gi, ''); // on* だけのパターンも除去
   
   // styleタグとstyle属性を除去（XSS防止）
   sanitized = sanitized.replace(/<\s*style[^>]*>[\s\S]*?<\s*\/\s*style\s*>/gi, '');

@@ -257,7 +257,16 @@ export const log = {
     
     // Additional safety: ensure the message itself doesn't contain sensitive data
     const safeMeta = typeof finalSanitized === 'object' ? finalSanitized : { data: '[SANITIZED]' };
-    logger.warn(message, safeMeta);
+    
+    // Double-check: ensure no sensitive patterns in the final output
+    const safeMessage = message.replace(/password|token|secret|key|bearer/gi, '[REDACTED]');
+    
+    // Use winston's built-in safe logging
+    logger.log({
+      level: 'warn',
+      message: safeMessage,
+      ...safeMeta
+    });
   },
   
   error: (message: string, error?: Error | any, meta?: any) => {
@@ -306,7 +315,16 @@ export const log = {
     
     // Additional safety: ensure the object is safe to log
     const safeMeta = typeof finalSanitized === 'object' ? finalSanitized : { data: '[SANITIZED]' };
-    logger.error(message, safeMeta);
+    
+    // Double-check: ensure no sensitive patterns in the final output
+    const safeMessage = message.replace(/password|token|secret|key|bearer/gi, '[REDACTED]');
+    
+    // Use winston's built-in safe logging
+    logger.log({
+      level: 'error',
+      message: safeMessage,
+      ...safeMeta
+    });
   },
 
   // Special logger for API requests

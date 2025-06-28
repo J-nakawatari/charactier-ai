@@ -98,7 +98,13 @@ export const optimizeImage = (width: number = 800, height: number = 800, quality
       //   space: outputMeta.space
       // });
         
-      await fs.promises.rename(tmpPath, filePath);
+      // Final path validation before rename
+      const finalPath = path.resolve(filePath);
+      if (!finalPath.startsWith(expectedUploadDir)) {
+        throw new Error('Invalid final file path');
+      }
+      
+      await fs.promises.rename(tmpPath, finalPath);
       next();
     } catch (err) {
       next(err);
