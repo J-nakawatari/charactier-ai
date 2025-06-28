@@ -1080,7 +1080,7 @@ routeRegistry.define('GET', `${API_PREFIX}/notifications/stream`, authenticateTo
   
   try {
     const { getRedisSubscriber } = require('../lib/redis');
-    redisSubscriber = getRedisSubscriber();
+    redisSubscriber = await getRedisSubscriber();
     const notificationChannel = `notifications:user:${userId}`;
     
     handleNotificationUpdate = async (channel: string, message: string) => {
@@ -1093,7 +1093,7 @@ routeRegistry.define('GET', `${API_PREFIX}/notifications/stream`, authenticateTo
       }
     };
 
-    redisSubscriber.subscribe(notificationChannel);
+    await redisSubscriber.subscribe(notificationChannel);
     redisSubscriber.on('message', handleNotificationUpdate);
   } catch (error) {
     log.error('Error setting up Redis subscriber', error);
@@ -1104,7 +1104,9 @@ routeRegistry.define('GET', `${API_PREFIX}/notifications/stream`, authenticateTo
     clearInterval(heartbeatInterval);
     if (redisSubscriber && handleNotificationUpdate) {
       const notificationChannel = `notifications:user:${userId}`;
-      redisSubscriber.unsubscribe(notificationChannel);
+      redisSubscriber.unsubscribe(notificationChannel).catch((err: any) => {
+        log.error('Error unsubscribing from Redis channel', err);
+      });
       redisSubscriber.removeListener('message', handleNotificationUpdate);
     }
     console.log(`📭 Notification stream closed for user ${userId}`);
