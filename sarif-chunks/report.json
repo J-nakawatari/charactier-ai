@@ -1,0 +1,257 @@
+{
+  "summary": {
+    "total": 476,
+    "open": 27,
+    "fixed": 449,
+    "byPriority": {
+      "HIGH": 18,
+      "MEDIUM": 8,
+      "LOW": 1
+    }
+  },
+  "openAlerts": [
+    {
+      "id": 476,
+      "rule": "js/clear-text-logging",
+      "severity": "error",
+      "priority": "MEDIUM",
+      "file": "backend/src/utils/logger.ts",
+      "line": 296,
+      "message": "This logs sensitive data returned by an access to passwordStrength as clear text.\nThis logs sensitiv..."
+    },
+    {
+      "id": 475,
+      "rule": "js/clear-text-logging",
+      "severity": "error",
+      "priority": "MEDIUM",
+      "file": "backend/src/utils/logger.ts",
+      "line": 249,
+      "message": "This logs sensitive data returned by an access to password as clear text.\nThis logs sensitive data r..."
+    },
+    {
+      "id": 474,
+      "rule": "js/server-side-unvalidated-url-redirection",
+      "severity": "warning",
+      "priority": "HIGH",
+      "file": "backend/src/index.ts",
+      "line": 872,
+      "message": "Untrusted URL redirection depends on a user-provided value...."
+    },
+    {
+      "id": 357,
+      "rule": "js/incomplete-url-scheme-check",
+      "severity": "warning",
+      "priority": "MEDIUM",
+      "file": "backend/src/middleware/validation.ts",
+      "line": 182,
+      "message": "This check does not consider data: and vbscript:...."
+    },
+    {
+      "id": 349,
+      "rule": "js/incomplete-multi-character-sanitization",
+      "severity": "warning",
+      "priority": "MEDIUM",
+      "file": "backend/src/middleware/validation.ts",
+      "line": 182,
+      "message": "This string may still contain <script, which may cause an HTML element injection vulnerability...."
+    },
+    {
+      "id": 348,
+      "rule": "js/incomplete-multi-character-sanitization",
+      "severity": "warning",
+      "priority": "MEDIUM",
+      "file": "backend/src/middleware/validation.ts",
+      "line": 182,
+      "message": "This string may still contain <script, which may cause an HTML element injection vulnerability...."
+    },
+    {
+      "id": 347,
+      "rule": "js/incomplete-multi-character-sanitization",
+      "severity": "warning",
+      "priority": "MEDIUM",
+      "file": "backend/src/middleware/validation.ts",
+      "line": 182,
+      "message": "This string may still contain on, which may cause an HTML attribute injection vulnerability...."
+    },
+    {
+      "id": 346,
+      "rule": "js/bad-tag-filter",
+      "severity": "warning",
+      "priority": "MEDIUM",
+      "file": "backend/src/middleware/validation.ts",
+      "line": 183,
+      "message": "This regular expression does not match script end tags like </script >...."
+    },
+    {
+      "id": 303,
+      "rule": "js/xss-through-dom",
+      "severity": "warning",
+      "priority": "HIGH",
+      "file": "frontend/utils/localeUtils.ts",
+      "line": 99,
+      "message": "DOM text is reinterpreted as HTML without escaping meta-characters...."
+    },
+    {
+      "id": 268,
+      "rule": "js/sql-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/src/routes/adminSecurity.ts",
+      "line": 249,
+      "message": "This query object depends on a user-provided value...."
+    },
+    {
+      "id": 267,
+      "rule": "js/sql-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/src/routes/adminSecurity.ts",
+      "line": 243,
+      "message": "This query object depends on a user-provided value...."
+    },
+    {
+      "id": 255,
+      "rule": "js/incomplete-url-substring-sanitization",
+      "severity": "warning",
+      "priority": "MEDIUM",
+      "file": "frontend/lib/api-config.ts",
+      "line": 13,
+      "message": "'charactier-ai.com' can be anywhere in the URL, and arbitrary hosts may come before or after it...."
+    },
+    {
+      "id": 171,
+      "rule": "js/sql-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/src/index.ts",
+      "line": 3208,
+      "message": "This query object depends on a user-provided value...."
+    },
+    {
+      "id": 167,
+      "rule": "js/sql-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/src/routes/notifications.ts",
+      "line": 89,
+      "message": "This query object depends on a user-provided value...."
+    },
+    {
+      "id": 166,
+      "rule": "js/sql-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/src/routes/notifications.ts",
+      "line": 45,
+      "message": "This query object depends on a user-provided value...."
+    },
+    {
+      "id": 165,
+      "rule": "js/sql-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/src/routes/adminTokenUsage.ts",
+      "line": 84,
+      "message": "This query object depends on a user-provided value...."
+    },
+    {
+      "id": 164,
+      "rule": "js/sql-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/src/routes/adminTokenUsage.ts",
+      "line": 76,
+      "message": "This query object depends on a user-provided value...."
+    },
+    {
+      "id": 162,
+      "rule": "js/sql-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/routes/user.js",
+      "line": 34,
+      "message": "This query object depends on a user-provided value...."
+    },
+    {
+      "id": 126,
+      "rule": "js/path-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/src/utils/fileUpload.ts",
+      "line": 90,
+      "message": "This path depends on a user-provided value...."
+    },
+    {
+      "id": 125,
+      "rule": "js/path-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/src/utils/fileUpload.ts",
+      "line": 90,
+      "message": "This path depends on a user-provided value...."
+    },
+    {
+      "id": 123,
+      "rule": "js/sql-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/src/index.ts",
+      "line": 3737,
+      "message": "This query object depends on a user-provided value...."
+    },
+    {
+      "id": 122,
+      "rule": "js/sql-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/src/index.ts",
+      "line": 3736,
+      "message": "This query object depends on a user-provided value...."
+    },
+    {
+      "id": 92,
+      "rule": "js/sql-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/src/index.ts",
+      "line": 2047,
+      "message": "This query object depends on a user-provided value...."
+    },
+    {
+      "id": 86,
+      "rule": "js/sql-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/services/tokenService.js",
+      "line": 194,
+      "message": "This query object depends on a user-provided value...."
+    },
+    {
+      "id": 85,
+      "rule": "js/sql-injection",
+      "severity": "error",
+      "priority": "HIGH",
+      "file": "backend/services/tokenService.js",
+      "line": 76,
+      "message": "This query object depends on a user-provided value...."
+    },
+    {
+      "id": 12,
+      "rule": "js/missing-rate-limiting",
+      "severity": "warning",
+      "priority": "LOW",
+      "file": "backend/src/index.ts",
+      "line": 453,
+      "message": "This route handler performs a database access, but is not rate-limited.\nThis route handler performs ..."
+    },
+    {
+      "id": 6,
+      "rule": "js/xss-through-exception",
+      "severity": "warning",
+      "priority": "HIGH",
+      "file": "backend/webhooks/stripe.js",
+      "line": 65,
+      "message": "Exception text is reinterpreted as HTML without escaping meta-characters.\nException text is reinterp..."
+    }
+  ]
+}

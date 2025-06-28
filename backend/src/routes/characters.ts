@@ -537,8 +537,8 @@ router.delete('/:id', adminRateLimit, authenticateToken, async (req: AuthRequest
 
     const updatedCharacter = await CharacterModel.findByIdAndUpdate(
       req.params.id,
-      { isActive: false },
-      { new: true }
+      { $set: { isActive: false } },
+      { new: true, runValidators: true }
     );
     
     if (!updatedCharacter) {

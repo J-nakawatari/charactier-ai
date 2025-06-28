@@ -384,7 +384,7 @@ router.post('/login',
     if (needsRehash(user.password)) {
       try {
         const newHash = await hashPassword(password);
-        await UserModel.findByIdAndUpdate(user._id, { password: newHash });
+        await UserModel.findByIdAndUpdate(user._id, { $set: { password: newHash } });
         log.info('Password hash migrated to Argon2id', { userId: user._id.toString() });
       } catch (migrationError) {
         log.error('Password hash migration failed', migrationError);
@@ -629,7 +629,7 @@ router.put('/user/profile',
     // ユーザー情報を更新
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
-      { name: name.trim() },
+      { $set: { name: name.trim() } },
       { new: true, select: '-password' }
     );
 

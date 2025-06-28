@@ -74,6 +74,7 @@ import { sendErrorResponse, ClientErrorCode } from './utils/errorResponse';
 import { ServerMonitor } from './monitoring/ServerMonitor';
 import { API_PREFIX } from './config/api';
 import { csrfProtection } from './services/csrfProtection';
+import { stripeWebhookRateLimit } from './middleware/stripeWebhookRateLimit';
 
 // PM2が環境変数を注入するため、dotenv.config()は不要
 // 開発環境の場合のみdotenvを使用（PM2を使わない場合）
@@ -81,7 +82,7 @@ if (process.env.NODE_ENV !== 'production') {
   try {
     require('dotenv').config({ path: './.env' });
   } catch (error) {
-    console.log('⚠️ dotenv not available in development, using process.env directly');
+    log.warn('dotenv not available in development, using process.env directly');
   }
 }
 
@@ -203,11 +204,12 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
         await cachedPrompt.save();
         
         // キャッシュから取得したプロンプトをログに表示
-        console.log('🎯 Cache HIT! Using cached prompt');
-        console.log(`📝 Cache details: userId=${userId}, characterId=${characterId}, affinityLevel=${userAffinityLevel}`);
-        console.log('📝 ========== CACHED SYSTEM PROMPT ==========');
-        console.log(systemPrompt.substring(0, 500) + '...');  // 最初の500文字のみ表示
-        console.log('📝 ========== END CACHED PROMPT ==========');
+        if (process.env.NODE_ENV === 'development') {
+          log.debug('Cache HIT! Using cached prompt', {
+            userId, characterId, affinityLevel: userAffinityLevel,
+            promptPreview: systemPrompt.substring(0, 100) + '...'
+          });
+        }
         
       }
     } catch (cacheError) {
@@ -289,11 +291,12 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
 - 絵文字を適度に使用してください`;
 
     // 新規生成されたプロンプトをログに表示
-    console.log('🔨 Cache MISS! Generating new prompt');
-    console.log(`📝 Generation details: characterId=${characterId}, affinityLevel=${userAffinityLevel}`);
-    console.log('📝 ========== GENERATED SYSTEM PROMPT ==========');
-    console.log(systemPrompt);
-    console.log('📝 ========== END GENERATED PROMPT ==========');
+    if (process.env.NODE_ENV === 'development') {
+      log.debug('Cache MISS! Generating new prompt', {
+        characterId, affinityLevel: userAffinityLevel,
+        promptLength: systemPrompt.length
+      });
+    }
     
     // キャッシュサイズ制限（8000文字超の場合は要約）
     if (systemPrompt.length > 8000) {
@@ -335,7 +338,7 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
         
       } catch (saveError) {
         // キャッシュ保存エラーは無視して続行
-        console.error('⚠️ CharacterPromptCache save error:', saveError);
+        log.error('⚠️ CharacterPromptCache save error:', saveError);
       }
     }
   }
@@ -351,18 +354,18 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
       ];
 
       // OpenAIに送信する直前にプロンプト全体をログ出力
-      console.log('🤖 ========== FINAL PROMPT TO OPENAI ==========');
-      console.log('SYSTEM PROMPT:');
+      if (process.env.NODE_ENV === 'development') log.debug('🤖 ========== FINAL PROMPT TO OPENAI ==========');
+      if (process.env.NODE_ENV === 'development') log.debug('SYSTEM PROMPT:');
       console.log(systemPrompt);
-      console.log('');
-      console.log('CONVERSATION HISTORY:');
+      if (process.env.NODE_ENV === 'development') log.debug('');
+      if (process.env.NODE_ENV === 'development') log.debug('CONVERSATION HISTORY:');
       conversationHistory.forEach((msg, index) => {
         console.log(`${index + 1}. ${msg.role}: ${msg.content}`);
       });
-      console.log('');
-      console.log('USER MESSAGE:');
+      if (process.env.NODE_ENV === 'development') log.debug('');
+      if (process.env.NODE_ENV === 'development') log.debug('USER MESSAGE:');
       console.log(userMessage);
-      console.log('🤖 ========== END OPENAI PROMPT ==========');
+      if (process.env.NODE_ENV === 'development') log.debug('🤖 ========== END OPENAI PROMPT ==========');
 
       const completion = await openai.chat.completions.create({
         model: model,
@@ -448,15 +451,16 @@ app.use(securityAuditMiddleware);
 
 // ⚠️ IMPORTANT: Stripe webhook MUST come BEFORE express.json()
 // Stripe webhook endpoint (needs raw body)
-app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req: Request, res: Response): Promise<void> => {
+app.post('/webhook/stripe', stripeWebhookRateLimit, express.raw({ type: 'application/json' }), async (req: Request, res: Response): Promise<void> => {
   
   const sig = req.headers['stripe-signature'] as string;
   let event: Stripe.Event;
 
-  console.log('[Stripe Webhook] Received request');
-  console.log('[Stripe Webhook] Signature:', sig ? 'Present' : 'Missing');
-  console.log('[Stripe Webhook] Body type:', typeof req.body);
-  console.log('[Stripe Webhook] Body length:', req.body?.length || 0);
+  log.info('Stripe webhook received', {
+    hasSignature: !!sig,
+    bodyType: typeof req.body,
+    bodyLength: req.body?.length || 0
+  });
 
   try {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -512,7 +516,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
         if (purchaseType === 'character' && characterId) {
           character = await CharacterModel.findById(characterId);
           if (!character) {
-            console.error('❌ Character not found for ID:', characterId);
+            log.error('Character not found for ID', { characterId });
             // フォールバック：価格IDから検索（複数キャラが同じ価格IDを持つ場合は問題あり）
             character = await CharacterModel.findOne({ stripeProductId: priceId });
             if (character) {
@@ -835,15 +839,62 @@ app.use(cookieParser());
 
 // HTMLエンコードされたURLパラメータを修正するミドルウェア
 // SendGridのテンプレートで&amp;にエンコードされる問題に対処
-app.use((req: Request, res: Response, next: NextFunction) => {
+app.use((req: any, res: Response, next: NextFunction): void => {
   if (req.originalUrl && req.originalUrl.includes('&amp;')) {
     const correctedUrl = req.originalUrl.replace(/&amp;/g, '&');
+    
+    // セキュリティ検証: 相対パスのみ許可（外部リダイレクト防止）
+    if (correctedUrl.startsWith('http://') || correctedUrl.startsWith('https://') || correctedUrl.startsWith('//')) {
+      log.warn('Blocked absolute URL redirect attempt', {
+        originalUrl: req.originalUrl,
+        correctedUrl: correctedUrl,
+        ip: req.ip
+      });
+      res.status(400).json({ error: 'External redirects not allowed' });
+      return;
+    }
+    
+    // 追加検証: パス操作攻撃防止
+    if (correctedUrl.includes('..') || correctedUrl.includes('\\')) {
+      log.warn('Blocked path traversal attempt in redirect', {
+        originalUrl: req.originalUrl,
+        correctedUrl: correctedUrl,
+        ip: req.ip
+      });
+      res.status(400).json({ error: 'Invalid path in redirect URL' });
+      return;
+    }
+    
     log.info('Correcting HTML-encoded URL', {
       originalUrl: req.originalUrl,
       correctedUrl: correctedUrl
     });
-    // 修正されたURLにリダイレクト
-    return res.redirect(correctedUrl);
+    // 最終確認: 相対パスであることを確認
+    if (!correctedUrl.startsWith('/')) {
+      log.warn('Invalid redirect path - must start with /', {
+        originalUrl: req.originalUrl,
+        correctedUrl: correctedUrl,
+        ip: req.ip
+      });
+      res.status(400).json({ error: 'Invalid redirect path' });
+      return;
+    }
+    
+    // 最終確認: API_PREFIXで始まることを確認
+    if (!correctedUrl.startsWith(API_PREFIX)) {
+      log.warn('Invalid redirect path - must start with API_PREFIX', {
+        originalUrl: req.originalUrl,
+        correctedUrl: correctedUrl,
+        API_PREFIX: API_PREFIX,
+        ip: req.ip
+      });
+      res.status(400).json({ error: 'Invalid redirect path' });
+      return;
+    }
+    
+    // 安全な相対パスのみリダイレクト
+    res.redirect(correctedUrl);
+    return;
   }
   next();
 });
@@ -1015,7 +1066,7 @@ routeRegistry.define('GET', `${API_PREFIX}/notifications/stream`, authenticateTo
     
     res.write(`data: ${JSON.stringify({ type: 'unreadCount', count: unreadCount })}\n\n`);
   } catch (error) {
-    console.error('❌ Error getting initial unread count:', error);
+    log.error('Error getting initial unread count', error);
   }
 
   // ハートビート設定（20秒ごと - Nginxのデフォルトタイムアウト30分より前に送信）
@@ -1038,14 +1089,14 @@ routeRegistry.define('GET', `${API_PREFIX}/notifications/stream`, authenticateTo
         // 新しい通知または既読状態の変更を通知
         res.write(`data: ${JSON.stringify(data)}\n\n`);
       } catch (error) {
-        console.error('❌ Error handling notification update:', error);
+        log.error('Error handling notification update', error);
       }
     };
 
     redisSubscriber.subscribe(notificationChannel);
     redisSubscriber.on('message', handleNotificationUpdate);
   } catch (error) {
-    console.error('❌ Error setting up Redis subscriber:', error);
+    log.error('Error setting up Redis subscriber', error);
   }
 
   // クライアント切断時のクリーンアップ
@@ -1503,8 +1554,8 @@ routeRegistry.define('PUT', `${API_PREFIX}/user/profile`, authenticateToken, cre
 
     const user = await UserModel.findByIdAndUpdate(
       userId,
-      updateData,
-      { new: true, select: '-password -emailVerificationToken' }
+      { $set: updateData },
+      { new: true, runValidators: true, select: '-password -emailVerificationToken' }
     );
 
     if (!user) {
@@ -1846,8 +1897,8 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
 
     // パスワードを更新
     await UserModel.findByIdAndUpdate(userId, {
-      password: hashedNewPassword
-    });
+      $set: { password: hashedNewPassword }
+    }, { runValidators: true });
 
     res.json({
       success: true,
@@ -1855,7 +1906,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
     });
 
   } catch (error) {
-    console.error('Password change error:', error);
+    log.error('Password change error', error);
     res.status(500).json({ 
       error: 'Password change failed',
       message: 'パスワードの変更に失敗しました'
@@ -1904,7 +1955,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
       });
 
     } catch (deleteError) {
-      console.error('Account deletion error:', deleteError);
+      log.error('Account deletion error:', deleteError);
       res.status(500).json({
         error: 'Account deletion failed',
         message: 'アカウントの削除中にエラーが発生しました'
@@ -1912,7 +1963,7 @@ routeRegistry.define('GET', `${API_PREFIX}/debug/chat-diagnostics/:characterId`,
     }
 
   } catch (error) {
-    console.error('Delete account error:', error);
+    log.error('Delete account error:', error);
     res.status(500).json({ 
       error: 'Account deletion failed',
       message: 'アカウントの削除に失敗しました'
@@ -1961,8 +2012,8 @@ routeRegistry.define('POST', `${API_PREFIX}/user/select-character`, authenticate
     // ユーザーの選択キャラクターを更新
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
-      { selectedCharacter: characterId },
-      { new: true, select: '-password' }
+      { $set: { selectedCharacter: characterId } },
+      { new: true, runValidators: true, select: '-password' }
     );
 
     if (!updatedUser) {
@@ -1981,7 +2032,7 @@ routeRegistry.define('POST', `${API_PREFIX}/user/select-character`, authenticate
     });
 
   } catch (error) {
-    console.error('Select character error:', error);
+    log.error('Select character error:', error);
     res.status(500).json({
       error: 'Character selection failed',
       message: 'キャラクター選択に失敗しました'
@@ -2002,7 +2053,7 @@ app.post(`${API_PREFIX}/user/setup-complete`, authenticateToken, createRateLimit
       return;
     }
 
-    if (!selectedCharacterId) {
+    if (!selectedCharacterId || !mongoose.Types.ObjectId.isValid(selectedCharacterId)) {
       res.status(400).json({
         error: 'Character selection required',
         message: 'キャラクターを選択してください'
@@ -2028,12 +2079,12 @@ app.post(`${API_PREFIX}/user/setup-complete`, authenticateToken, createRateLimit
 
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
-      { 
+      { $set: { 
         name: name.trim(),
         selectedCharacter: selectedCharacterId,
         isSetupComplete: true
-      },
-      { new: true, select: '-password' }
+      }},
+      { new: true, runValidators: true, select: '-password' }
     );
 
     if (!updatedUser) {
@@ -2336,10 +2387,10 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
     });
     
     // デバッグログ: 既存のチャット情報
-    console.log('🔍 [Chat History Debug] Existing chat found:', !!existingChat);
+    if (process.env.NODE_ENV === 'development') log.debug('🔍 [Chat History Debug] Existing chat found:', !!existingChat);
     if (existingChat) {
-      console.log('🔍 [Chat History Debug] Total messages in DB:', existingChat.messages?.length || 0);
-      console.log('🔍 [Chat History Debug] Last 3 messages:');
+      if (process.env.NODE_ENV === 'development') log.debug('🔍 [Chat History Debug] Total messages in DB:', existingChat.messages?.length || 0);
+      if (process.env.NODE_ENV === 'development') log.debug('🔍 [Chat History Debug] Last 3 messages:');
       existingChat.messages?.slice(-3).forEach((msg, index) => {
         console.log(`  ${index + 1}. ${msg.role}: ${msg.content.substring(0, 50)}...`);
       });
@@ -2352,8 +2403,8 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
     })) || [];
     
     // デバッグログ: 送信される会話履歴
-    console.log('🔍 [Chat History Debug] Conversation history to send:', conversationHistory.length, 'messages');
-    console.log('🔍 [Chat History Debug] History contents:', conversationHistory);
+    if (process.env.NODE_ENV === 'development') log.debug('Conversation history to send', { count: conversationHistory.length, type: 'messages' });
+    if (process.env.NODE_ENV === 'development') log.debug('🔍 [Chat History Debug] History contents:', conversationHistory);
 
     // 事前トークン残高チェック（1000トークン許容基準）
     const minimumTokensRequired = 1000; // 高品質な会話に必要なトークン
@@ -2387,8 +2438,8 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
     if (isMongoConnected) {
       try {
         await UserModel.findByIdAndUpdate(req.user._id, {
-          tokenBalance: newBalance
-        });
+          $set: { tokenBalance: newBalance }
+        }, { runValidators: true });
       } catch (updateError) {
       }
     }
@@ -2453,8 +2504,8 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
         );
         
         // デバッグログ: メッセージ保存確認
-        console.log('💾 [Chat Save Debug] Messages saved successfully:', !!updatedChat);
-        console.log('💾 [Chat Save Debug] Total messages after save:', updatedChat?.messages?.length || 0);
+        if (process.env.NODE_ENV === 'development') log.debug('💾 [Chat Save Debug] Messages saved successfully:', !!updatedChat);
+        if (process.env.NODE_ENV === 'development') log.debug('💾 [Chat Save Debug] Total messages after save:', updatedChat?.messages?.length || 0);
 
         // UserModelから現在の親密度を取得（ChatModelではなくUserModelが正確な値）
         const userAffinityData = await UserModel.findOne({
@@ -3168,10 +3219,10 @@ app.post(`${API_PREFIX}/purchase/create-character-checkout-session`, authenticat
 
   const { characterId } = req.body;
   
-  if (!characterId) {
+  if (!characterId || !mongoose.Types.ObjectId.isValid(characterId)) {
     res.status(400).json({ 
       success: false,
-      message: 'Character ID is required' 
+      message: 'Valid Character ID is required' 
     });
     return;
   }
@@ -3316,7 +3367,7 @@ app.post(`${API_PREFIX}/purchase/create-character-checkout-session`, authenticat
 app.get(`${API_PREFIX}/purchase/events/:sessionId`, async (req: Request, res: Response): Promise<void> => {
   const { sessionId } = req.params;
   
-  console.log('🌊 SSE購入イベント接続:', sessionId);
+  log.info('🌊 SSE購入イベント接続:', sessionId);
   
   // SSEヘッダーを設定
   res.setHeader('Content-Type', 'text/event-stream');
@@ -3334,13 +3385,13 @@ app.get(`${API_PREFIX}/purchase/events/:sessionId`, async (req: Request, res: Re
       const purchaseData = await redis.get(`purchase:${sessionId}`);
       
       if (purchaseData) {
-        console.log('✅ SSE: 購入データ送信:', sessionId);
+        if (process.env.NODE_ENV === 'development') log.debug('✅ SSE: 購入データ送信:', sessionId);
         res.write(`data: ${purchaseData}\n\n`);
         res.end();
         return true;
       }
     } catch (error) {
-      console.log('SSE: Redisエラー、メモリストアを確認');
+      if (process.env.NODE_ENV === 'development') log.debug('SSE: Redisエラー、メモリストアを確認');
     }
     return false;
   };
@@ -3362,7 +3413,7 @@ app.get(`${API_PREFIX}/purchase/events/:sessionId`, async (req: Request, res: Re
     }
     
     if (attempts >= maxAttempts) {
-      console.log('⏰ SSE: タイムアウト:', sessionId);
+      if (process.env.NODE_ENV === 'development') log.debug('⏰ SSE: タイムアウト:', sessionId);
       res.write(`data: ${JSON.stringify({ error: 'timeout' })}\n\n`);
       res.end();
       clearInterval(interval);
@@ -3371,7 +3422,7 @@ app.get(`${API_PREFIX}/purchase/events/:sessionId`, async (req: Request, res: Re
   
   // クライアント切断時のクリーンアップ
   req.on('close', () => {
-    console.log('🔌 SSE: クライアント切断:', sessionId);
+    if (process.env.NODE_ENV === 'development') log.debug('🔌 SSE: クライアント切断:', sessionId);
     clearInterval(interval);
   });
 });
@@ -3694,16 +3745,21 @@ routeRegistry.define('GET', `${API_PREFIX}/admin/users`, authenticateToken, crea
       };
       
       // 検索フィルター
-      if (search) {
+      if (search && typeof search === 'string') {
+        // 正規表現をエスケープ
+        const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         query.$or = [
-          { name: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
+          { name: { $regex: escapedSearch, $options: 'i' } },
+          { email: { $regex: escapedSearch, $options: 'i' } }
         ];
       }
       
       // ステータスフィルター（管理者は停止ユーザーも含めて表示）
-      if (status && status !== 'all') {
-        query.accountStatus = status;
+      const allowedStatuses = ['active', 'suspended', 'deleted', 'pending', 'all'];
+      if (status && allowedStatuses.includes(status as string)) {
+        if (status !== 'all') {
+          query.accountStatus = { $eq: status };
+        }
       }
       
       const totalUsers = await UserModel.countDocuments(query);
@@ -3902,17 +3958,17 @@ routeRegistry.define('PUT', `${API_PREFIX}/admin/users/:id/status`, authenticate
       // 違反記録も削除（完全な復活）
       try {
         await ViolationRecordModel.deleteMany({ userId: id });
-        console.log(`Deleted violation records for user ${id} on account restoration`);
+        log.info('Deleted violation records for user on account restoration', { userId: id });
       } catch (violationDeleteError) {
-        console.error('Error deleting violation records:', violationDeleteError);
+        log.error('Error deleting violation records', violationDeleteError);
         // 違反記録削除に失敗してもアカウント復活は続行
       }
     }
 
     const user = await UserModel.findByIdAndUpdate(
       id,
-      updateData,
-      { new: true, select: '-password' }
+      { $set: updateData },
+      { new: true, runValidators: true, select: '-password' }
     );
 
     if (!user) {
@@ -4237,10 +4293,12 @@ app.get(`${API_PREFIX}/admin/admins`, authenticateToken, createRateLimiter('admi
       const query: any = {};
       
       // 検索フィルター
-      if (search) {
+      if (search && typeof search === 'string') {
+        // 正規表現をエスケープ
+        const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         query.$or = [
-          { name: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
+          { name: { $regex: escapedSearch, $options: 'i' } },
+          { email: { $regex: escapedSearch, $options: 'i' } }
         ];
       }
 
@@ -4321,7 +4379,7 @@ app.get(`${API_PREFIX}/admin/admins/:id`, authenticateToken, createRateLimiter('
       admin: admin
     });
   } catch (error) {
-    console.error('Admin fetch error:', error);
+    log.error('Admin fetch error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: '管理者情報の取得に失敗しました'
@@ -4382,7 +4440,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/admin/admins/:id`, authenticateToken,
 
     const updatedAdmin = await AdminModel.findByIdAndUpdate(
       id,
-      updateData,
+      { $set: updateData },
       { new: true, select: '-password', runValidators: true }
     );
 
@@ -4394,7 +4452,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/admin/admins/:id`, authenticateToken,
       return;
     }
 
-    console.log('Admin updated:', updatedAdmin._id);
+    if (process.env.NODE_ENV === 'development') log.debug('Admin updated:', updatedAdmin._id);
 
     res.json({
       success: true,
@@ -4402,7 +4460,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/admin/admins/:id`, authenticateToken,
       admin: updatedAdmin
     });
   } catch (error) {
-    console.error('Admin update error:', error);
+    log.error('Admin update error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: '管理者情報の更新に失敗しました'
@@ -4474,14 +4532,14 @@ routeRegistry.define('DELETE', `${API_PREFIX}/admin/admins/:id`, authenticateTok
       return;
     }
 
-    console.log('Admin deleted:', deletedAdmin._id);
+    if (process.env.NODE_ENV === 'development') log.debug('Admin deleted:', deletedAdmin._id);
 
     res.json({
       success: true,
       message: `管理者 ${deletedAdmin.name} を削除しました`
     });
   } catch (error) {
-    console.error('Admin delete error:', error);
+    log.error('Admin delete error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: '管理者の削除に失敗しました'
@@ -4639,12 +4697,12 @@ app.post(`${API_PREFIX}/admin/resolve-violation/:id`, authenticateToken, createR
     
     const violation = await ViolationRecord.findByIdAndUpdate(
       id,
-      {
+      { $set: {
         isResolved: true,
         resolvedBy: req.user?._id,
         resolvedAt: new Date(),
         adminNotes: notes || '管理者により解決済み'
-      },
+      }},
       { new: true }
     );
 
@@ -6117,7 +6175,7 @@ app.get(`${API_PREFIX}/admin/errors`, authenticateToken, createRateLimiter('admi
     });
 
   } catch (error) {
-    console.error('❌ Error fetching errors:', error);
+    log.error('❌ Error fetching errors:', error);
     res.status(500).json({
       success: false,
       error: 'Internal Server Error',
@@ -6671,7 +6729,7 @@ app.get(`${API_PREFIX}/admin/dashboard/stats`, authenticateToken, createRateLimi
     const evaluation = calculateEvaluationScore();
 
     // デバッグログを追加
-    console.log('🔍 Admin Dashboard Stats Debug:', {
+    if (process.env.NODE_ENV === 'development') log.debug('🔍 Admin Dashboard Stats Debug:', {
       totalUsers,
       activeUsers,
       totalTokenUsage,
@@ -6857,7 +6915,7 @@ app.get(`${API_PREFIX}/exchange-rate`, async (req: Request, res: Response): Prom
       jpyToUsd: 1 / rate
     });
   } catch (error) {
-    console.error('Exchange rate fetch error:', error);
+    log.error('Exchange rate fetch error:', error);
     res.status(500).json({ 
       error: 'Failed to fetch exchange rate',
       fallback: {
@@ -6939,8 +6997,8 @@ routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateTo
 
     // パスワードを更新
     await UserModel.findByIdAndUpdate(req.user._id, {
-      password: hashedNewPassword
-    });
+      $set: { password: hashedNewPassword }
+    }, { runValidators: true });
 
     res.json({
       success: true,
@@ -6948,7 +7006,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateTo
     });
 
   } catch (error) {
-    console.error('Password change error:', error);
+    log.error('Password change error', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: 'パスワードの変更に失敗しました'
@@ -6992,11 +7050,13 @@ routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticate
 
     // 論理削除を実行（物理削除ではなく、アクセス不可にする）
     await UserModel.findByIdAndUpdate(req.user._id, {
-      isActive: false,
-      accountStatus: 'deleted',
-      email: `deleted_${Date.now()}_${user.email}`, // メールアドレスを無効化
-      deletedAt: new Date()
-    });
+      $set: {
+        isActive: false,
+        accountStatus: 'deleted',
+        email: `deleted_${Date.now()}_${user.email}`, // メールアドレスを無効化
+        deletedAt: new Date()
+      }
+    }, { runValidators: true });
 
     // 関連データの無効化
     try {
@@ -7012,7 +7072,7 @@ routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticate
         { $set: { isActive: false } }
       );
     } catch (cleanupError) {
-      console.error('Account deletion cleanup error:', cleanupError);
+      log.error('Account deletion cleanup error:', cleanupError);
       // クリーンアップエラーは無視して続行
     }
 
@@ -7022,7 +7082,7 @@ routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticate
     });
 
   } catch (error) {
-    console.error('Account deletion error:', error);
+    log.error('Account deletion error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: 'アカウントの削除に失敗しました'

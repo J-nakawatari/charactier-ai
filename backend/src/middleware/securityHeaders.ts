@@ -15,7 +15,7 @@ export function configureSecurityHeaders(app: Express): void {
         scriptSrc: [
           "'self'",
           "'unsafe-inline'", // Required for Next.js inline scripts
-          "'unsafe-eval'", // Required for development (remove in production)
+          ...(process.env.NODE_ENV === 'development' ? ["'unsafe-eval'"] : []), // Only in development
           "https://js.stripe.com", // Stripe
           "https://checkout.stripe.com"
         ],
@@ -118,7 +118,8 @@ export function configureSecurityHeaders(app: Express): void {
     next();
   });
 
-  console.log('🛡️ Security headers configured successfully');
+  const log = require('../utils/logger').default;
+  log.info('Security headers configured successfully');
 }
 
 /**

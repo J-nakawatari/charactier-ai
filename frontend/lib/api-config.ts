@@ -10,7 +10,9 @@ export const getApiUrl = (): string => {
     const origin = window.location.origin;
     
     // 本番ドメインの場合 - Nginxプロキシを使用
-    if (origin.includes('charactier-ai.com')) {
+    // 厳密なドメイン検証を行う
+    const url = new URL(origin);
+    if (url.hostname === 'charactier-ai.com' || url.hostname === 'www.charactier-ai.com') {
       return 'https://charactier-ai.com';
     }
   }

@@ -1,6 +1,7 @@
 import { Router, Response } from 'express';
 import { SystemSettingsModel } from '../models/SystemSettingsModel';
 import { createRateLimiter } from '../middleware/rateLimiter';
+import log from '../utils/logger';
 
 const router: Router = Router();
 
@@ -17,7 +18,7 @@ router.get('/google-analytics', generalRateLimit, async (req: any, res: Response
       isActive: settings?.isActive || false
     });
   } catch (error) {
-    console.error('GA設定取得エラー:', error);
+    log.error('GA設定取得エラー', error);
     res.status(500).json({ error: 'Google Analytics設定の取得に失敗しました' });
   }
 });

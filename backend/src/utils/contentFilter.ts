@@ -50,7 +50,7 @@ export function checkBlockedWords(message: string, userId?: string, username?: s
   const normalizedMessage = message.toLowerCase();
   const allWords = [...BLOCKED_WORDS.japanese, ...BLOCKED_WORDS.english];
   
-  for (let word of allWords) {
+  for (const word of allWords) {
     if (normalizedMessage.includes(word.toLowerCase())) {
       // 管理者向け通知を作成（非同期で実行、エラーは無視）
       if (userId && username) {

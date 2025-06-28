@@ -111,7 +111,7 @@ router.get('/',
         createdAt: user.createdAt.toISOString() // createdAtフィールドも追加
     }));
 
-    console.log(`✅ Fetched ${formattedUsers.length} users for admin`);
+    log.info('Fetched users for admin', { count: formattedUsers.length });
 
     res.json({
       users: formattedUsers,
@@ -163,8 +163,8 @@ router.post('/:userId/reset-tokens',
 
     await UserModel.findByIdAndUpdate(
       req.params.userId,
-      { tokenBalance: newBalance },
-      { new: true }
+      { $set: { tokenBalance: newBalance } }, // $set演算子を明示的に使用
+      { new: true, runValidators: true }
     );
 
     log.info('Token balance reset', { 
@@ -209,19 +209,20 @@ router.put('/:userId/status',
       return;
     }
 
-    const updateData: any = {};
-    if (status === 'active') {
-      updateData.isActive = true;
-      updateData.accountStatus = 'active';
-    } else if (status === 'inactive') {
-      updateData.isActive = false;
-      updateData.accountStatus = 'inactive';
-    } else if (status === 'suspended') {
-      updateData.isActive = false;
-      updateData.accountStatus = 'suspended';
-    }
+    // NoSQL injection防止: 明示的にフィールドを指定
+    const updateData: {
+      isActive: boolean;
+      accountStatus: 'active' | 'inactive' | 'suspended';
+    } = {
+      isActive: status === 'active',
+      accountStatus: status as 'active' | 'inactive' | 'suspended'
+    };
 
-    await UserModel.findByIdAndUpdate(req.params.userId, updateData);
+    await UserModel.findByIdAndUpdate(
+      req.params.userId, 
+      { $set: updateData }, // $set演算子を明示的に使用
+      { new: true, runValidators: true } // バリデーション実行
+    );
 
     log.info('User status updated', { userId: req.params.userId, status, adminId: req.admin?._id });
 
@@ -263,7 +264,7 @@ router.get('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (
       const UserTokenPack = require('../../../models/UserTokenPack');
       actualTokenBalance = await UserTokenPack.calculateUserTokenBalance(user._id);
     } catch (error) {
-      console.error('TokenPack calculation error:', error);
+      log.error('TokenPack calculation error', error);
     }
 
     res.json({

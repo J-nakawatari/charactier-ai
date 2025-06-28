@@ -148,7 +148,7 @@ router.get('/', adminRateLimit, authenticateToken, async (req: AuthRequest, res:
         const stats = userStats[0] || { totalUsers: 0, averageLevel: 0, maxLevel: 0 };
 
         // 購入統計を取得（有料キャラクターの場合）
-        let purchaseStats = { totalPurchases: 0, totalRevenue: 0 };
+        const purchaseStats = { totalPurchases: 0, totalRevenue: 0 };
         if (character.characterAccessType === 'purchaseOnly') {
           const purchasedUsers = await UserModel.countDocuments({
             purchasedCharacters: character._id
@@ -450,10 +450,10 @@ router.put('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), as
       }
     }
 
-    // 更新データを適用
+    // 更新データを適用（NoSQL injection防止のため$set使用）
     const updatedCharacter = await CharacterModel.findByIdAndUpdate(
       req.params.id,
-      updateData,
+      { $set: updateData },
       { new: true, runValidators: true }
     );
 

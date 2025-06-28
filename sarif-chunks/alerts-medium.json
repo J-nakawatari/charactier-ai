@@ -1,0 +1,440 @@
+[
+  {
+    "number": 476,
+    "created_at": "2025-06-28T01:53:02Z",
+    "updated_at": "2025-06-28T01:53:02Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/476",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/476",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/clear-text-logging",
+      "severity": "error",
+      "description": "Clear-text logging of sensitive information",
+      "name": "js/clear-text-logging",
+      "tags": [
+        "external/cwe/cwe-312",
+        "external/cwe/cwe-359",
+        "external/cwe/cwe-532",
+        "security"
+      ],
+      "full_description": "Logging sensitive information without encryption or hashing can expose it to an attacker.",
+      "help": "# Clear-text logging of sensitive information\nIf sensitive data is written to a log entry it could be exposed to an attacker who gains access to the logs.\n\nPotential attackers can obtain sensitive user data when the log output is displayed. Additionally that data may expose system information such as full path names, system information, and sometimes usernames and passwords.\n\n\n## Recommendation\nSensitive data should not be logged.\n\n\n## Example\nIn the example the entire process environment is logged using \\`console.info\\`. Regular users of the production deployed application should not have access to this much information about the environment configuration.\n\n\n```javascript\n// BAD: Logging cleartext sensitive data\nconsole.info(`[INFO] Environment: ${JSON.stringify(process.env)}`);\n\n```\nIn the second example the data that is logged is not sensitive.\n\n\n```javascript\nlet not_sensitive_data = { a: 1, b : 2} \n// GOOD: it is fine to log data that is not sensitive\nconsole.info(`[INFO] Some object contains: ${JSON.stringify(not_sensitive_data)}`);\n```\n\n## References\n* OWASP: [Insertion of Sensitive Information into Log File](https://owasp.org/Top10/A09_2021-Security_Logging_and_Monitoring_Failures/).\n* Common Weakness Enumeration: [CWE-312](https://cwe.mitre.org/data/definitions/312.html).\n* Common Weakness Enumeration: [CWE-359](https://cwe.mitre.org/data/definitions/359.html).\n* Common Weakness Enumeration: [CWE-532](https://cwe.mitre.org/data/definitions/532.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This logs sensitive data returned by an access to passwordStrength as clear text.\nThis logs sensitive data returned by an access to passwordStrength as clear text."
+      },
+      "location": {
+        "path": "backend/src/utils/logger.ts",
+        "start_line": 296,
+        "end_line": 296,
+        "start_column": 27,
+        "end_column": 41
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/476/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 475,
+    "created_at": "2025-06-28T01:53:02Z",
+    "updated_at": "2025-06-28T01:53:02Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/475",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/475",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/clear-text-logging",
+      "severity": "error",
+      "description": "Clear-text logging of sensitive information",
+      "name": "js/clear-text-logging",
+      "tags": [
+        "external/cwe/cwe-312",
+        "external/cwe/cwe-359",
+        "external/cwe/cwe-532",
+        "security"
+      ],
+      "full_description": "Logging sensitive information without encryption or hashing can expose it to an attacker.",
+      "help": "# Clear-text logging of sensitive information\nIf sensitive data is written to a log entry it could be exposed to an attacker who gains access to the logs.\n\nPotential attackers can obtain sensitive user data when the log output is displayed. Additionally that data may expose system information such as full path names, system information, and sometimes usernames and passwords.\n\n\n## Recommendation\nSensitive data should not be logged.\n\n\n## Example\nIn the example the entire process environment is logged using \\`console.info\\`. Regular users of the production deployed application should not have access to this much information about the environment configuration.\n\n\n```javascript\n// BAD: Logging cleartext sensitive data\nconsole.info(`[INFO] Environment: ${JSON.stringify(process.env)}`);\n\n```\nIn the second example the data that is logged is not sensitive.\n\n\n```javascript\nlet not_sensitive_data = { a: 1, b : 2} \n// GOOD: it is fine to log data that is not sensitive\nconsole.info(`[INFO] Some object contains: ${JSON.stringify(not_sensitive_data)}`);\n```\n\n## References\n* OWASP: [Insertion of Sensitive Information into Log File](https://owasp.org/Top10/A09_2021-Security_Logging_and_Monitoring_Failures/).\n* Common Weakness Enumeration: [CWE-312](https://cwe.mitre.org/data/definitions/312.html).\n* Common Weakness Enumeration: [CWE-359](https://cwe.mitre.org/data/definitions/359.html).\n* Common Weakness Enumeration: [CWE-532](https://cwe.mitre.org/data/definitions/532.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This logs sensitive data returned by an access to password as clear text.\nThis logs sensitive data returned by an access to password as clear text."
+      },
+      "location": {
+        "path": "backend/src/utils/logger.ts",
+        "start_line": 249,
+        "end_line": 249,
+        "start_column": 26,
+        "end_column": 40
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/475/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 357,
+    "created_at": "2025-06-22T15:37:19Z",
+    "updated_at": "2025-06-22T15:50:48Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/357",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/357",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/incomplete-url-scheme-check",
+      "severity": "warning",
+      "description": "Incomplete URL scheme check",
+      "name": "js/incomplete-url-scheme-check",
+      "tags": [
+        "correctness",
+        "external/cwe/cwe-020",
+        "external/cwe/cwe-184",
+        "security"
+      ],
+      "full_description": "Checking for the \"javascript:\" URL scheme without also checking for \"vbscript:\" and \"data:\" suggests a logic error or even a security vulnerability.",
+      "help": "# Incomplete URL scheme check\nURLs starting with `javascript:` can be used to encode JavaScript code to be executed when the URL is visited. While this is a powerful mechanism for creating feature-rich and responsive web applications, it is also a potential security risk: if the URL comes from an untrusted source, it might contain harmful JavaScript code. For this reason, many frameworks and libraries first check the URL scheme of any untrusted URL, and reject URLs with the `javascript:` scheme.\n\nHowever, the `data:` and `vbscript:` schemes can be used to represent executable code in a very similar way, so any validation logic that checks against `javascript:`, but not against `data:` and `vbscript:`, is likely to be insufficient.\n\n\n## Recommendation\nAdd checks covering both `data:` and `vbscript:`.\n\n\n## Example\nThe following function validates a (presumably untrusted) URL `url`. If it starts with `javascript:` (case-insensitive and potentially preceded by whitespace), the harmless placeholder URL `about:blank` is returned to prevent code injection; otherwise `url` itself is returned.\n\n\n```javascript\nfunction sanitizeUrl(url) {\n    let u = decodeURI(url).trim().toLowerCase();\n    if (u.startsWith(\"javascript:\"))\n        return \"about:blank\";\n    return url;\n}\n\n```\nWhile this check provides partial projection, it should be extended to cover `data:` and `vbscript:` as well:\n\n\n```javascript\nfunction sanitizeUrl(url) {\n    let u = decodeURI(url).trim().toLowerCase();\n    if (u.startsWith(\"javascript:\") || u.startsWith(\"data:\") || u.startsWith(\"vbscript:\"))\n        return \"about:blank\";\n    return url;\n}\n\n```\n\n## References\n* WHATWG: [URL schemes](https://wiki.whatwg.org/wiki/URL_schemes).\n* Common Weakness Enumeration: [CWE-20](https://cwe.mitre.org/data/definitions/20.html).\n* Common Weakness Enumeration: [CWE-184](https://cwe.mitre.org/data/definitions/184.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This check does not consider data: and vbscript:."
+      },
+      "location": {
+        "path": "backend/src/middleware/validation.ts",
+        "start_line": 182,
+        "end_line": 186,
+        "start_column": 10,
+        "end_column": 32
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/357/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 349,
+    "created_at": "2025-06-22T15:37:19Z",
+    "updated_at": "2025-06-22T15:50:48Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/349",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/349",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/incomplete-multi-character-sanitization",
+      "severity": "warning",
+      "description": "Incomplete multi-character sanitization",
+      "name": "js/incomplete-multi-character-sanitization",
+      "tags": [
+        "correctness",
+        "external/cwe/cwe-020",
+        "external/cwe/cwe-080",
+        "external/cwe/cwe-116",
+        "security"
+      ],
+      "full_description": "A sanitizer that removes a sequence of characters may reintroduce the dangerous sequence.",
+      "help": "# Incomplete multi-character sanitization\nSanitizing untrusted input is a common technique for preventing injection attacks and other security vulnerabilities. Regular expressions are often used to perform this sanitization. However, when the regular expression matches multiple consecutive characters, replacing it just once can result in the unsafe text reappearing in the sanitized input.\n\nAttackers can exploit this issue by crafting inputs that, when sanitized with an ineffective regular expression, still contain malicious code or content. This can lead to code execution, data exposure, or other vulnerabilities.\n\n\n## Recommendation\nTo prevent this issue, it is highly recommended to use a well-tested sanitization library whenever possible. These libraries are more likely to handle corner cases and ensure effective sanitization.\n\nIf a library is not an option, you can consider alternative strategies to fix the issue. For example, applying the regular expression replacement repeatedly until no more replacements can be performed, or rewriting the regular expression to match single characters instead of the entire unsafe text.\n\n\n## Example\nConsider the following JavaScript code that aims to remove all HTML comment start and end tags:\n\n```javascript\n\nstr.replace(/<!--|--!?>/g, \"\");   \n\n```\nGiven the input string \"&lt;!&lt;!--- comment ---&gt;&gt;\", the output will be \"&lt;!-- comment --&gt;\", which still contains an HTML comment.\n\nOne possible fix for this issue is to apply the regular expression replacement repeatedly until no more replacements can be performed. This ensures that the unsafe text does not re-appear in the sanitized input, effectively removing all instances of the targeted pattern:\n\n```javascript\n\nfunction removeHtmlComments(input) {  \n  let previous;  \n  do {  \n    previous = input;  \n    input = input.replace(/<!--|--!?>/g, \"\");  \n  } while (input !== previous);  \n  return input;  \n}  \n\n```\n\n## Example\nAnother example is the following regular expression intended to remove script tags:\n\n```javascript\n\nstr.replace(/<script\\b[^<]*(?:(?!<\\/script>)<[^<]*)*<\\/script>/g, \"\");  \n\n```\nIf the input string is \"&lt;scrip&lt;script&gt;is removed&lt;/script&gt;t&gt;alert(123)&lt;/script&gt;\", the output will be \"&lt;script&gt;alert(123)&lt;/script&gt;\", which still contains a script tag.\n\nA fix for this issue is to rewrite the regular expression to match single characters (\"&lt;\" and \"&gt;\") instead of the entire unsafe text. This simplifies the sanitization process and ensures that all potentially unsafe characters are removed:\n\n```javascript\n\nfunction removeAllHtmlTags(input) {  \n  return input.replace(/<|>/g, \"\");  \n}\n\n```\nAnother potential fix is to use the popular `sanitize-html` npm library. It keeps most of the safe HTML tags while removing all unsafe tags and attributes.\n\n```javascript\n\nconst sanitizeHtml = require(\"sanitize-html\");\nfunction removeAllHtmlTags(input) {  \n  return sanitizeHtml(input);  \n}\n\n```\n\n## Example\nLastly, consider a path sanitizer using the regular expression `/\\.\\.\\//`:\n\n```javascript\n\nstr.replace(/\\.\\.\\//g, \"\");  \n\n```\nThe regular expression attempts to strip out all occurences of `/../` from `str`. This will not work as expected: for the string `/./.././`, for example, it will remove the single occurrence of `/../` in the middle, but the remainder of the string then becomes `/../`, which is another instance of the substring we were trying to remove.\n\nA possible fix for this issue is to use the \"sanitize-filename\" npm library for path sanitization. This library is specifically designed to handle path sanitization, and should handle all corner cases and ensure effective sanitization:\n\n```javascript\n\nconst sanitize = require(\"sanitize-filename\");  \n  \nfunction sanitizePath(input) {  \n  return sanitize(input);  \n}  \n\n```\n\n## References\n* OWASP Top 10: [A1 Injection](https://www.owasp.org/index.php/Top_10-2017_A1-Injection).\n* Stack Overflow: [Removing all script tags from HTML with JS regular expression](https://stackoverflow.com/questions/6659351/removing-all-script-tags-from-html-with-js-regular-expression).\n* Common Weakness Enumeration: [CWE-20](https://cwe.mitre.org/data/definitions/20.html).\n* Common Weakness Enumeration: [CWE-80](https://cwe.mitre.org/data/definitions/80.html).\n* Common Weakness Enumeration: [CWE-116](https://cwe.mitre.org/data/definitions/116.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This string may still contain <script, which may cause an HTML element injection vulnerability."
+      },
+      "location": {
+        "path": "backend/src/middleware/validation.ts",
+        "start_line": 182,
+        "end_line": 183,
+        "start_column": 10,
+        "end_column": 72
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/349/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 348,
+    "created_at": "2025-06-22T15:37:19Z",
+    "updated_at": "2025-06-22T15:50:48Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/348",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/348",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/incomplete-multi-character-sanitization",
+      "severity": "warning",
+      "description": "Incomplete multi-character sanitization",
+      "name": "js/incomplete-multi-character-sanitization",
+      "tags": [
+        "correctness",
+        "external/cwe/cwe-020",
+        "external/cwe/cwe-080",
+        "external/cwe/cwe-116",
+        "security"
+      ],
+      "full_description": "A sanitizer that removes a sequence of characters may reintroduce the dangerous sequence.",
+      "help": "# Incomplete multi-character sanitization\nSanitizing untrusted input is a common technique for preventing injection attacks and other security vulnerabilities. Regular expressions are often used to perform this sanitization. However, when the regular expression matches multiple consecutive characters, replacing it just once can result in the unsafe text reappearing in the sanitized input.\n\nAttackers can exploit this issue by crafting inputs that, when sanitized with an ineffective regular expression, still contain malicious code or content. This can lead to code execution, data exposure, or other vulnerabilities.\n\n\n## Recommendation\nTo prevent this issue, it is highly recommended to use a well-tested sanitization library whenever possible. These libraries are more likely to handle corner cases and ensure effective sanitization.\n\nIf a library is not an option, you can consider alternative strategies to fix the issue. For example, applying the regular expression replacement repeatedly until no more replacements can be performed, or rewriting the regular expression to match single characters instead of the entire unsafe text.\n\n\n## Example\nConsider the following JavaScript code that aims to remove all HTML comment start and end tags:\n\n```javascript\n\nstr.replace(/<!--|--!?>/g, \"\");   \n\n```\nGiven the input string \"&lt;!&lt;!--- comment ---&gt;&gt;\", the output will be \"&lt;!-- comment --&gt;\", which still contains an HTML comment.\n\nOne possible fix for this issue is to apply the regular expression replacement repeatedly until no more replacements can be performed. This ensures that the unsafe text does not re-appear in the sanitized input, effectively removing all instances of the targeted pattern:\n\n```javascript\n\nfunction removeHtmlComments(input) {  \n  let previous;  \n  do {  \n    previous = input;  \n    input = input.replace(/<!--|--!?>/g, \"\");  \n  } while (input !== previous);  \n  return input;  \n}  \n\n```\n\n## Example\nAnother example is the following regular expression intended to remove script tags:\n\n```javascript\n\nstr.replace(/<script\\b[^<]*(?:(?!<\\/script>)<[^<]*)*<\\/script>/g, \"\");  \n\n```\nIf the input string is \"&lt;scrip&lt;script&gt;is removed&lt;/script&gt;t&gt;alert(123)&lt;/script&gt;\", the output will be \"&lt;script&gt;alert(123)&lt;/script&gt;\", which still contains a script tag.\n\nA fix for this issue is to rewrite the regular expression to match single characters (\"&lt;\" and \"&gt;\") instead of the entire unsafe text. This simplifies the sanitization process and ensures that all potentially unsafe characters are removed:\n\n```javascript\n\nfunction removeAllHtmlTags(input) {  \n  return input.replace(/<|>/g, \"\");  \n}\n\n```\nAnother potential fix is to use the popular `sanitize-html` npm library. It keeps most of the safe HTML tags while removing all unsafe tags and attributes.\n\n```javascript\n\nconst sanitizeHtml = require(\"sanitize-html\");\nfunction removeAllHtmlTags(input) {  \n  return sanitizeHtml(input);  \n}\n\n```\n\n## Example\nLastly, consider a path sanitizer using the regular expression `/\\.\\.\\//`:\n\n```javascript\n\nstr.replace(/\\.\\.\\//g, \"\");  \n\n```\nThe regular expression attempts to strip out all occurences of `/../` from `str`. This will not work as expected: for the string `/./.././`, for example, it will remove the single occurrence of `/../` in the middle, but the remainder of the string then becomes `/../`, which is another instance of the substring we were trying to remove.\n\nA possible fix for this issue is to use the \"sanitize-filename\" npm library for path sanitization. This library is specifically designed to handle path sanitization, and should handle all corner cases and ensure effective sanitization:\n\n```javascript\n\nconst sanitize = require(\"sanitize-filename\");  \n  \nfunction sanitizePath(input) {  \n  return sanitize(input);  \n}  \n\n```\n\n## References\n* OWASP Top 10: [A1 Injection](https://www.owasp.org/index.php/Top_10-2017_A1-Injection).\n* Stack Overflow: [Removing all script tags from HTML with JS regular expression](https://stackoverflow.com/questions/6659351/removing-all-script-tags-from-html-with-js-regular-expression).\n* Common Weakness Enumeration: [CWE-20](https://cwe.mitre.org/data/definitions/20.html).\n* Common Weakness Enumeration: [CWE-80](https://cwe.mitre.org/data/definitions/80.html).\n* Common Weakness Enumeration: [CWE-116](https://cwe.mitre.org/data/definitions/116.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This string may still contain <script, which may cause an HTML element injection vulnerability."
+      },
+      "location": {
+        "path": "backend/src/middleware/validation.ts",
+        "start_line": 182,
+        "end_line": 184,
+        "start_column": 10,
+        "end_column": 29
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/348/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 347,
+    "created_at": "2025-06-22T15:37:19Z",
+    "updated_at": "2025-06-22T15:50:48Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/347",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/347",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/incomplete-multi-character-sanitization",
+      "severity": "warning",
+      "description": "Incomplete multi-character sanitization",
+      "name": "js/incomplete-multi-character-sanitization",
+      "tags": [
+        "correctness",
+        "external/cwe/cwe-020",
+        "external/cwe/cwe-080",
+        "external/cwe/cwe-116",
+        "security"
+      ],
+      "full_description": "A sanitizer that removes a sequence of characters may reintroduce the dangerous sequence.",
+      "help": "# Incomplete multi-character sanitization\nSanitizing untrusted input is a common technique for preventing injection attacks and other security vulnerabilities. Regular expressions are often used to perform this sanitization. However, when the regular expression matches multiple consecutive characters, replacing it just once can result in the unsafe text reappearing in the sanitized input.\n\nAttackers can exploit this issue by crafting inputs that, when sanitized with an ineffective regular expression, still contain malicious code or content. This can lead to code execution, data exposure, or other vulnerabilities.\n\n\n## Recommendation\nTo prevent this issue, it is highly recommended to use a well-tested sanitization library whenever possible. These libraries are more likely to handle corner cases and ensure effective sanitization.\n\nIf a library is not an option, you can consider alternative strategies to fix the issue. For example, applying the regular expression replacement repeatedly until no more replacements can be performed, or rewriting the regular expression to match single characters instead of the entire unsafe text.\n\n\n## Example\nConsider the following JavaScript code that aims to remove all HTML comment start and end tags:\n\n```javascript\n\nstr.replace(/<!--|--!?>/g, \"\");   \n\n```\nGiven the input string \"&lt;!&lt;!--- comment ---&gt;&gt;\", the output will be \"&lt;!-- comment --&gt;\", which still contains an HTML comment.\n\nOne possible fix for this issue is to apply the regular expression replacement repeatedly until no more replacements can be performed. This ensures that the unsafe text does not re-appear in the sanitized input, effectively removing all instances of the targeted pattern:\n\n```javascript\n\nfunction removeHtmlComments(input) {  \n  let previous;  \n  do {  \n    previous = input;  \n    input = input.replace(/<!--|--!?>/g, \"\");  \n  } while (input !== previous);  \n  return input;  \n}  \n\n```\n\n## Example\nAnother example is the following regular expression intended to remove script tags:\n\n```javascript\n\nstr.replace(/<script\\b[^<]*(?:(?!<\\/script>)<[^<]*)*<\\/script>/g, \"\");  \n\n```\nIf the input string is \"&lt;scrip&lt;script&gt;is removed&lt;/script&gt;t&gt;alert(123)&lt;/script&gt;\", the output will be \"&lt;script&gt;alert(123)&lt;/script&gt;\", which still contains a script tag.\n\nA fix for this issue is to rewrite the regular expression to match single characters (\"&lt;\" and \"&gt;\") instead of the entire unsafe text. This simplifies the sanitization process and ensures that all potentially unsafe characters are removed:\n\n```javascript\n\nfunction removeAllHtmlTags(input) {  \n  return input.replace(/<|>/g, \"\");  \n}\n\n```\nAnother potential fix is to use the popular `sanitize-html` npm library. It keeps most of the safe HTML tags while removing all unsafe tags and attributes.\n\n```javascript\n\nconst sanitizeHtml = require(\"sanitize-html\");\nfunction removeAllHtmlTags(input) {  \n  return sanitizeHtml(input);  \n}\n\n```\n\n## Example\nLastly, consider a path sanitizer using the regular expression `/\\.\\.\\//`:\n\n```javascript\n\nstr.replace(/\\.\\.\\//g, \"\");  \n\n```\nThe regular expression attempts to strip out all occurences of `/../` from `str`. This will not work as expected: for the string `/./.././`, for example, it will remove the single occurrence of `/../` in the middle, but the remainder of the string then becomes `/../`, which is another instance of the substring we were trying to remove.\n\nA possible fix for this issue is to use the \"sanitize-filename\" npm library for path sanitization. This library is specifically designed to handle path sanitization, and should handle all corner cases and ensure effective sanitization:\n\n```javascript\n\nconst sanitize = require(\"sanitize-filename\");  \n  \nfunction sanitizePath(input) {  \n  return sanitize(input);  \n}  \n\n```\n\n## References\n* OWASP Top 10: [A1 Injection](https://www.owasp.org/index.php/Top_10-2017_A1-Injection).\n* Stack Overflow: [Removing all script tags from HTML with JS regular expression](https://stackoverflow.com/questions/6659351/removing-all-script-tags-from-html-with-js-regular-expression).\n* Common Weakness Enumeration: [CWE-20](https://cwe.mitre.org/data/definitions/20.html).\n* Common Weakness Enumeration: [CWE-80](https://cwe.mitre.org/data/definitions/80.html).\n* Common Weakness Enumeration: [CWE-116](https://cwe.mitre.org/data/definitions/116.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This string may still contain on, which may cause an HTML attribute injection vulnerability."
+      },
+      "location": {
+        "path": "backend/src/middleware/validation.ts",
+        "start_line": 182,
+        "end_line": 186,
+        "start_column": 10,
+        "end_column": 32
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/347/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 346,
+    "created_at": "2025-06-22T15:37:19Z",
+    "updated_at": "2025-06-22T15:50:48Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/346",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/346",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/bad-tag-filter",
+      "severity": "warning",
+      "description": "Bad HTML filtering regexp",
+      "name": "js/bad-tag-filter",
+      "tags": [
+        "correctness",
+        "external/cwe/cwe-020",
+        "external/cwe/cwe-080",
+        "external/cwe/cwe-116",
+        "external/cwe/cwe-184",
+        "external/cwe/cwe-185",
+        "external/cwe/cwe-186",
+        "security"
+      ],
+      "full_description": "Matching HTML tags using regular expressions is hard to do right, and can easily lead to security issues.",
+      "help": "# Bad HTML filtering regexp\nIt is possible to match some single HTML tags using regular expressions (parsing general HTML using regular expressions is impossible). However, if the regular expression is not written well it might be possible to circumvent it, which can lead to cross-site scripting or other security issues.\n\nSome of these mistakes are caused by browsers having very forgiving HTML parsers, and will often render invalid HTML containing syntax errors. Regular expressions that attempt to match HTML should also recognize tags containing such syntax errors.\n\n\n## Recommendation\nUse a well-tested sanitization or parser library if at all possible. These libraries are much more likely to handle corner cases correctly than a custom implementation.\n\n\n## Example\nThe following example attempts to filters out all `<script>` tags.\n\n\n```javascript\nfunction filterScript(html) {\n    var scriptRegex = /<script\\b[^>]*>([\\s\\S]*?)<\\/script>/gi;\n    var match;\n    while ((match = scriptRegex.exec(html)) !== null) {\n        html = html.replace(match[0], match[1]);\n    }\n    return html;\n}\n\n```\nThe above sanitizer does not filter out all `<script>` tags. Browsers will not only accept `</script>` as script end tags, but also tags such as `</script foo=\"bar\">` even though it is a parser error. This means that an attack string such as `<script>alert(1)</script foo=\"bar\">` will not be filtered by the function, and `alert(1)` will be executed by a browser if the string is rendered as HTML.\n\nOther corner cases include that HTML comments can end with `--!>`, and that HTML tag names can contain upper case characters.\n\n\n## References\n* Securitum: [The Curious Case of Copy &amp; Paste](https://research.securitum.com/the-curious-case-of-copy-paste/).\n* stackoverflow.com: [You can't parse \\[X\\]HTML with regex](https://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags#answer-1732454).\n* HTML Standard: [Comment end bang state](https://html.spec.whatwg.org/multipage/parsing.html#comment-end-bang-state).\n* stackoverflow.com: [Why aren't browsers strict about HTML?](https://stackoverflow.com/questions/25559999/why-arent-browsers-strict-about-html).\n* Common Weakness Enumeration: [CWE-20](https://cwe.mitre.org/data/definitions/20.html).\n* Common Weakness Enumeration: [CWE-80](https://cwe.mitre.org/data/definitions/80.html).\n* Common Weakness Enumeration: [CWE-116](https://cwe.mitre.org/data/definitions/116.html).\n* Common Weakness Enumeration: [CWE-184](https://cwe.mitre.org/data/definitions/184.html).\n* Common Weakness Enumeration: [CWE-185](https://cwe.mitre.org/data/definitions/185.html).\n* Common Weakness Enumeration: [CWE-186](https://cwe.mitre.org/data/definitions/186.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This regular expression does not match script end tags like </script >."
+      },
+      "location": {
+        "path": "backend/src/middleware/validation.ts",
+        "start_line": 183,
+        "end_line": 183,
+        "start_column": 15,
+        "end_column": 64
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/346/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 255,
+    "created_at": "2025-06-15T19:44:29Z",
+    "updated_at": "2025-06-15T20:09:09Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/255",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/255",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/incomplete-url-substring-sanitization",
+      "severity": "warning",
+      "description": "Incomplete URL substring sanitization",
+      "name": "js/incomplete-url-substring-sanitization",
+      "tags": [
+        "correctness",
+        "external/cwe/cwe-020",
+        "security"
+      ],
+      "full_description": "Security checks on the substrings of an unparsed URL are often vulnerable to bypassing.",
+      "help": "# Incomplete URL substring sanitization\nSanitizing untrusted URLs is an important technique for preventing attacks such as request forgeries and malicious redirections. Usually, this is done by checking that the host of a URL is in a set of allowed hosts.\n\nHowever, treating the URL as a string and checking if one of the allowed hosts is a substring of the URL is very prone to errors. Malicious URLs can bypass such security checks by embedding one of the allowed hosts in an unexpected location.\n\nEven if the substring check is not used in a security-critical context, the incomplete check may still cause undesirable behaviors when the check succeeds accidentally.\n\n\n## Recommendation\nParse a URL before performing a check on its host value, and ensure that the check handles arbitrary subdomain sequences correctly.\n\n\n## Example\nThe following example code checks that a URL redirection will reach the `example.com` domain, or one of its subdomains, and not some malicious site.\n\n\n```javascript\napp.get('/some/path', function(req, res) {\n    let url = req.param(\"url\");\n    // BAD: the host of `url` may be controlled by an attacker\n    if (url.includes(\"example.com\")) {\n        res.redirect(url);\n    }\n});\n\n```\nThe substring check is, however, easy to bypass. For example by embedding `example.com` in the path component: `http://evil-example.net/example.com`, or in the query string component: `http://evil-example.net/?x=example.com`. Address these shortcomings by checking the host of the parsed URL instead:\n\n\n```javascript\napp.get('/some/path', function(req, res) {\n    let url = req.param(\"url\"),\n        host = urlLib.parse(url).host;\n    // BAD: the host of `url` may be controlled by an attacker\n    if (host.includes(\"example.com\")) {\n        res.redirect(url);\n    }\n});\n\n```\nThis is still not a sufficient check as the following URLs bypass it: `http://evil-example.com` `http://example.com.evil-example.net`. Instead, use an explicit whitelist of allowed hosts to make the redirect secure:\n\n\n```javascript\napp.get('/some/path', function(req, res) {\n    let url = req.param('url'),\n        host = urlLib.parse(url).host;\n    // GOOD: the host of `url` can not be controlled by an attacker\n    let allowedHosts = [\n        'example.com',\n        'beta.example.com',\n        'www.example.com'\n    ];\n    if (allowedHosts.includes(host)) {\n        res.redirect(url);\n    }\n});\n\n```\n\n## References\n* OWASP: [SSRF](https://www.owasp.org/index.php/Server_Side_Request_Forgery)\n* OWASP: [XSS Unvalidated Redirects and Forwards Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html).\n* Common Weakness Enumeration: [CWE-20](https://cwe.mitre.org/data/definitions/20.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "'charactier-ai.com' can be anywhere in the URL, and arbitrary hosts may come before or after it."
+      },
+      "location": {
+        "path": "frontend/lib/api-config.ts",
+        "start_line": 13,
+        "end_line": 13,
+        "start_column": 9,
+        "end_column": 45
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/255/instances",
+    "dismissal_approved_by": null
+  }
+]

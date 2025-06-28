@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { UserModel, IUser } from '../models/UserModel';
 import { AdminModel, IAdmin } from '../models/AdminModel';
 import log from '../utils/logger';
-import { getDecryptedJwtSecret, generateEncryptedAccessToken, generateEncryptedRefreshToken, verifyEncryptedToken } from '../services/jwtEncryption';
+import { generateEncryptedAccessToken, generateEncryptedRefreshToken, verifyEncryptedToken } from '../services/jwtEncryption';
 
 // JWT認証用の拡張Request型
 export interface AuthRequest extends Request {
@@ -45,36 +45,39 @@ export const authenticateToken = async (
       }
     }
     
-    // Comprehensive debug logging for production issues
-    log.info('🔍 AUTH MIDDLEWARE DEBUG', {
-      path: req.path,
-      originalUrl: req.originalUrl,
-      fullPath,
-      method: req.method,
-      isAdminPath,
-      allCookies: req.cookies,
-      cookieNames: Object.keys(req.cookies || {}),
-      hasUserAccessToken: !!req.cookies?.userAccessToken,
-      hasAdminAccessToken: !!req.cookies?.adminAccessToken,
-      hasAuthHeader: !!req.headers.authorization,
-      authHeaderValue: req.headers.authorization ? req.headers.authorization.substring(0, 20) + '...' : 'none',
-      selectedToken: token ? token.substring(0, 20) + '...' : 'none',
-      tokenSource: token ? (req.cookies?.adminAccessToken ? 'adminCookie' : req.cookies?.userAccessToken ? 'userCookie' : 'authHeader') : 'none',
-      origin: req.headers.origin,
-      referer: req.headers.referer,
-      userAgent: req.headers['user-agent']
-    });
+    // Debug logging (reduced in production)
+    if (process.env.NODE_ENV === 'development') {
+      log.debug('🔍 AUTH MIDDLEWARE DEBUG', {
+        path: req.path,
+        originalUrl: req.originalUrl,
+        fullPath,
+        method: req.method,
+        isAdminPath,
+        cookieNames: Object.keys(req.cookies || {}),
+        hasUserAccessToken: !!req.cookies?.userAccessToken,
+        hasAdminAccessToken: !!req.cookies?.adminAccessToken,
+        hasAuthHeader: !!req.headers.authorization,
+        tokenSource: token ? (req.cookies?.adminAccessToken ? 'adminCookie' : req.cookies?.userAccessToken ? 'userCookie' : 'authHeader') : 'none'
+      });
+    } else {
+      log.debug('Auth middleware check', {
+        path: req.path,
+        isAdminPath,
+        hasToken: !!token
+      });
+    }
 
     if (!token) {
       log.warn('❌ NO TOKEN FOUND', { 
         path: req.path,
         originalUrl: req.originalUrl,
-        fullPath,
         isAdminPath,
-        cookieDebug: {
+        cookieDebug: process.env.NODE_ENV === 'development' ? {
           hasCookieHeader: !!req.headers.cookie,
-          cookieHeaderValue: req.headers.cookie,
           parsedCookies: req.cookies,
+          adminTokenExists: !!req.cookies?.adminAccessToken,
+          userTokenExists: !!req.cookies?.userAccessToken
+        } : {
           adminTokenExists: !!req.cookies?.adminAccessToken,
           userTokenExists: !!req.cookies?.userAccessToken
         }
@@ -95,7 +98,7 @@ export const authenticateToken = async (
     let decoded: { userId: string };
     try {
       decoded = verifyEncryptedToken(token) as { userId: string };
-    } catch (jwtError) {
+    } catch {
       // 暗号化トークンの検証に失敗した場合、従来の方法を試す（移行期間用）
       const JWT_SECRET = process.env.JWT_SECRET;
       if (!JWT_SECRET) {

@@ -14,10 +14,11 @@ router.post('/select-character', generalRateLimit, authenticateToken, async (req
     const { characterId } = req.body;
 
     // バリデーション
-    if (!characterId) {
+    const mongoose = require('mongoose');
+    if (!characterId || !mongoose.Types.ObjectId.isValid(characterId)) {
       return res.status(400).json({ 
-        error: 'characterIdが必要です',
-        code: 'MISSING_CHARACTER_ID'
+        error: '有効なcharacterIdが必要です',
+        code: 'INVALID_CHARACTER_ID'
       });
     }
 

@@ -87,7 +87,7 @@ router.get('/', adminRateLimit, authenticateToken, authenticateAdmin, async (req
     });
 
   } catch (error) {
-    console.error('❌ Error fetching admin token packs:', error);
+    log.error('Error fetching admin token packs', error);
     res.status(500).json({ error: 'トークンパック一覧の取得に失敗しました' });
   }
 });
@@ -158,7 +158,19 @@ router.post('/', adminRateLimit, authenticateToken, authenticateAdmin, async (re
 router.put('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    
+    // NoSQL injection防止: 許可されたフィールドのみを明示的に指定
+    const allowedFields = [
+      'name', 'tokens', 'price', 'bonusTokens', 'description', 
+      'isActive', 'validUntil', 'displayOrder', 'isRecommended'
+    ];
+
+    const updateData: any = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    }
 
     // tokenPerYenを再計算
     if (updateData.tokens && updateData.price) {
@@ -174,7 +186,7 @@ router.put('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (
 
     const tokenPack = await TokenPackModel.findByIdAndUpdate(
       id,
-      updateData,
+      { $set: updateData },
       { new: true, runValidators: true }
     );
 
@@ -235,7 +247,7 @@ router.get('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (
     res.json(tokenPack);
 
   } catch (error) {
-    console.error('❌ Error fetching token pack:', error);
+    log.error('Error fetching token pack', error);
     res.status(500).json({ error: 'トークンパックの取得に失敗しました' });
   }
 });

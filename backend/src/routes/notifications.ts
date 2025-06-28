@@ -10,6 +10,7 @@ import { AdminNotificationReadStatusModel } from '../models/AdminNotificationRea
 import { getRedisPublisher } from '../../lib/redis';
 import { createRateLimiter } from '../middleware/rateLimiter';
 import { escapeRegex } from '../utils/escapeRegex';
+import log from '../utils/logger';
 
 const router: Router = Router();
 
@@ -36,8 +37,10 @@ router.get('/', generalRateLimit, authenticateToken, async (req: AuthRequest, re
       ]
     };
 
-    if (type) {
-      baseQuery.type = type;
+    // Validate notification type
+    const allowedTypes = ['system', 'campaign', 'update', 'maintenance', 'general'];
+    if (type && allowedTypes.includes(type)) {
+      baseQuery.type = { $eq: type };
     }
 
     // お知らせを取得
@@ -94,7 +97,7 @@ router.get('/', generalRateLimit, authenticateToken, async (req: AuthRequest, re
     });
 
   } catch (error) {
-    console.error('❌ Error fetching user notifications:', error);
+    log.error('Error fetching user notifications', error);
     res.status(500).json({ error: 'お知らせの取得に失敗しました' });
   }
 });
@@ -133,7 +136,7 @@ router.get('/unread-count', generalRateLimit, authenticateToken, async (req: Aut
     res.json({ unreadCount });
 
   } catch (error) {
-    console.error('❌ Error fetching unread count:', error);
+    log.error('Error fetching unread count', error);
     res.status(500).json({ error: '未読件数の取得に失敗しました' });
   }
 });
@@ -195,11 +198,11 @@ router.post('/:id/read', generalRateLimit, authenticateToken, validateObjectId('
         })
       );
     } catch (error) {
-      console.error('❌ Error publishing notification event:', error);
+      log.error('Error publishing notification event', error);
     }
 
   } catch (error) {
-    console.error('❌ Error marking notification as read:', error);
+    log.error('Error marking notification as read', error);
     res.status(500).json({ error: '既読マークに失敗しました' });
   }
 });
@@ -256,7 +259,7 @@ router.post('/read-all', generalRateLimit, authenticateToken, async (req: AuthRe
     });
 
   } catch (error) {
-    console.error('❌ Error marking all notifications as read:', error);
+    log.error('Error marking all notifications as read', error);
     res.status(500).json({ error: '一括既読マークに失敗しました' });
   }
 });
@@ -266,7 +269,7 @@ router.post('/read-all', generalRateLimit, authenticateToken, async (req: AuthRe
 // デバッグ用: 現在のユーザー情報確認
 router.get('/debug/user', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('🔍 Debug user info:', {
+    log.debug('Debug user info', {
       hasUser: !!req.user,
       userId: req.user?._id,
       email: req.user?.email,
@@ -284,7 +287,7 @@ router.get('/debug/user', generalRateLimit, authenticateToken, async (req: AuthR
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('❌ Debug endpoint error:', error);
+    log.error('Debug endpoint error', error);
     res.status(500).json({ error: 'デバッグ情報の取得に失敗しました' });
   }
 });
@@ -292,7 +295,7 @@ router.get('/debug/user', generalRateLimit, authenticateToken, async (req: AuthR
 // 管理者認証ミドルウェア
 const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => {
   // デバッグログを追加
-  console.log('🔍 Admin authentication check:', {
+  log.debug('Admin authentication check', {
     hasUser: !!req.user,
     userId: req.user?._id,
     isAdmin: req.user?.isAdmin,
@@ -305,7 +308,7 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
 
   // authenticateTokenが既に実行されているので、isAdminフラグをチェックするだけ
   if (!req.user?.isAdmin) {
-    console.log('❌ Admin access denied - user is not admin');
+    log.debug('Admin access denied - user is not admin');
     res.status(403).json({ 
       error: '管理者権限が必要です',
       debug: {
@@ -316,7 +319,7 @@ const authenticateAdmin = (req: AuthRequest, res: Response, next: any): void => 
     return;
   }
   
-  console.log('✅ Admin access granted');
+  log.debug('Admin access granted');
   next();
 };
 
@@ -347,7 +350,7 @@ router.get('/admin/unread-count', adminRateLimit, authenticateToken, authenticat
 
     res.json({ unreadCount });
   } catch (error) {
-    console.error('未読通知数取得エラー:', error);
+    log.error('未読通知数取得エラー', error);
     res.status(500).json({ error: '未読通知数の取得に失敗しました' });
   }
 });
@@ -426,7 +429,7 @@ router.get('/admin', adminRateLimit, authenticateToken, authenticateAdmin, async
     });
 
   } catch (error) {
-    console.error('❌ Error fetching admin notifications:', error);
+    log.error('Error fetching admin notifications', error);
     res.status(500).json({ error: 'お知らせ一覧の取得に失敗しました' });
   }
 });
@@ -517,11 +520,11 @@ router.post('/admin', adminRateLimit, authenticateToken, authenticateAdmin, asyn
         }
       }
     } catch (error) {
-      console.error('❌ Error publishing new notification event:', error);
+      log.error('Error publishing new notification event', error);
     }
 
   } catch (error) {
-    console.error('❌ Error creating notification:', error);
+    log.error('Error creating notification', error);
     res.status(500).json({ error: 'お知らせの作成に失敗しました' });
   }
 });
@@ -541,7 +544,7 @@ router.get('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, a
     res.json(notification);
 
   } catch (error) {
-    console.error('❌ Error fetching notification:', error);
+    log.error('Error fetching notification', error);
     res.status(500).json({ error: 'お知らせの取得に失敗しました' });
   }
 });
@@ -577,7 +580,7 @@ router.put('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, v
 
     const notification = await NotificationModel.findByIdAndUpdate(
       req.params.id,
-      updateData,
+      { $set: updateData },
       { new: true, runValidators: true }
     ).populate('createdBy', 'name email');
 
@@ -589,7 +592,7 @@ router.put('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, v
     res.json(notification);
 
   } catch (error) {
-    console.error('❌ Error updating notification:', error);
+    log.error('Error updating notification', error);
     res.status(500).json({ error: 'お知らせの更新に失敗しました' });
   }
 });
@@ -612,7 +615,7 @@ router.delete('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin
     res.json({ success: true });
 
   } catch (error) {
-    console.error('❌ Error deleting notification:', error);
+    log.error('Error deleting notification', error);
     res.status(500).json({ error: 'お知らせの削除に失敗しました' });
   }
 });
@@ -688,7 +691,7 @@ router.get('/admin/:id/stats', adminRateLimit, authenticateToken, authenticateAd
     });
 
   } catch (error) {
-    console.error('❌ Error fetching notification stats:', error);
+    log.error('Error fetching notification stats', error);
     res.status(500).json({ error: '統計の取得に失敗しました' });
   }
 });
@@ -723,7 +726,7 @@ router.post('/admin/:id/read', adminRateLimit, authenticateToken, authenticateAd
 
     res.json({ success: true });
   } catch (error) {
-    console.error('管理者通知既読マークエラー:', error);
+    log.error('管理者通知既読マークエラー', error);
     res.status(500).json({ error: '既読状態の更新に失敗しました' });
   }
 });
@@ -759,7 +762,7 @@ router.post('/admin/read-all', adminRateLimit, authenticateToken, authenticateAd
 
     res.json({ success: true, markedCount: bulkOperations.length });
   } catch (error) {
-    console.error('管理者通知一括既読マークエラー:', error);
+    log.error('管理者通知一括既読マークエラー', error);
     res.status(500).json({ error: '一括既読の更新に失敗しました' });
   }
 });

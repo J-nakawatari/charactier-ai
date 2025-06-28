@@ -10,6 +10,7 @@ pnpm-debug.log*
 # .env / 機密ファイル
 .env
 .env.*
+!.env.example  # .env.example は追跡する
 *.pem
 *.key
 *.crt

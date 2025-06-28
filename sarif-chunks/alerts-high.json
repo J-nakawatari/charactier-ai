@@ -1,0 +1,974 @@
+[
+  {
+    "number": 474,
+    "created_at": "2025-06-27T19:43:12Z",
+    "updated_at": "2025-06-27T19:43:12Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/474",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/474",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/server-side-unvalidated-url-redirection",
+      "severity": "warning",
+      "description": "Server-side URL redirect",
+      "name": "js/server-side-unvalidated-url-redirection",
+      "tags": [
+        "external/cwe/cwe-601",
+        "security"
+      ],
+      "full_description": "Server-side URL redirection based on unvalidated user input may cause redirection to malicious web sites.",
+      "help": "# Server-side URL redirect\nDirectly incorporating user input into a URL redirect request without validating the input can facilitate phishing attacks. In these attacks, unsuspecting users can be redirected to a malicious site that looks very similar to the real site they intend to visit, but which is controlled by the attacker.\n\n\n## Recommendation\nTo guard against untrusted URL redirection, it is advisable to avoid putting user input directly into a redirect URL. Instead, maintain a list of authorized redirects on the server; then choose from that list based on the user input provided.\n\nIf this is not possible, then the user input should be validated in some other way, for example, by verifying that the target URL is on the same host as the current page.\n\n\n## Example\nThe following example shows an HTTP request parameter being used directly in a URL redirect without validating the input, which facilitates phishing attacks:\n\n\n```javascript\nconst app = require(\"express\")();\n\napp.get(\"/redirect\", function (req, res) {\n  // BAD: a request parameter is incorporated without validation into a URL redirect\n  res.redirect(req.query[\"target\"]);\n});\n\n```\nOne way to remedy the problem is to validate the user input against a known fixed string before doing the redirection:\n\n\n```javascript\nconst app = require(\"express\")();\n\nconst VALID_REDIRECT = \"http://cwe.mitre.org/data/definitions/601.html\";\n\napp.get(\"/redirect\", function (req, res) {\n  // GOOD: the request parameter is validated against a known fixed string\n  let target = req.query[\"target\"];\n  if (VALID_REDIRECT === target) {\n    res.redirect(target);\n  } else {\n    res.redirect(\"/\");\n  }\n});\n\n```\nAlternatively, we can check that the target URL does not redirect to a different host by parsing it relative to a base URL with a known host and verifying that the host stays the same:\n\n\n```javascript\nconst app = require(\"express\")();\n\nfunction isLocalUrl(path) {\n  try {\n    return (\n      // TODO: consider substituting your own domain for example.com\n      new URL(path, \"https://example.com\").origin === \"https://example.com\"\n    );\n  } catch (e) {\n    return false;\n  }\n}\n\napp.get(\"/redirect\", function (req, res) {\n  // GOOD: check that we don't redirect to a different host\n  let target = req.query[\"target\"];\n  if (isLocalUrl(target)) {\n    res.redirect(target);\n  } else {\n    res.redirect(\"/\");\n  }\n});\n\n```\nNote that as written, the above code will allow redirects to URLs on `example.com`, which is harmless but perhaps not intended. You can substitute your own domain (if known) for `example.com` to prevent this.\n\n\n## References\n* OWASP: [ XSS Unvalidated Redirects and Forwards Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html).\n* Common Weakness Enumeration: [CWE-601](https://cwe.mitre.org/data/definitions/601.html).\n",
+      "security_severity_level": "medium"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "Untrusted URL redirection depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/src/index.ts",
+        "start_line": 872,
+        "end_line": 872,
+        "start_column": 18,
+        "end_column": 30
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/474/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 303,
+    "created_at": "2025-06-18T06:42:37Z",
+    "updated_at": "2025-06-18T06:42:37Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/303",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/303",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/xss-through-dom",
+      "severity": "warning",
+      "description": "DOM text reinterpreted as HTML",
+      "name": "js/xss-through-dom",
+      "tags": [
+        "external/cwe/cwe-079",
+        "external/cwe/cwe-116",
+        "security"
+      ],
+      "full_description": "Reinterpreting text from the DOM as HTML can lead to a cross-site scripting vulnerability.",
+      "help": "# DOM text reinterpreted as HTML\nExtracting text from a DOM node and interpreting it as HTML can lead to a cross-site scripting vulnerability.\n\nA webpage with this vulnerability reads text from the DOM, and afterwards adds the text as HTML to the DOM. Using text from the DOM as HTML effectively unescapes the text, and thereby invalidates any escaping done on the text. If an attacker is able to control the safe sanitized text, then this vulnerability can be exploited to perform a cross-site scripting attack.\n\n\n## Recommendation\nTo guard against cross-site scripting, consider using contextual output encoding/escaping before writing text to the page, or one of the other solutions that are mentioned in the References section below.\n\n\n## Example\nThe following example shows a webpage using a `data-target` attribute to select and manipulate a DOM element using the JQuery library. In the example, the `data-target` attribute is read into the `target` variable, and the `$` function is then supposed to use the `target` variable as a CSS selector to determine which element should be manipulated.\n\n\n```javascript\n$(\"button\").click(function () {\n    var target = $(this).attr(\"data-target\");\n    $(target).hide();\n});\n\n```\nHowever, if an attacker can control the `data-target` attribute, then the value of `target` can be used to cause the `$` function to execute arbitrary JavaScript.\n\nThe above vulnerability can be fixed by using `$.find` instead of `$`. The `$.find` function will only interpret `target` as a CSS selector and never as HTML, thereby preventing an XSS attack.\n\n\n```javascript\n$(\"button\").click(function () {\n    var target = $(this).attr(\"data-target\");\n\t$.find(target).hide();\n});\n\n```\n\n## References\n* OWASP: [DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html).\n* OWASP: [XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html).\n* OWASP [DOM Based XSS](https://owasp.org/www-community/attacks/DOM_Based_XSS).\n* OWASP [Types of Cross-Site Scripting](https://owasp.org/www-community/Types_of_Cross-Site_Scripting).\n* Wikipedia: [Cross-site scripting](http://en.wikipedia.org/wiki/Cross-site_scripting).\n* Common Weakness Enumeration: [CWE-79](https://cwe.mitre.org/data/definitions/79.html).\n* Common Weakness Enumeration: [CWE-116](https://cwe.mitre.org/data/definitions/116.html).\n",
+      "security_severity_level": "medium"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "DOM text is reinterpreted as HTML without escaping meta-characters."
+      },
+      "location": {
+        "path": "frontend/utils/localeUtils.ts",
+        "start_line": 99,
+        "end_line": 99,
+        "start_column": 26,
+        "end_column": 33
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/303/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 268,
+    "created_at": "2025-06-16T19:49:22Z",
+    "updated_at": "2025-06-16T19:49:22Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/268",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/268",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/sql-injection",
+      "severity": "error",
+      "description": "Database query built from user-controlled sources",
+      "name": "js/sql-injection",
+      "tags": [
+        "external/cwe/cwe-089",
+        "external/cwe/cwe-090",
+        "external/cwe/cwe-943",
+        "security"
+      ],
+      "full_description": "Building a database query from user-controlled sources is vulnerable to insertion of malicious code by the user.",
+      "help": "# Database query built from user-controlled sources\nIf a database query (such as a SQL or NoSQL query) is built from user-provided data without sufficient sanitization, a malicious user may be able to run malicious database queries.\n\n\n## Recommendation\nMost database connector libraries offer a way of safely embedding untrusted data into a query by means of query parameters or prepared statements.\n\nFor NoSQL queries, make use of an operator like MongoDB's `$eq` to ensure that untrusted data is interpreted as a literal value and not as a query object. Alternatively, check that the untrusted data is a literal value and not a query object before using it in a query.\n\nFor SQL queries, use query parameters or prepared statements to embed untrusted data into the query string, or use a library like `sqlstring` to escape untrusted data.\n\n\n## Example\nIn the following example, assume the function `handler` is an HTTP request handler in a web application, whose parameter `req` contains the request object.\n\nThe handler constructs an SQL query string from user input and executes it as a database query using the `pg` library. The user input may contain quote characters, so this code is vulnerable to a SQL injection attack.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // BAD: the category might have SQL special characters in it\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    req.params.category +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\nTo fix this vulnerability, we can use query parameters to embed the user input into the query string. In this example, we use the API offered by the `pg` Postgres database connector library, but other libraries offer similar features. This version is immune to injection attacks.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: use parameters\n  var query2 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=$1 ORDER BY PRICE\";\n  pool.query(query2, [req.params.category], function(err, results) {\n    // process results\n  });\n});\n\n```\nAlternatively, we can use a library like `sqlstring` to escape the user input before embedding it into the query string:\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      SqlString = require('sqlstring'),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: the category is escaped using mysql.escape\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    SqlString.escape(req.params.category) +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\n\n## Example\nIn the following example, an express handler attempts to delete a single document from a MongoDB collection. The document to be deleted is identified by its `_id` field, which is constructed from user input. The user input may contain a query object, so this code is vulnerable to a NoSQL injection attack.\n\n\n```javascript\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst Todo = mongoose.model(\n  \"Todo\",\n  new mongoose.Schema({ text: { type: String } }, { timestamps: true })\n);\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: false }));\n\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n\n  await Todo.deleteOne({ _id: id }); // BAD: id might be an object with special properties\n\n  res.json({ status: \"ok\" });\n});\n\n```\nTo fix this vulnerability, we can use the `$eq` operator to ensure that the user input is interpreted as a literal value and not as a query object:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  await Todo.deleteOne({ _id: { $eq: id } }); // GOOD: using $eq operator for the comparison\n\n  res.json({ status: \"ok\" });\n});\n```\nAlternatively check that the user input is a literal value and not a query object before using it:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  if (typeof id !== \"string\") {\n    res.status(400).json({ status: \"error\" });\n    return;\n  }\n  await Todo.deleteOne({ _id: id }); // GOOD: id is guaranteed to be a string\n\n  res.json({ status: \"ok\" });\n});\n\n```\n\n## References\n* Wikipedia: [SQL injection](https://en.wikipedia.org/wiki/SQL_injection).\n* MongoDB: [$eq operator](https://docs.mongodb.com/manual/reference/operator/query/eq).\n* OWASP: [NoSQL injection](https://owasp.org/www-pdf-archive/GOD16-NOSQL.pdf).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n* Common Weakness Enumeration: [CWE-90](https://cwe.mitre.org/data/definitions/90.html).\n* Common Weakness Enumeration: [CWE-943](https://cwe.mitre.org/data/definitions/943.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This query object depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/src/routes/adminSecurity.ts",
+        "start_line": 249,
+        "end_line": 249,
+        "start_column": 43,
+        "end_column": 48
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/268/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 267,
+    "created_at": "2025-06-16T19:49:22Z",
+    "updated_at": "2025-06-16T19:49:22Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/267",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/267",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/sql-injection",
+      "severity": "error",
+      "description": "Database query built from user-controlled sources",
+      "name": "js/sql-injection",
+      "tags": [
+        "external/cwe/cwe-089",
+        "external/cwe/cwe-090",
+        "external/cwe/cwe-943",
+        "security"
+      ],
+      "full_description": "Building a database query from user-controlled sources is vulnerable to insertion of malicious code by the user.",
+      "help": "# Database query built from user-controlled sources\nIf a database query (such as a SQL or NoSQL query) is built from user-provided data without sufficient sanitization, a malicious user may be able to run malicious database queries.\n\n\n## Recommendation\nMost database connector libraries offer a way of safely embedding untrusted data into a query by means of query parameters or prepared statements.\n\nFor NoSQL queries, make use of an operator like MongoDB's `$eq` to ensure that untrusted data is interpreted as a literal value and not as a query object. Alternatively, check that the untrusted data is a literal value and not a query object before using it in a query.\n\nFor SQL queries, use query parameters or prepared statements to embed untrusted data into the query string, or use a library like `sqlstring` to escape untrusted data.\n\n\n## Example\nIn the following example, assume the function `handler` is an HTTP request handler in a web application, whose parameter `req` contains the request object.\n\nThe handler constructs an SQL query string from user input and executes it as a database query using the `pg` library. The user input may contain quote characters, so this code is vulnerable to a SQL injection attack.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // BAD: the category might have SQL special characters in it\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    req.params.category +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\nTo fix this vulnerability, we can use query parameters to embed the user input into the query string. In this example, we use the API offered by the `pg` Postgres database connector library, but other libraries offer similar features. This version is immune to injection attacks.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: use parameters\n  var query2 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=$1 ORDER BY PRICE\";\n  pool.query(query2, [req.params.category], function(err, results) {\n    // process results\n  });\n});\n\n```\nAlternatively, we can use a library like `sqlstring` to escape the user input before embedding it into the query string:\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      SqlString = require('sqlstring'),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: the category is escaped using mysql.escape\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    SqlString.escape(req.params.category) +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\n\n## Example\nIn the following example, an express handler attempts to delete a single document from a MongoDB collection. The document to be deleted is identified by its `_id` field, which is constructed from user input. The user input may contain a query object, so this code is vulnerable to a NoSQL injection attack.\n\n\n```javascript\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst Todo = mongoose.model(\n  \"Todo\",\n  new mongoose.Schema({ text: { type: String } }, { timestamps: true })\n);\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: false }));\n\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n\n  await Todo.deleteOne({ _id: id }); // BAD: id might be an object with special properties\n\n  res.json({ status: \"ok\" });\n});\n\n```\nTo fix this vulnerability, we can use the `$eq` operator to ensure that the user input is interpreted as a literal value and not as a query object:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  await Todo.deleteOne({ _id: { $eq: id } }); // GOOD: using $eq operator for the comparison\n\n  res.json({ status: \"ok\" });\n});\n```\nAlternatively check that the user input is a literal value and not a query object before using it:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  if (typeof id !== \"string\") {\n    res.status(400).json({ status: \"error\" });\n    return;\n  }\n  await Todo.deleteOne({ _id: id }); // GOOD: id is guaranteed to be a string\n\n  res.json({ status: \"ok\" });\n});\n\n```\n\n## References\n* Wikipedia: [SQL injection](https://en.wikipedia.org/wiki/SQL_injection).\n* MongoDB: [$eq operator](https://docs.mongodb.com/manual/reference/operator/query/eq).\n* OWASP: [NoSQL injection](https://owasp.org/www-pdf-archive/GOD16-NOSQL.pdf).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n* Common Weakness Enumeration: [CWE-90](https://cwe.mitre.org/data/definitions/90.html).\n* Common Weakness Enumeration: [CWE-943](https://cwe.mitre.org/data/definitions/943.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This query object depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/src/routes/adminSecurity.ts",
+        "start_line": 243,
+        "end_line": 243,
+        "start_column": 33,
+        "end_column": 38
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/267/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 171,
+    "created_at": "2025-06-14T23:22:54Z",
+    "updated_at": "2025-06-24T05:40:31Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/171",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/171",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/sql-injection",
+      "severity": "error",
+      "description": "Database query built from user-controlled sources",
+      "name": "js/sql-injection",
+      "tags": [
+        "external/cwe/cwe-089",
+        "external/cwe/cwe-090",
+        "external/cwe/cwe-943",
+        "security"
+      ],
+      "full_description": "Building a database query from user-controlled sources is vulnerable to insertion of malicious code by the user.",
+      "help": "# Database query built from user-controlled sources\nIf a database query (such as a SQL or NoSQL query) is built from user-provided data without sufficient sanitization, a malicious user may be able to run malicious database queries.\n\n\n## Recommendation\nMost database connector libraries offer a way of safely embedding untrusted data into a query by means of query parameters or prepared statements.\n\nFor NoSQL queries, make use of an operator like MongoDB's `$eq` to ensure that untrusted data is interpreted as a literal value and not as a query object. Alternatively, check that the untrusted data is a literal value and not a query object before using it in a query.\n\nFor SQL queries, use query parameters or prepared statements to embed untrusted data into the query string, or use a library like `sqlstring` to escape untrusted data.\n\n\n## Example\nIn the following example, assume the function `handler` is an HTTP request handler in a web application, whose parameter `req` contains the request object.\n\nThe handler constructs an SQL query string from user input and executes it as a database query using the `pg` library. The user input may contain quote characters, so this code is vulnerable to a SQL injection attack.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // BAD: the category might have SQL special characters in it\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    req.params.category +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\nTo fix this vulnerability, we can use query parameters to embed the user input into the query string. In this example, we use the API offered by the `pg` Postgres database connector library, but other libraries offer similar features. This version is immune to injection attacks.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: use parameters\n  var query2 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=$1 ORDER BY PRICE\";\n  pool.query(query2, [req.params.category], function(err, results) {\n    // process results\n  });\n});\n\n```\nAlternatively, we can use a library like `sqlstring` to escape the user input before embedding it into the query string:\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      SqlString = require('sqlstring'),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: the category is escaped using mysql.escape\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    SqlString.escape(req.params.category) +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\n\n## Example\nIn the following example, an express handler attempts to delete a single document from a MongoDB collection. The document to be deleted is identified by its `_id` field, which is constructed from user input. The user input may contain a query object, so this code is vulnerable to a NoSQL injection attack.\n\n\n```javascript\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst Todo = mongoose.model(\n  \"Todo\",\n  new mongoose.Schema({ text: { type: String } }, { timestamps: true })\n);\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: false }));\n\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n\n  await Todo.deleteOne({ _id: id }); // BAD: id might be an object with special properties\n\n  res.json({ status: \"ok\" });\n});\n\n```\nTo fix this vulnerability, we can use the `$eq` operator to ensure that the user input is interpreted as a literal value and not as a query object:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  await Todo.deleteOne({ _id: { $eq: id } }); // GOOD: using $eq operator for the comparison\n\n  res.json({ status: \"ok\" });\n});\n```\nAlternatively check that the user input is a literal value and not a query object before using it:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  if (typeof id !== \"string\") {\n    res.status(400).json({ status: \"error\" });\n    return;\n  }\n  await Todo.deleteOne({ _id: id }); // GOOD: id is guaranteed to be a string\n\n  res.json({ status: \"ok\" });\n});\n\n```\n\n## References\n* Wikipedia: [SQL injection](https://en.wikipedia.org/wiki/SQL_injection).\n* MongoDB: [$eq operator](https://docs.mongodb.com/manual/reference/operator/query/eq).\n* OWASP: [NoSQL injection](https://owasp.org/www-pdf-archive/GOD16-NOSQL.pdf).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n* Common Weakness Enumeration: [CWE-90](https://cwe.mitre.org/data/definitions/90.html).\n* Common Weakness Enumeration: [CWE-943](https://cwe.mitre.org/data/definitions/943.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This query object depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/src/index.ts",
+        "start_line": 3208,
+        "end_line": 3208,
+        "start_column": 53,
+        "end_column": 64
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/171/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 167,
+    "created_at": "2025-06-14T23:22:54Z",
+    "updated_at": "2025-06-14T23:22:54Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/167",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/167",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/sql-injection",
+      "severity": "error",
+      "description": "Database query built from user-controlled sources",
+      "name": "js/sql-injection",
+      "tags": [
+        "external/cwe/cwe-089",
+        "external/cwe/cwe-090",
+        "external/cwe/cwe-943",
+        "security"
+      ],
+      "full_description": "Building a database query from user-controlled sources is vulnerable to insertion of malicious code by the user.",
+      "help": "# Database query built from user-controlled sources\nIf a database query (such as a SQL or NoSQL query) is built from user-provided data without sufficient sanitization, a malicious user may be able to run malicious database queries.\n\n\n## Recommendation\nMost database connector libraries offer a way of safely embedding untrusted data into a query by means of query parameters or prepared statements.\n\nFor NoSQL queries, make use of an operator like MongoDB's `$eq` to ensure that untrusted data is interpreted as a literal value and not as a query object. Alternatively, check that the untrusted data is a literal value and not a query object before using it in a query.\n\nFor SQL queries, use query parameters or prepared statements to embed untrusted data into the query string, or use a library like `sqlstring` to escape untrusted data.\n\n\n## Example\nIn the following example, assume the function `handler` is an HTTP request handler in a web application, whose parameter `req` contains the request object.\n\nThe handler constructs an SQL query string from user input and executes it as a database query using the `pg` library. The user input may contain quote characters, so this code is vulnerable to a SQL injection attack.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // BAD: the category might have SQL special characters in it\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    req.params.category +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\nTo fix this vulnerability, we can use query parameters to embed the user input into the query string. In this example, we use the API offered by the `pg` Postgres database connector library, but other libraries offer similar features. This version is immune to injection attacks.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: use parameters\n  var query2 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=$1 ORDER BY PRICE\";\n  pool.query(query2, [req.params.category], function(err, results) {\n    // process results\n  });\n});\n\n```\nAlternatively, we can use a library like `sqlstring` to escape the user input before embedding it into the query string:\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      SqlString = require('sqlstring'),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: the category is escaped using mysql.escape\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    SqlString.escape(req.params.category) +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\n\n## Example\nIn the following example, an express handler attempts to delete a single document from a MongoDB collection. The document to be deleted is identified by its `_id` field, which is constructed from user input. The user input may contain a query object, so this code is vulnerable to a NoSQL injection attack.\n\n\n```javascript\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst Todo = mongoose.model(\n  \"Todo\",\n  new mongoose.Schema({ text: { type: String } }, { timestamps: true })\n);\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: false }));\n\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n\n  await Todo.deleteOne({ _id: id }); // BAD: id might be an object with special properties\n\n  res.json({ status: \"ok\" });\n});\n\n```\nTo fix this vulnerability, we can use the `$eq` operator to ensure that the user input is interpreted as a literal value and not as a query object:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  await Todo.deleteOne({ _id: { $eq: id } }); // GOOD: using $eq operator for the comparison\n\n  res.json({ status: \"ok\" });\n});\n```\nAlternatively check that the user input is a literal value and not a query object before using it:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  if (typeof id !== \"string\") {\n    res.status(400).json({ status: \"error\" });\n    return;\n  }\n  await Todo.deleteOne({ _id: id }); // GOOD: id is guaranteed to be a string\n\n  res.json({ status: \"ok\" });\n});\n\n```\n\n## References\n* Wikipedia: [SQL injection](https://en.wikipedia.org/wiki/SQL_injection).\n* MongoDB: [$eq operator](https://docs.mongodb.com/manual/reference/operator/query/eq).\n* OWASP: [NoSQL injection](https://owasp.org/www-pdf-archive/GOD16-NOSQL.pdf).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n* Common Weakness Enumeration: [CWE-90](https://cwe.mitre.org/data/definitions/90.html).\n* Common Weakness Enumeration: [CWE-943](https://cwe.mitre.org/data/definitions/943.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This query object depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/src/routes/notifications.ts",
+        "start_line": 89,
+        "end_line": 89,
+        "start_column": 58,
+        "end_column": 67
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/167/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 166,
+    "created_at": "2025-06-14T23:22:54Z",
+    "updated_at": "2025-06-14T23:22:54Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/166",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/166",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/sql-injection",
+      "severity": "error",
+      "description": "Database query built from user-controlled sources",
+      "name": "js/sql-injection",
+      "tags": [
+        "external/cwe/cwe-089",
+        "external/cwe/cwe-090",
+        "external/cwe/cwe-943",
+        "security"
+      ],
+      "full_description": "Building a database query from user-controlled sources is vulnerable to insertion of malicious code by the user.",
+      "help": "# Database query built from user-controlled sources\nIf a database query (such as a SQL or NoSQL query) is built from user-provided data without sufficient sanitization, a malicious user may be able to run malicious database queries.\n\n\n## Recommendation\nMost database connector libraries offer a way of safely embedding untrusted data into a query by means of query parameters or prepared statements.\n\nFor NoSQL queries, make use of an operator like MongoDB's `$eq` to ensure that untrusted data is interpreted as a literal value and not as a query object. Alternatively, check that the untrusted data is a literal value and not a query object before using it in a query.\n\nFor SQL queries, use query parameters or prepared statements to embed untrusted data into the query string, or use a library like `sqlstring` to escape untrusted data.\n\n\n## Example\nIn the following example, assume the function `handler` is an HTTP request handler in a web application, whose parameter `req` contains the request object.\n\nThe handler constructs an SQL query string from user input and executes it as a database query using the `pg` library. The user input may contain quote characters, so this code is vulnerable to a SQL injection attack.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // BAD: the category might have SQL special characters in it\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    req.params.category +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\nTo fix this vulnerability, we can use query parameters to embed the user input into the query string. In this example, we use the API offered by the `pg` Postgres database connector library, but other libraries offer similar features. This version is immune to injection attacks.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: use parameters\n  var query2 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=$1 ORDER BY PRICE\";\n  pool.query(query2, [req.params.category], function(err, results) {\n    // process results\n  });\n});\n\n```\nAlternatively, we can use a library like `sqlstring` to escape the user input before embedding it into the query string:\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      SqlString = require('sqlstring'),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: the category is escaped using mysql.escape\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    SqlString.escape(req.params.category) +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\n\n## Example\nIn the following example, an express handler attempts to delete a single document from a MongoDB collection. The document to be deleted is identified by its `_id` field, which is constructed from user input. The user input may contain a query object, so this code is vulnerable to a NoSQL injection attack.\n\n\n```javascript\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst Todo = mongoose.model(\n  \"Todo\",\n  new mongoose.Schema({ text: { type: String } }, { timestamps: true })\n);\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: false }));\n\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n\n  await Todo.deleteOne({ _id: id }); // BAD: id might be an object with special properties\n\n  res.json({ status: \"ok\" });\n});\n\n```\nTo fix this vulnerability, we can use the `$eq` operator to ensure that the user input is interpreted as a literal value and not as a query object:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  await Todo.deleteOne({ _id: { $eq: id } }); // GOOD: using $eq operator for the comparison\n\n  res.json({ status: \"ok\" });\n});\n```\nAlternatively check that the user input is a literal value and not a query object before using it:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  if (typeof id !== \"string\") {\n    res.status(400).json({ status: \"error\" });\n    return;\n  }\n  await Todo.deleteOne({ _id: id }); // GOOD: id is guaranteed to be a string\n\n  res.json({ status: \"ok\" });\n});\n\n```\n\n## References\n* Wikipedia: [SQL injection](https://en.wikipedia.org/wiki/SQL_injection).\n* MongoDB: [$eq operator](https://docs.mongodb.com/manual/reference/operator/query/eq).\n* OWASP: [NoSQL injection](https://owasp.org/www-pdf-archive/GOD16-NOSQL.pdf).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n* Common Weakness Enumeration: [CWE-90](https://cwe.mitre.org/data/definitions/90.html).\n* Common Weakness Enumeration: [CWE-943](https://cwe.mitre.org/data/definitions/943.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This query object depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/src/routes/notifications.ts",
+        "start_line": 45,
+        "end_line": 45,
+        "start_column": 56,
+        "end_column": 65
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/166/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 165,
+    "created_at": "2025-06-14T23:22:54Z",
+    "updated_at": "2025-06-14T23:22:54Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/165",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/165",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/sql-injection",
+      "severity": "error",
+      "description": "Database query built from user-controlled sources",
+      "name": "js/sql-injection",
+      "tags": [
+        "external/cwe/cwe-089",
+        "external/cwe/cwe-090",
+        "external/cwe/cwe-943",
+        "security"
+      ],
+      "full_description": "Building a database query from user-controlled sources is vulnerable to insertion of malicious code by the user.",
+      "help": "# Database query built from user-controlled sources\nIf a database query (such as a SQL or NoSQL query) is built from user-provided data without sufficient sanitization, a malicious user may be able to run malicious database queries.\n\n\n## Recommendation\nMost database connector libraries offer a way of safely embedding untrusted data into a query by means of query parameters or prepared statements.\n\nFor NoSQL queries, make use of an operator like MongoDB's `$eq` to ensure that untrusted data is interpreted as a literal value and not as a query object. Alternatively, check that the untrusted data is a literal value and not a query object before using it in a query.\n\nFor SQL queries, use query parameters or prepared statements to embed untrusted data into the query string, or use a library like `sqlstring` to escape untrusted data.\n\n\n## Example\nIn the following example, assume the function `handler` is an HTTP request handler in a web application, whose parameter `req` contains the request object.\n\nThe handler constructs an SQL query string from user input and executes it as a database query using the `pg` library. The user input may contain quote characters, so this code is vulnerable to a SQL injection attack.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // BAD: the category might have SQL special characters in it\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    req.params.category +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\nTo fix this vulnerability, we can use query parameters to embed the user input into the query string. In this example, we use the API offered by the `pg` Postgres database connector library, but other libraries offer similar features. This version is immune to injection attacks.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: use parameters\n  var query2 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=$1 ORDER BY PRICE\";\n  pool.query(query2, [req.params.category], function(err, results) {\n    // process results\n  });\n});\n\n```\nAlternatively, we can use a library like `sqlstring` to escape the user input before embedding it into the query string:\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      SqlString = require('sqlstring'),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: the category is escaped using mysql.escape\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    SqlString.escape(req.params.category) +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\n\n## Example\nIn the following example, an express handler attempts to delete a single document from a MongoDB collection. The document to be deleted is identified by its `_id` field, which is constructed from user input. The user input may contain a query object, so this code is vulnerable to a NoSQL injection attack.\n\n\n```javascript\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst Todo = mongoose.model(\n  \"Todo\",\n  new mongoose.Schema({ text: { type: String } }, { timestamps: true })\n);\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: false }));\n\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n\n  await Todo.deleteOne({ _id: id }); // BAD: id might be an object with special properties\n\n  res.json({ status: \"ok\" });\n});\n\n```\nTo fix this vulnerability, we can use the `$eq` operator to ensure that the user input is interpreted as a literal value and not as a query object:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  await Todo.deleteOne({ _id: { $eq: id } }); // GOOD: using $eq operator for the comparison\n\n  res.json({ status: \"ok\" });\n});\n```\nAlternatively check that the user input is a literal value and not a query object before using it:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  if (typeof id !== \"string\") {\n    res.status(400).json({ status: \"error\" });\n    return;\n  }\n  await Todo.deleteOne({ _id: id }); // GOOD: id is guaranteed to be a string\n\n  res.json({ status: \"ok\" });\n});\n\n```\n\n## References\n* Wikipedia: [SQL injection](https://en.wikipedia.org/wiki/SQL_injection).\n* MongoDB: [$eq operator](https://docs.mongodb.com/manual/reference/operator/query/eq).\n* OWASP: [NoSQL injection](https://owasp.org/www-pdf-archive/GOD16-NOSQL.pdf).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n* Common Weakness Enumeration: [CWE-90](https://cwe.mitre.org/data/definitions/90.html).\n* Common Weakness Enumeration: [CWE-943](https://cwe.mitre.org/data/definitions/943.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This query object depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/src/routes/adminTokenUsage.ts",
+        "start_line": 84,
+        "end_line": 84,
+        "start_column": 56,
+        "end_column": 61
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/165/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 164,
+    "created_at": "2025-06-14T23:22:54Z",
+    "updated_at": "2025-06-14T23:22:54Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/164",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/164",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/sql-injection",
+      "severity": "error",
+      "description": "Database query built from user-controlled sources",
+      "name": "js/sql-injection",
+      "tags": [
+        "external/cwe/cwe-089",
+        "external/cwe/cwe-090",
+        "external/cwe/cwe-943",
+        "security"
+      ],
+      "full_description": "Building a database query from user-controlled sources is vulnerable to insertion of malicious code by the user.",
+      "help": "# Database query built from user-controlled sources\nIf a database query (such as a SQL or NoSQL query) is built from user-provided data without sufficient sanitization, a malicious user may be able to run malicious database queries.\n\n\n## Recommendation\nMost database connector libraries offer a way of safely embedding untrusted data into a query by means of query parameters or prepared statements.\n\nFor NoSQL queries, make use of an operator like MongoDB's `$eq` to ensure that untrusted data is interpreted as a literal value and not as a query object. Alternatively, check that the untrusted data is a literal value and not a query object before using it in a query.\n\nFor SQL queries, use query parameters or prepared statements to embed untrusted data into the query string, or use a library like `sqlstring` to escape untrusted data.\n\n\n## Example\nIn the following example, assume the function `handler` is an HTTP request handler in a web application, whose parameter `req` contains the request object.\n\nThe handler constructs an SQL query string from user input and executes it as a database query using the `pg` library. The user input may contain quote characters, so this code is vulnerable to a SQL injection attack.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // BAD: the category might have SQL special characters in it\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    req.params.category +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\nTo fix this vulnerability, we can use query parameters to embed the user input into the query string. In this example, we use the API offered by the `pg` Postgres database connector library, but other libraries offer similar features. This version is immune to injection attacks.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: use parameters\n  var query2 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=$1 ORDER BY PRICE\";\n  pool.query(query2, [req.params.category], function(err, results) {\n    // process results\n  });\n});\n\n```\nAlternatively, we can use a library like `sqlstring` to escape the user input before embedding it into the query string:\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      SqlString = require('sqlstring'),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: the category is escaped using mysql.escape\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    SqlString.escape(req.params.category) +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\n\n## Example\nIn the following example, an express handler attempts to delete a single document from a MongoDB collection. The document to be deleted is identified by its `_id` field, which is constructed from user input. The user input may contain a query object, so this code is vulnerable to a NoSQL injection attack.\n\n\n```javascript\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst Todo = mongoose.model(\n  \"Todo\",\n  new mongoose.Schema({ text: { type: String } }, { timestamps: true })\n);\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: false }));\n\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n\n  await Todo.deleteOne({ _id: id }); // BAD: id might be an object with special properties\n\n  res.json({ status: \"ok\" });\n});\n\n```\nTo fix this vulnerability, we can use the `$eq` operator to ensure that the user input is interpreted as a literal value and not as a query object:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  await Todo.deleteOne({ _id: { $eq: id } }); // GOOD: using $eq operator for the comparison\n\n  res.json({ status: \"ok\" });\n});\n```\nAlternatively check that the user input is a literal value and not a query object before using it:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  if (typeof id !== \"string\") {\n    res.status(400).json({ status: \"error\" });\n    return;\n  }\n  await Todo.deleteOne({ _id: id }); // GOOD: id is guaranteed to be a string\n\n  res.json({ status: \"ok\" });\n});\n\n```\n\n## References\n* Wikipedia: [SQL injection](https://en.wikipedia.org/wiki/SQL_injection).\n* MongoDB: [$eq operator](https://docs.mongodb.com/manual/reference/operator/query/eq).\n* OWASP: [NoSQL injection](https://owasp.org/www-pdf-archive/GOD16-NOSQL.pdf).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n* Common Weakness Enumeration: [CWE-90](https://cwe.mitre.org/data/definitions/90.html).\n* Common Weakness Enumeration: [CWE-943](https://cwe.mitre.org/data/definitions/943.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This query object depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/src/routes/adminTokenUsage.ts",
+        "start_line": 76,
+        "end_line": 76,
+        "start_column": 52,
+        "end_column": 57
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/164/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 162,
+    "created_at": "2025-06-14T23:22:54Z",
+    "updated_at": "2025-06-14T23:22:54Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/162",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/162",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/sql-injection",
+      "severity": "error",
+      "description": "Database query built from user-controlled sources",
+      "name": "js/sql-injection",
+      "tags": [
+        "external/cwe/cwe-089",
+        "external/cwe/cwe-090",
+        "external/cwe/cwe-943",
+        "security"
+      ],
+      "full_description": "Building a database query from user-controlled sources is vulnerable to insertion of malicious code by the user.",
+      "help": "# Database query built from user-controlled sources\nIf a database query (such as a SQL or NoSQL query) is built from user-provided data without sufficient sanitization, a malicious user may be able to run malicious database queries.\n\n\n## Recommendation\nMost database connector libraries offer a way of safely embedding untrusted data into a query by means of query parameters or prepared statements.\n\nFor NoSQL queries, make use of an operator like MongoDB's `$eq` to ensure that untrusted data is interpreted as a literal value and not as a query object. Alternatively, check that the untrusted data is a literal value and not a query object before using it in a query.\n\nFor SQL queries, use query parameters or prepared statements to embed untrusted data into the query string, or use a library like `sqlstring` to escape untrusted data.\n\n\n## Example\nIn the following example, assume the function `handler` is an HTTP request handler in a web application, whose parameter `req` contains the request object.\n\nThe handler constructs an SQL query string from user input and executes it as a database query using the `pg` library. The user input may contain quote characters, so this code is vulnerable to a SQL injection attack.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // BAD: the category might have SQL special characters in it\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    req.params.category +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\nTo fix this vulnerability, we can use query parameters to embed the user input into the query string. In this example, we use the API offered by the `pg` Postgres database connector library, but other libraries offer similar features. This version is immune to injection attacks.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: use parameters\n  var query2 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=$1 ORDER BY PRICE\";\n  pool.query(query2, [req.params.category], function(err, results) {\n    // process results\n  });\n});\n\n```\nAlternatively, we can use a library like `sqlstring` to escape the user input before embedding it into the query string:\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      SqlString = require('sqlstring'),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: the category is escaped using mysql.escape\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    SqlString.escape(req.params.category) +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\n\n## Example\nIn the following example, an express handler attempts to delete a single document from a MongoDB collection. The document to be deleted is identified by its `_id` field, which is constructed from user input. The user input may contain a query object, so this code is vulnerable to a NoSQL injection attack.\n\n\n```javascript\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst Todo = mongoose.model(\n  \"Todo\",\n  new mongoose.Schema({ text: { type: String } }, { timestamps: true })\n);\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: false }));\n\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n\n  await Todo.deleteOne({ _id: id }); // BAD: id might be an object with special properties\n\n  res.json({ status: \"ok\" });\n});\n\n```\nTo fix this vulnerability, we can use the `$eq` operator to ensure that the user input is interpreted as a literal value and not as a query object:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  await Todo.deleteOne({ _id: { $eq: id } }); // GOOD: using $eq operator for the comparison\n\n  res.json({ status: \"ok\" });\n});\n```\nAlternatively check that the user input is a literal value and not a query object before using it:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  if (typeof id !== \"string\") {\n    res.status(400).json({ status: \"error\" });\n    return;\n  }\n  await Todo.deleteOne({ _id: id }); // GOOD: id is guaranteed to be a string\n\n  res.json({ status: \"ok\" });\n});\n\n```\n\n## References\n* Wikipedia: [SQL injection](https://en.wikipedia.org/wiki/SQL_injection).\n* MongoDB: [$eq operator](https://docs.mongodb.com/manual/reference/operator/query/eq).\n* OWASP: [NoSQL injection](https://owasp.org/www-pdf-archive/GOD16-NOSQL.pdf).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n* Common Weakness Enumeration: [CWE-90](https://cwe.mitre.org/data/definitions/90.html).\n* Common Weakness Enumeration: [CWE-943](https://cwe.mitre.org/data/definitions/943.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This query object depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/routes/user.js",
+        "start_line": 34,
+        "end_line": 34,
+        "start_column": 53,
+        "end_column": 64
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/162/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 126,
+    "created_at": "2025-06-12T03:17:34Z",
+    "updated_at": "2025-06-12T03:17:34Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/126",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/126",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/path-injection",
+      "severity": "error",
+      "description": "Uncontrolled data used in path expression",
+      "name": "js/path-injection",
+      "tags": [
+        "external/cwe/cwe-022",
+        "external/cwe/cwe-023",
+        "external/cwe/cwe-036",
+        "external/cwe/cwe-073",
+        "external/cwe/cwe-099",
+        "security"
+      ],
+      "full_description": "Accessing paths influenced by users can allow an attacker to access unexpected resources.",
+      "help": "# Uncontrolled data used in path expression\nAccessing files using paths constructed from user-controlled data can allow an attacker to access unexpected resources. This can result in sensitive information being revealed or deleted, or an attacker being able to influence behavior by modifying unexpected files.\n\n\n## Recommendation\nValidate user input before using it to construct a file path.\n\nThe validation method you should use depends on whether you want to allow the user to specify complex paths with multiple components that may span multiple folders, or only simple filenames without a path component.\n\nIn the former case, a common strategy is to make sure that the constructed file path is contained within a safe root folder. First, normalize the path using `path.resolve` or `fs.realpathSync` to remove any \"..\" segments. You should always normalize the file path since an unnormalized path that starts with the root folder can still be used to access files outside the root folder. Then, after you have normalized the path, check that the path starts with the root folder.\n\nIn the latter case, you can use a library like the `sanitize-filename` npm package to eliminate any special characters from the file path. Note that it is *not* sufficient to only remove \"../\" sequences: for example, applying this filter to \".../...//\" would still result in the string \"../\".\n\nFinally, the simplest (but most restrictive) option is to use an allow list of safe patterns and make sure that the user input matches one of these patterns.\n\n\n## Example\nIn the first (bad) example, the code reads the file name from an HTTP request, then accesses that file within a root folder. A malicious user could enter a file name containing \"../\" segments to navigate outside the root folder and access sensitive files.\n\n\n```javascript\nconst fs = require('fs'),\n      http = require('http'),\n      url = require('url');\n\nconst ROOT = \"/var/www/\";\n\nvar server = http.createServer(function(req, res) {\n  let filePath = url.parse(req.url, true).query.path;\n\n  // BAD: This function uses unsanitized input that can read any file on the file system.\n  res.write(fs.readFileSync(ROOT + filePath, 'utf8'));\n});\n```\nThe second (good) example shows how to avoid access to sensitive files by sanitizing the file path. First, the code resolves the file name relative to a root folder, normalizing the path and removing any \"../\" segments in the process. Then, the code calls `fs.realpathSync` to resolve any symbolic links in the path. Finally, the code checks that the normalized path starts with the path of the root folder, ensuring the file is contained within the root folder.\n\n\n```javascript\nconst fs = require('fs'),\n      http = require('http'),\n      path = require('path'),\n      url = require('url');\n\nconst ROOT = \"/var/www/\";\n\nvar server = http.createServer(function(req, res) {\n  let filePath = url.parse(req.url, true).query.path;\n\n  // GOOD: Verify that the file path is under the root directory\n  filePath = fs.realpathSync(path.resolve(ROOT, filePath));\n  if (!filePath.startsWith(ROOT)) {\n    res.statusCode = 403;\n    res.end();\n    return;\n  }\n  res.write(fs.readFileSync(filePath, 'utf8'));\n});\n```\n\n## References\n* OWASP: [Path Traversal](https://owasp.org/www-community/attacks/Path_Traversal).\n* npm: [sanitize-filename](https://www.npmjs.com/package/sanitize-filename) package.\n* Common Weakness Enumeration: [CWE-22](https://cwe.mitre.org/data/definitions/22.html).\n* Common Weakness Enumeration: [CWE-23](https://cwe.mitre.org/data/definitions/23.html).\n* Common Weakness Enumeration: [CWE-36](https://cwe.mitre.org/data/definitions/36.html).\n* Common Weakness Enumeration: [CWE-73](https://cwe.mitre.org/data/definitions/73.html).\n* Common Weakness Enumeration: [CWE-99](https://cwe.mitre.org/data/definitions/99.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This path depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/src/utils/fileUpload.ts",
+        "start_line": 90,
+        "end_line": 90,
+        "start_column": 41,
+        "end_column": 54
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/126/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 125,
+    "created_at": "2025-06-12T03:17:34Z",
+    "updated_at": "2025-06-12T03:17:34Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/125",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/125",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/path-injection",
+      "severity": "error",
+      "description": "Uncontrolled data used in path expression",
+      "name": "js/path-injection",
+      "tags": [
+        "external/cwe/cwe-022",
+        "external/cwe/cwe-023",
+        "external/cwe/cwe-036",
+        "external/cwe/cwe-073",
+        "external/cwe/cwe-099",
+        "security"
+      ],
+      "full_description": "Accessing paths influenced by users can allow an attacker to access unexpected resources.",
+      "help": "# Uncontrolled data used in path expression\nAccessing files using paths constructed from user-controlled data can allow an attacker to access unexpected resources. This can result in sensitive information being revealed or deleted, or an attacker being able to influence behavior by modifying unexpected files.\n\n\n## Recommendation\nValidate user input before using it to construct a file path.\n\nThe validation method you should use depends on whether you want to allow the user to specify complex paths with multiple components that may span multiple folders, or only simple filenames without a path component.\n\nIn the former case, a common strategy is to make sure that the constructed file path is contained within a safe root folder. First, normalize the path using `path.resolve` or `fs.realpathSync` to remove any \"..\" segments. You should always normalize the file path since an unnormalized path that starts with the root folder can still be used to access files outside the root folder. Then, after you have normalized the path, check that the path starts with the root folder.\n\nIn the latter case, you can use a library like the `sanitize-filename` npm package to eliminate any special characters from the file path. Note that it is *not* sufficient to only remove \"../\" sequences: for example, applying this filter to \".../...//\" would still result in the string \"../\".\n\nFinally, the simplest (but most restrictive) option is to use an allow list of safe patterns and make sure that the user input matches one of these patterns.\n\n\n## Example\nIn the first (bad) example, the code reads the file name from an HTTP request, then accesses that file within a root folder. A malicious user could enter a file name containing \"../\" segments to navigate outside the root folder and access sensitive files.\n\n\n```javascript\nconst fs = require('fs'),\n      http = require('http'),\n      url = require('url');\n\nconst ROOT = \"/var/www/\";\n\nvar server = http.createServer(function(req, res) {\n  let filePath = url.parse(req.url, true).query.path;\n\n  // BAD: This function uses unsanitized input that can read any file on the file system.\n  res.write(fs.readFileSync(ROOT + filePath, 'utf8'));\n});\n```\nThe second (good) example shows how to avoid access to sensitive files by sanitizing the file path. First, the code resolves the file name relative to a root folder, normalizing the path and removing any \"../\" segments in the process. Then, the code calls `fs.realpathSync` to resolve any symbolic links in the path. Finally, the code checks that the normalized path starts with the path of the root folder, ensuring the file is contained within the root folder.\n\n\n```javascript\nconst fs = require('fs'),\n      http = require('http'),\n      path = require('path'),\n      url = require('url');\n\nconst ROOT = \"/var/www/\";\n\nvar server = http.createServer(function(req, res) {\n  let filePath = url.parse(req.url, true).query.path;\n\n  // GOOD: Verify that the file path is under the root directory\n  filePath = fs.realpathSync(path.resolve(ROOT, filePath));\n  if (!filePath.startsWith(ROOT)) {\n    res.statusCode = 403;\n    res.end();\n    return;\n  }\n  res.write(fs.readFileSync(filePath, 'utf8'));\n});\n```\n\n## References\n* OWASP: [Path Traversal](https://owasp.org/www-community/attacks/Path_Traversal).\n* npm: [sanitize-filename](https://www.npmjs.com/package/sanitize-filename) package.\n* Common Weakness Enumeration: [CWE-22](https://cwe.mitre.org/data/definitions/22.html).\n* Common Weakness Enumeration: [CWE-23](https://cwe.mitre.org/data/definitions/23.html).\n* Common Weakness Enumeration: [CWE-36](https://cwe.mitre.org/data/definitions/36.html).\n* Common Weakness Enumeration: [CWE-73](https://cwe.mitre.org/data/definitions/73.html).\n* Common Weakness Enumeration: [CWE-99](https://cwe.mitre.org/data/definitions/99.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This path depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/src/utils/fileUpload.ts",
+        "start_line": 90,
+        "end_line": 90,
+        "start_column": 32,
+        "end_column": 39
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/125/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 123,
+    "created_at": "2025-06-11T08:03:34Z",
+    "updated_at": "2025-06-27T18:31:08Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/123",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/123",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/sql-injection",
+      "severity": "error",
+      "description": "Database query built from user-controlled sources",
+      "name": "js/sql-injection",
+      "tags": [
+        "external/cwe/cwe-089",
+        "external/cwe/cwe-090",
+        "external/cwe/cwe-943",
+        "security"
+      ],
+      "full_description": "Building a database query from user-controlled sources is vulnerable to insertion of malicious code by the user.",
+      "help": "# Database query built from user-controlled sources\nIf a database query (such as a SQL or NoSQL query) is built from user-provided data without sufficient sanitization, a malicious user may be able to run malicious database queries.\n\n\n## Recommendation\nMost database connector libraries offer a way of safely embedding untrusted data into a query by means of query parameters or prepared statements.\n\nFor NoSQL queries, make use of an operator like MongoDB's `$eq` to ensure that untrusted data is interpreted as a literal value and not as a query object. Alternatively, check that the untrusted data is a literal value and not a query object before using it in a query.\n\nFor SQL queries, use query parameters or prepared statements to embed untrusted data into the query string, or use a library like `sqlstring` to escape untrusted data.\n\n\n## Example\nIn the following example, assume the function `handler` is an HTTP request handler in a web application, whose parameter `req` contains the request object.\n\nThe handler constructs an SQL query string from user input and executes it as a database query using the `pg` library. The user input may contain quote characters, so this code is vulnerable to a SQL injection attack.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // BAD: the category might have SQL special characters in it\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    req.params.category +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\nTo fix this vulnerability, we can use query parameters to embed the user input into the query string. In this example, we use the API offered by the `pg` Postgres database connector library, but other libraries offer similar features. This version is immune to injection attacks.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: use parameters\n  var query2 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=$1 ORDER BY PRICE\";\n  pool.query(query2, [req.params.category], function(err, results) {\n    // process results\n  });\n});\n\n```\nAlternatively, we can use a library like `sqlstring` to escape the user input before embedding it into the query string:\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      SqlString = require('sqlstring'),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: the category is escaped using mysql.escape\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    SqlString.escape(req.params.category) +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\n\n## Example\nIn the following example, an express handler attempts to delete a single document from a MongoDB collection. The document to be deleted is identified by its `_id` field, which is constructed from user input. The user input may contain a query object, so this code is vulnerable to a NoSQL injection attack.\n\n\n```javascript\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst Todo = mongoose.model(\n  \"Todo\",\n  new mongoose.Schema({ text: { type: String } }, { timestamps: true })\n);\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: false }));\n\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n\n  await Todo.deleteOne({ _id: id }); // BAD: id might be an object with special properties\n\n  res.json({ status: \"ok\" });\n});\n\n```\nTo fix this vulnerability, we can use the `$eq` operator to ensure that the user input is interpreted as a literal value and not as a query object:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  await Todo.deleteOne({ _id: { $eq: id } }); // GOOD: using $eq operator for the comparison\n\n  res.json({ status: \"ok\" });\n});\n```\nAlternatively check that the user input is a literal value and not a query object before using it:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  if (typeof id !== \"string\") {\n    res.status(400).json({ status: \"error\" });\n    return;\n  }\n  await Todo.deleteOne({ _id: id }); // GOOD: id is guaranteed to be a string\n\n  res.json({ status: \"ok\" });\n});\n\n```\n\n## References\n* Wikipedia: [SQL injection](https://en.wikipedia.org/wiki/SQL_injection).\n* MongoDB: [$eq operator](https://docs.mongodb.com/manual/reference/operator/query/eq).\n* OWASP: [NoSQL injection](https://owasp.org/www-pdf-archive/GOD16-NOSQL.pdf).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n* Common Weakness Enumeration: [CWE-90](https://cwe.mitre.org/data/definitions/90.html).\n* Common Weakness Enumeration: [CWE-943](https://cwe.mitre.org/data/definitions/943.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This query object depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/src/index.ts",
+        "start_line": 3737,
+        "end_line": 3737,
+        "start_column": 42,
+        "end_column": 47
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/123/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 122,
+    "created_at": "2025-06-11T08:03:34Z",
+    "updated_at": "2025-06-27T18:31:08Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/122",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/122",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/sql-injection",
+      "severity": "error",
+      "description": "Database query built from user-controlled sources",
+      "name": "js/sql-injection",
+      "tags": [
+        "external/cwe/cwe-089",
+        "external/cwe/cwe-090",
+        "external/cwe/cwe-943",
+        "security"
+      ],
+      "full_description": "Building a database query from user-controlled sources is vulnerable to insertion of malicious code by the user.",
+      "help": "# Database query built from user-controlled sources\nIf a database query (such as a SQL or NoSQL query) is built from user-provided data without sufficient sanitization, a malicious user may be able to run malicious database queries.\n\n\n## Recommendation\nMost database connector libraries offer a way of safely embedding untrusted data into a query by means of query parameters or prepared statements.\n\nFor NoSQL queries, make use of an operator like MongoDB's `$eq` to ensure that untrusted data is interpreted as a literal value and not as a query object. Alternatively, check that the untrusted data is a literal value and not a query object before using it in a query.\n\nFor SQL queries, use query parameters or prepared statements to embed untrusted data into the query string, or use a library like `sqlstring` to escape untrusted data.\n\n\n## Example\nIn the following example, assume the function `handler` is an HTTP request handler in a web application, whose parameter `req` contains the request object.\n\nThe handler constructs an SQL query string from user input and executes it as a database query using the `pg` library. The user input may contain quote characters, so this code is vulnerable to a SQL injection attack.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // BAD: the category might have SQL special characters in it\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    req.params.category +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\nTo fix this vulnerability, we can use query parameters to embed the user input into the query string. In this example, we use the API offered by the `pg` Postgres database connector library, but other libraries offer similar features. This version is immune to injection attacks.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: use parameters\n  var query2 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=$1 ORDER BY PRICE\";\n  pool.query(query2, [req.params.category], function(err, results) {\n    // process results\n  });\n});\n\n```\nAlternatively, we can use a library like `sqlstring` to escape the user input before embedding it into the query string:\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      SqlString = require('sqlstring'),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: the category is escaped using mysql.escape\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    SqlString.escape(req.params.category) +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\n\n## Example\nIn the following example, an express handler attempts to delete a single document from a MongoDB collection. The document to be deleted is identified by its `_id` field, which is constructed from user input. The user input may contain a query object, so this code is vulnerable to a NoSQL injection attack.\n\n\n```javascript\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst Todo = mongoose.model(\n  \"Todo\",\n  new mongoose.Schema({ text: { type: String } }, { timestamps: true })\n);\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: false }));\n\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n\n  await Todo.deleteOne({ _id: id }); // BAD: id might be an object with special properties\n\n  res.json({ status: \"ok\" });\n});\n\n```\nTo fix this vulnerability, we can use the `$eq` operator to ensure that the user input is interpreted as a literal value and not as a query object:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  await Todo.deleteOne({ _id: { $eq: id } }); // GOOD: using $eq operator for the comparison\n\n  res.json({ status: \"ok\" });\n});\n```\nAlternatively check that the user input is a literal value and not a query object before using it:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  if (typeof id !== \"string\") {\n    res.status(400).json({ status: \"error\" });\n    return;\n  }\n  await Todo.deleteOne({ _id: id }); // GOOD: id is guaranteed to be a string\n\n  res.json({ status: \"ok\" });\n});\n\n```\n\n## References\n* Wikipedia: [SQL injection](https://en.wikipedia.org/wiki/SQL_injection).\n* MongoDB: [$eq operator](https://docs.mongodb.com/manual/reference/operator/query/eq).\n* OWASP: [NoSQL injection](https://owasp.org/www-pdf-archive/GOD16-NOSQL.pdf).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n* Common Weakness Enumeration: [CWE-90](https://cwe.mitre.org/data/definitions/90.html).\n* Common Weakness Enumeration: [CWE-943](https://cwe.mitre.org/data/definitions/943.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This query object depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/src/index.ts",
+        "start_line": 3736,
+        "end_line": 3736,
+        "start_column": 57,
+        "end_column": 62
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/122/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 92,
+    "created_at": "2025-06-10T21:20:05Z",
+    "updated_at": "2025-06-24T05:40:31Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/92",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/92",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/sql-injection",
+      "severity": "error",
+      "description": "Database query built from user-controlled sources",
+      "name": "js/sql-injection",
+      "tags": [
+        "external/cwe/cwe-089",
+        "external/cwe/cwe-090",
+        "external/cwe/cwe-943",
+        "security"
+      ],
+      "full_description": "Building a database query from user-controlled sources is vulnerable to insertion of malicious code by the user.",
+      "help": "# Database query built from user-controlled sources\nIf a database query (such as a SQL or NoSQL query) is built from user-provided data without sufficient sanitization, a malicious user may be able to run malicious database queries.\n\n\n## Recommendation\nMost database connector libraries offer a way of safely embedding untrusted data into a query by means of query parameters or prepared statements.\n\nFor NoSQL queries, make use of an operator like MongoDB's `$eq` to ensure that untrusted data is interpreted as a literal value and not as a query object. Alternatively, check that the untrusted data is a literal value and not a query object before using it in a query.\n\nFor SQL queries, use query parameters or prepared statements to embed untrusted data into the query string, or use a library like `sqlstring` to escape untrusted data.\n\n\n## Example\nIn the following example, assume the function `handler` is an HTTP request handler in a web application, whose parameter `req` contains the request object.\n\nThe handler constructs an SQL query string from user input and executes it as a database query using the `pg` library. The user input may contain quote characters, so this code is vulnerable to a SQL injection attack.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // BAD: the category might have SQL special characters in it\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    req.params.category +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\nTo fix this vulnerability, we can use query parameters to embed the user input into the query string. In this example, we use the API offered by the `pg` Postgres database connector library, but other libraries offer similar features. This version is immune to injection attacks.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: use parameters\n  var query2 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=$1 ORDER BY PRICE\";\n  pool.query(query2, [req.params.category], function(err, results) {\n    // process results\n  });\n});\n\n```\nAlternatively, we can use a library like `sqlstring` to escape the user input before embedding it into the query string:\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      SqlString = require('sqlstring'),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: the category is escaped using mysql.escape\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    SqlString.escape(req.params.category) +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\n\n## Example\nIn the following example, an express handler attempts to delete a single document from a MongoDB collection. The document to be deleted is identified by its `_id` field, which is constructed from user input. The user input may contain a query object, so this code is vulnerable to a NoSQL injection attack.\n\n\n```javascript\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst Todo = mongoose.model(\n  \"Todo\",\n  new mongoose.Schema({ text: { type: String } }, { timestamps: true })\n);\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: false }));\n\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n\n  await Todo.deleteOne({ _id: id }); // BAD: id might be an object with special properties\n\n  res.json({ status: \"ok\" });\n});\n\n```\nTo fix this vulnerability, we can use the `$eq` operator to ensure that the user input is interpreted as a literal value and not as a query object:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  await Todo.deleteOne({ _id: { $eq: id } }); // GOOD: using $eq operator for the comparison\n\n  res.json({ status: \"ok\" });\n});\n```\nAlternatively check that the user input is a literal value and not a query object before using it:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  if (typeof id !== \"string\") {\n    res.status(400).json({ status: \"error\" });\n    return;\n  }\n  await Todo.deleteOne({ _id: id }); // GOOD: id is guaranteed to be a string\n\n  res.json({ status: \"ok\" });\n});\n\n```\n\n## References\n* Wikipedia: [SQL injection](https://en.wikipedia.org/wiki/SQL_injection).\n* MongoDB: [$eq operator](https://docs.mongodb.com/manual/reference/operator/query/eq).\n* OWASP: [NoSQL injection](https://owasp.org/www-pdf-archive/GOD16-NOSQL.pdf).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n* Common Weakness Enumeration: [CWE-90](https://cwe.mitre.org/data/definitions/90.html).\n* Common Weakness Enumeration: [CWE-943](https://cwe.mitre.org/data/definitions/943.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This query object depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/src/index.ts",
+        "start_line": 2047,
+        "end_line": 2047,
+        "start_column": 53,
+        "end_column": 72
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/92/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 86,
+    "created_at": "2025-06-10T21:20:05Z",
+    "updated_at": "2025-06-10T21:20:05Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/86",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/86",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/sql-injection",
+      "severity": "error",
+      "description": "Database query built from user-controlled sources",
+      "name": "js/sql-injection",
+      "tags": [
+        "external/cwe/cwe-089",
+        "external/cwe/cwe-090",
+        "external/cwe/cwe-943",
+        "security"
+      ],
+      "full_description": "Building a database query from user-controlled sources is vulnerable to insertion of malicious code by the user.",
+      "help": "# Database query built from user-controlled sources\nIf a database query (such as a SQL or NoSQL query) is built from user-provided data without sufficient sanitization, a malicious user may be able to run malicious database queries.\n\n\n## Recommendation\nMost database connector libraries offer a way of safely embedding untrusted data into a query by means of query parameters or prepared statements.\n\nFor NoSQL queries, make use of an operator like MongoDB's `$eq` to ensure that untrusted data is interpreted as a literal value and not as a query object. Alternatively, check that the untrusted data is a literal value and not a query object before using it in a query.\n\nFor SQL queries, use query parameters or prepared statements to embed untrusted data into the query string, or use a library like `sqlstring` to escape untrusted data.\n\n\n## Example\nIn the following example, assume the function `handler` is an HTTP request handler in a web application, whose parameter `req` contains the request object.\n\nThe handler constructs an SQL query string from user input and executes it as a database query using the `pg` library. The user input may contain quote characters, so this code is vulnerable to a SQL injection attack.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // BAD: the category might have SQL special characters in it\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    req.params.category +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\nTo fix this vulnerability, we can use query parameters to embed the user input into the query string. In this example, we use the API offered by the `pg` Postgres database connector library, but other libraries offer similar features. This version is immune to injection attacks.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: use parameters\n  var query2 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=$1 ORDER BY PRICE\";\n  pool.query(query2, [req.params.category], function(err, results) {\n    // process results\n  });\n});\n\n```\nAlternatively, we can use a library like `sqlstring` to escape the user input before embedding it into the query string:\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      SqlString = require('sqlstring'),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: the category is escaped using mysql.escape\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    SqlString.escape(req.params.category) +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\n\n## Example\nIn the following example, an express handler attempts to delete a single document from a MongoDB collection. The document to be deleted is identified by its `_id` field, which is constructed from user input. The user input may contain a query object, so this code is vulnerable to a NoSQL injection attack.\n\n\n```javascript\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst Todo = mongoose.model(\n  \"Todo\",\n  new mongoose.Schema({ text: { type: String } }, { timestamps: true })\n);\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: false }));\n\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n\n  await Todo.deleteOne({ _id: id }); // BAD: id might be an object with special properties\n\n  res.json({ status: \"ok\" });\n});\n\n```\nTo fix this vulnerability, we can use the `$eq` operator to ensure that the user input is interpreted as a literal value and not as a query object:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  await Todo.deleteOne({ _id: { $eq: id } }); // GOOD: using $eq operator for the comparison\n\n  res.json({ status: \"ok\" });\n});\n```\nAlternatively check that the user input is a literal value and not a query object before using it:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  if (typeof id !== \"string\") {\n    res.status(400).json({ status: \"error\" });\n    return;\n  }\n  await Todo.deleteOne({ _id: id }); // GOOD: id is guaranteed to be a string\n\n  res.json({ status: \"ok\" });\n});\n\n```\n\n## References\n* Wikipedia: [SQL injection](https://en.wikipedia.org/wiki/SQL_injection).\n* MongoDB: [$eq operator](https://docs.mongodb.com/manual/reference/operator/query/eq).\n* OWASP: [NoSQL injection](https://owasp.org/www-pdf-archive/GOD16-NOSQL.pdf).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n* Common Weakness Enumeration: [CWE-90](https://cwe.mitre.org/data/definitions/90.html).\n* Common Weakness Enumeration: [CWE-943](https://cwe.mitre.org/data/definitions/943.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This query object depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/services/tokenService.js",
+        "start_line": 194,
+        "end_line": 194,
+        "start_column": 40,
+        "end_column": 46
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/86/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 85,
+    "created_at": "2025-06-10T21:20:05Z",
+    "updated_at": "2025-06-10T21:20:05Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/85",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/85",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/sql-injection",
+      "severity": "error",
+      "description": "Database query built from user-controlled sources",
+      "name": "js/sql-injection",
+      "tags": [
+        "external/cwe/cwe-089",
+        "external/cwe/cwe-090",
+        "external/cwe/cwe-943",
+        "security"
+      ],
+      "full_description": "Building a database query from user-controlled sources is vulnerable to insertion of malicious code by the user.",
+      "help": "# Database query built from user-controlled sources\nIf a database query (such as a SQL or NoSQL query) is built from user-provided data without sufficient sanitization, a malicious user may be able to run malicious database queries.\n\n\n## Recommendation\nMost database connector libraries offer a way of safely embedding untrusted data into a query by means of query parameters or prepared statements.\n\nFor NoSQL queries, make use of an operator like MongoDB's `$eq` to ensure that untrusted data is interpreted as a literal value and not as a query object. Alternatively, check that the untrusted data is a literal value and not a query object before using it in a query.\n\nFor SQL queries, use query parameters or prepared statements to embed untrusted data into the query string, or use a library like `sqlstring` to escape untrusted data.\n\n\n## Example\nIn the following example, assume the function `handler` is an HTTP request handler in a web application, whose parameter `req` contains the request object.\n\nThe handler constructs an SQL query string from user input and executes it as a database query using the `pg` library. The user input may contain quote characters, so this code is vulnerable to a SQL injection attack.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // BAD: the category might have SQL special characters in it\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    req.params.category +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\nTo fix this vulnerability, we can use query parameters to embed the user input into the query string. In this example, we use the API offered by the `pg` Postgres database connector library, but other libraries offer similar features. This version is immune to injection attacks.\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: use parameters\n  var query2 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=$1 ORDER BY PRICE\";\n  pool.query(query2, [req.params.category], function(err, results) {\n    // process results\n  });\n});\n\n```\nAlternatively, we can use a library like `sqlstring` to escape the user input before embedding it into the query string:\n\n\n```javascript\nconst app = require(\"express\")(),\n      pg = require(\"pg\"),\n      SqlString = require('sqlstring'),\n      pool = new pg.Pool(config);\n\napp.get(\"search\", function handler(req, res) {\n  // GOOD: the category is escaped using mysql.escape\n  var query1 =\n    \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\" +\n    SqlString.escape(req.params.category) +\n    \"' ORDER BY PRICE\";\n  pool.query(query1, [], function(err, results) {\n    // process results\n  });\n});\n\n```\n\n## Example\nIn the following example, an express handler attempts to delete a single document from a MongoDB collection. The document to be deleted is identified by its `_id` field, which is constructed from user input. The user input may contain a query object, so this code is vulnerable to a NoSQL injection attack.\n\n\n```javascript\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst Todo = mongoose.model(\n  \"Todo\",\n  new mongoose.Schema({ text: { type: String } }, { timestamps: true })\n);\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: false }));\n\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n\n  await Todo.deleteOne({ _id: id }); // BAD: id might be an object with special properties\n\n  res.json({ status: \"ok\" });\n});\n\n```\nTo fix this vulnerability, we can use the `$eq` operator to ensure that the user input is interpreted as a literal value and not as a query object:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  await Todo.deleteOne({ _id: { $eq: id } }); // GOOD: using $eq operator for the comparison\n\n  res.json({ status: \"ok\" });\n});\n```\nAlternatively check that the user input is a literal value and not a query object before using it:\n\n\n```javascript\napp.delete(\"/api/delete\", async (req, res) => {\n  let id = req.body.id;\n  if (typeof id !== \"string\") {\n    res.status(400).json({ status: \"error\" });\n    return;\n  }\n  await Todo.deleteOne({ _id: id }); // GOOD: id is guaranteed to be a string\n\n  res.json({ status: \"ok\" });\n});\n\n```\n\n## References\n* Wikipedia: [SQL injection](https://en.wikipedia.org/wiki/SQL_injection).\n* MongoDB: [$eq operator](https://docs.mongodb.com/manual/reference/operator/query/eq).\n* OWASP: [NoSQL injection](https://owasp.org/www-pdf-archive/GOD16-NOSQL.pdf).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n* Common Weakness Enumeration: [CWE-90](https://cwe.mitre.org/data/definitions/90.html).\n* Common Weakness Enumeration: [CWE-943](https://cwe.mitre.org/data/definitions/943.html).\n",
+      "security_severity_level": "high"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "This query object depends on a user-provided value."
+      },
+      "location": {
+        "path": "backend/services/tokenService.js",
+        "start_line": 76,
+        "end_line": 76,
+        "start_column": 36,
+        "end_column": 42
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/85/instances",
+    "dismissal_approved_by": null
+  },
+  {
+    "number": 6,
+    "created_at": "2025-06-09T06:48:34Z",
+    "updated_at": "2025-06-09T06:48:34Z",
+    "url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/6",
+    "html_url": "https://github.com/J-nakawatari/charactier-ai/security/code-scanning/6",
+    "state": "open",
+    "fixed_at": null,
+    "dismissed_by": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "dismissed_comment": null,
+    "rule": {
+      "id": "js/xss-through-exception",
+      "severity": "warning",
+      "description": "Exception text reinterpreted as HTML",
+      "name": "js/xss-through-exception",
+      "tags": [
+        "external/cwe/cwe-079",
+        "external/cwe/cwe-116",
+        "security"
+      ],
+      "full_description": "Reinterpreting text from an exception as HTML can lead to a cross-site scripting vulnerability.",
+      "help": "# Exception text reinterpreted as HTML\nDirectly writing error messages to a webpage without sanitization allows for a cross-site scripting vulnerability if parts of the error message can be influenced by a user.\n\n\n## Recommendation\nTo guard against cross-site scripting, consider using contextual output encoding/escaping before writing user input to the page, or one of the other solutions that are mentioned in the references.\n\n\n## Example\nThe following example shows an exception being written directly to the document, and this exception can potentially be influenced by the page URL, leaving the website vulnerable to cross-site scripting.\n\n\n```javascript\nfunction setLanguageOptions() {\n    var href = document.location.href,\n        deflt = href.substring(href.indexOf(\"default=\")+8);\n    \n    try {\n        var parsed = unknownParseFunction(deflt); \n    } catch(e) {\n        document.write(\"Had an error: \" + e + \".\");\n    }\n}\n\n```\n\n## Example\nThis second example shows an input being validated using the JSON schema validator `ajv`, and in case of an error, the error message is sent directly back in the response.\n\n\n```javascript\nimport express from 'express';\nimport Ajv from 'ajv';\n\nlet app = express();\nlet ajv = new Ajv();\n\najv.addSchema({type: 'object', additionalProperties: {type: 'number'}}, 'pollData');\n\napp.post('/polldata', (req, res) => {\n    if (!ajv.validate('pollData', req.body)) {\n        res.send(ajv.errorsText());\n    }\n});\n\n```\nThis is unsafe, because the error message can contain parts of the input. For example, the input `{'<img src=x onerror=alert(1)>': 'foo'}` will generate the error `data/<img src=x onerror=alert(1)> should be number`, causing reflected XSS.\n\n\n## References\n* OWASP: [DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html).\n* OWASP: [XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html).\n* OWASP [DOM Based XSS](https://www.owasp.org/index.php/DOM_Based_XSS).\n* OWASP [Types of Cross-Site Scripting](https://www.owasp.org/index.php/Types_of_Cross-Site_Scripting).\n* Wikipedia: [Cross-site scripting](http://en.wikipedia.org/wiki/Cross-site_scripting).\n* Common Weakness Enumeration: [CWE-79](https://cwe.mitre.org/data/definitions/79.html).\n* Common Weakness Enumeration: [CWE-116](https://cwe.mitre.org/data/definitions/116.html).\n",
+      "security_severity_level": "medium"
+    },
+    "tool": {
+      "name": "CodeQL",
+      "guid": null,
+      "version": "2.22.1"
+    },
+    "most_recent_instance": {
+      "ref": "refs/heads/main",
+      "analysis_key": "dynamic/github-code-scanning/codeql:analyze",
+      "environment": "{\"build-mode\":\"none\",\"category\":\"/language:javascript-typescript\",\"language\":\"javascript-typescript\",\"runner\":\"[\\\"ubuntu-latest\\\"]\"}",
+      "category": "/language:javascript-typescript",
+      "state": "open",
+      "commit_sha": "ddca38a934964742f5616507593921d67ff45a0c",
+      "message": {
+        "text": "Exception text is reinterpreted as HTML without escaping meta-characters.\nException text is reinterpreted as HTML without escaping meta-characters."
+      },
+      "location": {
+        "path": "backend/webhooks/stripe.js",
+        "start_line": 65,
+        "end_line": 65,
+        "start_column": 33,
+        "end_column": 66
+      },
+      "classifications": []
+    },
+    "instances_url": "https://api.github.com/repos/J-nakawatari/charactier-ai/code-scanning/alerts/6/instances",
+    "dismissal_approved_by": null
+  }
+]

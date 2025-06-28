@@ -44,6 +44,11 @@ class TokenService {
    */
   static async grantTokens(userId, stripeSessionId, purchaseAmountYen, model = 'gpt-4o-mini') {
     try {
+      // userIdの検証
+      if (!userId || typeof userId !== 'string') {
+        throw new Error('Invalid userId');
+      }
+      
       // 1. 付与トークン数を計算
       const tokensToGive = await this.calculateTokensToGive(purchaseAmountYen, model);
       
@@ -73,9 +78,15 @@ class TokenService {
       await tokenPack.save();
       
       // 4. User.tokenBalance を更新
-      await User.findByIdAndUpdate(userId, {
-        $inc: { tokenBalance: tokensToGive }
-      });
+      await User.findByIdAndUpdate(
+        userId, 
+        { $inc: { tokenBalance: tokensToGive } },
+        { 
+          new: true,
+          runValidators: true,
+          strict: true
+        }
+      );
       
       console.log(`✅ ユーザー ${userId} に ${tokensToGive} トークンを付与しました`);
       console.log(`💳 Stripeセッション: ${stripeSessionId}`);
@@ -191,6 +202,11 @@ class TokenService {
    */
   static async getUserTokenBalance(userId) {
     try {
+      // userIdの検証
+      if (!userId || typeof userId !== 'string') {
+        return 0;
+      }
+      
       const user = await User.findById(userId).select('tokenBalance');
       return user ? user.tokenBalance : 0;
     } catch (error) {

@@ -77,7 +77,7 @@ router.get('/', generalRateLimit, async (req: AuthRequest, res: Response) => {
       currentModel: process.env.OPENAI_MODEL || 'gpt-4o-mini'
     });
   } catch (error) {
-    console.error('❌ Models取得エラー:', error);
+    log.error('Models取得エラー', error);
     res.status(500).json({ error: 'Failed to get models' });
   }
 });
@@ -102,7 +102,7 @@ router.get('/current', adminRateLimit, authenticateToken, authenticateAdmin, asy
       }
     });
   } catch (error) {
-    console.error('❌ Current model取得エラー:', error);
+    log.error('Current model取得エラー', error);
     res.status(500).json({ error: 'Failed to get current model' });
   }
 });
@@ -127,7 +127,7 @@ router.post('/set-model', adminRateLimit, authenticateToken, authenticateAdmin, 
     // 環境変数を更新（実際のアプリケーションでは再起動が必要）
     process.env.OPENAI_MODEL = model;
     
-    console.log(`🔄 Model changed to: ${model} by admin`);
+    log.info('Model changed', { model, adminId: req.admin?._id });
     
     res.json({
       success: true,
@@ -137,7 +137,7 @@ router.post('/set-model', adminRateLimit, authenticateToken, authenticateAdmin, 
       note: 'アプリケーションの再起動が推奨されます'
     });
   } catch (error) {
-    console.error('❌ Model変更エラー:', error);
+    log.error('Model変更エラー', error);
     res.status(500).json({ error: 'Failed to change model' });
   }
 });
@@ -174,7 +174,7 @@ router.post('/simulate', adminRateLimit, authenticateToken, authenticateAdmin, a
       }
     });
   } catch (error) {
-    console.error('❌ Simulation エラー:', error);
+    log.error('Simulation エラー', error);
     res.status(500).json({ error: 'Failed to simulate' });
   }
 });
