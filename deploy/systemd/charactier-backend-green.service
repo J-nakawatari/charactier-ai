@@ -1,0 +1,25 @@
+[Unit]
+Description=Charactier AI Backend (Green)
+After=network.target mongodb.service
+
+[Service]
+Type=simple
+User=jun
+WorkingDirectory=/var/www/charactier-ai/backend
+Environment="NODE_ENV=production"
+Environment="PORT=5001"
+ExecStart=/usr/bin/node /var/www/charactier-ai/backend/dist/index.js
+ExecReload=/bin/kill -USR2 $MAINPID
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=charactier-backend-green
+
+# Graceful shutdown
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
