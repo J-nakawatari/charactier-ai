@@ -131,8 +131,8 @@ export default function ServerHealthWidget() {
 
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">メモリ使用率</span>
-          <span className={`text-sm font-medium ${health && health.memoryUsage.percentage > 80 ? 'text-yellow-600' : 'text-gray-900'}`}>
-            {health ? `${health.memoryUsage.percentage.toFixed(1)}%` : '-'}
+          <span className={`text-sm font-medium ${health && health.memoryUsage && health.memoryUsage.percentage > 80 ? 'text-yellow-600' : 'text-gray-900'}`}>
+            {health && health.memoryUsage ? `${health.memoryUsage.percentage.toFixed(1)}%` : '-'}
           </span>
         </div>
 
