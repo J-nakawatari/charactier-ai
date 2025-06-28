@@ -96,7 +96,7 @@ export function getRefreshCookieConfig(isProduction: boolean = process.env.NODE_
     httpOnly: true, // リフレッシュトークンは常にhttpOnly
     secure: isProduction,
     sameSite: flags.CSRF_SAMESITE_STRICT ? 'strict' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
+    maxAge: 14 * 24 * 60 * 60 * 1000, // 14日間
     path: '/'
   };
   

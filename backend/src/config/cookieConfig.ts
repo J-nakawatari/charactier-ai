@@ -35,7 +35,7 @@ export const getAccessTokenCookieOptions = (isProduction: boolean = process.env.
 // リフレッシュトークン用Cookie設定
 export const getRefreshTokenCookieOptions = (isProduction: boolean = process.env.NODE_ENV === 'production'): CookieOptions => ({
   ...getBaseCookieOptions(isProduction),
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
+  maxAge: 14 * 24 * 60 * 60 * 1000, // 14日間
   httpOnly: true, // 必須
 });
 

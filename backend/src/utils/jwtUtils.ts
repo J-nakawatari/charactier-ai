@@ -63,7 +63,7 @@ export function generateCompactAccessToken(
 export function generateCompactRefreshToken(
   userId: string,
   type: 'user' | 'admin' = 'user',
-  expiresIn: string = '7d'
+  expiresIn: string = '14d'
 ): string {
   const payload: CompactTokenPayload = {
     id: userId,
