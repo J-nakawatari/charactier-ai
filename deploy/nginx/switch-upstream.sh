@@ -15,7 +15,7 @@ print_red() { echo -e "\033[31m$1\033[0m"; }
 # 現在のアクティブポートを確認
 get_active_port() {
     # backendブロック内のserverディレクティブのみを取得
-    sed -n '/upstream backend/,/^}/p' "$NGINX_CONF" | grep -E "^\s*server\s+127\.0\.0\.1:" | grep -v "^\s*#" | head -1 | grep -oE ":[0-9]+" | tr -d ":"
+    sed -n '/upstream backend/,/^}/p' "$NGINX_CONF" | grep -E "^\s*server\s+127\.0\.0\.1:[0-9]+" | grep -v "^\s*#" | head -1 | sed 's/.*:\([0-9]\+\).*/\1/'
 }
 
 # バックアップディレクトリ作成
