@@ -41,7 +41,7 @@ export function generateCompactAccessToken(
   const token = jwt.sign(payload, secret, { 
     expiresIn,
     algorithm: 'HS256' // デフォルトのHS256を明示
-  });
+  } as jwt.SignOptions);
   
   // トークンサイズをログ
   log.debug('Generated compact access token', {
@@ -74,7 +74,7 @@ export function generateCompactRefreshToken(
   const token = jwt.sign(payload, refreshSecret, { 
     expiresIn,
     algorithm: 'HS256'
-  });
+  } as jwt.SignOptions);
   
   log.debug('Generated compact refresh token', {
     userId,
