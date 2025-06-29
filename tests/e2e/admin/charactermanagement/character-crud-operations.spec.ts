@@ -12,23 +12,27 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     const page = await context.newPage();
     
     // ログイン
-    await page.goto('/admin/login');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[type="email"]', adminEmail);
-    await page.fill('input[type="password"]', adminPassword);
-    await page.click('button[type="submit"]');
+    await newPage.goto('/admin/login');
+    await newPage.waitForLoadState('networkidle');
+    await newPage.fill('input[type="email"]', adminEmail);
+    await newPage.fill('input[type="password"]', adminPassword);
+    await newPage.click('button[type="submit"]');
     
     // ダッシュボードへの遷移を待つ
-    await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
-    await page.waitForTimeout(3000); // 十分な待機
+    await newPage.waitForURL('**/admin/dashboard', { timeout: 15000 });
+    await newPage.waitForTimeout(5000); // 十分な待機（重要）
     
-    // キャラクター管理ページへ
-    await page.goto('/admin/characters');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    // ページを閉じる（debug-character-formと同じアプローチ）
+    await newPage.close();
+    
+    // 新しいページでキャラクター管理ページを開く
+    const newPage = await context.newPage();
+    await newPage.goto('/admin/characters');
+    await newPage.waitForLoadState('networkidle');
+    await newPage.waitForTimeout(2000);
     
     // 新規作成ボタンをクリック
-    await page.locator('button:has-text("新規作成"), a:has-text("新規作成")').click();
+    await newPage.locator('button:has-text("新規作成"), a:has-text("新規作成")').click();
     
     // 基本情報の入力
     const timestamp = Date.now();
@@ -47,7 +51,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     let nameJaInput = null;
     for (const selector of nameJaSelectors) {
       try {
-        const input = page.locator(selector).first();
+        const input = newPage.locator(selector).first();
         if (await input.isVisible({ timeout: 1000 })) {
           nameJaInput = input;
           break;
@@ -59,7 +63,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     
     if (!nameJaInput) {
       // 最後の手段：最初のテキスト入力フィールドを使用
-      nameJaInput = page.locator('input[type="text"]').first();
+      nameJaInput = newPage.locator('input[type="text"]').first();
     }
     
     await nameJaInput.fill(characterName);
@@ -111,10 +115,10 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     const priceTypeSelect = page.locator('select[name="priceType"], input[name="priceType"][type="radio"], select[name="characterAccessType"]');
     if (await priceTypeSelect.first().isVisible()) {
       // 有料を選択
-      await page.locator('input[value="paid"], option[value="paid"]').click();
+      await newPage.locator('input[value="paid"], option[value="paid"]').click();
       
       // 価格設定
-      await page.locator('input[name="price"]').fill('1000');
+      await newPage.locator('input[name="price"]').fill('1000');
     }
     
     // AIモデルの選択
@@ -137,7 +141,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     await expect(saveButton).toBeEnabled({ timeout: 5000 });
     
     // クリック前にネットワークアイドルを待つ
-    await page.waitForLoadState('networkidle');
+    await newPage.waitForLoadState('networkidle');
     
     // 保存ボタンをクリック
     await saveButton.click();
@@ -145,7 +149,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     // 成功の指標を待つ（より柔軟に）
     try {
       // まず少し待つ
-      await page.waitForTimeout(2000);
+      await newPage.waitForTimeout(2000);
       
       // 現在のURLを確認
       const currentUrl = page.url();
@@ -156,15 +160,15 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
         // URLがキャラクター一覧または編集ページ
         currentUrl.includes('/admin/characters') ||
         // 成功メッセージが表示されている
-        await page.locator('.toast-success, .success-message').isVisible().catch(() => false) ||
+        await newPage.locator('.toast-success, .success-message').isVisible().catch(() => false) ||
         // 作成したキャラクター名が表示されている
-        await page.locator(`text="${characterName}"`).isVisible().catch(() => false);
+        await newPage.locator(`text="${characterName}"`).isVisible().catch(() => false);
       
       if (isSuccess) {
         console.log(`キャラクター「${characterName}」が正常に作成されました`);
       } else {
         // エラーメッセージを探す
-        const errorMessage = await page.locator('.error-message, .toast-error, [role="alert"]:has-text("エラー")').textContent().catch(() => null);
+        const errorMessage = await newPage.locator('.error-message, .toast-error, [role="alert"]:has-text("エラー")').textContent().catch(() => null);
         if (errorMessage) {
           throw new Error(`キャラクター作成エラー: ${errorMessage}`);
         }
@@ -172,7 +176,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       }
     } catch (error) {
       console.error('キャラクター作成テストエラー:', error);
-      await page.screenshot({ path: 'character-creation-error.png' });
+      await newPage.screenshot({ path: 'character-creation-error.png' });
       throw error;
     } finally {
       // クリーンアップ
@@ -181,15 +185,15 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
   });
 
   test('既存キャラクターの編集', async ({ page }) => {
-    await page.goto('/admin/characters');
-    await page.waitForLoadState('networkidle');
+    await newPage.goto('/admin/characters');
+    await newPage.waitForLoadState('networkidle');
     
     // 最初のキャラクターの編集ボタンをクリック
     const firstEditButton = page.locator('button:has-text("編集"), a:has-text("編集")').first();
     await firstEditButton.click();
     
     // 編集フォームが表示されることを確認
-    await page.waitForSelector('input[name="name.ja"], input[name="nameJa"]');
+    await newPage.waitForSelector('input[name="name.ja"], input[name="nameJa"]');
     
     // 現在の値を取得
     const nameInput = page.locator('input[name="name.ja"], input[name="nameJa"]');
@@ -212,10 +216,10 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     await promptInput.fill(`${currentPrompt}\n更新時刻: ${new Date().toISOString()}`);
     
     // 価格タイプの変更テスト
-    const currentPriceType = await page.locator('input[name="priceType"]:checked').getAttribute('value');
+    const currentPriceType = await newPage.locator('input[name="priceType"]:checked').getAttribute('value');
     if (currentPriceType === 'free') {
-      await page.locator('input[value="paid"]').click();
-      await page.locator('input[name="price"]').fill('500');
+      await newPage.locator('input[value="paid"]').click();
+      await newPage.locator('input[name="price"]').fill('500');
     }
     
     // 保存
@@ -223,7 +227,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       response => response.url().includes('/api/v1/admin/characters') && response.request().method() === 'PUT'
     );
     
-    await page.locator('button:has-text("更新"), button:has-text("保存")').click();
+    await newPage.locator('button:has-text("更新"), button:has-text("保存")').click();
     
     const response = await updateResponse;
     expect(response.status()).toBe(200);
@@ -232,8 +236,8 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
   });
 
   test('キャラクターの削除', async ({ page }) => {
-    await page.goto('/admin/characters');
-    await page.waitForLoadState('networkidle');
+    await newPage.goto('/admin/characters');
+    await newPage.waitForLoadState('networkidle');
     
     // テスト用キャラクターを探す（最後のキャラクター）
     const characterRows = page.locator('tbody tr, .character-row');
@@ -260,13 +264,13 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
         response => response.url().includes('/api/v1/admin/characters') && response.request().method() === 'DELETE'
       );
       
-      await page.locator('button:has-text("削除"), button:has-text("確認")').last().click();
+      await newPage.locator('button:has-text("削除"), button:has-text("確認")').last().click();
       
       const response = await deleteResponse;
       expect(response.status()).toBe(200);
       
       // キャラクターがリストから消えたことを確認
-      await page.waitForTimeout(1000);
+      await newPage.waitForTimeout(1000);
       const deletedCharacter = page.locator(`text="${characterName}"`);
       await expect(deletedCharacter).not.toBeVisible();
       
@@ -275,8 +279,8 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
   });
 
   test('キャラクターのステータス管理', async ({ page }) => {
-    await page.goto('/admin/characters');
-    await page.waitForLoadState('networkidle');
+    await newPage.goto('/admin/characters');
+    await newPage.waitForLoadState('networkidle');
     
     // アクティブなキャラクターを探す
     const activeRow = page.locator('tr:has-text("公開中"), tr:has-text("Active"), tr:has(.status-active)').first();
@@ -291,11 +295,11 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       // 確認ダイアログの処理
       const confirmDialog = page.locator('.confirm-dialog');
       if (await confirmDialog.isVisible({ timeout: 1000 })) {
-        await page.locator('button:has-text("確認")').click();
+        await newPage.locator('button:has-text("確認")').click();
       }
       
       // ステータスが変更されたことを確認
-      await page.waitForTimeout(1000);
+      await newPage.waitForTimeout(1000);
       await expect(activeRow).toContainText('非公開');
       
       // 再度公開する
@@ -303,7 +307,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       await publishButton.click();
       
       if (await confirmDialog.isVisible({ timeout: 1000 })) {
-        await page.locator('button:has-text("確認")').click();
+        await newPage.locator('button:has-text("確認")').click();
       }
       
       console.log(`キャラクター「${characterName}」のステータス切り替えが正常に動作しました`);
@@ -311,11 +315,11 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
   });
 
   test('キャラクター画像の管理', async ({ page }) => {
-    await page.goto('/admin/characters');
-    await page.waitForLoadState('networkidle');
+    await newPage.goto('/admin/characters');
+    await newPage.waitForLoadState('networkidle');
     
     // 編集ボタンをクリック
-    await page.locator('button:has-text("編集")').first().click();
+    await newPage.locator('button:has-text("編集")').first().click();
     
     // 画像管理セクションを探す
     const imageSection = page.locator('.image-management, .character-images');
@@ -343,8 +347,8 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
   });
 
   test('キャラクターの一括操作', async ({ page }) => {
-    await page.goto('/admin/characters');
-    await page.waitForLoadState('networkidle');
+    await newPage.goto('/admin/characters');
+    await newPage.waitForLoadState('networkidle');
     
     // チェックボックスで複数選択
     const checkboxes = page.locator('input[type="checkbox"][name="characterIds"], .character-checkbox');
@@ -359,16 +363,16 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       await expect(bulkActions).toBeVisible();
       
       // 一括非公開のテスト
-      if (await page.locator('option[value="unpublish"]').isVisible()) {
+      if (await newPage.locator('option[value="unpublish"]').isVisible()) {
         await bulkActions.selectOption('unpublish');
         
         // 実行ボタン
-        await page.locator('button:has-text("実行")').click();
+        await newPage.locator('button:has-text("実行")').click();
         
         // 確認ダイアログ
         const confirmDialog = page.locator('.confirm-dialog');
         if (await confirmDialog.isVisible()) {
-          await page.locator('button:has-text("確認")').click();
+          await newPage.locator('button:has-text("確認")').click();
         }
         
         console.log('一括操作（非公開）が実行されました');
@@ -377,14 +381,14 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
   });
 
   test('キャラクター検索とフィルタリング', async ({ page }) => {
-    await page.goto('/admin/characters');
-    await page.waitForLoadState('networkidle');
+    await newPage.goto('/admin/characters');
+    await newPage.waitForLoadState('networkidle');
     
     // 検索機能
     const searchInput = page.locator('input[placeholder*="検索"], input[type="search"]');
     if (await searchInput.isVisible()) {
       await searchInput.fill('テスト');
-      await page.waitForTimeout(500); // デバウンス待機
+      await newPage.waitForTimeout(500); // デバウンス待機
       
       // 検索結果の確認
       const results = page.locator('tbody tr, .character-row');
@@ -396,20 +400,20 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     const priceFilter = page.locator('select[name="priceType"], input[name="filterPriceType"]');
     if (await priceFilter.first().isVisible()) {
       // 有料のみ表示
-      await page.locator('[value="paid"]').click();
-      await page.waitForTimeout(500);
+      await newPage.locator('[value="paid"]').click();
+      await newPage.waitForTimeout(500);
       
       // 無料のみ表示
-      await page.locator('[value="free"]').click();
-      await page.waitForTimeout(500);
+      await newPage.locator('[value="free"]').click();
+      await newPage.waitForTimeout(500);
     }
     
     // ステータスフィルター
     const statusFilter = page.locator('select[name="status"], input[name="filterStatus"]');
     if (await statusFilter.first().isVisible()) {
       // 公開中のみ
-      await page.locator('[value="active"]').click();
-      await page.waitForTimeout(500);
+      await newPage.locator('[value="active"]').click();
+      await newPage.waitForTimeout(500);
     }
   });
 });
