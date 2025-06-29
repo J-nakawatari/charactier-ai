@@ -80,7 +80,7 @@ next-env.d.ts
 data/
 
 # Documentation - ドキュメントフォルダ全体
-docs/
+# docs/  # コメントアウト: testing-checklist.mdが必要なため
 
 # Upload files - アップロードされた画像ファイル
 uploads/*
