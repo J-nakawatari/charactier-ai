@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { TermsContent } from '@/components/legal/TermsContent';
 
 interface TermsModalProps {
   isOpen: boolean;
@@ -47,94 +48,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
         <div className="max-w-4xl mx-auto p-6">
           <p className="text-sm text-gray-500 mb-8">{t('lastUpdated')}</p>
           
-          <div className="prose prose-gray max-w-none">
-            <p className="text-gray-700 mb-6 whitespace-pre-wrap">
-              {t('introduction')}
-            </p>
-
-            <h3 className="text-xl font-semibold mb-4">{t('article1.title')}</h3>
-            <div className="text-gray-700 mb-6">
-              <p className="mb-2">{t('article1.content1')}</p>
-              <p>{t('article1.content2')}</p>
-            </div>
-
-            <h3 className="text-xl font-semibold mb-4">{t('article2.title')}</h3>
-            <ul className="list-disc pl-6 text-gray-700 mb-6">
-              <li>{t('article2.item1')}</li>
-              <li>{t('article2.item2')}</li>
-            </ul>
-
-            <h3 className="text-xl font-semibold mb-4">{t('article3.title')}</h3>
-            <ol className="list-decimal pl-6 text-gray-700 mb-6">
-              <li>{t('article3.item1')}</li>
-              <li>{t('article3.item2')}</li>
-              <li>{t('article3.item3')}</li>
-              <li>{t('article3.item4')}</li>
-            </ol>
-
-            <h3 className="text-xl font-semibold mb-4">{t('article4.title')}</h3>
-            <ol className="list-decimal pl-6 text-gray-700 mb-6">
-              <li>{t('article4.item1')}</li>
-              <li>{t('article4.item2')}</li>
-              <li>{t('article4.item3')}</li>
-            </ol>
-
-            <h3 className="text-xl font-semibold mb-4">{t('article5.title')}</h3>
-            <ol className="list-decimal pl-6 text-gray-700 mb-6">
-              <li>{t('article5.item1')}</li>
-              <li>{t('article5.item2')}</li>
-              <li>{t('article5.item3')}</li>
-            </ol>
-
-            <h3 className="text-xl font-semibold mb-4">{t('article6.title')}</h3>
-            <p className="text-gray-700 mb-2">{t('article6.intro')}</p>
-            <ol className="list-decimal pl-6 text-gray-700 mb-6">
-              <li>{t('article6.item1')}</li>
-              <li>{t('article6.item2')}</li>
-              <li>{t('article6.item3')}</li>
-              <li>{t('article6.item4')}</li>
-              <li>{t('article6.item5')}</li>
-            </ol>
-
-            <h3 className="text-xl font-semibold mb-4">{t('article7.title')}</h3>
-            <ol className="list-decimal pl-6 text-gray-700 mb-6">
-              <li>{t('article7.item1')}</li>
-              <li className="font-bold">{t('article7.item2')}</li>
-              <li>{t('article7.item3')}</li>
-            </ol>
-
-            <h3 className="text-xl font-semibold mb-4">{t('article8.title')}</h3>
-            <ol className="list-decimal pl-6 text-gray-700 mb-6">
-              <li>{t('article8.item1')}</li>
-              <li>{t('article8.item2')}</li>
-              <li>{t('article8.item3')}</li>
-            </ol>
-
-            <h3 className="text-xl font-semibold mb-4">{t('article9.title')}</h3>
-            <p className="text-gray-700 mb-6 whitespace-pre-wrap">
-              {t('article9.content')}
-            </p>
-
-            <h3 className="text-xl font-semibold mb-4">{t('article10.title')}</h3>
-            <p className="text-gray-700 mb-6 whitespace-pre-wrap">
-              {t('article10.content')}
-            </p>
-
-            <h3 className="text-xl font-semibold mb-4">{t('article11.title')}</h3>
-            <p className="text-gray-700 mb-6 whitespace-pre-wrap">
-              {t('article11.content')}
-            </p>
-
-            <h3 className="text-xl font-semibold mb-4">{t('article12.title')}</h3>
-            <p className="text-gray-700 mb-6 whitespace-pre-wrap">
-              {t('article12.content')}
-            </p>
-
-            <h3 className="text-xl font-semibold mb-4">{t('article13.title')}</h3>
-            <p className="text-gray-700 mb-6 whitespace-pre-wrap">
-              {t('article13.content')}
-            </p>
-          </div>
+          <TermsContent />
         </div>
         
         <div className="sticky bottom-0 p-6 bg-white border-t">

@@ -4,10 +4,10 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { TermsContent } from '@/components/legal/TermsContent';
+import { CommercialContent } from '@/components/legal/CommercialContent';
 
-export default function TermsPage() {
-  const t = useTranslations('sidebar.termsModal');
+export default function CommercialPage() {
+  const t = useTranslations('sidebar.commercialModal');
   const params = useParams();
   const locale = params?.locale || 'ja';
   
@@ -29,7 +29,7 @@ export default function TermsPage() {
 
         {/* コンテンツ */}
         <div className="bg-white rounded-lg shadow-sm p-8">
-          <TermsContent />
+          <CommercialContent />
         </div>
       </div>
     </div>
