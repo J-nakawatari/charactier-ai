@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible';
 import log from '../utils/logger';
+import { APIErrorModel } from '../models/APIError';
 
 // レート制限の設定
 export const rateLimitConfigs = {
@@ -104,10 +105,41 @@ export function createRateLimiter(configName: keyof typeof rateLimitConfigs) {
         res.setHeader('X-RateLimit-Reset', new Date(Date.now() + error.msBeforeNext).toISOString());
         res.setHeader('Retry-After', Math.round(error.msBeforeNext / 1000));
         
+        const ip = req.headers['x-real-ip'] as string || 
+                   req.headers['x-forwarded-for'] as string || 
+                   req.ip || 
+                   'unknown';
+        
         log.warn(`Rate limit exceeded for ${configName}`, {
-          ip: req.ip,
+          ip,
           path: req.path,
-          userId: (req as any).user?.userId
+          userId: (req as any).user?.userId,
+          remaining: error.remainingPoints,
+          resetIn: error.msBeforeNext
+        });
+        
+        // APIエラーをログに記録
+        (APIErrorModel as any).logError({
+          endpoint: req.originalUrl || req.url,
+          method: req.method,
+          statusCode: 429,
+          errorType: 'rate_limit',
+          errorMessage: 'Too many requests',
+          errorCode: 'RATE_LIMIT_EXCEEDED',
+          userAgent: req.headers['user-agent'] || 'unknown',
+          ip,
+          userId: (req as any).user?.userId || null,
+          requestBody: {},
+          responseTime: 0,
+          stackTrace: null,
+          metadata: {
+            configName,
+            limit: config.points,
+            remaining: error.remainingPoints,
+            resetIn: Math.round(error.msBeforeNext / 1000)
+          }
+        }).catch((logError: Error) => {
+          log.error('Failed to log rate limit error:', logError);
         });
         
         res.status(429).json({

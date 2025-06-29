@@ -960,6 +960,31 @@
           "label": "サブスクリプション",
           "content": "本サービスには定期購読（サブスクリプション）はありません"
         }
+      },
+      "privacyModal": {
+        "section1": {
+          "content": "TODO_翻訳"
+        },
+        "section2": {
+          "item5": "TODO_翻訳",
+          "item6": "TODO_翻訳"
+        },
+        "section3": {
+          "item1": "TODO_翻訳",
+          "item2": "TODO_翻訳",
+          "item3": "TODO_翻訳",
+          "note": "TODO_翻訳"
+        },
+        "section4": {
+          "content": "TODO_翻訳"
+        },
+        "section5": {
+          "content": "TODO_翻訳"
+        },
+        "section8": {
+          "title": "TODO_翻訳",
+          "content": "TODO_翻訳"
+        }
       }
     }
   }
