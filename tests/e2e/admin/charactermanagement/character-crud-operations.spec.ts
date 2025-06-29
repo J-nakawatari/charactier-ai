@@ -32,8 +32,8 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     await newPage.waitForLoadState('networkidle');
     await newPage.waitForTimeout(2000);
     
-    // 新規作成ボタンをクリック
-    const newButton = newPage.locator('button:has-text("新規作成"), a:has-text("新規作成")').first();
+    // 新規作成ボタンをクリック（右上の紫色のボタン）
+    const newButton = newPage.locator('button:has-text("新規作成")').first();
     
     // ボタンが見つからない場合は直接URLに移動
     if (await newButton.isVisible()) {
@@ -322,12 +322,12 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
         await newPage.waitForTimeout(2000);
       }
       
-      // 編集ボタンを探す（複数のパターン）
+      // 編集ボタンを探す（鉛筆アイコン）
       const editButtonSelectors = [
+        'button[title*="編集"]',
         'a[href*="/edit"]',
-        'button:has-text("編集")',
-        'a:has-text("編集")',
-        '[data-action="edit"]',
+        'button svg[class*="edit"]',
+        'button:has(svg)',
         '.edit-button'
       ];
       
@@ -347,12 +347,12 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       }
       
       if (!editButtonClicked) {
-        // テーブル内のリンクを直接探す
-        const firstRow = newPage.locator('tbody tr, .character-row').first();
-        const editLink = firstRow.locator('a:has-text("編集"), button:has-text("編集")');
+        // テーブル内のリンクを直接探す（操作列の編集アイコン）
+        const firstRow = newPage.locator('tbody tr').first();
+        const editLink = firstRow.locator('td:last-child button').first(); // 操作列の最初のボタン
         if (await editLink.isVisible()) {
           await editLink.click();
-          console.log('✅ 行内の編集リンククリック');
+          console.log('✅ 行内の編集アイコンクリック');
         } else {
           throw new Error('編集ボタンが見つかりません');
         }
@@ -555,13 +555,13 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
         console.log(`🎯 最後のキャラクターを削除: ${characterName}`);
       }
       
-      // 削除ボタンを探す
+      // 削除ボタンを探す（ゴミ箱アイコン）
       const deleteButtonSelectors = [
+        'button[title*="削除"]',
+        'button svg[class*="trash"]',
         'button:has-text("削除")',
-        'button:has-text("Delete")',
         '[data-action="delete"]',
-        '.delete-button',
-        'button[aria-label="削除"]'
+        '.delete-button'
       ];
       
       let deleteButton = null;
