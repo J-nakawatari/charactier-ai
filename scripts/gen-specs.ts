@@ -36,13 +36,14 @@ function parseChecklist(content: string): TestItem[] {
   let sectionPrefix = '';
   
   for (const line of lines) {
-    // セクション検出（## 🔍 ユーザー画面 など）
+    // セクション検出（## 🔍 ユーザー画面 (Frontend) など）
     const sectionMatch = line.match(/^##\s+[^\s]+\s+(.+?)(?:\s+\(.+\))?$/);
     if (sectionMatch) {
       currentSection = sectionMatch[1];
       sectionPrefix = currentSection === 'ユーザー画面' ? 'user' : 
                       currentSection === '管理画面' ? 'admin' : 
                       slugify(currentSection);
+      console.log('Found section:', currentSection, '-> prefix:', sectionPrefix);
       continue;
     }
     
@@ -50,6 +51,7 @@ function parseChecklist(content: string): TestItem[] {
     const groupMatch = line.match(/^###\s+\d+\.\s+(.+)$/);
     if (groupMatch) {
       currentGroup = groupMatch[1];
+      console.log('Found group:', currentGroup);
       continue;
     }
     
@@ -57,6 +59,7 @@ function parseChecklist(content: string): TestItem[] {
     const subGroupMatch = line.match(/^-\s+\[\s*\]\s+\*\*(.+?)\*\*$/);
     if (subGroupMatch) {
       currentSubGroup = subGroupMatch[1];
+      console.log('Found subgroup:', currentSubGroup);
       continue;
     }
     
@@ -64,6 +67,7 @@ function parseChecklist(content: string): TestItem[] {
     const itemMatch = line.match(/^\s+-\s+\[\s*\]\s+(.+)$/);
     if (itemMatch && currentGroup && currentSubGroup) {
       const title = itemMatch[1];
+      console.log('Found item:', title, 'in', currentGroup, '/', currentSubGroup);
       
       // IDを生成
       const groupSlug = slugify(currentGroup);
