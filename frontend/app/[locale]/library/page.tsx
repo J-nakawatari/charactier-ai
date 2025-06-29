@@ -253,6 +253,7 @@ export default function CharacterLibraryPage() {
     return selectedCharacter.galleryImages
       .filter(image => 
         userLevel >= image.unlockLevel &&
+        image.unlockLevel > 0 &&  // レベル0の画像を除外
         (searchTerm === '' || 
           image.title[locale as keyof typeof image.title]?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           image.description[locale as keyof typeof image.description]?.toLowerCase().includes(searchTerm.toLowerCase()) ||

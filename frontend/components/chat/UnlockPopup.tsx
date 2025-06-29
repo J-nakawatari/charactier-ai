@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { X, Star, Heart, Gift, Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useRouter, useParams } from 'next/navigation';
 
 interface UnlockPopupProps {
   level: number;
@@ -13,6 +14,8 @@ interface UnlockPopupProps {
 
 export function UnlockPopup({ level, illustration, characterName, onClose }: UnlockPopupProps) {
   const t = useTranslations('affinity');
+  const router = useRouter();
+  const params = useParams();
   const [isVisible, setIsVisible] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -138,8 +141,9 @@ export function UnlockPopup({ level, illustration, characterName, onClose }: Unl
             <button 
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105"
               onClick={() => {
-                // TODO: ギャラリーページへの遷移
-                console.log('Navigate to gallery');
+                // ライブラリページへ遷移
+                const locale = params.locale || 'ja';
+                router.push(`/${locale}/library`);
                 handleClose();
               }}
             >
