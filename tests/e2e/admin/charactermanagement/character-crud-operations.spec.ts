@@ -412,24 +412,37 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
         }
       }
       
-      // 編集ページに遷移したことを確認
+      // 編集ページへの遷移を確認
       await newPage.waitForLoadState('networkidle');
+      
+      // URLが編集ページに変わるのを待つ
+      await newPage.waitForURL('**/edit', { timeout: 10000 }).catch(async (e) => {
+        console.log('⚠️ 編集ページへの遷移に失敗しました');
+        console.log('現在のURL:', newPage.url());
+        
+        // 詳細ページにいる場合は、編集ボタンを探してクリック
+        const detailPageEditButton = newPage.locator('button:has-text("編集")').first();
+        if (await detailPageEditButton.isVisible()) {
+          console.log('📝 詳細ページの編集ボタンをクリック');
+          await detailPageEditButton.click();
+          await newPage.waitForLoadState('networkidle');
+        }
+      });
+      
       await newPage.waitForTimeout(3000);
       
       const editUrl = newPage.url();
-      console.log(`📍 編集ページURL: ${editUrl}`);
+      console.log(`📍 現在のURL: ${editUrl}`);
       
-      // 編集画面の要素を確認（スクリーンショットに基づく）
-      // 1. タイトル「キャラクター編集」を確認
-      const titleVisible = await newPage.locator('text="キャラクター編集"').isVisible().catch(() => false);
-      console.log(`📝 タイトル表示: ${titleVisible ? '✅' : '❌'}`);
+      // 編集画面かどうかを確認
+      if (!editUrl.includes('/edit')) {
+        console.log('❌ 編集ページではありません。詳細ページの可能性があります。');
+        await newPage.screenshot({ path: 'not-edit-page.png', fullPage: true });
+        throw new Error('編集ページへの遷移に失敗しました');
+      }
       
-      // 2. 言語タブを確認
-      const japaneseTab = await newPage.locator('button:has-text("日本語")').isVisible().catch(() => false);
-      const englishTab = await newPage.locator('button:has-text("English")').isVisible().catch(() => false);
-      console.log(`🌏 言語タブ - 日本語: ${japaneseTab ? '✅' : '❌'}, English: ${englishTab ? '✅' : '❌'}`);
-      
-      // 3. ページが読み込まれるまで待機
+      // 編集画面の要素を確認
+      console.log('✅ 編集画面に到達しました');
       await newPage.waitForTimeout(2000);
       
       // デバッグ用スクリーンショット
