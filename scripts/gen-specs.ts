@@ -27,11 +27,11 @@ function slugify(text: string): string {
 
 // Markdownファイルを解析してテスト項目を抽出
 function parseChecklist(content: string): TestItem[] {
-  const lines = content.split('\n');
+  // Windows改行コード(\r\n)とUnix改行コード(\n)の両方に対応
+  const lines = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
   const items: TestItem[] = [];
   
-  console.log('Total lines in file:', lines.length);
-  console.log('First 5 lines:', lines.slice(0, 5));
+  // console.log('Total lines in file:', lines.length);
   
   let currentSection = '';
   let currentGroup = '';
@@ -46,7 +46,7 @@ function parseChecklist(content: string): TestItem[] {
       sectionPrefix = currentSection === 'ユーザー画面' ? 'user' : 
                       currentSection === '管理画面' ? 'admin' : 
                       slugify(currentSection);
-      console.log('Found section:', currentSection, '-> prefix:', sectionPrefix);
+      // console.log('Found section:', currentSection, '-> prefix:', sectionPrefix);
       continue;
     }
     
@@ -54,7 +54,7 @@ function parseChecklist(content: string): TestItem[] {
     const groupMatch = line.match(/^###\s+\d+\.\s+(.+)$/);
     if (groupMatch) {
       currentGroup = groupMatch[1];
-      console.log('Found group:', currentGroup);
+      // console.log('Found group:', currentGroup);
       continue;
     }
     
@@ -62,7 +62,7 @@ function parseChecklist(content: string): TestItem[] {
     const subGroupMatch = line.match(/^-\s+\[\s*\]\s+\*\*(.+?)\*\*$/);
     if (subGroupMatch) {
       currentSubGroup = subGroupMatch[1];
-      console.log('Found subgroup:', currentSubGroup);
+      // console.log('Found subgroup:', currentSubGroup);
       continue;
     }
     
@@ -70,7 +70,7 @@ function parseChecklist(content: string): TestItem[] {
     const itemMatch = line.match(/^\s+-\s+\[\s*\]\s+(.+)$/);
     if (itemMatch && currentGroup && currentSubGroup) {
       const title = itemMatch[1];
-      console.log('Found item:', title, 'in', currentGroup, '/', currentSubGroup);
+      // console.log('Found item:', title, 'in', currentGroup, '/', currentSubGroup);
       
       // IDを生成
       const groupSlug = slugify(currentGroup);
@@ -125,8 +125,7 @@ async function main() {
   }
   
   const content = fs.readFileSync(checklistPath, 'utf-8');
-  console.log('File read successfully, length:', content.length);
-  console.log('First 200 chars:', content.substring(0, 200));
+  // console.log('File read successfully, length:', content.length);
   
   const items = parseChecklist(content);
   
