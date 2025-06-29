@@ -26,6 +26,10 @@ test.describe('キャラクター作成フォームの検証', () => {
     try {
       await page.waitForURL('**/admin/dashboard', { timeout: 10000 });
       console.log('✅ ログイン成功');
+      
+      // ページが完全に読み込まれるのを待つ
+      await page.waitForLoadState('networkidle');
+      
     } catch (e) {
       console.log('⚠️ ダッシュボードへの遷移に失敗（データベース接続の問題の可能性）');
       // ログインページのエラーメッセージを確認
@@ -44,8 +48,10 @@ test.describe('キャラクター作成フォームの検証', () => {
       return; // テストを終了
     }
     
-    // キャラクター管理ページへ
+    // 少し待機してからキャラクター管理ページへ
+    await page.waitForTimeout(1000);
     await page.goto('/admin/characters/new');
+    await page.waitForLoadState('networkidle');
     
     // フォームの必須フィールドを確認
     const nameInput = page.locator('input[type="text"]').first();
