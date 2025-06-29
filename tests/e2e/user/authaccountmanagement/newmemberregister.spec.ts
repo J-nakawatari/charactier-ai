@@ -12,7 +12,7 @@ test.describe('authaccountmanagement - newmemberregister', () => {
     await page.locator('button[type="submit"]').click();
     
     // カスタムエラーメッセージが表示されることを確認
-    await expect(page.getByText('必須項目を入力してください')).toBeVisible();
+    await expect(page.getByText('必須項目を入力してください').first()).toBeVisible();
     
     // 複数のエラーメッセージが表示されていることを確認
     const errorMessages = await page.locator('text=必須項目を入力してください').count();
