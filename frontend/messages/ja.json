@@ -246,6 +246,74 @@
         "content": "本規約は日本法に準拠し、横浜地方裁判所を専属的合意管轄裁判所とします。"
       }
     },
+    "commercialModal": {
+      "title": "特定商取引法に基づく表記",
+      "lastUpdated": "最終更新日：2025年6月29日",
+      "introduction": "「Charactier AI」（以下「本サービス」）における特定商取引法に基づく表記は以下の通りです。",
+      "sections": {
+        "provider": {
+          "label": "販売事業者",
+          "content": "Charactier 運営事務局"
+        },
+        "manager": {
+          "label": "運営責任者",
+          "content": "中渡 純"
+        },
+        "contact": {
+          "label": "お問い合わせ先",
+          "content": "以下のフォームからお問い合わせください",
+          "url": "https://forms.gle/ZkYUQSmpqxrQaa4m8"
+        },
+        "price": {
+          "label": "販売価格",
+          "content": "各商品ページに記載（税込価格）"
+        },
+        "payment": {
+          "label": "支払方法",
+          "content": "クレジットカード（Visa, Mastercard, American Express, JCB, Diners Club, Discover）"
+        },
+        "delivery": {
+          "label": "商品の引渡し時期",
+          "content": "決済完了後、即時利用可能"
+        },
+        "timing": {
+          "label": "支払時期",
+          "content": "商品購入時に即時決済"
+        },
+        "refund": {
+          "label": "返品・キャンセル",
+          "content": "デジタルコンテンツの性質上、購入後の返品・返金は一切お受けできません"
+        },
+        "currency": {
+          "label": "表示通貨",
+          "content": "日本円（JPY）/ 米ドル（USD）"
+        },
+        "validity": {
+          "label": "サービス利用有効期限",
+          "content": "購入したトークン：無期限 / 購入したキャラクター：無期限"
+        },
+        "required": {
+          "label": "必要な費用",
+          "content": "商品代金以外の必要費用はありません（通信費等は利用者負担）"
+        },
+        "defect": {
+          "label": "瑕疵対応",
+          "content": "システム障害により利用できない場合は、復旧後に利用可能となります"
+        },
+        "special": {
+          "label": "特別な販売条件",
+          "content": "トークン残高が 0 の場合、一部機能が制限されます"
+        },
+        "support": {
+          "label": "サポート対応",
+          "content": "土日祝を除く 10:00-18:00（JST）にメールで返信"
+        },
+        "subscription": {
+          "label": "サブスクリプション",
+          "content": "本サービスには定期購読（サブスクリプション）はありません"
+        }
+      }
+    },
     "privacyModal": {
       "title": "プライバシーポリシー",
       "lastUpdated": "最終改定日：2025年6月29日",

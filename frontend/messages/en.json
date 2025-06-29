@@ -246,6 +246,74 @@
         "content": "These Terms are governed by Japanese law, and the Yokohama District Court shall have exclusive jurisdiction."
       }
     },
+    "commercialModal": {
+      "title": "Specified Commercial Transaction Act Disclosure",
+      "lastUpdated": "Last Updated: June 29, 2025",
+      "introduction": "The disclosure based on the Specified Commercial Transaction Act for 'Charactier AI' (hereinafter 'the Service') is as follows.",
+      "sections": {
+        "provider": {
+          "label": "Sales Business Operator",
+          "content": "Charactier Operations Office"
+        },
+        "manager": {
+          "label": "Operations Manager",
+          "content": "Jun Nakawatari"
+        },
+        "contact": {
+          "label": "Contact Information",
+          "content": "Please contact us through the form below",
+          "url": "https://forms.gle/ZkYUQSmpqxrQaa4m8"
+        },
+        "price": {
+          "label": "Sales Price",
+          "content": "Listed on each product page (tax included)"
+        },
+        "payment": {
+          "label": "Payment Method",
+          "content": "Credit Card (Visa, Mastercard, American Express, JCB, Diners Club, Discover)"
+        },
+        "delivery": {
+          "label": "Product Delivery Period",
+          "content": "Immediately available after payment completion"
+        },
+        "timing": {
+          "label": "Payment Timing",
+          "content": "Immediate payment upon product purchase"
+        },
+        "refund": {
+          "label": "Returns and Cancellations",
+          "content": "Due to the nature of digital content, no returns or refunds are accepted after purchase"
+        },
+        "currency": {
+          "label": "Display Currency",
+          "content": "Japanese Yen (JPY) / US Dollar (USD)"
+        },
+        "validity": {
+          "label": "Service Validity Period",
+          "content": "Purchased tokens: Unlimited / Purchased characters: Unlimited"
+        },
+        "required": {
+          "label": "Required Costs",
+          "content": "No additional costs beyond product price (communication costs are user's responsibility)"
+        },
+        "defect": {
+          "label": "Defect Response",
+          "content": "If unavailable due to system failure, will be available after restoration"
+        },
+        "special": {
+          "label": "Special Sales Conditions",
+          "content": "Some features are restricted when token balance is 0"
+        },
+        "support": {
+          "label": "Support Service",
+          "content": "Email responses during 10:00-18:00 (JST) excluding weekends and holidays"
+        },
+        "subscription": {
+          "label": "Subscription",
+          "content": "This service does not have periodic subscriptions"
+        }
+      }
+    },
     "privacyModal": {
       "title": "Privacy Policy",
       "lastUpdated": "Last updated: July 1, 2025",
