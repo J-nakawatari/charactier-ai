@@ -374,10 +374,25 @@
   "dashboard": {
     "title": "おかえりなさい、{name}さん",
     "welcome": "今日も素敵な一日をお過ごしください！",
+    "subtitle": "キャラクターとの会話やアクティビティの概要",
     "loading": "読み込み中...",
     "error": "データの取得に失敗しました",
     "retry": "再試行",
-    "defaultUser": "ユーザー"
+    "defaultUser": "ユーザー",
+    "stats": {
+      "tokens": "保有トークン",
+      "totalChats": "総チャット数",
+      "characters": "キャラクター数",
+      "maxAffinity": "最高親密度"
+    },
+    "recentChats": {
+      "title": "最近のチャット",
+      "empty": "まだチャット履歴がありません"
+    },
+    "affinity": {
+      "title": "親密度の進捗",
+      "empty": "まだ親密度データがありません"
+    }
   },
   "purchaseHistory": {
     "title": "購入履歴",

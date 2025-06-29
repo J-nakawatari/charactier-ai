@@ -374,10 +374,25 @@
   "dashboard": {
     "title": "Welcome back, {name}",
     "welcome": "Have a wonderful day!",
+    "subtitle": "Overview of your conversations and activities with characters",
     "loading": "Loading...",
     "error": "Failed to fetch data",
     "retry": "Retry",
-    "defaultUser": "User"
+    "defaultUser": "User",
+    "stats": {
+      "tokens": "Token Balance",
+      "totalChats": "Total Chats",
+      "characters": "Characters",
+      "maxAffinity": "Max Affinity"
+    },
+    "recentChats": {
+      "title": "Recent Chats",
+      "empty": "No chat history yet"
+    },
+    "affinity": {
+      "title": "Affinity Progress",
+      "empty": "No affinity data yet"
+    }
   },
   "purchaseHistory": {
     "title": "Purchase History",
