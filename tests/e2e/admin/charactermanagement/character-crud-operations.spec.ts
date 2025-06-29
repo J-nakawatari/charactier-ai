@@ -12,18 +12,18 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     const page = await context.newPage();
     
     // ログイン
-    await newPage.goto('/admin/login');
-    await newPage.waitForLoadState('networkidle');
-    await newPage.fill('input[type="email"]', adminEmail);
-    await newPage.fill('input[type="password"]', adminPassword);
-    await newPage.click('button[type="submit"]');
+    await page.goto('/admin/login');
+    await page.waitForLoadState('networkidle');
+    await page.fill('input[type="email"]', adminEmail);
+    await page.fill('input[type="password"]', adminPassword);
+    await page.click('button[type="submit"]');
     
     // ダッシュボードへの遷移を待つ
-    await newPage.waitForURL('**/admin/dashboard', { timeout: 15000 });
-    await newPage.waitForTimeout(5000); // 十分な待機（重要）
+    await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
+    await page.waitForTimeout(5000); // 十分な待機（重要）
     
     // ページを閉じる（debug-character-formと同じアプローチ）
-    await newPage.close();
+    await page.close();
     
     // 新しいページでキャラクター管理ページを開く
     const newPage = await context.newPage();
