@@ -69,18 +69,18 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     await nameJaInput.fill(characterName);
     
     // 英語名も同様に
-    const nameEnInput = page.locator('input[type="text"]').nth(1);
+    const nameEnInput = newPage.locator('input[type="text"]').nth(1);
     await nameEnInput.fill(`Test Character ${timestamp}`);
     
     // 説明（textareaを探す）
-    const descriptionJaInput = page.locator('textarea').first();
+    const descriptionJaInput = newPage.locator('textarea').first();
     await descriptionJaInput.fill('E2Eテスト用のキャラクター説明です。');
     
-    const descriptionEnInput = page.locator('textarea').nth(1);
+    const descriptionEnInput = newPage.locator('textarea').nth(1);
     await descriptionEnInput.fill('This is a test character for E2E testing.');
     
     // 性格プリセットを選択（必須）
-    const personalityPresetSelect = page.locator('select[name="personalityPreset"], select').first();
+    const personalityPresetSelect = newPage.locator('select[name="personalityPreset"], select').first();
     if (await personalityPresetSelect.isVisible()) {
       // 最初のオプション以外を選択（通常最初は空白）
       const options = await personalityPresetSelect.locator('option').all();
@@ -93,26 +93,26 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     }
     
     // 性格タグを選択（必須）
-    const personalityTags = page.locator('input[type="checkbox"][name*="personality"], label:has-text("優しい"), label:has-text("フレンドリー")');
+    const personalityTags = newPage.locator('input[type="checkbox"][name*="personality"], label:has-text("優しい"), label:has-text("フレンドリー")');
     const firstTag = personalityTags.first();
     if (await firstTag.isVisible()) {
       await firstTag.click();
     } else {
       // チェックボックスが見つからない場合、最初のチェックボックスをクリック
-      const anyCheckbox = page.locator('input[type="checkbox"]').first();
+      const anyCheckbox = newPage.locator('input[type="checkbox"]').first();
       if (await anyCheckbox.isVisible()) {
         await anyCheckbox.click();
       }
     }
     
     // プロンプト設定（通常3番目のtextarea）
-    const promptInput = page.locator('textarea').nth(2);
+    const promptInput = newPage.locator('textarea').nth(2);
     if (await promptInput.isVisible()) {
       await promptInput.fill('あなたは親切で優しいAIアシスタントです。');
     }
     
     // 価格タイプの選択
-    const priceTypeSelect = page.locator('select[name="priceType"], input[name="priceType"][type="radio"], select[name="characterAccessType"]');
+    const priceTypeSelect = newPage.locator('select[name="priceType"], input[name="priceType"][type="radio"], select[name="characterAccessType"]');
     if (await priceTypeSelect.first().isVisible()) {
       // 有料を選択
       await newPage.locator('input[value="paid"], option[value="paid"]').click();
@@ -122,20 +122,20 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     }
     
     // AIモデルの選択
-    const modelSelect = page.locator('select[name="model"], select[name="aiModel"]');
+    const modelSelect = newPage.locator('select[name="model"], select[name="aiModel"]');
     if (await modelSelect.isVisible()) {
       await modelSelect.selectOption('gpt-4o-mini');
     }
     
     // 画像アップロード（オプション）
-    const imageInput = page.locator('input[type="file"][name="avatar"], input[type="file"][name="image"]');
+    const imageInput = newPage.locator('input[type="file"][name="avatar"], input[type="file"][name="image"]');
     if (await imageInput.isVisible()) {
       // テスト画像をアップロード（実際のファイルパスが必要）
       // await imageInput.setInputFiles('path/to/test-image.jpg');
     }
     
     // 保存ボタンをクリック
-    const saveButton = page.locator('button:has-text("保存"), button:has-text("作成"), button[type="submit"]').first();
+    const saveButton = newPage.locator('button:has-text("保存"), button:has-text("作成"), button[type="submit"]').first();
     
     // ボタンが有効になるまで待つ
     await expect(saveButton).toBeEnabled({ timeout: 5000 });
@@ -189,14 +189,14 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     await newPage.waitForLoadState('networkidle');
     
     // 最初のキャラクターの編集ボタンをクリック
-    const firstEditButton = page.locator('button:has-text("編集"), a:has-text("編集")').first();
+    const firstEditButton = newPage.locator('button:has-text("編集"), a:has-text("編集")').first();
     await firstEditButton.click();
     
     // 編集フォームが表示されることを確認
     await newPage.waitForSelector('input[name="name.ja"], input[name="nameJa"]');
     
     // 現在の値を取得
-    const nameInput = page.locator('input[name="name.ja"], input[name="nameJa"]');
+    const nameInput = newPage.locator('input[name="name.ja"], input[name="nameJa"]');
     const originalName = await nameInput.inputValue();
     
     // 名前を更新
@@ -205,12 +205,12 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     await nameInput.fill(updatedName);
     
     // 説明を更新
-    const descriptionInput = page.locator('textarea[name="description.ja"], textarea[name="descriptionJa"]');
+    const descriptionInput = newPage.locator('textarea[name="description.ja"], textarea[name="descriptionJa"]');
     await descriptionInput.clear();
     await descriptionInput.fill('更新されたキャラクター説明です。E2Eテストによる編集。');
     
     // プロンプトを更新
-    const promptInput = page.locator('textarea[name="characterPrompt"], textarea[name="prompt"]');
+    const promptInput = newPage.locator('textarea[name="characterPrompt"], textarea[name="prompt"]');
     const currentPrompt = await promptInput.inputValue();
     await promptInput.clear();
     await promptInput.fill(`${currentPrompt}\n更新時刻: ${new Date().toISOString()}`);
@@ -240,7 +240,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     await newPage.waitForLoadState('networkidle');
     
     // テスト用キャラクターを探す（最後のキャラクター）
-    const characterRows = page.locator('tbody tr, .character-row');
+    const characterRows = newPage.locator('tbody tr, .character-row');
     const rowCount = await characterRows.count();
     
     if (rowCount > 0) {
@@ -252,7 +252,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       await deleteButton.click();
       
       // 確認ダイアログ
-      const confirmDialog = page.locator('.confirm-dialog, [role="dialog"]');
+      const confirmDialog = newPage.locator('.confirm-dialog, [role="dialog"]');
       await expect(confirmDialog).toBeVisible();
       
       // ダイアログ内のメッセージを確認
@@ -271,7 +271,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       
       // キャラクターがリストから消えたことを確認
       await newPage.waitForTimeout(1000);
-      const deletedCharacter = page.locator(`text="${characterName}"`);
+      const deletedCharacter = newPage.locator(`text="${characterName}"`);
       await expect(deletedCharacter).not.toBeVisible();
       
       console.log(`キャラクター「${characterName}」が正常に削除されました`);
@@ -283,7 +283,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     await newPage.waitForLoadState('networkidle');
     
     // アクティブなキャラクターを探す
-    const activeRow = page.locator('tr:has-text("公開中"), tr:has-text("Active"), tr:has(.status-active)').first();
+    const activeRow = newPage.locator('tr:has-text("公開中"), tr:has-text("Active"), tr:has(.status-active)').first();
     
     if (await activeRow.isVisible()) {
       const characterName = await activeRow.locator('td:first-child').textContent();
@@ -293,7 +293,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       await toggleButton.click();
       
       // 確認ダイアログの処理
-      const confirmDialog = page.locator('.confirm-dialog');
+      const confirmDialog = newPage.locator('.confirm-dialog');
       if (await confirmDialog.isVisible({ timeout: 1000 })) {
         await newPage.locator('button:has-text("確認")').click();
       }
@@ -322,22 +322,22 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     await newPage.locator('button:has-text("編集")').first().click();
     
     // 画像管理セクションを探す
-    const imageSection = page.locator('.image-management, .character-images');
+    const imageSection = newPage.locator('.image-management, .character-images');
     
     if (await imageSection.isVisible()) {
       // レベル画像の設定
-      const levelImageInputs = page.locator('input[type="file"][name*="levelImage"]');
+      const levelImageInputs = newPage.locator('input[type="file"][name*="levelImage"]');
       const inputCount = await levelImageInputs.count();
       
       console.log(`${inputCount}個のレベル画像スロットが見つかりました`);
       
       // レベル10の画像設定を確認
-      const level10Section = page.locator('.level-10-image, [data-level="10"]');
+      const level10Section = newPage.locator('.level-10-image, [data-level="10"]');
       if (await level10Section.isVisible()) {
         console.log('レベル10画像の設定セクションが存在します');
         
         // アンロック条件の確認
-        const unlockInfo = page.locator('.unlock-info, .level-requirement');
+        const unlockInfo = newPage.locator('.unlock-info, .level-requirement');
         if (await unlockInfo.isVisible()) {
           const unlockText = await unlockInfo.textContent();
           console.log(`アンロック条件: ${unlockText}`);
@@ -351,7 +351,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     await newPage.waitForLoadState('networkidle');
     
     // チェックボックスで複数選択
-    const checkboxes = page.locator('input[type="checkbox"][name="characterIds"], .character-checkbox');
+    const checkboxes = newPage.locator('input[type="checkbox"][name="characterIds"], .character-checkbox');
     
     if (await checkboxes.first().isVisible()) {
       // 2つのキャラクターを選択
@@ -359,7 +359,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       await checkboxes.nth(1).check();
       
       // 一括操作メニューの表示
-      const bulkActions = page.locator('.bulk-actions, select[name="bulkAction"]');
+      const bulkActions = newPage.locator('.bulk-actions, select[name="bulkAction"]');
       await expect(bulkActions).toBeVisible();
       
       // 一括非公開のテスト
@@ -370,7 +370,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
         await newPage.locator('button:has-text("実行")').click();
         
         // 確認ダイアログ
-        const confirmDialog = page.locator('.confirm-dialog');
+        const confirmDialog = newPage.locator('.confirm-dialog');
         if (await confirmDialog.isVisible()) {
           await newPage.locator('button:has-text("確認")').click();
         }
@@ -385,19 +385,19 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     await newPage.waitForLoadState('networkidle');
     
     // 検索機能
-    const searchInput = page.locator('input[placeholder*="検索"], input[type="search"]');
+    const searchInput = newPage.locator('input[placeholder*="検索"], input[type="search"]');
     if (await searchInput.isVisible()) {
       await searchInput.fill('テスト');
       await newPage.waitForTimeout(500); // デバウンス待機
       
       // 検索結果の確認
-      const results = page.locator('tbody tr, .character-row');
+      const results = newPage.locator('tbody tr, .character-row');
       const resultCount = await results.count();
       console.log(`検索結果: ${resultCount}件`);
     }
     
     // フィルタリング（価格タイプ）
-    const priceFilter = page.locator('select[name="priceType"], input[name="filterPriceType"]');
+    const priceFilter = newPage.locator('select[name="priceType"], input[name="filterPriceType"]');
     if (await priceFilter.first().isVisible()) {
       // 有料のみ表示
       await newPage.locator('[value="paid"]').click();
@@ -409,7 +409,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     }
     
     // ステータスフィルター
-    const statusFilter = page.locator('select[name="status"], input[name="filterStatus"]');
+    const statusFilter = newPage.locator('select[name="status"], input[name="filterStatus"]');
     if (await statusFilter.first().isVisible()) {
       // 公開中のみ
       await newPage.locator('[value="active"]').click();
