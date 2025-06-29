@@ -32,28 +32,28 @@ export function TermsContent() {
       <section>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('article3.title')}</h2>
         <ol className="list-decimal list-inside space-y-2 text-gray-700">
-          <li>{t('article3.content1')}</li>
-          <li>{t('article3.content2')}</li>
-          <li>{t('article3.content3')}</li>
-          <li>{t('article3.content4')}</li>
+          <li>{t('article3.item1')}</li>
+          <li>{t('article3.item2')}</li>
+          <li>{t('article3.item3')}</li>
+          <li>{t('article3.item4')}</li>
         </ol>
       </section>
 
       <section>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('article4.title')}</h2>
         <ol className="list-decimal list-inside space-y-2 text-gray-700">
-          <li>{t('article4.content1')}</li>
-          <li>{t('article4.content2')}</li>
-          <li>{t('article4.content3')}</li>
+          <li>{t('article4.item1')}</li>
+          <li>{t('article4.item2')}</li>
+          <li>{t('article4.item3')}</li>
         </ol>
       </section>
 
       <section>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('article5.title')}</h2>
         <ol className="list-decimal list-inside space-y-2 text-gray-700">
-          <li>{t('article5.content1')}</li>
-          <li>{t('article5.content2')}</li>
-          <li>{t('article5.content3')}</li>
+          <li>{t('article5.item1')}</li>
+          <li>{t('article5.item2')}</li>
+          <li>{t('article5.item3')}</li>
         </ol>
       </section>
 
@@ -72,18 +72,18 @@ export function TermsContent() {
       <section>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('article7.title')}</h2>
         <ol className="list-decimal list-inside space-y-2 text-gray-700">
-          <li>{t('article7.content1')}</li>
-          <li>{t('article7.content2')}</li>
-          <li>{t('article7.content3')}</li>
+          <li>{t('article7.item1')}</li>
+          <li>{t('article7.item2')}</li>
+          <li>{t('article7.item3')}</li>
         </ol>
       </section>
 
       <section>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('article8.title')}</h2>
         <ol className="list-decimal list-inside space-y-2 text-gray-700">
-          <li>{t('article8.content1')}</li>
-          <li>{t('article8.content2')}</li>
-          <li>{t('article8.content3')}</li>
+          <li>{t('article8.item1')}</li>
+          <li>{t('article8.item2')}</li>
+          <li>{t('article8.item3')}</li>
         </ol>
       </section>
 
