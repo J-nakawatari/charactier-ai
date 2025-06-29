@@ -66,6 +66,32 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     const descriptionEnInput = page.locator('textarea').nth(1);
     await descriptionEnInput.fill('This is a test character for E2E testing.');
     
+    // 性格プリセットを選択（必須）
+    const personalityPresetSelect = page.locator('select[name="personalityPreset"], select').first();
+    if (await personalityPresetSelect.isVisible()) {
+      // 最初のオプション以外を選択（通常最初は空白）
+      const options = await personalityPresetSelect.locator('option').all();
+      if (options.length > 1) {
+        const value = await options[1].getAttribute('value');
+        if (value) {
+          await personalityPresetSelect.selectOption(value);
+        }
+      }
+    }
+    
+    // 性格タグを選択（必須）
+    const personalityTags = page.locator('input[type="checkbox"][name*="personality"], label:has-text("優しい"), label:has-text("フレンドリー")');
+    const firstTag = personalityTags.first();
+    if (await firstTag.isVisible()) {
+      await firstTag.click();
+    } else {
+      // チェックボックスが見つからない場合、最初のチェックボックスをクリック
+      const anyCheckbox = page.locator('input[type="checkbox"]').first();
+      if (await anyCheckbox.isVisible()) {
+        await anyCheckbox.click();
+      }
+    }
+    
     // プロンプト設定（通常3番目のtextarea）
     const promptInput = page.locator('textarea').nth(2);
     if (await promptInput.isVisible()) {
@@ -73,7 +99,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     }
     
     // 価格タイプの選択
-    const priceTypeSelect = page.locator('select[name="priceType"], input[name="priceType"][type="radio"]');
+    const priceTypeSelect = page.locator('select[name="priceType"], input[name="priceType"][type="radio"], select[name="characterAccessType"]');
     if (await priceTypeSelect.first().isVisible()) {
       // 有料を選択
       await page.locator('input[value="paid"], option[value="paid"]').click();

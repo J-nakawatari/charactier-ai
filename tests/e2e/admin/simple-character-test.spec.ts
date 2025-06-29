@@ -73,6 +73,29 @@ test.describe('シンプルなキャラクター作成テスト', () => {
       console.log('✅ 説明を入力');
     }
     
+    // 性格プリセットを選択（必須）
+    const selects = await page.locator('select').all();
+    console.log(`セレクトボックス数: ${selects.length}`);
+    if (selects.length > 0) {
+      // 最初のセレクトボックス（性格プリセット）
+      const options = await selects[0].locator('option').all();
+      if (options.length > 1) {
+        const value = await options[1].getAttribute('value');
+        if (value) {
+          await selects[0].selectOption(value);
+          console.log('✅ 性格プリセットを選択');
+        }
+      }
+    }
+    
+    // 性格タグを選択（必須）- 最初のチェックボックスをクリック
+    const checkboxes = await page.locator('input[type="checkbox"]').all();
+    console.log(`チェックボックス数: ${checkboxes.length}`);
+    if (checkboxes.length > 0) {
+      await checkboxes[0].click();
+      console.log('✅ 性格タグを選択');
+    }
+    
     // 6. 保存ボタンを探してクリック
     const saveButtonSelectors = [
       'button:has-text("保存")',
