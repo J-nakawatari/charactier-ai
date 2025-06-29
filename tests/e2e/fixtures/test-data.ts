@@ -14,7 +14,8 @@ export interface TestCharacter {
   _id?: string;
 }
 
-const MONGODB_URI = process.env.MONGODB_URI || process.env.TEST_MONGODB_URI || 'mongodb://localhost:27017/charactier-test';
+// 環境変数から直接読み取る（優先順位: TEST_MONGODB_URI > MONGODB_URI > デフォルト）
+const MONGODB_URI = process.env.TEST_MONGODB_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/charactier-test';
 
 export class TestDataManager {
   private client: MongoClient;
