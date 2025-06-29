@@ -174,8 +174,8 @@
       "introduction": "These Terms of Service (hereinafter referred to as \"Terms\") set forth the conditions for using all features provided by Charactier (hereinafter referred to as \"the Service\").\nUsers shall use the Service upon agreeing to these Terms.",
       "article1": {
         "title": "Article 1 (Definitions)",
-        "content1": "1. \"Talk Tickets\" refers to digital points required for sending chats with characters.",
-        "content2": "2. \"Premium Characters\" refers to characters that are unlocked by paying an additional fee."
+        "content1": "\"Talk Tickets\" refers to digital points required for sending chats with characters.",
+        "content2": "\"Premium Characters\" refers to characters that are unlocked by paying an additional fee."
       },
       "article2": {
         "title": "Article 2 (Account)",
@@ -229,9 +229,9 @@
       "article10": {
         "title": "Article 10 (Disclaimer and Limitation of Liability)",
         "content": "The Service is provided 'as is' without warranties of any kind.",
-        "content1": "1. The Service is provided as-is. The Office does not guarantee operational reliability or fitness for purpose.",
-        "content2": "2. The Office does not intervene in disputes between users or with third parties and assumes no responsibility.",
-        "content3": "3. Purchased tokens and characters cannot be refunded for any reason."
+        "content1": "The Service is provided as-is. The Office does not guarantee operational reliability or fitness for purpose.",
+        "content2": "The Office does not intervene in disputes between users or with third parties and assumes no responsibility.",
+        "content3": "Purchased tokens and characters cannot be refunded for any reason."
       },
       "article11": {
         "title": "Article 11 (Damages)",
