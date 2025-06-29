@@ -11,7 +11,10 @@ interface AdminApiOptions extends RequestInit {
 export async function adminFetch(endpoint: string, options: AdminApiOptions = {}) {
   // For production, use relative URLs that will be proxied by Next.js
   // This ensures cookies are sent properly
-  const url = endpoint.startsWith('http') ? endpoint : endpoint;
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+  const url = endpoint.startsWith('http') ? endpoint : 
+              endpoint.startsWith('/api/') ? endpoint : 
+              `${backendUrl}${endpoint}`;
   
   console.log('🔐 Admin API Request:', {
     url,

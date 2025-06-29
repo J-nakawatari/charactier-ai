@@ -82,7 +82,7 @@ export default function CharacterManagementTable({ characters, onCharacterDelete
   const handleDeleteCharacter = async (character: Character) => {
     if (window.confirm(`${character.name?.ja || 'このキャラクター'}を削除してもよろしいですか？\nこの操作は取り消せません。`)) {
       try {
-        const response = await adminFetch(`/api/v1/admin/characters/${character._id}`, {
+        const response = await adminFetch(`http://localhost:5000/api/v1/admin/characters/${character._id}`, {
           method: 'DELETE',
         });
 
