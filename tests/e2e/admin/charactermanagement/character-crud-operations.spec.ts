@@ -695,7 +695,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     await context.close();
   });
 
-  test.skip('キャラクター画像の管理', async ({ browser }) => {
+  test('キャラクター画像の管理', async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
     
@@ -720,25 +720,66 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     await newPage.locator('button:has-text("編集")').first().click();
     
     // 画像管理セクションを探す
-    const imageSection = newPage.locator('.image-management, .character-images');
+    // ギャラリー画像セクションを探す
+    const gallerySection = await newPage.locator('h3:has-text("ギャラリー画像")').isVisible();
     
-    if (await imageSection.isVisible()) {
-      // レベル画像の設定
-      const levelImageInputs = newPage.locator('input[type="file"][name*="levelImage"]');
-      const inputCount = await levelImageInputs.count();
+    if (gallerySection) {
+      console.log('✅ ギャラリー画像セクションが見つかりました');
       
-      console.log(`${inputCount}個のレベル画像スロットが見つかりました`);
+      // 各レベルの画像アップロードフィールドを確認
+      const levels = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
       
-      // レベル10の画像設定を確認
-      const level10Section = newPage.locator('.level-10-image, [data-level="10"]');
-      if (await level10Section.isVisible()) {
-        console.log('レベル10画像の設定セクションが存在します');
+      for (let i = 0; i < levels.length; i++) {
+        const level = levels[i];
+        const uploadInput = newPage.locator(`#gallery-upload-${i}`);
+        const titleInput = uploadInput.locator('xpath=../following-sibling::div//input[placeholder="画像タイトル"]').first();
+        const descriptionTextarea = uploadInput.locator('xpath=../following-sibling::div//textarea[placeholder="画像説明"]').first();
         
-        // アンロック条件の確認
-        const unlockInfo = newPage.locator('.unlock-info, .level-requirement');
-        if (await unlockInfo.isVisible()) {
-          const unlockText = await unlockInfo.textContent();
-          console.log(`アンロック条件: ${unlockText}`);
+        if (await uploadInput.count() > 0) {
+          console.log(`✅ レベル${level}の画像アップロード: 存在`);
+          
+          // 各レベルの情報を表示
+          const levelHeader = newPage.locator(`h4:has-text("解放レベル ${level}")`).first();
+          if (await levelHeader.isVisible()) {
+            const levelInfo = await levelHeader.locator('xpath=../span').textContent();
+            console.log(`  - ${levelInfo}`);
+          }
+        }
+      }
+      
+      // アップロード可能枚数の確認
+      const totalSlots = await newPage.locator('input[type="file"][id^="gallery-upload-"]').count();
+      console.log(`\n📊 画像アップロード統計:`);
+      console.log(`- 総スロット数: ${totalSlots}`);
+      console.log(`- 親密度レベル範囲: 0-100`);
+      console.log(`- 解放間隔: 10レベルごと`);
+      
+      // 実際にファイルをアップロードする場合のテスト（コメントアウト）
+      // const testImagePath = path.join(__dirname, 'test-assets', 'test-character.jpg');
+      // if (fs.existsSync(testImagePath)) {
+      //   await newPage.locator('#gallery-upload-0').setInputFiles(testImagePath);
+      //   console.log('✅ テスト画像をレベル10にアップロード');
+      // }
+    } else {
+      console.log('⚠️ ギャラリー画像セクションが見つかりません');
+      // 編集画面ではない可能性があるため、新規作成画面に遷移
+      await newPage.goto('/admin/characters/new');
+      await newPage.waitForLoadState('networkidle');
+      await newPage.waitForTimeout(2000);
+      
+      // 再度確認
+      const galleryInNew = await newPage.locator('h3:has-text("ギャラリー画像")').isVisible();
+      if (galleryInNew) {
+        console.log('✅ 新規作成画面でギャラリー画像セクションを確認');
+        
+        // 画像アップロードフィールドの総数を確認
+        const totalUploads = await newPage.locator('input[type="file"][id^="gallery-upload-"]').count();
+        console.log(`- 画像アップロードフィールド数: ${totalUploads}個`);
+        
+        // 各フィールドの詳細
+        for (let i = 0; i < totalUploads; i++) {
+          const levelText = await newPage.locator(`h4:has-text("解放レベル ${(i + 1) * 10}")`).textContent();
+          console.log(`  ${i + 1}. ${levelText}`);
         }
       }
     }
