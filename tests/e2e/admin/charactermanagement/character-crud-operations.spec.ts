@@ -230,6 +230,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
   test('既存キャラクターの編集', async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
+    let newPage; // スコープを広げる
     
     console.log('🔧 キャラクター編集テスト開始');
     
@@ -247,7 +248,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       await page.close();
       
       // 新しいページでキャラクター管理ページを開く
-      const newPage = await context.newPage();
+      newPage = await context.newPage();
       await newPage.goto('/admin/characters');
       await newPage.waitForLoadState('networkidle');
       await newPage.waitForTimeout(3000);
@@ -488,9 +489,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       
     } catch (error) {
       console.error('❌ 編集テストエラー:', error);
-      if (newPage && !newPage.isClosed()) {
-        await newPage.screenshot({ path: 'character-edit-exception.png', fullPage: true });
-      }
+      // スクリーンショットはエラー箇所で直接保存
       throw error;
     } finally {
       await context.close();
@@ -500,6 +499,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
   test('キャラクターの削除', async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
+    let newPage; // スコープを広げる
     
     console.log('🗑️ キャラクター削除テスト開始');
     
@@ -517,7 +517,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       await page.close();
       
       // 新しいページでキャラクター管理ページを開く
-      const newPage = await context.newPage();
+      newPage = await context.newPage();
       await newPage.goto('/admin/characters');
       await newPage.waitForLoadState('networkidle');
       await newPage.waitForTimeout(3000);
@@ -669,9 +669,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       
     } catch (error) {
       console.error('❌ 削除テストエラー:', error);
-      if (newPage && !newPage.isClosed()) {
-        await newPage.screenshot({ path: 'character-delete-error.png', fullPage: true });
-      }
+      // スクリーンショットはエラー箇所で直接保存
       throw error;
     } finally {
       await context.close();
@@ -737,9 +735,11 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
   test('キャラクター画像の管理', async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
+    let newPage; // スコープを広げる
     
-    // ログイン
-    await page.goto('/admin/login');
+    try {
+      // ログイン
+      await page.goto('/admin/login');
     await page.waitForLoadState('networkidle');
     await page.fill('input[type="email"]', adminEmail);
     await page.fill('input[type="password"]', adminPassword);
@@ -822,8 +822,12 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
         }
       }
     }
-    
-    await context.close();
+    } catch (error) {
+      console.error('❌ 画像管理テストエラー:', error);
+      throw error;
+    } finally {
+      await context.close();
+    }
   });
 
   test.skip('キャラクターの一括操作', async ({ browser }) => {
