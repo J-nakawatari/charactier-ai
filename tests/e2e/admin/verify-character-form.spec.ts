@@ -52,23 +52,20 @@ test.describe('キャラクター作成フォームの検証', () => {
     await expect(page).toHaveURL(/.*\/admin\/dashboard/);
     console.log('📍 現在のURL:', page.url());
     
-    // キャラクター一覧ページへ移動
-    await page.goto('/admin/characters');
-    await page.waitForLoadState('networkidle');
-    console.log('✅ キャラクター一覧ページへ遷移');
+    // 十分な待機時間を確保（すべての非同期処理が完了するのを待つ）
+    console.log('⏱️ ページが安定するのを待機中...');
+    await page.waitForTimeout(5000);
     
-    // 新規作成ボタンをクリック
-    const newButton = page.locator('a[href="/admin/characters/new"], button:has-text("新規作成"), a:has-text("新規作成")').first();
-    if (await newButton.isVisible({ timeout: 5000 })) {
-      await newButton.click();
-      await page.waitForURL('**/admin/characters/new');
-      console.log('✅ キャラクター作成ページへ遷移（ボタン経由）');
-    } else {
-      // ボタンが見つからない場合は直接遷移
-      console.log('⚠️ 新規作成ボタンが見つからないため、直接遷移します');
-      await page.goto('/admin/characters/new');
-      await page.waitForLoadState('networkidle');
-    }
+    // 直接キャラクター作成ページへ遷移（最も安全な方法）
+    console.log('🚀 キャラクター作成ページへ直接遷移');
+    await page.goto('/admin/characters/new', { waitUntil: 'networkidle' });
+    
+    // ページが完全に読み込まれるのを待つ
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(2000);
+    
+    console.log('✅ キャラクター作成ページに到達');
+    console.log('📍 現在のURL:', page.url());
     
     // フォームの必須フィールドを確認
     const nameInput = page.locator('input[type="text"]').first();
