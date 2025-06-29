@@ -99,7 +99,7 @@ export class ChatPaginationService {
     try {
       const nextPage = this.state.currentPage + 1;
       const response = await fetch(
-        `/api/chats/${this.characterId}?page=${nextPage}&limit=${this.messagesPerPage}`,
+        `/api/v1/chats/${this.characterId}?page=${nextPage}&limit=${this.messagesPerPage}`,
         {
           headers: getAuthHeadersSync()
         }

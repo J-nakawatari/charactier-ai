@@ -6,7 +6,7 @@ import log from '../utils/logger';
 export const rateLimitConfigs = {
   // 一般的なAPI（読み取り系）
   general: {
-    points: 100,     // リクエスト数
+    points: 300,     // リクエスト数（60秒間に300リクエストまで許可
     duration: 60,    // 60秒
     blockDuration: 60 // ブロック時間（秒）
   },

@@ -69,7 +69,27 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean; _retryCount?: number };
+
+    // 429エラー（レート制限）の場合
+    if (error.response?.status === 429) {
+      const retryAfter = error.response.headers['retry-after'];
+      const retryCount = originalRequest._retryCount || 0;
+      
+      // 最大3回までリトライ
+      if (retryCount < 3) {
+        originalRequest._retryCount = retryCount + 1;
+        
+        // Retry-Afterヘッダーがある場合はその時間待つ、なければ指数バックオフ
+        const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.min(1000 * Math.pow(2, retryCount), 10000);
+        
+        console.log(`Rate limited. Retrying after ${delay}ms (attempt ${retryCount + 1}/3)`);
+        
+        // 指定時間待ってからリトライ
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return apiClient(originalRequest);
+      }
+    }
 
     // 401エラーかつリトライではない場合
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -118,6 +138,17 @@ apiClient.interceptors.response.use(
     // 403エラー（権限なし）の場合
     if (error.response?.status === 403) {
       console.error('Access forbidden:', error.response.data);
+    }
+
+    // 429エラーの詳細をログ出力
+    if (error.response?.status === 429) {
+      console.error('Rate limit exceeded:', {
+        url: originalRequest.url,
+        retryAfter: error.response.headers['retry-after'],
+        limit: error.response.headers['x-ratelimit-limit'],
+        remaining: error.response.headers['x-ratelimit-remaining'],
+        reset: error.response.headers['x-ratelimit-reset']
+      });
     }
 
     // その他のエラーはそのまま返す
