@@ -4,6 +4,7 @@
     "type": "commonjs",
     "scripts": {
         "dev": "ts-node src/index.ts",
+        "dev:test": "cross-env NODE_ENV=test DISABLE_RATE_LIMIT=true ts-node src/index.ts",
         "build": "tsc -p tsconfig.json",
         "start": "node dist/src/index.js",
         "lint": "eslint src/**/*.ts",
@@ -37,6 +38,7 @@
         "@types/yamljs": "^0.2.34",
         "@typescript-eslint/eslint-plugin": "^8.34.0",
         "@typescript-eslint/parser": "^8.34.0",
+        "cross-env": "^7.0.3",
         "eslint": "^9.28.0",
         "eslint-config-prettier": "^10.1.5",
         "jest": "^30.0.3",
