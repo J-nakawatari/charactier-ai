@@ -1,0 +1,1609 @@
+﻿噫 E2E Test Global Setup Starting...
+笨・Connected to test database
+笨・Created global test user: global-test@example.com
+笨・Created free test character: 辟｡譁吶ユ繧ｹ繝医く繝｣繝ｩ繧ｯ繧ｿ繝ｼ
+笨・Created paid test character: 譛画侭繝・せ繝医く繝｣繝ｩ繧ｯ繧ｿ繝ｼ
+笨・E2E Test Global Setup Completed
+ｧｹ E2E Test Global Teardown Starting...
+笨・Cleaned up test data
+笨・Disconnected from test database
+笨・E2E Test Global Teardown Completed
+{
+  "config": {
+    "configFile": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\playwright.config.ts",
+    "rootDir": "C:/Users/PC_User/Documents/dev/charactier-ai/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\global-setup.ts",
+    "globalTeardown": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\global-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 12
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/Users/PC_User/Documents/dev/charactier-ai/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 12
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/PC_User/Documents/dev/charactier-ai/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/PC_User/Documents/dev/charactier-ai/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 12
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "C:/Users/PC_User/Documents/dev/charactier-ai/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/PC_User/Documents/dev/charactier-ai/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 12
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "C:/Users/PC_User/Documents/dev/charactier-ai/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/PC_User/Documents/dev/charactier-ai/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 12
+        },
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "C:/Users/PC_User/Documents/dev/charactier-ai/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/PC_User/Documents/dev/charactier-ai/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 12
+        },
+        "id": "Mobile Safari",
+        "name": "Mobile Safari",
+        "testDir": "C:/Users/PC_User/Documents/dev/charactier-ai/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.53.1",
+    "workers": 12,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://localhost:3000",
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "user\\authaccountmanagement\\accountdelete.spec.ts",
+      "file": "user/authaccountmanagement/accountdelete.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "authaccountmanagement - accountdelete",
+          "file": "user/authaccountmanagement/accountdelete.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "蜑企勁遒ｺ隱阪ム繧､繧｢繝ｭ繧ｰ縺ｮ陦ｨ遉ｺ",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2325,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:47.905Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b8558046944ff0989823-f21bbfcaec36d0ea76c4",
+              "file": "user/authaccountmanagement/accountdelete.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "蜑企勁遒ｺ隱阪ム繧､繧｢繝ｭ繧ｰ縺ｮ陦ｨ遉ｺ",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 6,
+                      "status": "timedOut",
+                      "duration": 35045,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\accountdelete.spec.ts",
+                            "column": 16,
+                            "line": 6
+                          },
+                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/ja\", waiting until \"load\"\u001b[22m\n\n\n  4 |   test('蜑企勁遒ｺ隱阪ム繧､繧｢繝ｭ繧ｰ縺ｮ陦ｨ遉ｺ', async ({ page }) => {\n  5 |     // 繝壹・繧ｸ縺ｫ遘ｻ蜍表n> 6 |     await page.goto('/ja');\n    |                ^\n  7 |     await page.waitForLoadState('networkidle');\n  8 |     \n  9 |     // 繝壹・繧ｸ縺梧ｭ｣蟶ｸ縺ｫ隱ｭ縺ｿ霎ｼ縺ｾ繧後◆縺薙→繧堤｢ｺ隱構n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\accountdelete.spec.ts:6:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:47.915Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-30273--accountdelete-蜑企勁遒ｺ隱阪ム繧､繧｢繝ｭ繧ｰ縺ｮ陦ｨ遉ｺ-firefox\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-30273--accountdelete-蜑企勁遒ｺ隱阪ム繧､繧｢繝ｭ繧ｰ縺ｮ陦ｨ遉ｺ-firefox\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b8558046944ff0989823-a144478958e16c96a7e6",
+              "file": "user/authaccountmanagement/accountdelete.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "蜑企勁遒ｺ隱阪ム繧､繧｢繝ｭ繧ｰ縺ｮ陦ｨ遉ｺ",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3126,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:51.232Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b8558046944ff0989823-874b3058e36e8a8817c2",
+              "file": "user/authaccountmanagement/accountdelete.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "蜑企勁遒ｺ隱阪ム繧､繧｢繝ｭ繧ｰ縺ｮ陦ｨ遉ｺ",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 17,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1454,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:54.989Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b8558046944ff0989823-d7d8c39a979d58d736c2",
+              "file": "user/authaccountmanagement/accountdelete.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "蜑企勁遒ｺ隱阪ム繧､繧｢繝ｭ繧ｰ縺ｮ陦ｨ遉ｺ",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 21,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 1444,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:57.993Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b8558046944ff0989823-936bad9aef39f8093a3b",
+              "file": "user/authaccountmanagement/accountdelete.spec.ts",
+              "line": 4,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "user\\authaccountmanagement\\emailauth.spec.ts",
+      "file": "user/authaccountmanagement/emailauth.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "authaccountmanagement - emailauth",
+          "file": "user/authaccountmanagement/emailauth.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "隱崎ｨｼ繝｡繝ｼ繝ｫ縺ｮ蜿嶺ｿ｡遒ｺ隱・,
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2387,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:47.906Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "293dcdeae759e9ac900b-cf29d227f9a6fd9a337f",
+              "file": "user/authaccountmanagement/emailauth.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "隱崎ｨｼ繝｡繝ｼ繝ｫ縺ｮ蜿嶺ｿ｡遒ｺ隱・,
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 7,
+                      "status": "timedOut",
+                      "duration": 35050,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\emailauth.spec.ts",
+                            "column": 16,
+                            "line": 6
+                          },
+                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/ja\", waiting until \"load\"\u001b[22m\n\n\n  4 |   test('隱崎ｨｼ繝｡繝ｼ繝ｫ縺ｮ蜿嶺ｿ｡遒ｺ隱・, async ({ page }) => {\n  5 |     // 繝壹・繧ｸ縺ｫ遘ｻ蜍表n> 6 |     await page.goto('/ja');\n    |                ^\n  7 |     await page.waitForLoadState('networkidle');\n  8 |     \n  9 |     // 繝壹・繧ｸ縺梧ｭ｣蟶ｸ縺ｫ隱ｭ縺ｿ霎ｼ縺ｾ繧後◆縺薙→繧堤｢ｺ隱構n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\emailauth.spec.ts:6:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:47.923Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-d4474-ment---emailauth-隱崎ｨｼ繝｡繝ｼ繝ｫ縺ｮ蜿嶺ｿ｡遒ｺ隱・firefox\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-d4474-ment---emailauth-隱崎ｨｼ繝｡繝ｼ繝ｫ縺ｮ蜿嶺ｿ｡遒ｺ隱・firefox\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "293dcdeae759e9ac900b-c09748cbaac32b0c1e10",
+              "file": "user/authaccountmanagement/emailauth.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "隱崎ｨｼ繝｡繝ｼ繝ｫ縺ｮ蜿嶺ｿ｡遒ｺ隱・,
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 3067,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:51.251Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "293dcdeae759e9ac900b-da42cd3f680a6ea68fe5",
+              "file": "user/authaccountmanagement/emailauth.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "隱崎ｨｼ繝｡繝ｼ繝ｫ縺ｮ蜿嶺ｿ｡遒ｺ隱・,
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 18,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 1422,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:55.125Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "293dcdeae759e9ac900b-280b0932be3ec019d644",
+              "file": "user/authaccountmanagement/emailauth.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "隱崎ｨｼ繝｡繝ｼ繝ｫ縺ｮ蜿嶺ｿ｡遒ｺ隱・,
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 22,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1465,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:58.434Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "293dcdeae759e9ac900b-065f4a6d5c0975c412b6",
+              "file": "user/authaccountmanagement/emailauth.spec.ts",
+              "line": 4,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "user\\authaccountmanagement\\login.spec.ts",
+      "file": "user/authaccountmanagement/login.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "authaccountmanagement - login",
+          "file": "user/authaccountmanagement/login.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 8143,
+                      "error": {
+                        "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\u001b[22m\n",
+                        "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\u001b[22m\n\n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts:32:55",
+                        "location": {
+                          "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts",
+                          "column": 55,
+                          "line": 32
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 30 |\u001b[39m     \u001b[90m// 繝｡繝ｼ繝ｫ隱崎ｨｼ繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ縺瑚｡ｨ遉ｺ縺輔ｌ繧九％縺ｨ繧堤｢ｺ隱構u001b[39m\n \u001b[90m 31 |\u001b[39m     \u001b[90m// ・域眠隕冗匳骭ｲ逶ｴ蠕後・繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√％繧後′豁｣蟶ｸ縺ｪ蜍穂ｽ懶ｼ噂u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 32 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByText(\u001b[32m'繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 33 |\u001b[39m     \n \u001b[90m 34 |\u001b[39m     \u001b[90m// 縺薙・迥ｶ諷九〒繝ｭ繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ繧九◆繧√√％繧後ｒ繝・せ繝医・謌仙粥縺ｨ縺吶ｋ\u001b[39m\n \u001b[90m 35 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m'繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√Ο繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ縺ｾ縺励◆・域悄蠕・壹ｊ縺ｮ蜍穂ｽ懶ｼ・\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts",
+                            "column": 55,
+                            "line": 32
+                          },
+                          "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\u001b[22m\n\n\n  30 |     // 繝｡繝ｼ繝ｫ隱崎ｨｼ繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ縺瑚｡ｨ遉ｺ縺輔ｌ繧九％縺ｨ繧堤｢ｺ隱構n  31 |     // ・域眠隕冗匳骭ｲ逶ｴ蠕後・繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√％繧後′豁｣蟶ｸ縺ｪ蜍穂ｽ懶ｼ噂n> 32 |     await expect(page.getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')).toBeVisible();\n     |                                                       ^\n  33 |     \n  34 |     // 縺薙・迥ｶ諷九〒繝ｭ繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ繧九◆繧√√％繧後ｒ繝・せ繝医・謌仙粥縺ｨ縺吶ｋ\n  35 |     console.log('繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√Ο繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ縺ｾ縺励◆・域悄蠕・壹ｊ縺ｮ蜍穂ｽ懶ｼ・);\n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts:32:55"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:47.925Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts",
+                        "column": 55,
+                        "line": 32
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b875eb39f9393f4a49df-083584532727ab643587",
+              "file": "user/authaccountmanagement/login.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 8,
+                      "status": "timedOut",
+                      "duration": 35052,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts",
+                            "column": 16,
+                            "line": 11
+                          },
+                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/ja/register\", waiting until \"load\"\u001b[22m\n\n\n   9 |     \n  10 |     // 譁ｰ隕冗匳骭ｲ\n> 11 |     await page.goto('/ja/register');\n     |                ^\n  12 |     await page.locator('#email').fill(testEmail);\n  13 |     await page.locator('#password').fill(testPassword);\n  14 |     await page.locator('#confirmPassword').fill(testPassword);\n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts:11:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:47.935Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-firefox\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-firefox\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b875eb39f9393f4a49df-1112b01fb31f205bb3b4",
+              "file": "user/authaccountmanagement/login.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 11688,
+                      "error": {
+                        "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\u001b[22m\n",
+                        "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\u001b[22m\n\n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts:32:55",
+                        "location": {
+                          "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts",
+                          "column": 55,
+                          "line": 32
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 30 |\u001b[39m     \u001b[90m// 繝｡繝ｼ繝ｫ隱崎ｨｼ繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ縺瑚｡ｨ遉ｺ縺輔ｌ繧九％縺ｨ繧堤｢ｺ隱構u001b[39m\n \u001b[90m 31 |\u001b[39m     \u001b[90m// ・域眠隕冗匳骭ｲ逶ｴ蠕後・繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√％繧後′豁｣蟶ｸ縺ｪ蜍穂ｽ懶ｼ噂u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 32 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByText(\u001b[32m'繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 33 |\u001b[39m     \n \u001b[90m 34 |\u001b[39m     \u001b[90m// 縺薙・迥ｶ諷九〒繝ｭ繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ繧九◆繧√√％繧後ｒ繝・せ繝医・謌仙粥縺ｨ縺吶ｋ\u001b[39m\n \u001b[90m 35 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m'繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√Ο繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ縺ｾ縺励◆・域悄蠕・壹ｊ縺ｮ蜍穂ｽ懶ｼ・\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts",
+                            "column": 55,
+                            "line": 32
+                          },
+                          "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\u001b[22m\n\n\n  30 |     // 繝｡繝ｼ繝ｫ隱崎ｨｼ繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ縺瑚｡ｨ遉ｺ縺輔ｌ繧九％縺ｨ繧堤｢ｺ隱構n  31 |     // ・域眠隕冗匳骭ｲ逶ｴ蠕後・繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√％繧後′豁｣蟶ｸ縺ｪ蜍穂ｽ懶ｼ噂n> 32 |     await expect(page.getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')).toBeVisible();\n     |                                                       ^\n  33 |     \n  34 |     // 縺薙・迥ｶ諷九〒繝ｭ繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ繧九◆繧√√％繧後ｒ繝・せ繝医・謌仙粥縺ｨ縺吶ｋ\n  35 |     console.log('繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√Ο繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ縺ｾ縺励◆・域悄蠕・壹ｊ縺ｮ蜍穂ｽ懶ｼ・);\n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts:32:55"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:51.197Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-webkit\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-webkit\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-webkit\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts",
+                        "column": 55,
+                        "line": 32
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b875eb39f9393f4a49df-c8272bd095e502f11e80",
+              "file": "user/authaccountmanagement/login.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 20,
+                      "parallelIndex": 5,
+                      "status": "failed",
+                      "duration": 6283,
+                      "error": {
+                        "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\u001b[22m\n",
+                        "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\u001b[22m\n\n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts:32:55",
+                        "location": {
+                          "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts",
+                          "column": 55,
+                          "line": 32
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 30 |\u001b[39m     \u001b[90m// 繝｡繝ｼ繝ｫ隱崎ｨｼ繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ縺瑚｡ｨ遉ｺ縺輔ｌ繧九％縺ｨ繧堤｢ｺ隱構u001b[39m\n \u001b[90m 31 |\u001b[39m     \u001b[90m// ・域眠隕冗匳骭ｲ逶ｴ蠕後・繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√％繧後′豁｣蟶ｸ縺ｪ蜍穂ｽ懶ｼ噂u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 32 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByText(\u001b[32m'繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 33 |\u001b[39m     \n \u001b[90m 34 |\u001b[39m     \u001b[90m// 縺薙・迥ｶ諷九〒繝ｭ繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ繧九◆繧√√％繧後ｒ繝・せ繝医・謌仙粥縺ｨ縺吶ｋ\u001b[39m\n \u001b[90m 35 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m'繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√Ο繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ縺ｾ縺励◆・域悄蠕・壹ｊ縺ｮ蜍穂ｽ懶ｼ・\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts",
+                            "column": 55,
+                            "line": 32
+                          },
+                          "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\u001b[22m\n\n\n  30 |     // 繝｡繝ｼ繝ｫ隱崎ｨｼ繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ縺瑚｡ｨ遉ｺ縺輔ｌ繧九％縺ｨ繧堤｢ｺ隱構n  31 |     // ・域眠隕冗匳骭ｲ逶ｴ蠕後・繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√％繧後′豁｣蟶ｸ縺ｪ蜍穂ｽ懶ｼ噂n> 32 |     await expect(page.getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')).toBeVisible();\n     |                                                       ^\n  33 |     \n  34 |     // 縺薙・迥ｶ諷九〒繝ｭ繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ繧九◆繧√√％繧後ｒ繝・せ繝医・謌仙粥縺ｨ縺吶ｋ\n  35 |     console.log('繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√Ο繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ縺ｾ縺励◆・域悄蠕・壹ｊ縺ｮ蜍穂ｽ懶ｼ・);\n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts:32:55"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:56.749Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-Mobile-Chrome\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-Mobile-Chrome\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-Mobile-Chrome\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts",
+                        "column": 55,
+                        "line": 32
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b875eb39f9393f4a49df-36788fbe2eff7227ac58",
+              "file": "user/authaccountmanagement/login.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 23,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 7312,
+                      "error": {
+                        "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\u001b[22m\n",
+                        "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\u001b[22m\n\n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts:32:55",
+                        "location": {
+                          "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts",
+                          "column": 55,
+                          "line": 32
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 30 |\u001b[39m     \u001b[90m// 繝｡繝ｼ繝ｫ隱崎ｨｼ繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ縺瑚｡ｨ遉ｺ縺輔ｌ繧九％縺ｨ繧堤｢ｺ隱構u001b[39m\n \u001b[90m 31 |\u001b[39m     \u001b[90m// ・域眠隕冗匳骭ｲ逶ｴ蠕後・繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√％繧後′豁｣蟶ｸ縺ｪ蜍穂ｽ懶ｼ噂u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 32 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByText(\u001b[32m'繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 33 |\u001b[39m     \n \u001b[90m 34 |\u001b[39m     \u001b[90m// 縺薙・迥ｶ諷九〒繝ｭ繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ繧九◆繧√√％繧後ｒ繝・せ繝医・謌仙粥縺ｨ縺吶ｋ\u001b[39m\n \u001b[90m 35 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m'繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√Ο繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ縺ｾ縺励◆・域悄蠕・壹ｊ縺ｮ蜍穂ｽ懶ｼ・\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts",
+                            "column": 55,
+                            "line": 32
+                          },
+                          "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')\u001b[22m\n\n\n  30 |     // 繝｡繝ｼ繝ｫ隱崎ｨｼ繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ縺瑚｡ｨ遉ｺ縺輔ｌ繧九％縺ｨ繧堤｢ｺ隱構n  31 |     // ・域眠隕冗匳骭ｲ逶ｴ蠕後・繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√％繧後′豁｣蟶ｸ縺ｪ蜍穂ｽ懶ｼ噂n> 32 |     await expect(page.getByText('繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺瑚ｪ崎ｨｼ縺輔ｌ縺ｦ縺・∪縺帙ｓ')).toBeVisible();\n     |                                                       ^\n  33 |     \n  34 |     // 縺薙・迥ｶ諷九〒繝ｭ繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ繧九◆繧√√％繧後ｒ繝・せ繝医・謌仙粥縺ｨ縺吶ｋ\n  35 |     console.log('繝｡繝ｼ繝ｫ隱崎ｨｼ縺悟ｿ・ｦ√↑縺溘ａ縲√Ο繧ｰ繧､繝ｳ縺ｯ繝悶Ο繝・け縺輔ｌ縺ｾ縺励◆・域悄蠕・壹ｊ縺ｮ蜍穂ｽ懶ｼ・);\n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts:32:55"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:58.754Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-Mobile-Safari\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-Mobile-Safari\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-62248-ent---login-豁｣縺励＞隱崎ｨｼ諠・ｱ縺ｧ縺ｮ繝ｭ繧ｰ繧､繝ｳ謌仙粥-Mobile-Safari\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\login.spec.ts",
+                        "column": 55,
+                        "line": 32
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b875eb39f9393f4a49df-9f84ae7685d3cdecdaef",
+              "file": "user/authaccountmanagement/login.spec.ts",
+              "line": 4,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "user\\authaccountmanagement\\logout.spec.ts",
+      "file": "user/authaccountmanagement/logout.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "authaccountmanagement - logout",
+          "file": "user/authaccountmanagement/logout.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "繝ｭ繧ｰ繧｢繧ｦ繝亥・逅・・螳御ｺ・｢ｺ隱・,
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 2354,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:47.906Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "184d4a1acf3388f02f1f-22fc9945c925dd6d98d3",
+              "file": "user/authaccountmanagement/logout.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "繝ｭ繧ｰ繧｢繧ｦ繝亥・逅・・螳御ｺ・｢ｺ隱・,
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 9,
+                      "status": "timedOut",
+                      "duration": 35046,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\logout.spec.ts",
+                            "column": 16,
+                            "line": 6
+                          },
+                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/ja\", waiting until \"load\"\u001b[22m\n\n\n  4 |   test('繝ｭ繧ｰ繧｢繧ｦ繝亥・逅・・螳御ｺ・｢ｺ隱・, async ({ page }) => {\n  5 |     // 繝壹・繧ｸ縺ｫ遘ｻ蜍表n> 6 |     await page.goto('/ja');\n    |                ^\n  7 |     await page.waitForLoadState('networkidle');\n  8 |     \n  9 |     // 繝壹・繧ｸ縺梧ｭ｣蟶ｸ縺ｫ隱ｭ縺ｿ霎ｼ縺ｾ繧後◆縺薙→繧堤｢ｺ隱構n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\logout.spec.ts:6:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:47.935Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-148bc-ement---logout-繝ｭ繧ｰ繧｢繧ｦ繝亥・逅・・螳御ｺ・｢ｺ隱・firefox\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-148bc-ement---logout-繝ｭ繧ｰ繧｢繧ｦ繝亥・逅・・螳御ｺ・｢ｺ隱・firefox\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "184d4a1acf3388f02f1f-7308a19815aa5a7ed372",
+              "file": "user/authaccountmanagement/logout.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "繝ｭ繧ｰ繧｢繧ｦ繝亥・逅・・螳御ｺ・｢ｺ隱・,
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 15,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 3186,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:51.295Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "184d4a1acf3388f02f1f-e03488fef791322db797",
+              "file": "user/authaccountmanagement/logout.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "繝ｭ繧ｰ繧｢繧ｦ繝亥・逅・・螳御ｺ・｢ｺ隱・,
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 19,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 1459,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:56.705Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "184d4a1acf3388f02f1f-7d8c1cb7eac87fd228d8",
+              "file": "user/authaccountmanagement/logout.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "繝ｭ繧ｰ繧｢繧ｦ繝亥・逅・・螳御ｺ・｢ｺ隱・,
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 21,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 1422,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:59.490Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "184d4a1acf3388f02f1f-54b3f20394b55b190e84",
+              "file": "user/authaccountmanagement/logout.spec.ts",
+              "line": 4,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "user\\authaccountmanagement\\newmemberregister.spec.ts",
+      "file": "user/authaccountmanagement/newmemberregister.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "authaccountmanagement - newmemberregister",
+          "file": "user/authaccountmanagement/newmemberregister.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "蠢・磯・岼縺ｮ蜈･蜉帙メ繧ｧ繝・け",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 2499,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:47.934Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3c957b5a0b0d5dab3611-49c2df4cd457f40ef992",
+              "file": "user/authaccountmanagement/newmemberregister.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "豁｣蟶ｸ縺ｪ譁ｰ隕冗匳骭ｲ繝輔Ο繝ｼ",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 2777,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:47.899Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3c957b5a0b0d5dab3611-5e706c6edaaaa8ff8466",
+              "file": "user/authaccountmanagement/newmemberregister.spec.ts",
+              "line": 22,
+              "column": 7
+            },
+            {
+              "title": "蠢・磯・岼縺ｮ蜈･蜉帙メ繧ｧ繝・け",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 10,
+                      "status": "timedOut",
+                      "duration": 35047,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\newmemberregister.spec.ts",
+                            "column": 16,
+                            "line": 6
+                          },
+                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/ja/register\", waiting until \"load\"\u001b[22m\n\n\n  4 |   test('蠢・磯・岼縺ｮ蜈･蜉帙メ繧ｧ繝・け', async ({ page }) => {\n  5 |     // 譁ｰ隕冗匳骭ｲ繝壹・繧ｸ縺ｫ遘ｻ蜍表n> 6 |     await page.goto('/ja/register');\n    |                ^\n  7 |     \n  8 |     // 繝壹・繧ｸ縺瑚ｪｭ縺ｿ霎ｼ縺ｾ繧後◆縺薙→繧堤｢ｺ隱構n  9 |     await page.waitForLoadState('networkidle');\n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\newmemberregister.spec.ts:6:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:47.946Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-6aef7-wmemberregister-蠢・磯・岼縺ｮ蜈･蜉帙メ繧ｧ繝・け-firefox\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-6aef7-wmemberregister-蠢・磯・岼縺ｮ蜈･蜉帙メ繧ｧ繝・け-firefox\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3c957b5a0b0d5dab3611-e98e49960a1284c2388f",
+              "file": "user/authaccountmanagement/newmemberregister.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "豁｣蟶ｸ縺ｪ譁ｰ隕冗匳骭ｲ繝輔Ο繝ｼ",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 11,
+                      "status": "timedOut",
+                      "duration": 35047,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\newmemberregister.spec.ts",
+                            "column": 16,
+                            "line": 27
+                          },
+                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/ja/register\", waiting until \"load\"\u001b[22m\n\n\n  25 |     \n  26 |     // 譁ｰ隕冗匳骭ｲ繝壹・繧ｸ縺ｫ遘ｻ蜍表n> 27 |     await page.goto('/ja/register');\n     |                ^\n  28 |     \n  29 |     // 繝輔か繝ｼ繝縺ｫ蜈･蜉媾n  30 |     await page.locator('#email').fill(testEmail);\n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\newmemberregister.spec.ts:27:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:47.958Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-64e16-ewmemberregister-豁｣蟶ｸ縺ｪ譁ｰ隕冗匳骭ｲ繝輔Ο繝ｼ-firefox\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-64e16-ewmemberregister-豁｣蟶ｸ縺ｪ譁ｰ隕冗匳骭ｲ繝輔Ο繝ｼ-firefox\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3c957b5a0b0d5dab3611-fb6cf5ec6b1da689dbdc",
+              "file": "user/authaccountmanagement/newmemberregister.spec.ts",
+              "line": 22,
+              "column": 7
+            },
+            {
+              "title": "蠢・磯・岼縺ｮ蜈･蜉帙メ繧ｧ繝・け",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 16,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 4707,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:51.438Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3c957b5a0b0d5dab3611-1f929e4c7f78502dce55",
+              "file": "user/authaccountmanagement/newmemberregister.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "豁｣蟶ｸ縺ｪ譁ｰ隕冗匳骭ｲ繝輔Ο繝ｼ",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 13192,
+                      "error": {
+                        "message": "TimeoutError: page.waitForURL: Timeout 10000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation to \"**/register-complete\" until \"load\"\n============================================================",
+                        "stack": "TimeoutError: page.waitForURL: Timeout 10000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation to \"**/register-complete\" until \"load\"\n============================================================\n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\newmemberregister.spec.ts:38:16",
+                        "location": {
+                          "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\newmemberregister.spec.ts",
+                          "column": 16,
+                          "line": 38
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 36 |\u001b[39m     \n \u001b[90m 37 |\u001b[39m     \u001b[90m// 逋ｻ骭ｲ螳御ｺ・・繝ｼ繧ｸ縺ｸ縺ｮ繝ｪ繝繧､繝ｬ繧ｯ繝医ｒ遒ｺ隱構u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 38 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForURL(\u001b[32m'**/register-complete'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 39 |\u001b[39m     \n \u001b[90m 40 |\u001b[39m     \u001b[90m// 謌仙粥繝｡繝・そ繝ｼ繧ｸ縺ｾ縺溘・繝壹・繧ｸ縺瑚｡ｨ遉ｺ縺輔ｌ繧九％縺ｨ繧堤｢ｺ隱構u001b[39m\n \u001b[90m 41 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'body'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\newmemberregister.spec.ts",
+                            "column": 16,
+                            "line": 38
+                          },
+                          "message": "TimeoutError: page.waitForURL: Timeout 10000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation to \"**/register-complete\" until \"load\"\n============================================================\n\n  36 |     \n  37 |     // 逋ｻ骭ｲ螳御ｺ・・繝ｼ繧ｸ縺ｸ縺ｮ繝ｪ繝繧､繝ｬ繧ｯ繝医ｒ遒ｺ隱構n> 38 |     await page.waitForURL('**/register-complete', { timeout: 10000 });\n     |                ^\n  39 |     \n  40 |     // 謌仙粥繝｡繝・そ繝ｼ繧ｸ縺ｾ縺溘・繝壹・繧ｸ縺瑚｡ｨ遉ｺ縺輔ｌ繧九％縺ｨ繧堤｢ｺ隱構n  41 |     await expect(page.locator('body')).toBeVisible();\n    at C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\newmemberregister.spec.ts:38:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:54.380Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-64e16-ewmemberregister-豁｣蟶ｸ縺ｪ譁ｰ隕冗匳骭ｲ繝輔Ο繝ｼ-webkit\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-64e16-ewmemberregister-豁｣蟶ｸ縺ｪ譁ｰ隕冗匳骭ｲ繝輔Ο繝ｼ-webkit\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\test-results\\user-authaccountmanagement-64e16-ewmemberregister-豁｣蟶ｸ縺ｪ譁ｰ隕冗匳骭ｲ繝輔Ο繝ｼ-webkit\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC_User\\Documents\\dev\\charactier-ai\\tests\\e2e\\user\\authaccountmanagement\\newmemberregister.spec.ts",
+                        "column": 16,
+                        "line": 38
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3c957b5a0b0d5dab3611-1be7aa706198788c3025",
+              "file": "user/authaccountmanagement/newmemberregister.spec.ts",
+              "line": 22,
+              "column": 7
+            },
+            {
+              "title": "蠢・磯・岼縺ｮ蜈･蜉帙メ繧ｧ繝・け",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 17,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1374,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:56.521Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3c957b5a0b0d5dab3611-87023a4a7f78bfaaa99b",
+              "file": "user/authaccountmanagement/newmemberregister.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "豁｣蟶ｸ縺ｪ譁ｰ隕冗匳骭ｲ繝輔Ο繝ｼ",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 18,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 793,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:18:56.631Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3c957b5a0b0d5dab3611-a3c0a754eee5e39e5db0",
+              "file": "user/authaccountmanagement/newmemberregister.spec.ts",
+              "line": 22,
+              "column": 7
+            },
+            {
+              "title": "蠢・磯・岼縺ｮ蜈･蜉帙メ繧ｧ繝・け",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 22,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1894,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:19:00.037Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3c957b5a0b0d5dab3611-d9d8101ddfe9c817716a",
+              "file": "user/authaccountmanagement/newmemberregister.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "豁｣蟶ｸ縺ｪ譁ｰ隕冗匳骭ｲ繝輔Ο繝ｼ",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 21,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 1405,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-29T15:19:00.916Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3c957b5a0b0d5dab3611-4ce7b93408a99dd9e1be",
+              "file": "user/authaccountmanagement/newmemberregister.spec.ts",
+              "line": 22,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-06-29T15:18:46.724Z",
+    "duration": 40058.53,
+    "expected": 19,
+    "skipped": 0,
+    "unexpected": 11,
+    "flaky": 0
+  }
+}
