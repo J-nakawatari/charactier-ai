@@ -80,7 +80,9 @@ next-env.d.ts
 data/
 
 # Documentation - ドキュメントフォルダ全体
-# docs/  # コメントアウト: testing-checklist.mdが必要なため
+docs/
+!docs/testing-checklist.md  # テストチェックリストは追跡する
+!docs/e2e-test-helper.md    # E2Eテストヘルパーも追跡する
 
 # Upload files - アップロードされた画像ファイル
 uploads/*
