@@ -472,7 +472,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'x-auth-token', 'stripe-signature'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'x-auth-token', 'stripe-signature', 'x-csrf-token', 'X-CSRF-Token'],
   maxAge: 86400 // プリフライトリクエストのキャッシュ時間（24時間）
 }));
 

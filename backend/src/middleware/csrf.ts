@@ -25,6 +25,14 @@ export const verifyCsrfToken = (req: Request, res: Response, next: NextFunction)
   // CookieからCSRFトークンを取得
   const cookieToken = req.cookies[CSRF_COOKIE_NAME];
 
+  // デバッグログ
+  console.log('CSRF Verification:', {
+    headerToken: headerToken ? 'present' : 'missing',
+    cookieToken: cookieToken ? 'present' : 'missing',
+    cookies: Object.keys(req.cookies || {}),
+    headers: Object.keys(req.headers).filter(h => h.toLowerCase().includes('csrf'))
+  });
+
   // トークンが存在し、一致するか確認
   if (!headerToken || !cookieToken || headerToken !== cookieToken) {
     res.status(403).json({ 
@@ -47,8 +55,9 @@ export const setCsrfToken = (req: Request, res: Response, next: NextFunction): v
     res.cookie(CSRF_COOKIE_NAME, token, {
       httpOnly: false, // JavaScriptからアクセス可能にする
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000 // 24時間
+      sameSite: 'lax', // strictからlaxに変更
+      maxAge: 24 * 60 * 60 * 1000, // 24時間
+      path: '/' // パスを明示的に設定
     });
   }
 
@@ -57,14 +66,22 @@ export const setCsrfToken = (req: Request, res: Response, next: NextFunction): v
 
 // CSRFトークンを取得するためのエンドポイントハンドラー
 export const getCsrfToken = (req: Request, res: Response): void => {
-  const token = req.cookies[CSRF_COOKIE_NAME] || generateCsrfToken();
+  const existingToken = req.cookies[CSRF_COOKIE_NAME];
+  const token = existingToken || generateCsrfToken();
   
-  if (!req.cookies[CSRF_COOKIE_NAME]) {
+  console.log('CSRF Token Endpoint:', {
+    existingToken: existingToken ? 'present' : 'missing',
+    newToken: !existingToken,
+    secure: process.env.NODE_ENV === 'production'
+  });
+  
+  if (!existingToken) {
     res.cookie(CSRF_COOKIE_NAME, token, {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000
+      sameSite: 'lax', // strictからlaxに変更（クロスサイトGETリクエストでCookieを送信するため）
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/' // パスを明示的に設定
     });
   }
 
