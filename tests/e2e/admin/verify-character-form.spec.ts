@@ -48,10 +48,27 @@ test.describe('キャラクター作成フォームの検証', () => {
       return; // テストを終了
     }
     
-    // 少し待機してからキャラクター管理ページへ
-    await page.waitForTimeout(1000);
-    await page.goto('/admin/characters/new');
+    // ダッシュボードが完全に読み込まれたことを確認
+    await expect(page).toHaveURL(/.*\/admin\/dashboard/);
+    console.log('📍 現在のURL:', page.url());
+    
+    // キャラクター一覧ページへ移動
+    await page.goto('/admin/characters');
     await page.waitForLoadState('networkidle');
+    console.log('✅ キャラクター一覧ページへ遷移');
+    
+    // 新規作成ボタンをクリック
+    const newButton = page.locator('a[href="/admin/characters/new"], button:has-text("新規作成"), a:has-text("新規作成")').first();
+    if (await newButton.isVisible({ timeout: 5000 })) {
+      await newButton.click();
+      await page.waitForURL('**/admin/characters/new');
+      console.log('✅ キャラクター作成ページへ遷移（ボタン経由）');
+    } else {
+      // ボタンが見つからない場合は直接遷移
+      console.log('⚠️ 新規作成ボタンが見つからないため、直接遷移します');
+      await page.goto('/admin/characters/new');
+      await page.waitForLoadState('networkidle');
+    }
     
     // フォームの必須フィールドを確認
     const nameInput = page.locator('input[type="text"]').first();
