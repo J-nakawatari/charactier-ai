@@ -68,10 +68,13 @@ test.describe('キャラクター作成フォームの検証 v2', () => {
       return;
     }
     
-    // Step 4: フォームフィールドの確認
+    // Step 4: ページが完全に読み込まれるのを待つ
+    await newPage.waitForLoadState('networkidle');
+    await newPage.waitForTimeout(3000); // 追加の待機
+    
     console.log('\n📋 フォームフィールドの確認:');
     
-    // 各要素の数をカウント
+    // 各要素の数をカウント（より確実に）
     const elements = {
       'テキスト入力': await newPage.locator('input[type="text"]').count(),
       'セレクトボックス': await newPage.locator('select').count(),
@@ -79,6 +82,16 @@ test.describe('キャラクター作成フォームの検証 v2', () => {
       'テキストエリア': await newPage.locator('textarea').count(),
       '保存ボタン': await newPage.locator('button[type="submit"], button:has-text("保存"), button:has-text("作成")').count()
     };
+    
+    // デバッグ情報を追加
+    console.log('要素数:', elements);
+    
+    // もし要素が見つからない場合、より広範囲で検索
+    if (elements['テキスト入力'] === 0) {
+      console.log('⚠️ テキスト入力が見つかりません。すべてのinput要素を確認...');
+      const allInputs = await newPage.locator('input').count();
+      console.log(`全input要素: ${allInputs}個`);
+    }
     
     for (const [name, count] of Object.entries(elements)) {
       console.log(`- ${name}: ${count}個`);
