@@ -87,9 +87,18 @@ export default function ChatSidebar({ locale = 'ja' }: ChatSidebarProps) {
     }
     
     // selectedCharacterがある場合
-    if (user?.selectedCharacter?._id) {
-      console.log('Chat link using selectedCharacter:', user.selectedCharacter._id);
-      return `/${currentLocale}/characters/${user.selectedCharacter._id}/chat`;
+    if (user?.selectedCharacter) {
+      // selectedCharacterが文字列のIDかオブジェクトかを確認
+      const characterId = typeof user.selectedCharacter === 'string' 
+        ? user.selectedCharacter 
+        : user.selectedCharacter._id;
+      
+      if (characterId && characterId !== '[object Object]') {
+        console.log('Chat link using selectedCharacter:', characterId);
+        return `/${currentLocale}/characters/${characterId}/chat`;
+      } else {
+        console.error('Invalid selectedCharacter:', user.selectedCharacter);
+      }
     }
     
     // localStorageから最後に選択したキャラクターIDを取得

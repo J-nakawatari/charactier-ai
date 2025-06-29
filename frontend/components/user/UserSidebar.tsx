@@ -96,12 +96,23 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
   const getCurrentCharacterId = () => {
     // URLからキャラクターIDを抽出
     const match = pathname.match(/\/characters\/([^\/]+)\/chat/);
-    if (match && match[1]) {
+    if (match && match[1] && match[1] !== '[object%20Object]') {
       return match[1];
     }
     
     // URLにない場合はselectedCharacterを使用
-    return user?.selectedCharacter;
+    if (user?.selectedCharacter) {
+      // selectedCharacterが文字列かオブジェクトかを確認
+      const characterId = typeof user.selectedCharacter === 'string' 
+        ? user.selectedCharacter 
+        : user.selectedCharacter._id || user.selectedCharacter.id;
+      
+      if (characterId && characterId !== '[object Object]') {
+        return characterId;
+      }
+    }
+    
+    return null;
   };
 
   // selectedCharacterに基づく動的なチャットリンク
