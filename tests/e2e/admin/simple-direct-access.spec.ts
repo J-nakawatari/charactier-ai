@@ -15,7 +15,7 @@ test.describe('シンプルな直接アクセステスト', () => {
     // 長めに待機
     await page.waitForTimeout(5000);
     
-    // 各ページを順番に確認
+    // 各ページを順番に確認（JavaScriptで遷移）
     const pages = [
       { url: '/admin/dashboard', name: 'ダッシュボード' },
       { url: '/admin/characters', name: 'キャラクター一覧' },
@@ -25,7 +25,13 @@ test.describe('シンプルな直接アクセステスト', () => {
     for (const pageInfo of pages) {
       console.log(`\n📄 ${pageInfo.name}を確認中...`);
       
-      await page.goto(pageInfo.url, { waitUntil: 'networkidle' });
+      // JavaScriptで直接遷移（ナビゲーション競合を回避）
+      await page.evaluate((url) => {
+        window.location.href = url;
+      }, pageInfo.url);
+      
+      // ページの読み込みを待つ
+      await page.waitForLoadState('networkidle');
       await page.waitForTimeout(2000);
       
       const currentUrl = page.url();
