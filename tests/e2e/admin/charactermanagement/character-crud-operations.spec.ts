@@ -38,57 +38,42 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     // 基本情報の入力
     const timestamp = Date.now();
     const characterName = `テストキャラ_${timestamp}`;
+    const textInputs = await newPage.locator('input[type="text"]').all();
+    const textareas = await newPage.locator('textarea').all();
     
-    // より柔軟なセレクターで名前フィールドを探す
-    const nameJaSelectors = [
-      'input[name="name.ja"]',
-      'input[name="nameJa"]',
-      'input[id="name-ja"]',
-      'input[placeholder*="日本語"]',
-      'label:has-text("名前") + input',
-      'label:has-text("日本語") + input'
-    ];
+    // キャラクター名（日本語・英語）
+    await textInputs[0].fill(characterName);
+    await textInputs[1].fill(`Test Character ${timestamp}`);
     
-    let nameJaInput = null;
-    for (const selector of nameJaSelectors) {
-      try {
-        const input = newPage.locator(selector).first();
-        if (await input.isVisible({ timeout: 1000 })) {
-          nameJaInput = input;
-          break;
-        }
-      } catch (e) {
-        // Continue to next selector
-      }
+    // キャットフレーズ（日本語・英語）
+    await textInputs[2].fill('テストキャッチフレーズ');
+    await textInputs[3].fill('Test catchphrase');
+    
+    // 説明（日本語・英語）
+    await textareas[0].fill('E2Eテスト用のキャラクター説明です。');
+    await textareas[1].fill('This is a test character for E2E testing.');
+    
+    // セレクトボックス
+    const selects = await newPage.locator('select').all();
+    
+    // 性別（1番目のselect）
+    if (selects.length > 0) {
+      await selects[0].selectOption({ index: 1 });
     }
     
-    if (!nameJaInput) {
-      // 最後の手段：最初のテキスト入力フィールドを使用
-      nameJaInput = newPage.locator('input[type="text"]').first();
+    // 年齢と職業
+    if (textInputs.length > 5) {
+      await textInputs[4].fill('20歳');
+      await textInputs[5].fill('テストキャラクター');
     }
     
-    await nameJaInput.fill(characterName);
-    
-    // 英語名も同様に
-    const nameEnInput = newPage.locator('input[type="text"]').nth(1);
-    await nameEnInput.fill(`Test Character ${timestamp}`);
-    
-    // 説明（textareaを探す）
-    const descriptionJaInput = newPage.locator('textarea').first();
-    await descriptionJaInput.fill('E2Eテスト用のキャラクター説明です。');
-    
-    const descriptionEnInput = newPage.locator('textarea').nth(1);
-    await descriptionEnInput.fill('This is a test character for E2E testing.');
-    
-    // 性格プリセットを選択（必須）
-    const personalityPresetSelect = newPage.locator('select[name="personalityPreset"], select').first();
-    if (await personalityPresetSelect.isVisible()) {
-      // 空でない最初のオプションを選択
-      const options = await personalityPresetSelect.locator('option').all();
+    // 性格プリセット（2番目のselect）
+    if (selects.length > 1) {
+      const options = await selects[1].locator('option').all();
       for (let i = 1; i < options.length; i++) {
         const value = await options[i].getAttribute('value');
         if (value && value !== '') {
-          await personalityPresetSelect.selectOption(value);
+          await selects[1].selectOption(value);
           break;
         }
       }
@@ -107,10 +92,10 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       }
     }
     
-    // プロンプト設定（通常3番目のtextarea）
-    const promptInput = newPage.locator('textarea').nth(2);
-    if (await promptInput.isVisible()) {
-      await promptInput.fill('あなたは親切で優しいAIアシスタントです。');
+    // デフォルトメッセージ（日本語・英語）
+    if (textareas.length >= 4) {
+      await textareas[2].fill('こんにちは！テストキャラクターです。よろしくお願いします！');
+      await textareas[3].fill('Hello! I am a test character. Nice to meet you!');
     }
     
     // 価格タイプの選択
