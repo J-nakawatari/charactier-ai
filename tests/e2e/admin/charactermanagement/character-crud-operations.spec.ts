@@ -1,22 +1,31 @@
 import { test, expect } from '@playwright/test';
 
-test.describe.skip('キャラクター管理機能の包括的E2Eテスト（一時的にスキップ）', () => {
+test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
   const adminEmail = 'admin@example.com';
   const adminPassword = 'admin123';
   
-  test.beforeEach(async ({ page }) => {
-    // 管理者ログイン
-    await page.goto('/admin/login');
-    await page.locator('input[type="email"]').fill(adminEmail);
-    await page.locator('input[type="password"]').fill(adminPassword);
-    await page.locator('button[type="submit"]').click();
-    await page.waitForURL('**/admin/dashboard', { timeout: 10000 });
-  });
+  // beforeEachの代わりに、各テストで新しいコンテキストを使用
 
-  test('新規キャラクターの作成', async ({ page }) => {
+  test('新規キャラクターの作成', async ({ browser }) => {
+    // 新しいコンテキストでより安定した動作を実現
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    
+    // ログイン
+    await page.goto('/admin/login');
+    await page.waitForLoadState('networkidle');
+    await page.fill('input[type="email"]', adminEmail);
+    await page.fill('input[type="password"]', adminPassword);
+    await page.click('button[type="submit"]');
+    
+    // ダッシュボードへの遷移を待つ
+    await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
+    await page.waitForTimeout(3000); // 十分な待機
+    
     // キャラクター管理ページへ
     await page.goto('/admin/characters');
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
     
     // 新規作成ボタンをクリック
     await page.locator('button:has-text("新規作成"), a:has-text("新規作成")').click();
@@ -165,6 +174,9 @@ test.describe.skip('キャラクター管理機能の包括的E2Eテスト（一
       console.error('キャラクター作成テストエラー:', error);
       await page.screenshot({ path: 'character-creation-error.png' });
       throw error;
+    } finally {
+      // クリーンアップ
+      await context.close();
     }
   });
 
