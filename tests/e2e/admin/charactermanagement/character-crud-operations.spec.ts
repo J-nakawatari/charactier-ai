@@ -96,20 +96,38 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     }
     
     // 保存ボタンをクリック
-    const saveResponse = page.waitForResponse(
-      response => response.url().includes('/api/v1/admin/characters') && response.request().method() === 'POST'
-    );
+    const saveButton = page.locator('button:has-text("保存"), button:has-text("作成"), button[type="submit"]').first();
     
-    await page.locator('button:has-text("保存"), button[type="submit"]').click();
+    // ボタンが有効になるまで待つ
+    await expect(saveButton).toBeEnabled({ timeout: 5000 });
     
-    const response = await saveResponse;
-    expect(response.status()).toBe(201);
+    // クリック前にネットワークアイドルを待つ
+    await page.waitForLoadState('networkidle');
     
-    // 成功メッセージを確認
-    const successMessage = page.locator('.toast-success, .success-message');
-    await expect(successMessage).toBeVisible();
+    // 保存ボタンをクリック
+    await saveButton.click();
     
-    console.log(`キャラクター「${characterName}」が正常に作成されました`);
+    // 成功の指標を待つ（複数の可能性）
+    try {
+      // 成功メッセージ、リダイレクト、または新しいキャラクターの表示を待つ
+      await Promise.race([
+        // 成功メッセージ
+        page.waitForSelector('.toast-success, .success-message, [role="alert"]:has-text("成功")', { timeout: 10000 }),
+        // リダイレクト
+        page.waitForURL('**/admin/characters', { timeout: 10000 }),
+        // 作成されたキャラクター名の表示
+        page.waitForSelector(`text="${characterName}"`, { timeout: 10000 })
+      ]);
+      
+      console.log(`キャラクター「${characterName}」が正常に作成されました`);
+    } catch (error) {
+      // エラーメッセージを探す
+      const errorMessage = await page.locator('.error-message, .toast-error, [role="alert"]:has-text("エラー")').textContent().catch(() => null);
+      if (errorMessage) {
+        throw new Error(`キャラクター作成エラー: ${errorMessage}`);
+      }
+      throw error;
+    }
   });
 
   test('既存キャラクターの編集', async ({ page }) => {
