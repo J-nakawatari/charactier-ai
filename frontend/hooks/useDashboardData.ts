@@ -17,7 +17,7 @@ export const DASHBOARD_CACHE_KEYS = {
 // SWRの設定（リクエスト削減版）
 const SWR_CONFIG: SWRConfiguration = {
   // キャッシュ有効期間（大幅に短縮してリクエスト頻度を下げる）
-  dedupingInterval: 5000, // 5秒間は同じリクエストを重複排除
+  dedupingInterval: 10000, // 10秒間は同じリクエストを重複排除
   focusThrottleInterval: 300000, // フォーカス時の再検証を5分に1回に制限
   
   // 自動再検証設定（リクエスト削減のため無効化）
@@ -25,10 +25,10 @@ const SWR_CONFIG: SWRConfiguration = {
   revalidateOnReconnect: true, // ネットワーク再接続時のみ再検証
   revalidateIfStale: false, // 古いデータでも再検証しない
   
-  // エラーハンドリング（リトライを無効化）
-  errorRetryCount: 0, // エラー時のリトライを無効化
-  errorRetryInterval: 5000, // エラー時のリトライ間隔（使用されない）
-  shouldRetryOnError: false, // エラー時の自動リトライを完全に無効化
+  // エラーハンドリング（リトライを制限）
+  errorRetryCount: 1, // エラー時のリトライを1回に制限
+  errorRetryInterval: 5000, // エラー時のリトライ間隔
+  shouldRetryOnError: true, // エラー時の自動リトライは有効（ただし1回のみ）
   
   // パフォーマンス設定
   keepPreviousData: true, // 新しいデータ取得中も前のデータを保持
@@ -36,6 +36,33 @@ const SWR_CONFIG: SWRConfiguration = {
   
   // ローディング状態
   loadingTimeout: 10000, // 10秒でタイムアウト
+  
+  // オフライン対応
+  provider: () => new Map() // メモリベースのキャッシュプロバイダー
+};
+
+// 管理者用のSWR設定（より緩和されたバージョン）
+const ADMIN_SWR_CONFIG: SWRConfiguration = {
+  // キャッシュ有効期間
+  dedupingInterval: 30000, // 30秒間は同じリクエストを重複排除
+  focusThrottleInterval: 600000, // フォーカス時の再検証を10分に1回に制限
+  
+  // 自動再検証設定
+  revalidateOnFocus: false, // ウィンドウフォーカス時の再検証を無効化
+  revalidateOnReconnect: true, // ネットワーク再接続時のみ再検証
+  revalidateIfStale: false, // 古いデータでも再検証しない
+  
+  // エラーハンドリング
+  errorRetryCount: 2, // エラー時のリトライを2回まで
+  errorRetryInterval: 10000, // エラー時のリトライ間隔を10秒に
+  shouldRetryOnError: true, // エラー時の自動リトライは有効
+  
+  // パフォーマンス設定
+  keepPreviousData: true, // 新しいデータ取得中も前のデータを保持
+  fallbackData: undefined, // 初期表示用のフォールバックデータ
+  
+  // ローディング状態
+  loadingTimeout: 30000, // 30秒でタイムアウト
   
   // オフライン対応
   provider: () => new Map() // メモリベースのキャッシュプロバイダー
@@ -172,20 +199,20 @@ export function useUserDashboard() {
 
 // 管理者ダッシュボード用フック
 export function useAdminDashboard() {
-  // 複数のエンドポイントを並列で取得
-  const overview = useSWR(DASHBOARD_CACHE_KEYS.ADMIN_OVERVIEW, fetcher, SWR_CONFIG);
-  const users = useSWR(DASHBOARD_CACHE_KEYS.ADMIN_USERS, fetcher, SWR_CONFIG);
-  const characters = useSWR(DASHBOARD_CACHE_KEYS.ADMIN_CHARACTERS, fetcher, SWR_CONFIG);
+  // 複数のエンドポイントを並列で取得（管理者用の緩和された設定を使用）
+  const overview = useSWR(DASHBOARD_CACHE_KEYS.ADMIN_OVERVIEW, fetcher, ADMIN_SWR_CONFIG);
+  const users = useSWR(DASHBOARD_CACHE_KEYS.ADMIN_USERS, fetcher, ADMIN_SWR_CONFIG);
+  const characters = useSWR(DASHBOARD_CACHE_KEYS.ADMIN_CHARACTERS, fetcher, ADMIN_SWR_CONFIG);
   const errorStats = useSWR(
     `${DASHBOARD_CACHE_KEYS.ADMIN_ERROR_STATS}?range=all`,
     fetcher,
-    SWR_CONFIG
+    ADMIN_SWR_CONFIG
   );
-  const dashboardStats = useSWR(DASHBOARD_CACHE_KEYS.ADMIN_DASHBOARD_STATS, fetcher, SWR_CONFIG);
+  const dashboardStats = useSWR(DASHBOARD_CACHE_KEYS.ADMIN_DASHBOARD_STATS, fetcher, ADMIN_SWR_CONFIG);
   const notifications = useSWR(
     `${DASHBOARD_CACHE_KEYS.ADMIN_NOTIFICATIONS}?limit=5`,
     fetcher,
-    SWR_CONFIG
+    ADMIN_SWR_CONFIG
   );
 
   // すべてのデータの読み込み状態を集約

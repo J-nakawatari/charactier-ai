@@ -33,9 +33,9 @@ export const rateLimitConfigs = {
     blockDuration: 3600
   },
   
-  // 管理者API（レート制限を緩和）
+  // 管理者API（レート制限をさらに緩和）
   admin: {
-    points: 500,    // 200から500に増加
+    points: 1000,    // 500から1000に増加（管理画面の複数API呼び出しに対応）
     duration: 60,
     blockDuration: 60
   },
@@ -127,7 +127,7 @@ export function createRateLimiter(configName: keyof typeof rateLimitConfigs) {
           errorMessage: 'Too many requests',
           errorCode: 'RATE_LIMIT_EXCEEDED',
           userAgent: req.headers['user-agent'] || 'unknown',
-          ip,
+          ipAddress: ip,
           userId: (req as any).user?.userId || null,
           requestBody: {},
           responseTime: 0,

@@ -17,6 +17,7 @@ export interface IAPIError extends Document {
   resolvedAt?: Date; // 解決日時
   resolvedBy?: string; // 解決者ID
   notes?: string;    // 管理者メモ
+  metadata?: any;    // 追加のメタデータ（レート制限情報など）
 }
 
 const APIErrorSchema: Schema = new Schema({
@@ -86,7 +87,11 @@ const APIErrorSchema: Schema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User'
   },
-  notes: String
+  notes: String,
+  metadata: {
+    type: Schema.Types.Mixed,
+    default: {}
+  }
 }, {
   timestamps: true,
   collection: 'api_errors'
@@ -207,6 +212,7 @@ APIErrorSchema.statics.logError = async function(errorData: {
   requestBody?: any;
   stackTrace?: string;
   responseTime?: number;
+  metadata?: any;
 }) {
   try {
     // 機密情報を除外
@@ -224,7 +230,8 @@ APIErrorSchema.statics.logError = async function(errorData: {
       ...errorData,
       requestBody: sanitizedRequestBody,
       responseTime: errorData.responseTime || 0,
-      stackTrace: process.env.NODE_ENV === 'development' ? errorData.stackTrace : undefined
+      stackTrace: process.env.NODE_ENV === 'development' ? errorData.stackTrace : undefined,
+      metadata: errorData.metadata || {}
     });
 
     await error.save();
