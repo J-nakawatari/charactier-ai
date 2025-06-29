@@ -1270,7 +1270,7 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, c
       // キャラクターがpopulateされていない場合は手動で取得
       let character = affinity.character;
       if (!character || typeof character === 'string' || character instanceof mongoose.Types.ObjectId) {
-        const characterDoc = await CharacterModel.findById(character).select('_id name imageCharacterSelect themeColor');
+        const characterDoc = await CharacterModel.findById(character).select('_id name imageCharacterSelect themeColor galleryImages');
         if (!characterDoc) {
           log.warn('Character not found for affinity:', { characterId: character });
           return null;

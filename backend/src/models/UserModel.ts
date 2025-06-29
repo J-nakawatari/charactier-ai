@@ -63,7 +63,12 @@ interface IAffinity {
   
   // レベル進行管理
   unlockedRewards: string[]; // 解放済み報酬ID
+  unlockedImages: {
+    imageId: string;
+    unlockedAt: Date;
+  }[];
   nextRewardLevel: number;
+  nextUnlockLevel: number;
   
   // 感情変化・状態遷移（MoodEngine用）
   moodHistory: IMoodHistory[];
@@ -280,7 +285,18 @@ const AffinitySchema = new Schema({
   
   // レベル進行管理
   unlockedRewards: [String],
+  unlockedImages: [{
+    imageId: String,
+    unlockedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   nextRewardLevel: {
+    type: Number,
+    default: 10
+  },
+  nextUnlockLevel: {
     type: Number,
     default: 10
   },

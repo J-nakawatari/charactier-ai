@@ -32,6 +32,7 @@
     "node_modules",
     "dist",
     "**/*.backup*",
-    "__backup/**/*"
+    "__backup/**/*",
+    "src/scripts/**/*"
   ]
 }

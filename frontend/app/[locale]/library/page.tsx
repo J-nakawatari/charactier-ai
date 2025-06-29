@@ -97,8 +97,8 @@ export default function CharacterLibraryPage() {
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         try {
-          // 実際のユーザー親密度データを取得
-          const affinityResponse = await fetch('/api/v1/user/profile', {
+          // 実際のユーザー親密度データを取得 - dashboard APIを使用
+          const affinityResponse = await fetch('/api/v1/user/dashboard', {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
@@ -106,21 +106,26 @@ export default function CharacterLibraryPage() {
           });
           
           if (affinityResponse.ok) {
-            const userData = await affinityResponse.json();
-            console.log('👤 Library - ユーザープロファイルレスポンス:', userData);
+            const dashboardData = await affinityResponse.json();
+            console.log('👤 Library - ダッシュボードレスポンス:', dashboardData);
             
             // ユーザーの親密度データを抽出
             const realAffinities: Record<string, number> = {};
-            // userData.affinities または userData.user.affinities の両方をチェック
-            const affinitiesData = userData.affinities || userData.user?.affinities;
+            // dashboardData.affinities から親密度データを取得
+            const affinitiesData = dashboardData.affinities;
             if (affinitiesData && Array.isArray(affinitiesData)) {
               affinitiesData.forEach((affinity: any) => {
-                realAffinities[affinity.character] = affinity.level || 0;
-                console.log('❤️ Library - キャラクター親密度:', {
-                  characterId: affinity.character,
-                  level: affinity.level,
-                  experience: affinity.experience
-                });
+                // character._id または character（文字列）の両方に対応
+                const characterId = affinity.character?._id || affinity.character;
+                if (characterId) {
+                  realAffinities[characterId] = affinity.level || 0;
+                  console.log('❤️ Library - キャラクター親密度:', {
+                    characterId: characterId,
+                    level: affinity.level,
+                    experience: affinity.experience,
+                    characterName: affinity.character?.name
+                  });
+                }
               });
             }
             
@@ -128,7 +133,7 @@ export default function CharacterLibraryPage() {
             setUserAffinities(realAffinities);
             
           } else {
-            console.error('❌ Library - 親密度データ取得失敗');
+            console.error('❌ Library - 親密度データ取得失敗:', affinityResponse.status);
             // フォールバック: デフォルト値
             const fallbackAffinities: Record<string, number> = {};
             charactersWithGallery.forEach((char: Character) => {
