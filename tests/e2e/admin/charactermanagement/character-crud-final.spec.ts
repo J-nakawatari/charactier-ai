@@ -115,15 +115,23 @@ test.describe('キャラクター管理機能 - 最終修正版', () => {
         console.log('  ✅ 名前入力完了');
       }
       
-      // 7-2: 説明入力
-      if (formCheck.textareas > 0) {
+      // 7-2: 説明入力（日本語・英語）
+      if (formCheck.textareas >= 2) {
         console.log('  7-2: 説明入力中...');
-        const description = newPage.locator('textarea').first();
-        await description.waitFor({ state: 'visible', timeout: 5000 });
-        await description.clear();
-        await description.fill('最終修正版のテストで作成されたキャラクターです。');
+        // 日本語説明
+        const descriptionJa = newPage.locator('textarea').first();
+        await descriptionJa.waitFor({ state: 'visible', timeout: 5000 });
+        await descriptionJa.clear();
+        await descriptionJa.fill('最終修正版のテストで作成されたキャラクターです。');
+        
+        // 英語説明
+        const descriptionEn = newPage.locator('textarea').nth(1);
+        await descriptionEn.waitFor({ state: 'visible', timeout: 5000 });
+        await descriptionEn.clear();
+        await descriptionEn.fill('This is a test character created with the final version.');
+        
         await newPage.waitForTimeout(500);
-        console.log('  ✅ 説明入力完了');
+        console.log('  ✅ 説明（日本語・英語）入力完了');
       }
       
       // 7-3: 性別と性格プリセット選択
@@ -175,6 +183,25 @@ test.describe('キャラクター管理機能 - 最終修正版', () => {
         await checkbox.click();
         await newPage.waitForTimeout(500);
         console.log('  ✅ 性格タグ選択完了');
+      }
+      
+      // 7-5: デフォルトメッセージ（日本語・英語）
+      if (formCheck.textareas >= 4) {
+        console.log('  7-5: デフォルトメッセージ入力中...');
+        // 日本語デフォルトメッセージ
+        const defaultMessageJa = newPage.locator('textarea').nth(2);
+        await defaultMessageJa.waitFor({ state: 'visible', timeout: 5000 });
+        await defaultMessageJa.clear();
+        await defaultMessageJa.fill('こんにちは！テストキャラクターですよらしくお願いします！');
+        
+        // 英語デフォルトメッセージ
+        const defaultMessageEn = newPage.locator('textarea').nth(3);
+        await defaultMessageEn.waitFor({ state: 'visible', timeout: 5000 });
+        await defaultMessageEn.clear();
+        await defaultMessageEn.fill('Hello! I am a test character. Nice to meet you!');
+        
+        await newPage.waitForTimeout(500);
+        console.log('  ✅ デフォルトメッセージ入力完了');
       }
       
       // スクリーンショット（入力後）
