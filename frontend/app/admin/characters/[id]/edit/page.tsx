@@ -181,7 +181,7 @@ export default function CharacterEditPage() {
         
         // 翻訳データを取得
         try {
-          const translationResponse = await adminFetch(`${API_BASE_URL}/api/v1/characters/${characterId}/translations`);
+          const translationResponse = await adminFetch(`${API_BASE_URL}/api/v1/admin/characters/${characterId}/translations`);
           if (translationResponse.ok) {
             const translationData = await translationResponse.json();
             setTranslationData(translationData);
@@ -279,7 +279,7 @@ export default function CharacterEditPage() {
       
       // 1. 翻訳データを保存
       console.log('🔍 Sending translation data:', translationData);
-      const translationSaveResponse = await adminFetch(`${API_BASE_URL}/api/v1/characters/${characterId}/translations`, {
+      const translationSaveResponse = await adminFetch(`${API_BASE_URL}/api/v1/admin/characters/${characterId}/translations`, {
         method: 'PUT',
         body: JSON.stringify(translationData)
       });

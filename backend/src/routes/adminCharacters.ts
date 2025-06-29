@@ -477,6 +477,114 @@ router.put('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), as
   }
 });
 
+// 翻訳データ取得（管理者用）
+router.get('/:id/translations', adminRateLimit, authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 管理者権限チェック
+    if (!req.admin) {
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED, 'Admin authentication required');
+      return;
+    }
+
+    const character = await CharacterModel.findById(req.params.id);
+    
+    if (!character) {
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'Character not found');
+      return;
+    }
+
+    res.json({
+      name: character.name || { ja: '', en: '' },
+      description: character.description || { ja: '', en: '' },
+      defaultMessage: character.defaultMessage || { ja: '', en: '' },
+      personalityPreset: character.personalityPreset || '',
+      personalityTags: character.personalityTags || []
+    });
+
+  } catch (error) {
+    log.error('Error fetching character translations', error, {
+      characterId: req.params.id,
+      adminId: req.admin?._id
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
+// 翻訳データ保存（管理者用）
+router.put('/:id/translations', adminRateLimit, authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 管理者権限チェック
+    if (!req.admin) {
+      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED, 'Admin authentication required');
+      return;
+    }
+
+    // super_admin権限チェック
+    if (req.admin.role !== 'super_admin') {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Only super admin can edit translations');
+      return;
+    }
+
+    const { name, description, personalityPreset, personalityTags, defaultMessage } = req.body;
+    
+    // バリデーション
+    if (!name || typeof name.ja !== 'string' || typeof name.en !== 'string') {
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Invalid name structure');
+      return;
+    }
+    
+    if (!description || typeof description.ja !== 'string' || typeof description.en !== 'string') {
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Invalid description structure');
+      return;
+    }
+
+    // キャラクターの存在確認
+    const character = await CharacterModel.findById(req.params.id);
+    if (!character) {
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'Character not found');
+      return;
+    }
+
+    // 更新
+    const updatedCharacter = await CharacterModel.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          name,
+          description,
+          defaultMessage: defaultMessage || character.defaultMessage,
+          personalityPreset: personalityPreset || character.personalityPreset,
+          personalityTags: personalityTags || character.personalityTags
+        }
+      },
+      { new: true, runValidators: true }
+    );
+
+    log.info('Character translations updated', { 
+      characterId: updatedCharacter?._id,
+      adminId: req.admin._id
+    });
+
+    res.json({ 
+      message: 'Translations updated',
+      translations: {
+        name: updatedCharacter?.name,
+        description: updatedCharacter?.description,
+        defaultMessage: updatedCharacter?.defaultMessage,
+        personalityPreset: updatedCharacter?.personalityPreset,
+        personalityTags: updatedCharacter?.personalityTags
+      }
+    });
+
+  } catch (error) {
+    log.error('Admin translation update error', error, {
+      characterId: req.params.id,
+      adminId: req.admin?._id
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
 // 画像アップロード（管理者用）
 router.post('/upload/image', uploadRateLimit, authenticateToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: AuthRequest, res: Response): Promise<void> => {
   try {

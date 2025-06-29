@@ -286,8 +286,8 @@ router.get('/:id/affinity-images', generalRateLimit, authenticateToken, async (r
   }
 });
 
-// 翻訳データ取得（/:idより前に定義する必要あり）
-router.get('/:id/translations', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+// 翻訳データ取得（管理者ルートに移動しました）
+/* router.get('/:id/translations', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const character = await CharacterModel.findById(req.params.id);
     
@@ -320,38 +320,25 @@ router.get('/:id/translations', generalRateLimit, authenticateToken, async (req:
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
-});
+}); */
 
-// 翻訳データ保存（/:idより前に定義する必要あり）
-router.put('/:id/translations', adminRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+// 翻訳データ保存（管理者ルートに移動しました）
+/* router.put('/:id/translations', adminRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    // 管理者トークンを明示的にチェック
-    const adminToken = req.cookies?.adminAccessToken;
-    if (!adminToken) {
+    // authenticateTokenミドルウェアで既に認証済み
+    if (!req.admin) {
       sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED, 'Admin authentication required');
-      return;
-    }
-
-    // 管理者トークンを検証
-    const jwt = require('jsonwebtoken');
-    const JWT_SECRET = process.env.JWT_SECRET;
-    const decoded = jwt.verify(adminToken, JWT_SECRET) as { userId: string };
-    
-    // 管理者を取得
-    const admin = await AdminModel.findById(decoded.userId);
-    if (!admin || !admin.isActive) {
-      sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED, 'Invalid admin credentials');
       return;
     }
 
     // 認証情報をログ
     log.debug('Character translation update - Auth', {
-      adminId: admin._id,
-      adminRole: admin.role
+      adminId: req.admin._id,
+      adminRole: req.admin.role
     });
     
     // Check if admin is super_admin
-    if (admin.role !== 'super_admin') {
+    if (req.admin.role !== 'super_admin') {
       sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Only super admin can edit characters');
       return;
     }
@@ -432,7 +419,7 @@ router.put('/:id/translations', adminRateLimit, authenticateToken, async (req: A
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
-});
+}); */
 
 // 個別キャラクター取得
 router.get('/:id', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
