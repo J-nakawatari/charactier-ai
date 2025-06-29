@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test.describe('99%利益確保システムのE2Eテスト', () => {
   let adminToken: string;
-  const testEmail = 'admin-test@example.com';
-  const testPassword = 'Test123!';
+  const testEmail = 'admin@example.com';
+  const testPassword = 'admin123';
 
   test.beforeEach(async ({ page }) => {
     // 管理者ログイン

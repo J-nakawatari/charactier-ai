@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('ユーザー管理機能の包括的E2Eテスト', () => {
-  const adminEmail = 'admin-test@example.com';
-  const adminPassword = 'Test123!';
+  const adminEmail = 'admin@example.com';
+  const adminPassword = 'admin123';
   
   test.beforeEach(async ({ page }) => {
     // 管理者ログイン

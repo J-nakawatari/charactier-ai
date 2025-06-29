@@ -164,8 +164,8 @@ test.describe('プロンプトキャッシュシステムのE2Eテスト', () =>
   test('キャッシュ統計情報の確認', async ({ page }) => {
     // 管理者としてログイン
     await page.goto('/admin/login');
-    await page.locator('input[type="email"]').fill('admin-test@example.com');
-    await page.locator('input[type="password"]').fill('Test123!');
+    await page.locator('input[type="email"]').fill('admin@example.com');
+    await page.locator('input[type="password"]').fill('admin123');
     await page.locator('button[type="submit"]').click();
     
     // ダッシュボードへ

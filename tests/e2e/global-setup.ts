@@ -36,11 +36,21 @@ async function globalSetup(config: FullConfig) {
     });
     console.log('✅ Created paid test character:', paidCharacter.name);
     
+    // テスト用管理者アカウントを作成
+    const adminUser = await testDataManager.createTestAdmin({
+      email: 'admin@example.com',
+      password: 'admin123',
+      name: 'テスト管理者'
+    });
+    console.log('✅ Created test admin:', adminUser.email);
+    
     // グローバル変数に保存（テストで使用可能）
     process.env.TEST_USER_EMAIL = testUser.email;
     process.env.TEST_USER_PASSWORD = testUser.password;
     process.env.TEST_FREE_CHARACTER_ID = freeCharacter._id;
     process.env.TEST_PAID_CHARACTER_ID = paidCharacter._id;
+    process.env.TEST_ADMIN_EMAIL = adminUser.email;
+    process.env.TEST_ADMIN_PASSWORD = adminUser.password;
     
     console.log('✅ E2E Test Global Setup Completed');
   } catch (error) {
