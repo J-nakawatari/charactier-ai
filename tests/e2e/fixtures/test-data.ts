@@ -14,7 +14,7 @@ export interface TestCharacter {
   _id?: string;
 }
 
-const MONGODB_URI = process.env.TEST_MONGODB_URI || 'mongodb://localhost:27017/charactier-test';
+const MONGODB_URI = process.env.MONGODB_URI || process.env.TEST_MONGODB_URI || 'mongodb://localhost:27017/charactier-test';
 
 export class TestDataManager {
   private client: MongoClient;

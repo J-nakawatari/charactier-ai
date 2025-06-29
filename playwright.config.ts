@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// .env.testファイルを読み込む
+dotenv.config({ path: path.resolve(process.cwd(), '.env.test') });
 
 /**
  * See https://playwright.dev/docs/test-configuration.

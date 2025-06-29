@@ -1,7 +1,12 @@
 import { FullConfig } from '@playwright/test';
 import { testDataManager } from './fixtures/test-data';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
 
 async function globalSetup(config: FullConfig) {
+  // .env.testファイルを読み込む
+  dotenv.config({ path: path.resolve(process.cwd(), '.env.test') });
+  
   console.log('🚀 E2E Test Global Setup Starting...');
   
   try {
