@@ -23,9 +23,13 @@ export function useNotificationStream() {
   useEffect(() => {
     let eventSource: EventSource | null = null;
     let reconnectTimeout: NodeJS.Timeout | null = null;
+    let connectionStartTime: number = 0;
 
     const connect = async () => {
       try {
+        // 接続開始時刻を記録
+        connectionStartTime = Date.now();
+        
         // EventSourceはCookieを自動的に送るので、認証はCookieベースで行われる
         // フロントエンドプロキシ経由で接続（CSP対策）
         eventSource = new EventSource(`/api/v1/notifications/stream`, {
@@ -74,6 +78,15 @@ export function useNotificationStream() {
           console.error('❌ Notification stream error:', error);
           setIsConnected(false);
           eventSource?.close();
+          
+          // 401エラーの場合は再接続しない（認証が無効）
+          const timeSinceConnect = Date.now() - connectionStartTime;
+          const isAuthError = timeSinceConnect < 1000; // 1秒以内にエラーは認証エラーの可能性が高い
+          
+          if (isAuthError) {
+            console.log('🔐 Authentication error detected, stopping reconnection');
+            return; // 再接続しない
+          }
           
           // 5秒後に再接続を試みる
           reconnectTimeout = setTimeout(() => {

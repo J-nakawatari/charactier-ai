@@ -48,6 +48,7 @@ export function useNotificationStreamOptimized() {
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef(0);
+  const connectionStartTimeRef = useRef<number>(0);
 
   // 最大リトライ回数とバックオフ設定
   const MAX_RETRY_COUNT = 10;
@@ -94,6 +95,9 @@ export function useNotificationStreamOptimized() {
     }));
 
     try {
+      // 接続開始時刻を記録
+      connectionStartTimeRef.current = Date.now();
+      
       // EventSourceはCookieを自動的に送るので、認証はCookieベースで行われる
       eventSourceRef.current = new EventSource(`/api/v1/notifications/stream`, {
         withCredentials: true
@@ -152,6 +156,22 @@ export function useNotificationStreamOptimized() {
         console.error('❌ Notification stream error:', error);
         eventSourceRef.current?.close();
         eventSourceRef.current = null;
+        
+        // 401エラーの場合は再接続しない（認証が無効）
+        // EventSourceはステータスコードを直接取得できないため、
+        // 接続後すぐにエラーが発生した場合は認証エラーと判断
+        const timeSinceConnect = Date.now() - connectionStartTimeRef.current;
+        const isAuthError = timeSinceConnect < 1000; // 1秒以内にエラーは認証エラーの可能性が高い
+        
+        if (isAuthError) {
+          console.log('🔐 Authentication error detected, stopping reconnection');
+          setConnectionState({
+            status: 'failed',
+            retryCount: retryCountRef.current,
+            lastError: 'Authentication failed'
+          });
+          return; // 再接続しない
+        }
         
         setConnectionState(prev => ({
           status: 'disconnected',
