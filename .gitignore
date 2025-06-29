@@ -42,6 +42,7 @@ out/
 # Coverage
 coverage/
 .nyc_output/
+coverage.yaml
 
 # Dependency lock files (optional)
 package-lock.json
@@ -55,6 +56,10 @@ package-lock.json
 # Temp
 tmp/
 temp/
+
+# Testing
+playwright-report/
+test-results/
 
 # Git backup / filter-repo
 .git/filter-repo/
