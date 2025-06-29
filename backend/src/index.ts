@@ -7084,7 +7084,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateTo
 });
 
 // ユーザーのアカウント削除API
-routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticateToken, verifyCsrfToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
