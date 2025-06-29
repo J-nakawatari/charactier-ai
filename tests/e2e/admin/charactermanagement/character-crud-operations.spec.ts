@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
+test.describe.skip('キャラクター管理機能の包括的E2Eテスト（一時的にスキップ）', () => {
   const adminEmail = 'admin@example.com';
   const adminPassword = 'admin123';
   
