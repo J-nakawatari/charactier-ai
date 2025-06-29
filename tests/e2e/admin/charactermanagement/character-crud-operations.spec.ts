@@ -152,17 +152,23 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       await newPage.waitForTimeout(2000);
       
       // 現在のURLを確認
-      const currentUrl = page.url();
+      const currentUrl = newPage.url();
       console.log(`現在のURL: ${currentUrl}`);
       
       // 成功の判定（複数の条件）
-      const isSuccess = 
-        // URLがキャラクター一覧または編集ページ
-        currentUrl.includes('/admin/characters') ||
-        // 成功メッセージが表示されている
-        await newPage.locator('.toast-success, .success-message').isVisible().catch(() => false) ||
-        // 作成したキャラクター名が表示されている
-        await newPage.locator(`text="${characterName}"`).isVisible().catch(() => false);
+      let isSuccess = false;
+      try {
+        isSuccess = 
+          // URLがキャラクター一覧または編集ページ
+          currentUrl.includes('/admin/characters') ||
+          // 成功メッセージが表示されている
+          await newPage.locator('.toast-success, .success-message').isVisible().catch(() => false) ||
+          // 作成したキャラクター名が表示されている
+          await newPage.locator(`text="${characterName}"`).isVisible().catch(() => false);
+      } catch (checkError) {
+        console.log('成功判定中のエラー:', checkError.message);
+        isSuccess = false;
+      }
       
       if (isSuccess) {
         console.log(`キャラクター「${characterName}」が正常に作成されました`);
@@ -176,11 +182,22 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       }
     } catch (error) {
       console.error('キャラクター作成テストエラー:', error);
-      await newPage.screenshot({ path: 'character-creation-error.png' });
+      try {
+        // newPageがまだ開いている場合のみスクリーンショットを撮る
+        if (newPage && !newPage.isClosed()) {
+          await newPage.screenshot({ path: 'character-creation-error.png' });
+        }
+      } catch (screenshotError) {
+        console.log('スクリーンショットの保存に失敗:', screenshotError.message);
+      }
       throw error;
     } finally {
       // クリーンアップ
-      await context.close();
+      try {
+        await context.close();
+      } catch (closeError) {
+        console.log('コンテキストのクローズに失敗:', closeError.message);
+      }
     }
   });
 
