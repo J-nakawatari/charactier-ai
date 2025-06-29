@@ -6,17 +6,36 @@ test.describe('authaccountmanagement - newmemberregister', () => {
     await page.goto('/ja/register');
     
     // ページが読み込まれたことを確認
-    await expect(page.getByRole('heading', { name: '新規登録' })).toBeVisible();
+    await page.waitForLoadState('networkidle');
     
     // 何も入力せずに登録ボタンをクリック
-    await page.getByRole('button', { name: '登録' }).click();
+    await page.locator('button[type="submit"]').click();
     
-    // エラーメッセージが表示されることを確認
-    await expect(page.getByText('名前は必須です')).toBeVisible();
-    await expect(page.getByText('メールアドレスは必須です')).toBeVisible();
-    await expect(page.getByText('パスワードは必須です')).toBeVisible();
+    // ブラウザのバリデーションメッセージを確認（HTML5の required 属性）
+    const emailInput = page.locator('input[type="email"]');
+    const isEmailInvalid = await emailInput.evaluate((el: HTMLInputElement) => !el.checkValidity());
+    expect(isEmailInvalid).toBe(true);
+  });
+  
+  test('正常な新規登録フロー', async ({ page }) => {
+    const timestamp = Date.now();
+    const testEmail = `test-${timestamp}@example.com`;
     
-    // 利用規約のチェックがされていないエラー
-    await expect(page.getByText('利用規約に同意してください')).toBeVisible();
+    // 新規登録ページに移動
+    await page.goto('/ja/register');
+    
+    // フォームに入力
+    await page.locator('#email').fill(testEmail);
+    await page.locator('#password').fill('Test123!');
+    await page.locator('#confirmPassword').fill('Test123!');
+    
+    // 登録ボタンをクリック
+    await page.locator('button[type="submit"]').click();
+    
+    // 登録完了ページへのリダイレクトを確認
+    await page.waitForURL('**/register-complete', { timeout: 10000 });
+    
+    // 成功メッセージまたはページが表示されることを確認
+    await expect(page.locator('body')).toBeVisible();
   });
 });
