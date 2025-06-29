@@ -2,196 +2,153 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
-import { execSync } from 'child_process';
 
 interface CoverageData {
   [key: string]: 'pending' | 'ready';
 }
 
-interface CoverageSummary {
+interface TestGroup {
+  name: string;
+  tests: {
+    id: string;
+    status: 'pending' | 'ready';
+  }[];
+}
+
+interface SummaryReport {
   total: number;
   ready: number;
   pending: number;
-  percentage: number;
-  bySection: {
-    [section: string]: {
+  coverage: number;
+  sections: {
+    [key: string]: {
       total: number;
       ready: number;
       pending: number;
-      percentage: number;
+      coverage: number;
+      groups: TestGroup[];
     };
   };
-  timestamp: string;
-}
-
-// Playwrightのテスト一覧を取得
-function getPlaywrightTests(): Set<string> {
-  const testIds = new Set<string>();
-  
-  try {
-    // playwright listコマンドを実行
-    const output = execSync('npx playwright test --list', { encoding: 'utf-8' });
-    const lines = output.split('\n');
-    
-    // テストIDを抽出（Test IDコメントから）
-    for (const line of lines) {
-      const match = line.match(/Test ID:\s+([a-z0-9.-]+)/);
-      if (match) {
-        testIds.add(match[1]);
-      }
-    }
-  } catch (error) {
-    console.warn('Warning: Could not get Playwright test list. Running basic coverage analysis.');
-  }
-  
-  return testIds;
 }
 
 // カバレッジレポートを生成
-function generateReport(coverageData: CoverageData, implementedTests: Set<string>): CoverageSummary {
-  const summary: CoverageSummary = {
-    total: 0,
-    ready: 0,
-    pending: 0,
-    percentage: 0,
-    bySection: {},
-    timestamp: new Date().toISOString()
-  };
-  
-  // 各テストの状態を集計
-  for (const [testId, status] of Object.entries(coverageData)) {
-    summary.total++;
-    
-    // セクションを抽出
-    const section = testId.split('.')[0];
-    if (!summary.bySection[section]) {
-      summary.bySection[section] = {
-        total: 0,
-        ready: 0,
-        pending: 0,
-        percentage: 0
-      };
-    }
-    
-    summary.bySection[section].total++;
-    
-    // ステータスをカウント
-    if (status === 'ready' && (implementedTests.size === 0 || implementedTests.has(testId))) {
-      summary.ready++;
-      summary.bySection[section].ready++;
-    } else {
-      summary.pending++;
-      summary.bySection[section].pending++;
-    }
-  }
-  
-  // パーセンテージを計算
-  summary.percentage = summary.total > 0 ? Math.round((summary.ready / summary.total) * 100) : 0;
-  
-  for (const section of Object.values(summary.bySection)) {
-    section.percentage = section.total > 0 ? Math.round((section.ready / section.total) * 100) : 0;
-  }
-  
-  return summary;
-}
-
-// メイン処理
-async function main() {
+function generateReport() {
   const coveragePath = path.join(process.cwd(), 'coverage.yaml');
-  const reportDir = path.join(process.cwd(), 'coverage');
-  const summaryPath = path.join(reportDir, 'summary.json');
-  const detailPath = path.join(reportDir, 'detail.md');
   
-  // coverage.yamlを読み込み
   if (!fs.existsSync(coveragePath)) {
-    console.error('Error: coverage.yaml not found. Run "npm run gen:specs" first.');
+    console.error('Error: coverage.yaml not found');
+    console.error('Run "npm run gen:specs" first to generate coverage data');
     process.exit(1);
   }
   
   const coverageData: CoverageData = yaml.parse(fs.readFileSync(coveragePath, 'utf-8'));
   
-  // 実装済みテストを取得
-  const implementedTests = getPlaywrightTests();
+  // セクション別に集計
+  const summary: SummaryReport = {
+    total: 0,
+    ready: 0,
+    pending: 0,
+    coverage: 0,
+    sections: {}
+  };
   
-  // レポートを生成
-  const summary = generateReport(coverageData, implementedTests);
+  // テストをグループ化
+  for (const [testId, status] of Object.entries(coverageData)) {
+    const parts = testId.split('.');
+    const section = parts[0]; // user, admin, testfield
+    const group = parts[1];   // authaccountmanagement, etc
+    const subGroup = parts[2]; // newmemberregister, etc
+    
+    // セクション初期化
+    if (!summary.sections[section]) {
+      summary.sections[section] = {
+        total: 0,
+        ready: 0,
+        pending: 0,
+        coverage: 0,
+        groups: []
+      };
+    }
+    
+    // グループを探す
+    let testGroup = summary.sections[section].groups.find(g => g.name === group);
+    if (!testGroup) {
+      testGroup = { name: group, tests: [] };
+      summary.sections[section].groups.push(testGroup);
+    }
+    
+    // テストを追加
+    testGroup.tests.push({ id: testId, status });
+    
+    // カウント
+    summary.total++;
+    summary.sections[section].total++;
+    
+    if (status === 'ready') {
+      summary.ready++;
+      summary.sections[section].ready++;
+    } else {
+      summary.pending++;
+      summary.sections[section].pending++;
+    }
+  }
   
-  // レポートディレクトリを作成
-  fs.mkdirSync(reportDir, { recursive: true });
+  // カバレッジ率を計算
+  summary.coverage = Math.round((summary.ready / summary.total) * 100);
+  for (const section of Object.values(summary.sections)) {
+    section.coverage = Math.round((section.ready / section.total) * 100);
+  }
   
-  // サマリーをJSON形式で保存
+  // レポートを出力
+  console.log('\n📊 E2E Test Coverage Report');
+  console.log('==========================\n');
+  
+  console.log(`Total Tests: ${summary.total}`);
+  console.log(`✅ Ready: ${summary.ready}`);
+  console.log(`⏳ Pending: ${summary.pending}`);
+  console.log(`📈 Coverage: ${summary.coverage}%\n`);
+  
+  // セクション別詳細
+  for (const [sectionName, section] of Object.entries(summary.sections)) {
+    console.log(`\n## ${sectionName.toUpperCase()}`);
+    console.log(`Tests: ${section.total} | Ready: ${section.ready} | Coverage: ${section.coverage}%`);
+    
+    // グループ別のサマリー
+    for (const group of section.groups) {
+      const readyCount = group.tests.filter(t => t.status === 'ready').length;
+      const percentage = Math.round((readyCount / group.tests.length) * 100);
+      const bar = generateProgressBar(percentage);
+      
+      console.log(`  ${group.name}: ${bar} ${percentage}% (${readyCount}/${group.tests.length})`);
+    }
+  }
+  
+  // JSONサマリーを保存
+  const summaryPath = path.join(process.cwd(), 'coverage', 'summary.json');
+  fs.mkdirSync(path.dirname(summaryPath), { recursive: true });
   fs.writeFileSync(summaryPath, JSON.stringify(summary, null, 2));
   
-  // 詳細レポートをMarkdown形式で生成
-  let detailReport = `# Test Coverage Report
-
-Generated: ${new Date().toLocaleString()}
-
-## Summary
-
-- **Total Tests**: ${summary.total}
-- **Implemented**: ${summary.ready} (${summary.percentage}%)
-- **Pending**: ${summary.pending}
-
-## Coverage by Section
-
-`;
+  console.log(`\n💾 Summary saved to: coverage/summary.json`);
   
-  for (const [section, stats] of Object.entries(summary.bySection)) {
-    detailReport += `### ${section}\n`;
-    detailReport += `- Total: ${stats.total}\n`;
-    detailReport += `- Ready: ${stats.ready} (${stats.percentage}%)\n`;
-    detailReport += `- Pending: ${stats.pending}\n\n`;
-    
-    // プログレスバーを追加
-    const barLength = 20;
-    const filledLength = Math.round((stats.percentage / 100) * barLength);
-    const emptyLength = barLength - filledLength;
-    const progressBar = '█'.repeat(filledLength) + '░'.repeat(emptyLength);
-    detailReport += `Progress: [${progressBar}] ${stats.percentage}%\n\n`;
-  }
-  
-  // 未実装テストのリスト
-  detailReport += `## Pending Tests\n\n`;
-  const pendingTests = Object.entries(coverageData)
-    .filter(([_, status]) => status === 'pending')
-    .map(([id]) => id);
-  
-  if (pendingTests.length > 0) {
-    for (const testId of pendingTests.slice(0, 20)) {
-      detailReport += `- ${testId}\n`;
+  // 未実装のテスト一覧を出力（オプション）
+  if (process.argv.includes('--pending')) {
+    console.log('\n⏳ Pending Tests:');
+    for (const [testId, status] of Object.entries(coverageData)) {
+      if (status === 'pending') {
+        console.log(`  - ${testId}`);
+      }
     }
-    if (pendingTests.length > 20) {
-      detailReport += `\n... and ${pendingTests.length - 20} more\n`;
-    }
-  } else {
-    detailReport += `All tests are implemented! 🎉\n`;
   }
-  
-  // 詳細レポートを保存
-  fs.writeFileSync(detailPath, detailReport);
-  
-  // コンソール出力
-  console.log('\n📊 Test Coverage Report');
-  console.log('======================');
-  console.log(`Total Coverage: ${summary.percentage}% (${summary.ready}/${summary.total})`);
-  console.log('\nBy Section:');
-  
-  for (const [section, stats] of Object.entries(summary.bySection)) {
-    const barLength = 20;
-    const filledLength = Math.round((stats.percentage / 100) * barLength);
-    const emptyLength = barLength - filledLength;
-    const progressBar = '█'.repeat(filledLength) + '░'.repeat(emptyLength);
-    console.log(`  ${section}: [${progressBar}] ${stats.percentage}% (${stats.ready}/${stats.total})`);
-  }
-  
-  console.log(`\n✅ Reports saved to:`);
-  console.log(`   - ${summaryPath}`);
-  console.log(`   - ${detailPath}`);
 }
 
-// エラーハンドリング
-main().catch((error) => {
-  console.error('Error:', error);
-  process.exit(1);
-});
+// プログレスバーを生成
+function generateProgressBar(percentage: number): string {
+  const width = 20;
+  const filled = Math.round((percentage / 100) * width);
+  const empty = width - filled;
+  
+  return `[${'█'.repeat(filled)}${' '.repeat(empty)}]`;
+}
+
+// メイン実行
+generateReport();
