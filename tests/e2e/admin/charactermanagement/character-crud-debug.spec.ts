@@ -101,10 +101,21 @@ test.describe('キャラクター作成デバッグテスト', () => {
       if (await personalitySelect.isVisible()) {
         console.log('  性格プリセットを選択...');
         const options = await personalitySelect.locator('option').all();
-        if (options.length > 1) {
-          const value = await options[1].getAttribute('value');
-          if (value) {
+        console.log(`  オプション数: ${options.length}`);
+        
+        for (let i = 0; i < options.length; i++) {
+          const value = await options[i].getAttribute('value');
+          const text = await options[i].textContent();
+          console.log(`    [${i}] value="${value}", text="${text}"`);
+        }
+        
+        // 空でない最初の値を選択
+        for (let i = 1; i < options.length; i++) {
+          const value = await options[i].getAttribute('value');
+          if (value && value !== '') {
+            console.log(`  選択: ${value}`);
             await personalitySelect.selectOption(value);
+            break;
           }
         }
       }

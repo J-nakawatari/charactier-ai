@@ -85,10 +85,16 @@ test.describe('キャラクター管理機能 - 修正版', () => {
       if (selectCount > 0) {
         const personalitySelect = newPage.locator('select').first();
         await personalitySelect.waitFor({ state: 'visible', timeout: 5000 });
-        const options = await personalitySelect.locator('option').count();
-        if (options > 1) {
-          await personalitySelect.selectOption({ index: 1 });
-          console.log('✅ 性格プリセット選択');
+        const options = await personalitySelect.locator('option').all();
+        
+        // 空でない値を選択
+        for (let i = 1; i < options.length; i++) {
+          const value = await options[i].getAttribute('value');
+          if (value && value !== '') {
+            await personalitySelect.selectOption(value);
+            console.log(`✅ 性格プリセット選択: ${value}`);
+            break;
+          }
         }
       }
       

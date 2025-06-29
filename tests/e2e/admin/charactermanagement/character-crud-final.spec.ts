@@ -131,11 +131,22 @@ test.describe('キャラクター管理機能 - 最終修正版', () => {
         console.log('  7-3: 性格プリセット選択中...');
         const select = newPage.locator('select').first();
         await select.waitFor({ state: 'visible', timeout: 5000 });
+        
+        // オプションの値を取得して、空でない最初の値を選択
         const options = await select.locator('option').all();
-        if (options.length > 1) {
-          await select.selectOption({ index: 1 });
-          await newPage.waitForTimeout(500);
-          console.log('  ✅ 性格プリセット選択完了');
+        console.log(`  オプション数: ${options.length}`);
+        
+        for (let i = 1; i < options.length; i++) {
+          const optionValue = await options[i].getAttribute('value');
+          const optionText = await options[i].textContent();
+          console.log(`  オプション[${i}]: value="${optionValue}", text="${optionText}"`);
+          
+          if (optionValue && optionValue !== '') {
+            await select.selectOption(optionValue);
+            await newPage.waitForTimeout(500);
+            console.log(`  ✅ 性格プリセット選択完了: ${optionValue}`);
+            break;
+          }
         }
       }
       

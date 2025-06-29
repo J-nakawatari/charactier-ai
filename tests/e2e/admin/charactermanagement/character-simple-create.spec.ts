@@ -96,8 +96,17 @@ test.describe('シンプルなキャラクター作成テスト', () => {
     if (formElements['select'] > 0) {
       // 性格プリセット
       const select = page.locator('select').first();
-      await select.selectOption({ index: 1 });
-      console.log('✅ 性格プリセット選択完了');
+      const options = await select.locator('option').all();
+      
+      // 空でない最初の値を選択
+      for (let i = 1; i < options.length; i++) {
+        const value = await options[i].getAttribute('value');
+        if (value && value !== '') {
+          await select.selectOption(value);
+          console.log(`✅ 性格プリセット選択完了: ${value}`);
+          break;
+        }
+      }
     }
     
     if (formElements['checkbox'] > 0) {

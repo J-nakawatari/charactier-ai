@@ -77,11 +77,13 @@ test.describe('実証済みアプローチでのキャラクター作成', () =>
     const selects = await newPage.locator('select').all();
     if (selects.length > 0) {
       const options = await selects[0].locator('option').all();
-      if (options.length > 1) {
-        const value = await options[1].getAttribute('value');
-        if (value) {
+      // 空でない最初の値を選択
+      for (let i = 1; i < options.length; i++) {
+        const value = await options[i].getAttribute('value');
+        if (value && value !== '') {
           await selects[0].selectOption(value);
-          console.log('✅ 性格プリセットを選択');
+          console.log(`✅ 性格プリセットを選択: ${value}`);
+          break;
         }
       }
     }

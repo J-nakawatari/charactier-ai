@@ -83,12 +83,13 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     // 性格プリセットを選択（必須）
     const personalityPresetSelect = newPage.locator('select[name="personalityPreset"], select').first();
     if (await personalityPresetSelect.isVisible()) {
-      // 最初のオプション以外を選択（通常最初は空白）
+      // 空でない最初のオプションを選択
       const options = await personalityPresetSelect.locator('option').all();
-      if (options.length > 1) {
-        const value = await options[1].getAttribute('value');
-        if (value) {
+      for (let i = 1; i < options.length; i++) {
+        const value = await options[i].getAttribute('value');
+        if (value && value !== '') {
           await personalityPresetSelect.selectOption(value);
+          break;
         }
       }
     }
