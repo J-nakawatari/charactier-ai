@@ -1,9 +1,40 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
-  test.setTimeout(60000); // 全テストのタイムアウトを60秒に設定
+  test.setTimeout(120000); // 全テストのタイムアウトを120秒に設定（レート制限対策）
   const adminEmail = 'admin@example.com';
   const adminPassword = 'admin123';
+  
+  // ログイン処理を共通化
+  const loginAsAdmin = async (page: any) => {
+    // レート制限を回避するため、テスト開始前に少し待機
+    await page.waitForTimeout(2000);
+    
+    await page.goto('/admin/login');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000); // レート制限対策
+    
+    await page.fill('input[type="email"]', adminEmail);
+    await page.fill('input[type="password"]', adminPassword);
+    await page.waitForTimeout(500); // レート制限対策
+    
+    await page.click('button[type="submit"]');
+    
+    // ダッシュボードへの遷移を待つ（タイムアウトを延長）
+    try {
+      await page.waitForURL('**/admin/dashboard', { timeout: 30000 });
+    } catch (error) {
+      // エラー詳細を出力
+      console.log('❌ ログイン失敗。現在のURL:', page.url());
+      const errorMessage = await page.locator('.error-message, .toast-error, [role="alert"]').textContent().catch(() => '');
+      if (errorMessage) {
+        console.log('エラーメッセージ:', errorMessage);
+      }
+      throw error;
+    }
+    
+    await page.waitForTimeout(2000); // ログイン後の待機
+  };
   
   // beforeEachの代わりに、各テストで新しいコンテキストを使用
 
@@ -13,15 +44,8 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     const page = await context.newPage();
     
     // ログイン
-    await page.goto('/admin/login');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[type="email"]', adminEmail);
-    await page.fill('input[type="password"]', adminPassword);
-    await page.click('button[type="submit"]');
-    
-    // ダッシュボードへの遷移を待つ
-    await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
-    await page.waitForTimeout(5000); // 十分な待機（重要）
+    await loginAsAdmin(page);
+    await page.waitForTimeout(3000); // 十分な待機（重要）
     
     // ページを閉じる（debug-character-formと同じアプローチ）
     await page.close();
@@ -255,15 +279,8 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     
     try {
       // ログイン
-      await page.goto('/admin/login');
-      await page.waitForLoadState('networkidle');
-      await page.fill('input[type="email"]', adminEmail);
-      await page.fill('input[type="password"]', adminPassword);
-      await page.click('button[type="submit"]');
-      
-      // ダッシュボードへの遷移を待つ
-      await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
-      await page.waitForTimeout(5000);
+      await loginAsAdmin(page);
+      await page.waitForTimeout(3000);
       await page.close();
       
       // 新しいページでキャラクター管理ページを開く
@@ -587,15 +604,8 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     
     try {
       // ログイン
-      await page.goto('/admin/login');
-      await page.waitForLoadState('networkidle');
-      await page.fill('input[type="email"]', adminEmail);
-      await page.fill('input[type="password"]', adminPassword);
-      await page.click('button[type="submit"]');
-      
-      // ダッシュボードへの遷移を待つ
-      await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
-      await page.waitForTimeout(5000);
+      await loginAsAdmin(page);
+      await page.waitForTimeout(3000);
       await page.close();
       
       // 新しいページでキャラクター管理ページを開く
@@ -821,15 +831,8 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     const page = await context.newPage();
     
     // ログイン
-    await page.goto('/admin/login');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[type="email"]', adminEmail);
-    await page.fill('input[type="password"]', adminPassword);
-    await page.click('button[type="submit"]');
-    
-    // ダッシュボードへの遷移を待つ
-    await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
-    await page.waitForTimeout(5000);
+    await loginAsAdmin(page);
+    await page.waitForTimeout(3000);
     await page.close();
     
     // 新しいページでキャラクター管理ページを開く
@@ -978,15 +981,8 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     const page = await context.newPage();
     
     // ログイン
-    await page.goto('/admin/login');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[type="email"]', adminEmail);
-    await page.fill('input[type="password"]', adminPassword);
-    await page.click('button[type="submit"]');
-    
-    // ダッシュボードへの遷移を待つ
-    await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
-    await page.waitForTimeout(5000);
+    await loginAsAdmin(page);
+    await page.waitForTimeout(3000);
     await page.close();
     
     // 新しいページでキャラクター管理ページを開く
@@ -1032,15 +1028,8 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     const page = await context.newPage();
     
     // ログイン
-    await page.goto('/admin/login');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[type="email"]', adminEmail);
-    await page.fill('input[type="password"]', adminPassword);
-    await page.click('button[type="submit"]');
-    
-    // ダッシュボードへの遷移を待つ
-    await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
-    await page.waitForTimeout(5000);
+    await loginAsAdmin(page);
+    await page.waitForTimeout(3000);
     await page.close();
     
     // 新しいページでキャラクター管理ページを開く
