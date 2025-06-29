@@ -217,18 +217,11 @@ export default function SettingsPage() {
       setDeleteLoading(true);
       const token = localStorage.getItem('accessToken');
 
-      // CSRFトークンを取得
-      const csrfRes = await fetch('/api/v1/csrf-token', {
-        credentials: 'include'
-      });
-      const { csrfToken } = await csrfRes.json();
-
       const response = await fetch('/api/v1/user/delete-account', {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfToken
+          'Content-Type': 'application/json'
         },
         credentials: 'include',
         body: JSON.stringify({ confirmDeletion: true })
