@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('authaccountmanagement - login', () => {
   test('正しい認証情報でのログイン成功', async ({ page }) => {
     // ログインページに移動
-    await page.goto('/ja/auth/login');
+    await page.goto('/ja/login');
     
     // ログインフォームが表示されることを確認
     await expect(page.getByRole('heading', { name: 'ログイン' })).toBeVisible();
@@ -16,7 +16,7 @@ test.describe('authaccountmanagement - login', () => {
     await page.getByRole('button', { name: 'ログイン' }).click();
     
     // ダッシュボードにリダイレクトされることを確認
-    await page.waitForURL('/ja/dashboard');
+    await page.waitForURL('**/dashboard');
     
     // ダッシュボードが表示されることを確認
     await expect(page.getByRole('heading', { name: 'ダッシュボード' })).toBeVisible();

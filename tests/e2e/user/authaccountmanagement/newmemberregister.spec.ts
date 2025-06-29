@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('authaccountmanagement - newmemberregister', () => {
   test('必須項目の入力チェック', async ({ page }) => {
     // 新規登録ページに移動
-    await page.goto('/ja/auth/register');
+    await page.goto('/ja/register');
     
     // ページが読み込まれたことを確認
     await expect(page.getByRole('heading', { name: '新規登録' })).toBeVisible();
