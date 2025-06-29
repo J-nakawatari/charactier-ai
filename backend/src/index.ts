@@ -40,6 +40,7 @@ import userRoutes from './routes/user';
 import { monitoringMiddleware } from './middleware/monitoring';
 import { registrationRateLimit } from './middleware/registrationLimit';
 import { createRateLimiter } from './middleware/rateLimiter';
+import { verifyCsrfToken, setCsrfToken, getCsrfToken } from './middleware/csrf';
 // const userRoutes = require('./routes/user');
 // const dashboardRoutes = require('./routes/dashboard');
 import { validateMessage } from './utils/contentFilter';
@@ -77,7 +78,6 @@ import { requestLoggingMiddleware, securityAuditMiddleware } from './middleware/
 import { sendErrorResponse, ClientErrorCode } from './utils/errorResponse';
 import { ServerMonitor } from './monitoring/ServerMonitor';
 import { API_PREFIX } from './config/api';
-import { csrfProtection } from './services/csrfProtection';
 import { stripeWebhookRateLimit } from './middleware/stripeWebhookRateLimit';
 
 // PM2が環境変数を注入するため、dotenv.config()は不要
@@ -942,7 +942,7 @@ app.use((req: any, res: Response, next: NextFunction): void => {
 });
 
 // CSRF保護を適用（Stripe webhook後、他のルート前）
-app.use(csrfProtection);
+app.use(setCsrfToken);
 
 // ヘルスチェックエンドポイント（デプロイメント用、認証不要）
 app.get(`${API_PREFIX}/health`, (req: Request, res: Response) => {
@@ -982,13 +982,7 @@ app.use(`${API_PREFIX}/upload`, createRateLimiter('upload'));
 app.use(API_PREFIX, createRateLimiter('general'));
 
 // CSRFトークン取得エンドポイント
-app.get(`${API_PREFIX}/csrf-token`, (req: Request, res: Response) => {
-  // CSRFミドルウェアがGETリクエストで自動的にトークンをcookieに設定する
-  res.json({ 
-    success: true,
-    message: 'CSRF token has been set in cookie'
-  });
-});
+app.get(`${API_PREFIX}/csrf-token`, getCsrfToken);
 
 // 認証ルート
 app.use(`${API_PREFIX}/auth`, authRoutes);
@@ -7084,7 +7078,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateTo
 });
 
 // ユーザーのアカウント削除API
-routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticateToken, verifyCsrfToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
