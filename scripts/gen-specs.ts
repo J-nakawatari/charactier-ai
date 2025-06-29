@@ -30,6 +30,9 @@ function parseChecklist(content: string): TestItem[] {
   const lines = content.split('\n');
   const items: TestItem[] = [];
   
+  console.log('Total lines in file:', lines.length);
+  console.log('First 5 lines:', lines.slice(0, 5));
+  
   let currentSection = '';
   let currentGroup = '';
   let currentSubGroup = '';
@@ -122,6 +125,9 @@ async function main() {
   }
   
   const content = fs.readFileSync(checklistPath, 'utf-8');
+  console.log('File read successfully, length:', content.length);
+  console.log('First 200 chars:', content.substring(0, 200));
+  
   const items = parseChecklist(content);
   
   console.log(`Found ${items.length} test items`);
