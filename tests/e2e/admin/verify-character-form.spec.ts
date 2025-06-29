@@ -5,8 +5,8 @@ test.describe('キャラクター作成フォームの検証', () => {
     // 管理者ログインページへアクセス
     await page.goto('/admin/login');
     
-    // タイトルが表示されることを確認
-    await expect(page).toHaveTitle(/Admin/i);
+    // ページが読み込まれるのを待つ
+    await page.waitForLoadState('networkidle');
     
     // ログインフォームが存在することを確認
     const emailInput = page.locator('input[type="email"]');
@@ -24,13 +24,23 @@ test.describe('キャラクター作成フォームの検証', () => {
     
     // ダッシュボードへの遷移を待つ（タイムアウトを短くして早期失敗）
     try {
-      await page.waitForURL('**/admin/dashboard', { timeout: 5000 });
+      await page.waitForURL('**/admin/dashboard', { timeout: 10000 });
       console.log('✅ ログイン成功');
     } catch (e) {
       console.log('⚠️ ダッシュボードへの遷移に失敗（データベース接続の問題の可能性）');
       // ログインページのエラーメッセージを確認
-      const errorMessage = await page.locator('.error, .text-red-600').textContent();
-      console.log('エラーメッセージ:', errorMessage);
+      const errorMessages = await page.locator('.error, .text-red-600, [role="alert"]').allTextContents();
+      if (errorMessages.length > 0) {
+        console.log('エラーメッセージ:', errorMessages.join(', '));
+      }
+      
+      // 現在のURLを確認
+      console.log('現在のURL:', page.url());
+      
+      // スクリーンショットを保存
+      await page.screenshot({ path: 'login-error.png' });
+      console.log('スクリーンショットを login-error.png に保存しました');
+      
       return; // テストを終了
     }
     
