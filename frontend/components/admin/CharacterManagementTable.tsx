@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useToast } from '@/contexts/ToastContext';
 import { Eye, Edit, Play, Pause, Heart, Trash2 } from 'lucide-react';
+import { adminFetch } from '@/utils/admin-api';
 
 interface Character {
   _id: string;
@@ -81,9 +82,8 @@ export default function CharacterManagementTable({ characters, onCharacterDelete
   const handleDeleteCharacter = async (character: Character) => {
     if (window.confirm(`${character.name?.ja || 'このキャラクター'}を削除してもよろしいですか？\nこの操作は取り消せません。`)) {
       try {
-        const response = await fetch(`/api/v1/admin/characters/${character._id}`, {
+        const response = await adminFetch(`/api/v1/admin/characters/${character._id}`, {
           method: 'DELETE',
-          credentials: 'include',
         });
 
         if (response.ok) {
