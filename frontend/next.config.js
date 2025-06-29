@@ -1,7 +1,4 @@
-// 強化版i18n設定を使用（本番環境でMISSING_MESSAGEエラーを解決）
-const useEnhancedI18n = process.env.USE_ENHANCED_I18N === 'true' || process.env.NODE_ENV === 'production';
-const i18nConfig = useEnhancedI18n ? './i18n-enhanced.ts' : './i18n.ts';
-const withNextIntl = require('next-intl/plugin')(i18nConfig);
+const withNextIntl = require('next-intl/plugin')('./i18n.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
