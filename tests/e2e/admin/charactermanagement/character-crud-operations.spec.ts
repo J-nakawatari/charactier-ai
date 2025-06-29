@@ -241,7 +241,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       try {
         await context.close();
       } catch (closeError) {
-        console.log('コンテキストのクローズに失敗:', closeError.message);
+        // コンテキストが既に閉じられている場合は無視
       }
     }
   });
@@ -570,7 +570,11 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       // スクリーンショットはエラー箇所で直接保存
       throw error;
     } finally {
-      await context.close();
+      try {
+        await context.close();
+      } catch (e) {
+        // コンテキストが既に閉じられている場合は無視
+      }
     }
   });
 
@@ -803,7 +807,11 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       }
       throw error;
     } finally {
-      await context.close();
+      try {
+        await context.close();
+      } catch (e) {
+        // コンテキストが既に閉じられている場合は無視
+      }
     }
   });
 
@@ -957,7 +965,11 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       console.error('❌ 画像管理テストエラー:', error);
       throw error;
     } finally {
-      await context.close();
+      try {
+        await context.close();
+      } catch (e) {
+        // コンテキストが既に閉じられている場合は無視
+      }
     }
   });
 
