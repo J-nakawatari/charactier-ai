@@ -17,10 +17,41 @@ test.describe('シンプルなキャラクター作成テスト', () => {
     // 5秒待機（重要）
     await page.waitForTimeout(5000);
     
-    // JavaScriptでキャラクター作成ページへ直接遷移
-    await page.evaluate(() => {
-      window.location.href = '/admin/characters/new';
-    });
+    // キャラクター一覧ページ経由で遷移（より確実）
+    console.log('📄 キャラクター一覧ページへ遷移...');
+    await page.goto('/admin/characters');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
+    
+    // 新規作成ボタンを探してクリック
+    console.log('🔍 新規作成ボタンを探しています...');
+    const newButtonSelectors = [
+      'a[href="/admin/characters/new"]',
+      'button:has-text("新規作成")',
+      'a:has-text("新規作成")',
+      'button:has-text("追加")',
+      'a:has-text("キャラクターを追加")'
+    ];
+    
+    let clicked = false;
+    for (const selector of newButtonSelectors) {
+      try {
+        const button = page.locator(selector).first();
+        if (await button.isVisible({ timeout: 2000 })) {
+          await button.click();
+          clicked = true;
+          console.log(`✅ ボタンをクリック: ${selector}`);
+          break;
+        }
+      } catch (e) {
+        // 次のセレクターを試す
+      }
+    }
+    
+    if (!clicked) {
+      console.log('⚠️ 新規作成ボタンが見つかりません。直接URLで遷移を試みます...');
+      await page.goto('/admin/characters/new');
+    }
     
     // ページの読み込みを待つ
     await page.waitForLoadState('networkidle');
@@ -29,9 +60,18 @@ test.describe('シンプルなキャラクター作成テスト', () => {
     const currentUrl = page.url();
     console.log('📍 現在のURL:', currentUrl);
     
-    // URLが正しいことを確認
-    if (!currentUrl.includes('/admin/characters/new')) {
-      throw new Error('キャラクター作成ページに到達できませんでした');
+    // URLが正しいことを確認（より柔軟に）
+    if (!currentUrl.includes('/characters/new') && !currentUrl.includes('/characters/create')) {
+      console.error('❌ 期待したURLではありません:', currentUrl);
+      await page.screenshot({ path: 'navigation-error.png' });
+      
+      // ページの内容を確認
+      const pageTitle = await page.title();
+      const bodyText = await page.locator('body').innerText();
+      console.log('ページタイトル:', pageTitle);
+      console.log('ページの最初の200文字:', bodyText.substring(0, 200));
+      
+      throw new Error(`キャラクター作成ページに到達できませんでした。現在のURL: ${currentUrl}`);
     }
     
     // フォーム要素の存在確認
