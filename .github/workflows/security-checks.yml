@@ -66,12 +66,21 @@ jobs:
         cd backend
         npm run test:security:xss || true
     
-    # CSRF保護テスト（他のセキュリティテストに統合済み）
-    - name: Check CSRF protection
+    # CSRF保護テスト
+    - name: Run CSRF protection tests
       run: |
         cd backend
-        echo "CSRF protection is tested as part of the security test suite"
-        echo "Tests include: XSS, validation, rate limiting, and headers"
+        echo "🔒 Testing CSRF Protection..."
+        npm run test:security:csrf || true
+        
+        # CSRF設定の確認
+        echo "📋 Checking CSRF middleware configuration..."
+        grep -q "verifyCsrfToken" src/index.ts && echo "✅ CSRF middleware is configured" || echo "❌ CSRF middleware not found"
+        grep -q "csrf-token" src/index.ts && echo "✅ CSRF token endpoint exists" || echo "❌ CSRF token endpoint not found"
+        
+        # Feature Flag の確認
+        echo "🏳️ Checking CSRF Feature Flags..."
+        grep -q "FEATURE_CSRF_SAMESITE_STRICT" .env.example && echo "✅ CSRF SameSite feature flag documented" || echo "⚠️ CSRF feature flag not documented"
     
     # レート制限テスト
     - name: Run rate limiting tests

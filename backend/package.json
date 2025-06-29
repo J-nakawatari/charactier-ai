@@ -17,6 +17,7 @@
         "test:security:validation": "jest --testPathPattern=validation --coverage",
         "test:security:features": "jest --testPathPattern=features --coverage",
         "test:security:headers": "jest --testPathPattern=headers --coverage",
+        "test:security:csrf": "jest --testPathPattern=csrf-test --coverage",
         "test:load": "ts-node src/tests/load-tests.ts",
         "check-api-duplicates": "node ../scripts/check-api-duplicates.js",
         "check:password-migration": "ts-node scripts/migrate-passwords-to-argon2.ts",
