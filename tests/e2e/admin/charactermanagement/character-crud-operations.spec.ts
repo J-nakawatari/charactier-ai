@@ -402,34 +402,18 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       const editUrl = newPage.url();
       console.log(`📍 編集ページURL: ${editUrl}`);
       
-      // 編集フォームが表示されることを確認（複数のセレクタを試す）
-      const editPageSelectors = [
-        'h1:has-text("キャラクター編集")',
-        'h2:has-text("キャラクター編集")',
-        'text="キャラクター編集"',
-        'div[class*="container"]',
-        'main',
-        'input[type="text"]'
-      ];
+      // 編集画面の要素を確認（スクリーンショットに基づく）
+      // 1. タイトル「キャラクター編集」を確認
+      const titleVisible = await newPage.locator('text="キャラクター編集"').isVisible().catch(() => false);
+      console.log(`📝 タイトル表示: ${titleVisible ? '✅' : '❌'}`);
       
-      let pageLoaded = false;
-      for (const selector of editPageSelectors) {
-        try {
-          await newPage.waitForSelector(selector, { timeout: 5000 });
-          console.log(`✅ 編集画面が表示されました（セレクタ: ${selector}）`);
-          pageLoaded = true;
-          break;
-        } catch (e) {
-          console.log(`⚠️ セレクタ ${selector} が見つかりません`);
-        }
-      }
+      // 2. 言語タブを確認
+      const japaneseTab = await newPage.locator('button:has-text("日本語")').isVisible().catch(() => false);
+      const englishTab = await newPage.locator('button:has-text("English")').isVisible().catch(() => false);
+      console.log(`🌏 言語タブ - 日本語: ${japaneseTab ? '✅' : '❌'}, English: ${englishTab ? '✅' : '❌'}`);
       
-      if (!pageLoaded) {
-        console.log('❌ 編集画面の読み込みに失敗しました');
-        await newPage.screenshot({ path: 'edit-page-not-loaded.png', fullPage: true });
-        const pageContent = await newPage.content();
-        console.log('ページのHTML（最初の1000文字）:', pageContent.substring(0, 1000));
-      }
+      // 3. ページが読み込まれるまで待機
+      await newPage.waitForTimeout(2000);
       
       // デバッグ用スクリーンショット
       await newPage.screenshot({ path: 'character-edit-page.png', fullPage: true });
@@ -437,27 +421,22 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       // 入力フィールドを探す前に追加の待機
       await newPage.waitForTimeout(2000);
       
-      // キャラクター名入力フィールドを複数の方法で探す
+      // キャラクター名入力フィールドを探す（スクリーンショットでは「キャラクター名（日本語）」の下）
       let nameInput = null;
-      const inputSelectors = [
-        'input[type="text"]:visible',
-        'input[name*="name"]',
-        'input[id*="name"]',
-        'input[placeholder*="名前"]',
-        'input[type="text"]'
-      ];
       
-      for (const selector of inputSelectors) {
-        try {
-          const input = newPage.locator(selector).first();
-          if (await input.isVisible({ timeout: 1000 })) {
-            nameInput = input;
-            console.log(`✅ 名前入力フィールドを発見: ${selector}`);
-            break;
-          }
-        } catch (e) {
-          // 次のセレクタを試す
+      // まず「キャラクター名（日本語）」ラベルを探す
+      const nameLabel = newPage.locator('text="キャラクター名（日本語）"');
+      if (await nameLabel.isVisible()) {
+        console.log('✅ キャラクター名ラベルを発見');
+        // ラベルの次の入力フィールドを探す
+        nameInput = newPage.locator('text="キャラクター名（日本語）" >> .. >> input[type="text"]').first();
+        if (!(await nameInput.isVisible())) {
+          // 別の方法：最初のテキスト入力フィールド
+          nameInput = newPage.locator('input[type="text"]').first();
         }
+      } else {
+        // ラベルが見つからない場合は、最初のテキスト入力フィールドを使用
+        nameInput = newPage.locator('input[type="text"]').first();
       }
       
       if (!nameInput || !(await nameInput.isVisible())) {
@@ -467,8 +446,11 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
         const allInputs = await newPage.locator('input').count();
         console.log(`📊 表示されている入力フィールド: ${visibleInputs}/${allInputs}`);
         
-        console.log('⚠️ 編集フォームが見つかりません。このテストをスキップします。');
-        return; // エラーを投げずにテストを終了
+        // ページのHTMLを一部出力してデバッグ
+        const pageContent = await newPage.content();
+        console.log('ページHTMLの一部:', pageContent.substring(0, 500));
+        
+        throw new Error(`名前入力フィールドが見つかりません。表示されている入力フィールド数: ${visibleInputs}`);
       }
       
       // 現在の値を取得
@@ -513,26 +495,33 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       // スクリーンショット（更新前）
       await newPage.screenshot({ path: 'character-edit-before-save.png', fullPage: true });
       
-      // 保存ボタンを探す
-      const saveButtonSelectors = [
-        'button[type="submit"]',
-        'button:has-text("更新")',
-        'button:has-text("保存")',
-        'button:has-text("変更を保存")',
-        '.save-button'
-      ];
-      
+      // 保存ボタンを探す（スクリーンショットでは右下の紫色のボタン）
       let saveButton = null;
-      for (const selector of saveButtonSelectors) {
-        const button = newPage.locator(selector).first();
-        if (await button.isVisible({ timeout: 1000 })) {
-          saveButton = button;
-          console.log(`✅ 保存ボタン発見: ${selector}`);
-          break;
+      
+      // まず紫色の保存ボタンを探す
+      saveButton = newPage.locator('button:has-text("保存")').filter({ hasClass: /bg-purple|purple|primary/ }).first();
+      
+      if (!(await saveButton.isVisible())) {
+        // 通常の保存ボタンを探す
+        const saveButtonSelectors = [
+          'button:has-text("保存")',
+          'button[type="submit"]:has-text("保存")',
+          'button:has-text("更新")',
+          'button:has-text("変更を保存")'
+        ];
+        
+        for (const selector of saveButtonSelectors) {
+          const button = newPage.locator(selector).first();
+          if (await button.isVisible({ timeout: 1000 })) {
+            saveButton = button;
+            console.log(`✅ 保存ボタン発見: ${selector}`);
+            break;
+          }
         }
       }
       
-      if (!saveButton) {
+      if (!saveButton || !(await saveButton.isVisible())) {
+        await newPage.screenshot({ path: 'save-button-not-found.png', fullPage: true });
         throw new Error('保存ボタンが見つかりません');
       }
       
