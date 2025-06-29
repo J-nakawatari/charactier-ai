@@ -126,26 +126,43 @@ test.describe('キャラクター管理機能 - 最終修正版', () => {
         console.log('  ✅ 説明入力完了');
       }
       
-      // 7-3: 性格プリセット選択
+      // 7-3: 性別と性格プリセット選択
       if (formCheck.selects > 0) {
-        console.log('  7-3: 性格プリセット選択中...');
-        const select = newPage.locator('select').first();
-        await select.waitFor({ state: 'visible', timeout: 5000 });
+        console.log('  7-3: セレクトボックス処理中...');
+        const selects = await newPage.locator('select').all();
         
-        // オプションの値を取得して、空でない最初の値を選択
-        const options = await select.locator('option').all();
-        console.log(`  オプション数: ${options.length}`);
+        // 最初のセレクト（性別）
+        if (selects.length > 0) {
+          const genderSelect = selects[0];
+          await genderSelect.waitFor({ state: 'visible', timeout: 5000 });
+          const genderOptions = await genderSelect.locator('option').all();
+          if (genderOptions.length > 1) {
+            const value = await genderOptions[1].getAttribute('value');
+            if (value) {
+              await genderSelect.selectOption(value);
+              console.log(`  ✅ 性別選択完了: ${value}`);
+            }
+          }
+        }
         
-        for (let i = 1; i < options.length; i++) {
-          const optionValue = await options[i].getAttribute('value');
-          const optionText = await options[i].textContent();
-          console.log(`  オプション[${i}]: value="${optionValue}", text="${optionText}"`);
+        // 2番目のセレクト（性格プリセット）
+        if (selects.length > 1) {
+          const personalitySelect = selects[1];
+          await personalitySelect.waitFor({ state: 'visible', timeout: 5000 });
+          const personalityOptions = await personalitySelect.locator('option').all();
+          console.log(`  性格プリセットオプション数: ${personalityOptions.length}`);
           
-          if (optionValue && optionValue !== '') {
-            await select.selectOption(optionValue);
-            await newPage.waitForTimeout(500);
-            console.log(`  ✅ 性格プリセット選択完了: ${optionValue}`);
-            break;
+          // 空でない最初の値を選択
+          for (let i = 1; i < personalityOptions.length; i++) {
+            const optionValue = await personalityOptions[i].getAttribute('value');
+            const optionText = await personalityOptions[i].textContent();
+            
+            if (optionValue && optionValue !== '') {
+              await personalitySelect.selectOption(optionValue);
+              await newPage.waitForTimeout(500);
+              console.log(`  ✅ 性格プリセット選択完了: ${optionValue} (${optionText})`);
+              break;
+            }
           }
         }
       }
