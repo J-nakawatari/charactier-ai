@@ -186,7 +186,10 @@ export default function CharactersPage() {
               <CharacterStats characters={characters} />
               
               {/* キャラクター管理テーブル */}
-              <CharacterManagementTable characters={characters} />
+              <CharacterManagementTable 
+        characters={characters} 
+        onCharacterDeleted={fetchCharacters}
+      />
             </>
           )}
         </div>

@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useToast } from '@/contexts/ToastContext';
-import { Eye, Edit, Play, Pause, Heart } from 'lucide-react';
+import { Eye, Edit, Play, Pause, Heart, Trash2 } from 'lucide-react';
 
 interface Character {
   _id: string;
@@ -25,10 +25,11 @@ interface Character {
 
 interface CharacterManagementTableProps {
   characters: Character[];
+  onCharacterDeleted?: () => void;
 }
 
-export default function CharacterManagementTable({ characters }: CharacterManagementTableProps) {
-  const { success, warning } = useToast();
+export default function CharacterManagementTable({ characters, onCharacterDeleted }: CharacterManagementTableProps) {
+  const { success, warning, error } = useToast();
   
   // ヘルパー関数
   const formatDate = (dateString: string) => {
@@ -74,6 +75,29 @@ export default function CharacterManagementTable({ characters }: CharacterManage
       warning('キャラクター非公開', `${character.name?.ja || 'キャラクター'}を非公開にしました`);
     } else {
       success('キャラクター公開', `${character.name?.ja || 'キャラクター'}を公開しました`);
+    }
+  };
+
+  const handleDeleteCharacter = async (character: Character) => {
+    if (window.confirm(`${character.name?.ja || 'このキャラクター'}を削除してもよろしいですか？\nこの操作は取り消せません。`)) {
+      try {
+        const response = await fetch(`/api/v1/admin/characters/${character._id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          success('削除完了', `${character.name?.ja || 'キャラクター'}を削除しました`);
+          if (onCharacterDeleted) {
+            onCharacterDeleted();
+          }
+        } else {
+          const data = await response.json();
+          error('削除エラー', data.error || 'キャラクターの削除に失敗しました');
+        }
+      } catch (err) {
+        error('削除エラー', 'キャラクターの削除中にエラーが発生しました');
+      }
     }
   };
 
@@ -128,6 +152,7 @@ export default function CharacterManagementTable({ characters }: CharacterManage
                   <button 
                     onClick={() => handleToggleStatus(character)}
                     className="p-2 text-gray-400 hover:text-yellow-600 transition-colors"
+                    title="非公開にする"
                   >
                     <Pause className="w-4 h-4" />
                   </button>
@@ -135,10 +160,18 @@ export default function CharacterManagementTable({ characters }: CharacterManage
                   <button 
                     onClick={() => handleToggleStatus(character)}
                     className="p-2 text-gray-400 hover:text-green-600 transition-colors"
+                    title="公開する"
                   >
                     <Play className="w-4 h-4" />
                   </button>
                 )}
+                <button 
+                  onClick={() => handleDeleteCharacter(character)}
+                  className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                  title="削除"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
             </div>
             
@@ -306,6 +339,7 @@ export default function CharacterManagementTable({ characters }: CharacterManage
                       <button 
                         onClick={() => handleToggleStatus(character)}
                         className="text-gray-400 hover:text-yellow-600"
+                        title="非公開にする"
                       >
                         <Pause className="w-4 h-4" />
                       </button>
@@ -313,10 +347,18 @@ export default function CharacterManagementTable({ characters }: CharacterManage
                       <button 
                         onClick={() => handleToggleStatus(character)}
                         className="text-gray-400 hover:text-green-600"
+                        title="公開する"
                       >
                         <Play className="w-4 h-4" />
                       </button>
                     )}
+                    <button 
+                      onClick={() => handleDeleteCharacter(character)}
+                      className="text-gray-400 hover:text-red-600"
+                      title="削除"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </td>
               </tr>

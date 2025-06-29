@@ -634,4 +634,50 @@ router.post('/upload/image', uploadRateLimit, authenticateToken, uploadImage.sin
   }
 });
 
+// キャラクター削除（管理者用）
+router.delete('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 管理者権限チェック
+    if (!req.admin) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
+      return;
+    }
+
+    // super_admin権限チェック
+    if (!hasWritePermission(req)) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Only super admin can delete characters');
+      return;
+    }
+
+    // キャラクターを物理削除
+    const deletedCharacter = await CharacterModel.findByIdAndDelete(req.params.id);
+    
+    if (!deletedCharacter) {
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'Character not found');
+      return;
+    }
+    
+    log.info('Character deleted by admin', { 
+      characterId: deletedCharacter._id,
+      characterName: deletedCharacter.name,
+      adminId: req.admin._id
+    });
+    
+    res.json({
+      message: 'キャラクターが削除されました',
+      character: {
+        _id: deletedCharacter._id,
+        name: deletedCharacter.name
+      }
+    });
+
+  } catch (error) {
+    log.error('Character deletion error', error, {
+      characterId: req.params.id,
+      adminId: req.admin?._id
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
 export default router;

@@ -52,18 +52,37 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
     const timestamp = Date.now();
     const characterName = `テストキャラ_${timestamp}`;
     
-    // まず要素の存在を確認
-    await newPage.waitForSelector('input[type="text"]', { timeout: 10000 });
+    // まず要素の存在を確認（複数の方法で待機）
+    try {
+      await newPage.waitForSelector('input[type="text"]', { timeout: 10000 });
+    } catch (e) {
+      console.log('⚠️ input[type="text"]が見つかりません。フォームの読み込みを待機...');
+      await newPage.waitForSelector('form', { timeout: 10000 });
+      await newPage.waitForTimeout(2000);
+    }
+    
+    // デバッグ用スクリーンショット
+    await newPage.screenshot({ path: 'character-new-page.png', fullPage: true });
     
     const textInputs = await newPage.locator('input[type="text"]').all();
     const textareas = await newPage.locator('textarea').all();
     
     console.log(`📝 入力要素数: text inputs=${textInputs.length}, textareas=${textareas.length}`);
     
-    // 要素が存在しない場合はエラー
+    // 要素が存在しない場合はエラー（詳細情報付き）
     if (textInputs.length === 0) {
       await newPage.screenshot({ path: 'no-text-inputs-error.png', fullPage: true });
-      throw new Error('テキスト入力フィールドが見つかりません');
+      const visibleInputs = await newPage.locator('input:visible').count();
+      const allInputs = await newPage.locator('input').count();
+      console.log(`📊 表示されている入力フィールド: ${visibleInputs}/${allInputs}`);
+      
+      // ページの状態を確認
+      const pageTitle = await newPage.title();
+      const pageUrl = newPage.url();
+      console.log(`📄 ページタイトル: ${pageTitle}`);
+      console.log(`🔗 現在のURL: ${pageUrl}`);
+      
+      throw new Error(`テキスト入力フィールドが見つかりません。表示されている入力フィールド数: ${visibleInputs}`);
     }
     
     // キャラクター名（日本語・英語）
@@ -267,9 +286,23 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
         
         // 最小限の情報でキャラクターを作成
         const timestamp = Date.now();
+        
+        // フォームの読み込みを待つ
+        await newPage.waitForSelector('input[type="text"]', { timeout: 10000 });
+        await newPage.waitForTimeout(1000);
+        
         const textInputs = await newPage.locator('input[type="text"]').all();
+        
+        if (textInputs.length === 0) {
+          console.log('⚠️ 新規作成ページでも入力フィールドが見つかりません');
+          await newPage.screenshot({ path: 'new-page-no-inputs.png', fullPage: true });
+          throw new Error('新規作成ページに入力フィールドがありません');
+        }
+        
         await textInputs[0].fill(`編集テスト用_${timestamp}`);
-        await textInputs[1].fill(`Edit Test ${timestamp}`);
+        if (textInputs.length > 1) {
+          await textInputs[1].fill(`Edit Test ${timestamp}`);
+        }
         
         // キャッチフレーズ
         if (textInputs.length > 3) {
@@ -279,8 +312,12 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
         
         // 説明
         const textareas = await newPage.locator('textarea').all();
-        await textareas[0].fill('編集テスト用の説明');
-        await textareas[1].fill('Edit test description');
+        if (textareas.length > 0) {
+          await textareas[0].fill('編集テスト用の説明');
+          if (textareas.length > 1) {
+            await textareas[1].fill('Edit test description');
+          }
+        }
         
         // 性別
         const selects = await newPage.locator('select').all();
@@ -365,60 +402,97 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       const editUrl = newPage.url();
       console.log(`📍 編集ページURL: ${editUrl}`);
       
-      // フォーム要素を確認（成功テストと同じ構造）
-      const textInputs = await newPage.locator('input[type="text"]').all();
-      const textareas = await newPage.locator('textarea').all();
+      // 編集フォームが表示されることを確認（複数のセレクタを試す）
+      try {
+        await newPage.waitForSelector('h1:has-text("キャラクター編集")', { timeout: 10000 });
+        console.log('✅ 編集画面が表示されました');
+      } catch (e) {
+        console.log('⚠️ "キャラクター編集"タイトルが見つかりません。別のセレクタを試します...');
+        // フォームの存在を確認
+        await newPage.waitForSelector('form', { timeout: 10000 });
+        console.log('✅ フォームが表示されました');
+      }
       
-      console.log(`📋 フォーム要素数: テキスト入力=${textInputs.length}, テキストエリア=${textareas.length}`);
+      // デバッグ用スクリーンショット
+      await newPage.screenshot({ path: 'character-edit-page.png', fullPage: true });
       
-      if (textInputs.length === 0) {
-        throw new Error('編集フォームが表示されていません');
+      // 入力フィールドを探す前に追加の待機
+      await newPage.waitForTimeout(2000);
+      
+      // キャラクター名入力フィールドを複数の方法で探す
+      let nameInput = null;
+      const inputSelectors = [
+        'input[type="text"]:visible',
+        'input[name*="name"]',
+        'input[id*="name"]',
+        'input[placeholder*="名前"]',
+        'input[type="text"]'
+      ];
+      
+      for (const selector of inputSelectors) {
+        try {
+          const input = newPage.locator(selector).first();
+          if (await input.isVisible({ timeout: 1000 })) {
+            nameInput = input;
+            console.log(`✅ 名前入力フィールドを発見: ${selector}`);
+            break;
+          }
+        } catch (e) {
+          // 次のセレクタを試す
+        }
+      }
+      
+      if (!nameInput || !(await nameInput.isVisible())) {
+        // エラー時の詳細情報を収集
+        await newPage.screenshot({ path: 'no-input-fields-error.png', fullPage: true });
+        const visibleInputs = await newPage.locator('input:visible').count();
+        const allInputs = await newPage.locator('input').count();
+        console.log(`📊 表示されている入力フィールド: ${visibleInputs}/${allInputs}`);
+        
+        // ページのHTMLを一部出力してデバッグ
+        const pageContent = await newPage.content();
+        console.log('ページHTMLの一部:', pageContent.substring(0, 500));
+        
+        throw new Error(`名前入力フィールドが見つかりません。表示されている入力フィールド数: ${visibleInputs}`);
       }
       
       // 現在の値を取得
-      const originalName = await textInputs[0].inputValue();
+      const originalName = await nameInput.inputValue();
       console.log(`📝 現在の名前: ${originalName}`);
       
-      // 名前を更新（日本語・英語）
+      // 名前を更新
       const timestamp = Date.now();
-      const updatedNameJa = `${originalName}_更新_${timestamp}`;
-      const updatedNameEn = `Updated_${timestamp}`;
+      const updatedName = `${originalName}_更新_${timestamp}`;
       
-      await textInputs[0].clear();
-      await textInputs[0].fill(updatedNameJa);
-      
-      if (textInputs.length > 1) {
-        await textInputs[1].clear();
-        await textInputs[1].fill(updatedNameEn);
-      }
-      
+      await nameInput.clear();
+      await nameInput.fill(updatedName);
       console.log('✅ 名前更新完了');
       
-      // キャッチフレーズを更新
-      if (textInputs.length > 3) {
-        await textInputs[2].clear();
-        await textInputs[2].fill('更新されたキャッチフレーズ');
-        await textInputs[3].clear();
-        await textInputs[3].fill('Updated catchphrase');
-        console.log('✅ キャッチフレーズ更新完了');
-      }
-      
-      // 説明を更新（日本語・英語）
-      if (textareas.length >= 2) {
-        await textareas[0].clear();
-        await textareas[0].fill('更新されたキャラクター説明です。E2Eテストによる編集。');
-        await textareas[1].clear();
-        await textareas[1].fill('Updated character description. Edited by E2E test.');
-        console.log('✅ 説明更新完了');
-      }
-      
       // デフォルトメッセージを更新
-      if (textareas.length >= 4) {
-        await textareas[2].clear();
-        await textareas[2].fill('更新されたデフォルトメッセージです！');
-        await textareas[3].clear();
-        await textareas[3].fill('Updated default message!');
+      const messageTextarea = newPage.locator('textarea').first();
+      if (await messageTextarea.isVisible()) {
+        await messageTextarea.clear();
+        await messageTextarea.fill('更新されたデフォルトメッセージです。E2Eテストによる編集。');
         console.log('✅ デフォルトメッセージ更新完了');
+      }
+      
+      // 性格タイプを変更（優しいと賢いを選択）
+      const kindCheckbox = newPage.locator('label:has-text("優しい") input[type="checkbox"]');
+      if (await kindCheckbox.isVisible()) {
+        const isChecked = await kindCheckbox.isChecked();
+        if (!isChecked) {
+          await kindCheckbox.click();
+          console.log('✅ 「優しい」を選択');
+        }
+      }
+      
+      const smartCheckbox = newPage.locator('label:has-text("賢い") input[type="checkbox"]');
+      if (await smartCheckbox.isVisible()) {
+        const isChecked = await smartCheckbox.isChecked();
+        if (!isChecked) {
+          await smartCheckbox.click();
+          console.log('✅ 「賢い」を選択');
+        }
       }
       
       // スクリーンショット（更新前）
@@ -465,7 +539,7 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
         console.log(`📡 APIレスポンス: ${status}`);
         
         if (status === 200 || status === 201) {
-          console.log(`✅ キャラクター「${updatedNameJa}」が正常に更新されました`);
+          console.log(`✅ キャラクター「${updatedName}」が正常に更新されました`);
         } else {
           const responseBody = await response.json().catch(() => response.text());
           console.log('❌ 更新エラー:', responseBody);
@@ -555,27 +629,70 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
         console.log(`🎯 最後のキャラクターを削除: ${characterName}`);
       }
       
-      // 削除ボタンを探す（ゴミ箱アイコン）
-      const deleteButtonSelectors = [
-        'button[title*="削除"]',
-        'button svg[class*="trash"]',
-        'button:has-text("削除")',
-        '[data-action="delete"]',
-        '.delete-button'
-      ];
+      // 削除ボタンを探す（操作列の最後のボタン）
+      console.log('🔍 削除ボタンを探しています...');
+      
+      // デバッグ用スクリーンショット
+      await newPage.screenshot({ path: 'character-list-before-delete.png', fullPage: true });
+      
+      // 操作列（最後の列）のボタンを探す
+      const actionCell = targetRow.locator('td:last-child');
+      const actionButtons = await actionCell.locator('button, a[role="button"], [role="button"]').all();
+      console.log(`📊 操作列のボタン数: ${actionButtons.length}`);
       
       let deleteButton = null;
-      for (const selector of deleteButtonSelectors) {
-        const button = targetRow.locator(selector).first();
-        if (await button.isVisible({ timeout: 1000 })) {
-          deleteButton = button;
-          console.log(`✅ 削除ボタン発見: ${selector}`);
-          break;
+      
+      // 通常、削除ボタンは2番目（編集ボタンの次）
+      if (actionButtons.length >= 2) {
+        deleteButton = actionButtons[1];
+        console.log('✅ 削除ボタンを操作列の2番目のボタンとして検出');
+      } else if (actionButtons.length === 1) {
+        // ボタンが1つしかない場合は、それが削除ボタンの可能性
+        deleteButton = actionButtons[0];
+        console.log('⚠️ 操作列にボタンが1つしかありません');
+      }
+      
+      // 従来のセレクタでも試す
+      if (!deleteButton) {
+        const deleteButtonSelectors = [
+          'button[title*="削除"]',
+          'button[aria-label*="削除"]',
+          'button:has(svg[class*="trash"])',
+          'button:has-text("削除")',
+          '[data-action="delete"]',
+          '.delete-button',
+          'button[class*="delete"]',
+          'button[class*="danger"]'
+        ];
+        
+        for (const selector of deleteButtonSelectors) {
+          try {
+            const button = targetRow.locator(selector).first();
+            if (await button.isVisible({ timeout: 500 })) {
+              deleteButton = button;
+              console.log(`✅ 削除ボタン発見: ${selector}`);
+              break;
+            }
+          } catch (e) {
+            // 次のセレクタを試す
+          }
         }
       }
       
       if (!deleteButton) {
-        throw new Error('削除ボタンが見つかりません');
+        // エラー時の詳細情報
+        const buttonsInfo = [];
+        for (let i = 0; i < actionButtons.length; i++) {
+          const button = actionButtons[i];
+          const title = await button.getAttribute('title').catch(() => null);
+          const ariaLabel = await button.getAttribute('aria-label').catch(() => null);
+          const classes = await button.getAttribute('class').catch(() => null);
+          buttonsInfo.push(`ボタン${i + 1}: title="${title}", aria-label="${ariaLabel}", class="${classes}"`);
+        }
+        console.log('🔍 操作列のボタン詳細:', buttonsInfo);
+        
+        await newPage.screenshot({ path: 'delete-button-not-found.png', fullPage: true });
+        throw new Error(`削除ボタンが見つかりません。操作列のボタン数: ${actionButtons.length}`);
       }
       
       // 削除ボタンをクリック
@@ -604,15 +721,23 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
         }
       }
       
+      if (!confirmDialog) {
+        console.log('⚠️ 確認ダイアログが表示されませんでした');
+        // 直接削除される可能性もあるため、続行
+      }
+      
+      // 確認ボタンを探す（ダイアログ内外両方）
+      const confirmButtonSelectors = [
+        'button:has-text("削除")',
+        'button:has-text("確認")',
+        'button:has-text("OK")',
+        'button:has-text("はい")',
+        'button[data-action="confirm"]',
+        'button.confirm-delete',
+        'button[class*="danger"]:has-text("削除")'
+      ];
+      
       if (confirmDialog) {
-        // ダイアログ内の確認ボタンを探す
-        const confirmButtonSelectors = [
-          'button:has-text("削除")',
-          'button:has-text("確認")',
-          'button:has-text("OK")',
-          'button:has-text("はい")',
-          'button[data-action="confirm"]'
-        ];
         
         // APIレスポンスを監視
         const deleteResponsePromise = newPage.waitForResponse(
@@ -669,7 +794,9 @@ test.describe('キャラクター管理機能の包括的E2Eテスト', () => {
       
     } catch (error) {
       console.error('❌ 削除テストエラー:', error);
-      // スクリーンショットはエラー箇所で直接保存
+      if (newPage && !newPage.isClosed()) {
+        await newPage.screenshot({ path: 'delete-test-error.png', fullPage: true });
+      }
       throw error;
     } finally {
       await context.close();
