@@ -4,7 +4,8 @@
     "type": "commonjs",
     "scripts": {
         "dev": "ts-node src/index.ts",
-        "dev:test": "cross-env NODE_ENV=test DISABLE_RATE_LIMIT=true ts-node src/index.ts",
+        "dev:test": "npx cross-env NODE_ENV=test DISABLE_RATE_LIMIT=true ts-node src/index.ts",
+        "test:windows": "set NODE_ENV=test&& set DISABLE_RATE_LIMIT=true&& ts-node src/index.ts",
         "build": "tsc -p tsconfig.json",
         "start": "node dist/src/index.js",
         "lint": "eslint src/**/*.ts",
