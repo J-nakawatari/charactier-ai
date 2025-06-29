@@ -11,7 +11,7 @@ interface CommercialTransactionModalProps {
 }
 
 export function CommercialTransactionModal({ isOpen, onClose }: CommercialTransactionModalProps) {
-  const t = useTranslations('sidebar.commercialModal');
+  const t = useTranslations('footer.commercialTransactionModal');
   const tClose = useTranslations('sidebar.termsModal'); // 閉じるボタンの翻訳を借用
 
   useEffect(() => {

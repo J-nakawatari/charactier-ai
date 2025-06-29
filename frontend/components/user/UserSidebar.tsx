@@ -371,27 +371,33 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
 
         {/* 法的リンク */}
         <div className="flex-shrink-0 px-4 pb-3 space-y-1">
-          <Link
+          <a
             href={`/${currentLocale}/terms`}
+            target="_blank"
+            rel="noopener noreferrer"
             onClick={() => setIsOpen(false)}
             className="block px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
           >
             {t('termsOfService')}
-          </Link>
-          <Link
+          </a>
+          <a
             href={`/${currentLocale}/privacy`}
+            target="_blank"
+            rel="noopener noreferrer"
             onClick={() => setIsOpen(false)}
             className="block px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
           >
             {t('privacyPolicy')}
-          </Link>
-          <Link
+          </a>
+          <a
             href={`/${currentLocale}/legal`}
+            target="_blank"
+            rel="noopener noreferrer"
             onClick={() => setIsOpen(false)}
             className="block px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
           >
             {t('commercialTransactions')}
-          </Link>
+          </a>
         </div>
 
         {/* フッター */}

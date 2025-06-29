@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
-import { CommercialTransactionModal } from '@/components/CommercialTransactionModal';
 
 const orbitron = Orbitron({ 
   weight: ['400', '700'], 
@@ -31,7 +30,6 @@ export default function HomePage() {
   const [rightText, setRightText] = useState('');
   const [leftVisible, setLeftVisible] = useState(false);
   const [rightVisible, setRightVisible] = useState(false);
-  const [showCommercialModal, setShowCommercialModal] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   
   const videoSources = useMemo(() => [
@@ -472,19 +470,15 @@ export default function HomePage() {
       
       {/* Footer with Commercial Transaction Act link */}
       <div className="absolute bottom-4 left-0 right-0 text-center z-20">
-        <button
-          onClick={() => setShowCommercialModal(true)}
+        <a
+          href="/commercial-transaction"
+          target="_blank"
+          rel="noopener noreferrer"
           className="text-white text-sm hover:opacity-80 transition-opacity underline"
         >
           {tFooter('commercialTransaction')}
-        </button>
+        </a>
       </div>
-      
-      {/* Modals */}
-      <CommercialTransactionModal 
-        isOpen={showCommercialModal} 
-        onClose={() => setShowCommercialModal(false)} 
-      />
     </div>
   );
 }

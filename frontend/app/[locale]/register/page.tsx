@@ -6,9 +6,6 @@ import { useTranslations } from 'next-intl';
 import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
 import { API_BASE_URL } from '@/libs/constants';
-import { TermsModal } from '@/components/TermsModal';
-import { PrivacyModal } from '@/components/PrivacyModal';
-import { CommercialTransactionModal } from '@/components/CommercialTransactionModal';
 
 const orbitron = Orbitron({ 
   weight: ['400', '700'], 
@@ -36,9 +33,6 @@ export default function RegisterPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [showTermsModal, setShowTermsModal] = useState(false);
-  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-  const [showCommercialModal, setShowCommercialModal] = useState(false);
   
   const videoSources = [
     '/video/hero-videos_01.mp4',
@@ -428,23 +422,25 @@ export default function RegisterPage() {
               {/* Terms Agreement */}
               <div className="text-xs text-gray-600 leading-relaxed">
                 {t('terms')}
-                <button
-                  type="button"
+                <a
+                  href={`/${locale}/terms`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="underline hover:opacity-80 transition-colors"
                   style={{ color: '#E95295' }}
-                  onClick={() => setShowTermsModal(true)}
                 >
                   {t('termsOfService')}
-                </button>
+                </a>
                 {t('and')}
-                <button
-                  type="button"
+                <a
+                  href={`/${locale}/privacy`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="underline hover:opacity-80 transition-colors ml-1"
                   style={{ color: '#E95295' }}
-                  onClick={() => setShowPrivacyModal(true)}
                 >
                   {t('privacyPolicy')}
-                </button>
+                </a>
                 {t('termsAccept')}
               </div>
               
@@ -495,21 +491,16 @@ export default function RegisterPage() {
       
       {/* Footer with Commercial Transaction Act link */}
       <div className="absolute bottom-4 left-0 right-0 text-center z-20">
-        <button
-          onClick={() => setShowCommercialModal(true)}
+        <a
+          href={`/${locale}/legal`}
+          target="_blank"
+          rel="noopener noreferrer"
           className="text-white text-sm hover:opacity-80 transition-opacity underline"
         >
           {tFooter('commercialTransaction')}
-        </button>
+        </a>
       </div>
       
-      {/* Modals */}
-      <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
-      <PrivacyModal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
-      <CommercialTransactionModal 
-        isOpen={showCommercialModal} 
-        onClose={() => setShowCommercialModal(false)} 
-      />
     </div>
   );
 }
