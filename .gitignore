@@ -83,6 +83,7 @@ data/
 docs/
 !docs/testing-checklist.md  # テストチェックリストは追跡する
 !docs/e2e-test-helper.md    # E2Eテストヘルパーも追跡する
+!docs/e2e-testing-guide.md  # E2Eテストガイドも追跡する
 
 # Upload files - アップロードされた画像ファイル
 uploads/*
