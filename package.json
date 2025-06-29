@@ -27,7 +27,7 @@
     "auto-restore-images": "cd backend && npx ts-node src/scripts/auto-restore-images.ts",
     "check-user-purchases": "cd backend && npx ts-node src/scripts/check-user-purchases.ts",
     "reset-rate-limit": "cd backend && npx ts-node src/scripts/reset-rate-limit.ts",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "gen:specs": "tsx scripts/gen-specs.ts",
     "coverage:report": "tsx scripts/coverage-report.ts",
     "test:e2e": "playwright test",
