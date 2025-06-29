@@ -11,10 +11,12 @@ test.describe('authaccountmanagement - newmemberregister', () => {
     // 何も入力せずに登録ボタンをクリック
     await page.locator('button[type="submit"]').click();
     
-    // ブラウザのバリデーションメッセージを確認（HTML5の required 属性）
-    const emailInput = page.locator('input[type="email"]');
-    const isEmailInvalid = await emailInput.evaluate((el: HTMLInputElement) => !el.checkValidity());
-    expect(isEmailInvalid).toBe(true);
+    // カスタムエラーメッセージが表示されることを確認
+    await expect(page.getByText('必須項目を入力してください')).toBeVisible();
+    
+    // 複数のエラーメッセージが表示されていることを確認
+    const errorMessages = await page.locator('text=必須項目を入力してください').count();
+    expect(errorMessages).toBeGreaterThan(0);
   });
   
   test('正常な新規登録フロー', async ({ page }) => {
