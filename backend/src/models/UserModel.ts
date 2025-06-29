@@ -97,7 +97,7 @@ export interface IUser extends Document {
   // セキュリティ・制裁
   violationCount: number;
   warningCount: number;
-  accountStatus: 'active' | 'inactive' | 'suspended' | 'banned' | 'warned' | 'chat_suspended' | 'account_suspended';
+  accountStatus: 'active' | 'inactive' | 'suspended' | 'banned' | 'warned' | 'chat_suspended' | 'account_suspended' | 'deleted';
   suspensionEndDate?: Date;
   banReason?: string;
   lastViolationDate?: Date;
@@ -381,7 +381,7 @@ const UserSchema: Schema = new Schema({
   },
   accountStatus: {
     type: String,
-    enum: ['active', 'inactive', 'suspended', 'banned', 'warned', 'chat_suspended', 'account_suspended'],
+    enum: ['active', 'inactive', 'suspended', 'banned', 'warned', 'chat_suspended', 'account_suspended', 'deleted'],
     default: 'active'
   },
   suspensionEndDate: Date,
