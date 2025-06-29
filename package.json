@@ -30,9 +30,11 @@
     "prepare": "husky || true",
     "gen:specs": "npx tsx scripts/gen-specs.ts",
     "coverage:report": "npx tsx scripts/coverage-report.ts",
+    "test:setup": "./scripts/setup-test-env.sh",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
+    "test:e2e:ui": "playwright test --ui",
     "test:smoke": "playwright test --config=playwright.config.production.ts",
     "monitor:production": "npx tsx scripts/production-monitor.ts",
     "ci": "npm run gen:specs && npm run test:e2e && npm run coverage:report"

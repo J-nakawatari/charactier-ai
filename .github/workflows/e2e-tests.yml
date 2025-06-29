@@ -64,6 +64,29 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: always()
       with:
+        name: test-results
+        path: test-results/
+        retention-days: 30
+        
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
         name: coverage-report
         path: coverage/
         retention-days: 30
+    
+    - name: Upload test videos on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-videos
+        path: test-results/**/*.webm
+        retention-days: 7
+    
+    - name: Upload test screenshots on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-screenshots
+        path: test-results/**/*.png
+        retention-days: 7

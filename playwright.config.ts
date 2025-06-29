@@ -5,6 +5,9 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests/e2e',
+  /* Global setup and teardown */
+  globalSetup: require.resolve('./tests/e2e/global-setup'),
+  globalTeardown: require.resolve('./tests/e2e/global-teardown'),
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -25,7 +28,26 @@ export default defineConfig({
 
     /* Screenshot on failure */
     screenshot: 'only-on-failure',
+    
+    /* Video recording */
+    video: 'retain-on-failure',
+    
+    /* Viewport size */
+    viewport: { width: 1280, height: 720 },
+    
+    /* Ignore HTTPS errors during navigation */
+    ignoreHTTPSErrors: true,
   },
+  
+  /* Configure output folders */
+  outputDir: './test-results',
+  
+  /* Configure reporters */
+  reporter: [
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+    ['json', { outputFile: 'test-results/results.json' }],
+    ['junit', { outputFile: 'test-results/junit.xml' }],
+  ],
 
   /* Configure projects for major browsers */
   projects: [
@@ -59,7 +81,7 @@ export default defineConfig({
   webServer: process.env.CI ? undefined : {
     command: 'npm run dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true, // 既存のサーバーを使用
     timeout: 120 * 1000,
   },
 });
