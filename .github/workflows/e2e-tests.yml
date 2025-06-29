@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  pull-requests: write  # PRへのコメント投稿用（将来の機能拡張用）
+
 jobs:
   test:
     timeout-minutes: 60
