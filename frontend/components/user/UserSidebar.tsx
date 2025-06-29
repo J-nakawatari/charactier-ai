@@ -105,7 +105,7 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
       // selectedCharacterが文字列かオブジェクトかを確認
       const characterId = typeof user.selectedCharacter === 'string' 
         ? user.selectedCharacter 
-        : user.selectedCharacter._id || user.selectedCharacter.id;
+        : (user.selectedCharacter as any)?._id || (user.selectedCharacter as any)?.id;
       
       if (characterId && characterId !== '[object Object]') {
         return characterId;
