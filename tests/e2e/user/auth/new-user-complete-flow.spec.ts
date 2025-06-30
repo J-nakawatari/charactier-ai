@@ -8,8 +8,14 @@ test.describe('New User Complete Flow', () => {
 
   test('Complete new user registration and setup flow', async ({ page }) => {
     // Step 1: Navigate to registration page
-    await page.goto('/');
-    await page.click('a:has-text("新規登録")');
+    await page.goto('/ja'); // Use Japanese locale
+    
+    // Wait for page to load
+    await page.waitForLoadState('networkidle');
+    
+    // Click on the register button/link based on the homepage structure
+    // The homepage has a button with onClick that navigates to register page
+    await page.click('button:has-text("新規登録")');
     await page.waitForURL('**/register');
     
     // Step 2: Fill registration form
@@ -39,7 +45,7 @@ test.describe('New User Complete Flow', () => {
     
     // Step 7: After email verification, user should be redirected to setup
     // For testing, we'll login with the created account
-    await page.goto('/login');
+    await page.goto('/ja/login');
     await page.fill('input[name="email"]', testEmail);
     await page.fill('input[name="password"]', testPassword);
     await page.click('button[type="submit"]');
@@ -57,7 +63,7 @@ test.describe('New User Complete Flow', () => {
   });
 
   test('Registration form validation', async ({ page }) => {
-    await page.goto('/register');
+    await page.goto('/ja/register');
     
     // Test 1: Required fields validation
     await page.click('button[type="submit"]');

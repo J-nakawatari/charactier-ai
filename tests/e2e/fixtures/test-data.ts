@@ -21,6 +21,7 @@ export class TestDataManager {
   private client: MongoClient;
   private testUsers: TestUser[] = [];
   private testCharacters: TestCharacter[] = [];
+  private connected: boolean = false;
 
   constructor() {
     this.client = new MongoClient(MONGODB_URI);
@@ -29,18 +30,27 @@ export class TestDataManager {
   async connect() {
     try {
       await this.client.connect();
+      this.connected = true;
       console.log('✅ MongoDB接続成功');
     } catch (error) {
       console.error('⚠️ MongoDB接続エラー:', error.message);
       console.log('📝 テストはDB接続なしで実行されます');
+      this.connected = false;
       // エラーを吸収してテストを続行
     }
+  }
+  
+  isConnected(): boolean {
+    return this.connected;
   }
 
   async disconnect() {
     try {
-      await this.cleanup();
-      await this.client.close();
+      if (this.connected) {
+        await this.cleanup();
+        await this.client.close();
+        this.connected = false;
+      }
     } catch (error) {
       console.error('⚠️ クリーンアップエラー:', error.message);
       // エラーを吸収
@@ -49,6 +59,18 @@ export class TestDataManager {
 
   // テストユーザーを作成
   async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+    if (!this.connected) {
+      // DB未接続の場合はモックデータを返す
+      const user: TestUser = {
+        email: userData.email || `test-${Date.now()}@example.com`,
+        password: userData.password || 'Test123!',
+        name: userData.name || 'テストユーザー',
+        _id: `mock-user-${Date.now()}`,
+      };
+      this.testUsers.push(user);
+      return user;
+    }
+    
     const db = this.client.db();
     const hashedPassword = await bcrypt.hash(userData.password || 'Test123!', 10);
     
@@ -74,6 +96,18 @@ export class TestDataManager {
 
   // テスト管理者を作成
   async createTestAdmin(adminData: Partial<TestUser> = {}): Promise<TestUser> {
+    if (!this.connected) {
+      // DB未接続の場合はモックデータを返す
+      const admin: TestUser = {
+        email: adminData.email || 'admin@example.com',
+        password: adminData.password || 'admin123',
+        name: adminData.name || 'テスト管理者',
+        _id: `mock-admin-${Date.now()}`,
+      };
+      this.testUsers.push(admin);
+      return admin;
+    }
+    
     const db = this.client.db();
     const hashedPassword = await bcrypt.hash(adminData.password || 'admin123', 10);
     
@@ -100,6 +134,17 @@ export class TestDataManager {
 
   // テストキャラクターを作成
   async createTestCharacter(charData: Partial<TestCharacter> = {}): Promise<TestCharacter> {
+    if (!this.connected) {
+      // DB未接続の場合はモックデータを返す
+      const character: TestCharacter = {
+        name: charData.name || `テストキャラ${Date.now()}`,
+        price: charData.price || 0,
+        _id: `mock-char-${Date.now()}`,
+      };
+      this.testCharacters.push(character);
+      return character;
+    }
+    
     const db = this.client.db();
     
     const character: TestCharacter = {
@@ -125,6 +170,13 @@ export class TestDataManager {
 
   // テスト後のクリーンアップ
   async cleanup() {
+    if (!this.connected) {
+      // DB未接続の場合はメモリをクリアするだけ
+      this.testUsers = [];
+      this.testCharacters = [];
+      return;
+    }
+    
     try {
       const db = this.client.db();
       
