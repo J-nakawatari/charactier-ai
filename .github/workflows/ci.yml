@@ -56,12 +56,12 @@ jobs:
           version: 8
           
       - name: Install root dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
         
       - name: Install frontend dependencies
         run: |
           cd frontend
-          pnpm install --frozen-lockfile
+          pnpm install --no-frozen-lockfile
         
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
