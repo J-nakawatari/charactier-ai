@@ -50,19 +50,19 @@ jobs:
         with:
           node-version: '20'
           
-      - name: Install dependencies
+      - name: Install root dependencies
+        run: npm ci
+        
+      - name: Install frontend dependencies
         run: |
           cd frontend
           npm ci
         
       - name: Install Playwright browsers
-        run: |
-          cd frontend
-          npx playwright install --with-deps
+        run: npx playwright install --with-deps
         
       - name: Run E2E tests
         run: |
-          cd frontend
           if [ "${{ github.event.inputs.browsers }}" = "all" ]; then
             npm run test:e2e
           else
@@ -71,8 +71,7 @@ jobs:
         
       - name: Generate failure report
         run: |
-          cd frontend
-          npm run failures:md
+          npm run failures:md || echo "No test results found"
         if: always()
         
       - uses: actions/upload-artifact@v4
@@ -80,6 +79,6 @@ jobs:
         with:
           name: playwright-report
           path: |
-            frontend/playwright-report
-            frontend/coverage/playwright-results.json
-            frontend/coverage/failures.md
+            playwright-report
+            coverage/playwright-results.json
+            coverage/failures.md
