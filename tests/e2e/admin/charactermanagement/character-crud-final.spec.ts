@@ -223,24 +223,59 @@ test.describe('キャラクター管理機能 - 最終修正版', () => {
         await saveButton.click();
         console.log('✅ 保存ボタンクリック');
         
-        // 結果を待つ
-        await newPage.waitForTimeout(5000);
+        // トーストが表示されるまで待つ（作成完了メッセージ）
+        try {
+          await newPage.waitForSelector('[role="alert"]:has-text("作成完了"), .toast:has-text("作成完了")', { timeout: 10000 });
+          console.log('✅ 作成完了トーストが表示されました');
+        } catch (e) {
+          console.log('⚠️ 作成完了トーストが見つかりません');
+        }
         
-        // 成功判定
+        // URLの変更を待つ（リダイレクト）
+        try {
+          await newPage.waitForURL('**/admin/characters', { timeout: 5000 });
+          console.log('✅ キャラクター一覧ページにリダイレクトされました');
+        } catch (e) {
+          console.log('⚠️ リダイレクトが完了しませんでした');
+        }
+        
+        // 成功判定（詳細なログ付き）
         const finalUrl = newPage.url();
-        const hasSuccess = 
-          !finalUrl.includes('/new') || 
-          await newPage.locator('.toast-success, .success-message').isVisible().catch(() => false) ||
-          await newPage.locator(`text="最終テストキャラ_${timestamp}"`).isVisible().catch(() => false);
         
-        console.log('\n📊 最終結果:');
-        console.log(`- URL: ${finalUrl}`);
-        console.log(`- 成功: ${hasSuccess ? '✅' : '❌'}`);
+        // 各条件を個別にチェック
+        const urlChanged = finalUrl.includes('/admin/characters') && !finalUrl.includes('/new');
+        const toastVisible = await newPage.locator('[role="alert"]:has-text("作成完了"), .toast:has-text("作成完了"), [role="alert"]:has-text("新規作成しました")').isVisible().catch(() => false);
+        const characterNameVisible = await newPage.locator(`text="最終テストキャラ_${timestamp}"`).isVisible().catch(() => false);
+        
+        console.log('\n📊 成功条件の詳細:');
+        console.log(`- URL変更 (charactersページ): ${urlChanged ? '✅' : '❌'} (${finalUrl})`);
+        console.log(`- 成功トースト表示: ${toastVisible ? '✅' : '❌'}`);
+        console.log(`- キャラクター名表示: ${characterNameVisible ? '✅' : '❌'}`);
+        
+        // ページ上のすべてのトーストメッセージを取得
+        const allToasts = await newPage.locator('[role="alert"], .toast, .toast-message').allTextContents();
+        if (allToasts.length > 0) {
+          console.log('- 検出されたトースト:', allToasts);
+        }
+        
+        // エラーメッセージを探す
+        const errorMessages = await newPage.locator('.error, .text-red-600, [role="alert"]:has-text("エラー"), .error-message, .bg-red-50').allTextContents();
+        if (errorMessages.length > 0) {
+          console.log('- エラーメッセージ:', errorMessages);
+        }
+        
+        const hasSuccess = urlChanged || toastVisible || characterNameVisible;
+        console.log(`\n📊 最終結果: ${hasSuccess ? '✅ 成功' : '❌ 失敗'}`);
         
         if (!hasSuccess) {
-          const errors = await newPage.locator('.error, .text-red-600, [role="alert"]').allTextContents();
-          console.log('- エラー:', errors);
-          await newPage.screenshot({ path: 'final-save-error.png' });
+          await newPage.screenshot({ path: 'final-save-error.png', fullPage: true });
+          console.log('- スクリーンショットを保存しました: final-save-error.png');
+          
+          // フォームのバリデーションエラーを確認
+          const validationErrors = await newPage.locator('.bg-red-50 ul li').allTextContents();
+          if (validationErrors.length > 0) {
+            console.log('- バリデーションエラー:', validationErrors);
+          }
         }
         
         expect(hasSuccess).toBeTruthy();
