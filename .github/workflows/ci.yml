@@ -35,7 +35,7 @@ jobs:
         env:
           MINIO_ACCESS_KEY: minio
           MINIO_SECRET_KEY: minio123
-        command: server /data
+        options: --entrypoint "minio server /data"
         ports: ['9000:9000']
     steps:
       - uses: actions/checkout@v4
