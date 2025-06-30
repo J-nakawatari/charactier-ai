@@ -27,16 +27,21 @@ jobs:
       mailhog:
         image: mailhog/mailhog
         ports: ['1025:1025', '8025:8025']
-      stripe:
-        image: stripe/stripe-cli
-        ports: ['12111:12111']
-      minio:
-        image: minio/minio
-        env:
-          MINIO_ACCESS_KEY: minio
-          MINIO_SECRET_KEY: minio123
-        options: --entrypoint "minio server /data"
-        ports: ['9000:9000']
+      # stripe:
+      #   image: stripe/stripe-cli
+      #   ports: ['12111:12111']
+      # minio:
+      #   image: minio/minio:latest
+      #   env:
+      #     MINIO_ROOT_USER: minio
+      #     MINIO_ROOT_PASSWORD: minio123
+      #   ports: 
+      #     - 9000:9000
+      #   options: >-
+      #     --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+      #     --health-interval 10s
+      #     --health-timeout 5s
+      #     --health-retries 5
     steps:
       - uses: actions/checkout@v4
       
