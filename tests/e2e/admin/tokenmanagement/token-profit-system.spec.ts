@@ -27,8 +27,9 @@ test.describe('99%利益確保システムのE2Eテスト', () => {
     await page.waitForTimeout(2000);
     
     // ページが正しく読み込まれたか確認
-    const pageTitle = await page.locator('h1').textContent();
-    expect(pageTitle).toContain('トークン管理');
+    // 複数のh1要素があるため、具体的なセレクタを使用
+    const pageTitle = await page.locator('h1:has-text("トークン管理")').textContent();
+    expect(pageTitle).toBe('トークン管理');
     
     // パック管理タブに切り替え
     await page.locator('button:has-text("パック管理")').click();
