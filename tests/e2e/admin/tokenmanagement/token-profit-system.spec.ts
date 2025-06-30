@@ -14,15 +14,25 @@ test.describe('99%利益確保システムのE2Eテスト', () => {
     
     // ログイン成功を待つ
     await page.waitForURL('**/admin/dashboard', { timeout: 10000 });
+    await page.waitForLoadState('networkidle');
     
     // トークンを取得（デバッグ用）
     adminToken = await page.evaluate(() => localStorage.getItem('adminToken') || '');
   });
 
   test('トークンパック作成時の99%利益率計算検証', async ({ page }) => {
-    // トークンパック管理ページへ
-    await page.goto('/admin/tokens');
+    // サイドバーからトークンパック管理ページへ遷移
+    await page.locator('a:has-text("トークチケット管理")').click();
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
+    
+    // ページが正しく読み込まれたか確認
+    const pageTitle = await page.locator('h1').textContent();
+    expect(pageTitle).toContain('トークン管理');
+    
+    // パック管理タブに切り替え
+    await page.locator('button:has-text("パック管理")').click();
+    await page.waitForTimeout(1000);
     
     // 新規作成ボタンをクリック
     await page.locator('button:has-text("新規作成")').click();
@@ -59,9 +69,14 @@ test.describe('99%利益確保システムのE2Eテスト', () => {
   });
 
   test('為替レート変動時の価格再計算', async ({ page }) => {
-    // トークンパック管理ページへ
-    await page.goto('/admin/tokens');
+    // サイドバーからトークンパック管理ページへ遷移
+    await page.locator('a:has-text("トークチケット管理")').click();
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
+    
+    // パック管理タブに切り替え
+    await page.locator('button:has-text("パック管理")').click();
+    await page.waitForTimeout(1000);
     
     // 既存のトークンパックの編集ボタンをクリック
     const firstEditButton = page.locator('button:has-text("編集")').first();
@@ -84,9 +99,14 @@ test.describe('99%利益確保システムのE2Eテスト', () => {
   });
 
   test('Stripe Price IDの正確な登録と取得', async ({ page }) => {
-    // トークンパック管理ページへ
-    await page.goto('/admin/tokens');
+    // サイドバーからトークンパック管理ページへ遷移
+    await page.locator('a:has-text("トークチケット管理")').click();
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
+    
+    // パック管理タブに切り替え
+    await page.locator('button:has-text("パック管理")').click();
+    await page.waitForTimeout(1000);
     
     // 新規作成
     await page.locator('button:has-text("新規作成")').click();
@@ -113,8 +133,14 @@ test.describe('99%利益確保システムのE2Eテスト', () => {
   });
 
   test('利益率計算のエッジケース', async ({ page }) => {
-    // トークンパック管理ページへ
-    await page.goto('/admin/tokens');
+    // サイドバーからトークンパック管理ページへ遷移
+    await page.locator('a:has-text("トークチケット管理")').click();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
+    
+    // パック管理タブに切り替え
+    await page.locator('button:has-text("パック管理")').click();
+    await page.waitForTimeout(1000);
     
     // 新規作成
     await page.locator('button:has-text("新規作成")').click();
