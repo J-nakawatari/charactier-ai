@@ -60,8 +60,10 @@ export default function CharactersPage() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('📊 Characters API response:', data);
         setCharacters(data.characters || []);
       } else {
+        console.error('❌ Characters API error:', response.status, response.statusText);
         setError('キャラクター一覧の取得に失敗しました');
       }
     } catch (error) {

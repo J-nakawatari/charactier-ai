@@ -32,6 +32,9 @@ interface CharacterManagementTableProps {
 export default function CharacterManagementTable({ characters, onCharacterDeleted }: CharacterManagementTableProps) {
   const { success, warning, error } = useToast();
   
+  // デバッグ用
+  console.log('🔍 CharacterManagementTable - characters:', characters);
+  
   // ヘルパー関数
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ja-JP', {
@@ -325,13 +328,15 @@ export default function CharacterManagementTable({ characters, onCharacterDelete
                   <div className="flex items-center justify-end space-x-2">
                     <button 
                       onClick={() => handleViewCharacter(character)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                      title="詳細を見る"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button 
                       onClick={() => handleEditCharacter(character)}
-                      className="text-gray-400 hover:text-purple-600"
+                      className="text-gray-400 hover:text-purple-600 transition-colors"
+                      title="編集"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
