@@ -88,5 +88,6 @@ export default defineConfig({
     url: 'http://localhost:3001',
     reuseExistingServer: true, // 既存のサーバーを使用
     timeout: 120 * 1000,
+    ignoreHTTPSErrors: true,
   },
 });
