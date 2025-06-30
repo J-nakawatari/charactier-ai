@@ -35,8 +35,12 @@ jobs:
         
       - name: Install Playwright
         run: |
-          sudo npx playwright install-deps
-          npx playwright install --with-deps
+          # システムパッケージを更新
+          sudo apt-get update
+          # Playwrightの依存関係をインストール
+          sudo npx playwright install-deps chromium firefox webkit
+          # ブラウザをインストール
+          npx playwright install chromium firefox webkit
       
       - name: Build frontend
         run: |
