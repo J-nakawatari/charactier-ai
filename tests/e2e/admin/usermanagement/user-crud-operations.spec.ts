@@ -18,14 +18,17 @@ test.describe('ユーザー管理機能の包括的E2Eテスト', () => {
     await page.goto('/admin/users');
     await page.waitForLoadState('networkidle');
     
-    // ユーザー一覧が表示されることを確認
-    // UserTableコンポーネントは通常の<table>タグを使用
-    const userTable = page.locator('table').first();
-    await expect(userTable).toBeVisible();
+    // 統計カードが表示されることを確認
+    const statsCards = page.locator('div').filter({ hasText: '総ユーザー数' }).first();
+    await expect(statsCards).toBeVisible();
     
-    // または、より具体的に
+    // ユーザー一覧が表示されることを確認
     const userListHeading = page.locator('h3:has-text("ユーザー一覧")');
     await expect(userListHeading).toBeVisible();
+    
+    // テーブルが表示されることを確認
+    const userTable = page.locator('table').first();
+    await expect(userTable).toBeVisible();
     
     // 検索機能のテスト
     const searchInput = page.locator('input[placeholder="ユーザー検索..."]');
@@ -40,9 +43,16 @@ test.describe('ユーザー管理機能の包括的E2Eテスト', () => {
     }
     
     // ページネーションの確認
-    const pagination = page.locator('.pagination, [aria-label="pagination"]');
-    if (await pagination.isVisible()) {
-      console.log('ページネーション機能が実装されています');
+    const paginationText = page.locator('text=/\\d+ - \\d+ \\/ \\d+件/');
+    if (await paginationText.isVisible()) {
+      const text = await paginationText.textContent();
+      console.log(`ページネーション: ${text}`);
+      
+      // 次のページボタンがあるか確認
+      const nextButton = page.locator('button').filter({ hasText: '>' }).first();
+      if (await nextButton.isVisible() && await nextButton.isEnabled()) {
+        console.log('次のページボタンが利用可能です');
+      }
     }
   });
 
@@ -99,12 +109,12 @@ test.describe('ユーザー管理機能の包括的E2Eテスト', () => {
     await page.waitForLoadState('networkidle');
     
     // アクティブなユーザーを探す
-    const activeUserRow = page.locator('tr:has-text("アクティブ"), tr:has-text("Active"), tr:has(.status-active)').first();
+    const activeUserRow = page.locator('tr:has-text("アクティブ")').first();
     
     if (await activeUserRow.isVisible()) {
-      // 停止ボタンをクリック
-      const suspendButton = activeUserRow.locator('button:has-text("停止"), button:has-text("Suspend")');
-      await suspendButton.click();
+      // 停止ボタン（禁止アイコン）をクリック - 操作列の2番目のボタン
+      const banButton = activeUserRow.locator('td:last-child button').nth(1);
+      await banButton.click();
       
       // 確認ダイアログが表示される場合
       const confirmDialog = page.locator('.confirm-dialog, [role="dialog"]');
