@@ -64,9 +64,13 @@ jobs:
           export NODE_ENV=test
           export JWT_SECRET=test-secret-key
           export MONGODB_URI=mongodb://localhost:27017/test
+          export MONGO_URI=mongodb://localhost:27017/test
+          export SENDGRID_API_KEY=dummy-key-for-test
+          export STRIPE_SECRET_KEY=sk_test_dummy
+          export STRIPE_WEBHOOK_SECRET=whsec_test_dummy
           
           # バックエンドサーバーを起動
-          cd backend && npm run dev > backend.log 2>&1 &
+          cd backend && NODE_ENV=test MONGO_URI=mongodb://localhost:27017/test JWT_SECRET=test-secret-key npm run dev > backend.log 2>&1 &
           BACKEND_PID=$!
           sleep 10
           
