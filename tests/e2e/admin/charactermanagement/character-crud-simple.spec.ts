@@ -1,54 +1,54 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('キャラクター管理 - シンプルテスト', () => {
+test.describe('キャラクター管琁E- シンプルチE��チE, () => {
   test.setTimeout(60000);
   
   const adminEmail = 'admin@example.com';
   const adminPassword = 'admin123';
 
-  test('管理者ログインとキャラクター一覧表示', async ({ page }) => {
-    console.log('🚀 シンプルテスト開始');
+  test('管琁E��E��グインとキャラクター一覧表示', async ({ page }) => {
+    console.log('🚀 シンプルチE��ト開姁E);
     
     // ログイン
     await page.goto('/admin/login');
     await page.waitForLoadState('networkidle');
     
-    // ログインフォームの存在確認
+    // ログインフォームの存在確誁E
     await expect(page.locator('input[type="email"]')).toBeVisible();
     await expect(page.locator('input[type="password"]')).toBeVisible();
     
-    // ログイン情報入力
+    // ログイン惁E��入劁E
     await page.fill('input[type="email"]', adminEmail);
     await page.fill('input[type="password"]', adminPassword);
     
-    // ログインボタンクリック
+    // ログインボタンクリチE��
     await page.click('button[type="submit"]');
     
-    // ダッシュボードへの遷移を待つ
+    // ダチE��ュボ�Eドへの遷移を征E��
     await page.waitForURL('**/admin/dashboard', { timeout: 30000 });
-    console.log('✅ ログイン成功');
+    console.log('✁Eログイン成功');
     
-    // キャラクター管理ページへ移動
+    // キャラクター管琁E�Eージへ移勁E
     await page.goto('/admin/characters');
     await page.waitForLoadState('networkidle');
     
-    // ページタイトルまたはヘッダーの確認
+    // ペ�Eジタイトルまた�Eヘッダーの確誁E
     const pageTitle = await page.title();
-    console.log(`📄 ページタイトル: ${pageTitle}`);
+    console.log(`📄 ペ�Eジタイトル: ${pageTitle}`);
     
-    // 新規作成ボタンの確認
-    const newButton = page.locator('a[href="/admin/characters/new"], button:has-text("新規作成")').first();
+    // 新規作�Eボタンの確誁E
+    const newButton = page.locator('a[href="/admin/characters/new"], button:has-text("新規作�E")').first();
     const hasNewButton = await newButton.isVisible().catch(() => false);
-    console.log(`🔘 新規作成ボタン: ${hasNewButton ? '✅' : '❌'}`);
+    console.log(`🔘 新規作�Eボタン: ${hasNewButton ? '✁E : '❁E}`);
     
-    // テーブルまたはリストの確認
+    // チE�Eブルまた�Eリスト�E確誁E
     const hasTable = await page.locator('table, .character-list').isVisible().catch(() => false);
-    console.log(`📊 キャラクター一覧: ${hasTable ? '✅' : '❌'}`);
+    console.log(`📊 キャラクター一覧: ${hasTable ? '✁E : '❁E}`);
     
     expect(hasNewButton || hasTable).toBeTruthy();
   });
 
-  test('新規キャラクター作成画面の表示', async ({ page }) => {
+  test('新規キャラクター作�E画面の表示', async ({ page }) => {
     // ログイン
     await page.goto('/admin/login');
     await page.fill('input[type="email"]', adminEmail);
@@ -56,25 +56,25 @@ test.describe('キャラクター管理 - シンプルテスト', () => {
     await page.click('button[type="submit"]');
     await page.waitForURL('**/admin/dashboard', { timeout: 30000 });
     
-    // キャラクター作成ページへ直接遷移
+    // キャラクター作�Eペ�Eジへ直接遷移
     await page.goto('/admin/characters/new');
     await page.waitForLoadState('networkidle');
     
-    // フォーム要素の確認
+    // フォーム要素の確誁E
     const formChecks = {
-      名前入力: await page.locator('input[type="text"]').first().isVisible(),
-      説明入力: await page.locator('textarea').first().isVisible(),
-      性別選択: await page.locator('select').first().isVisible(),
-      保存ボタン: await page.locator('button[type="submit"]').isVisible(),
+      名前入劁E await page.locator('input[type="text"]').first().isVisible(),
+      説明�E劁E await page.locator('textarea').first().isVisible(),
+      性別選抁E await page.locator('select').first().isVisible(),
+      保存�Eタン: await page.locator('button[type="submit"]').isVisible(),
     };
     
-    console.log('📝 フォーム要素チェック:');
+    console.log('📝 フォーム要素チェチE��:');
     Object.entries(formChecks).forEach(([key, value]) => {
-      console.log(`  - ${key}: ${value ? '✅' : '❌'}`);
+      console.log(`  - ${key}: ${value ? '✁E : '❁E}`);
     });
     
-    // 基本的なフォーム要素が存在することを確認
-    expect(formChecks.名前入力).toBeTruthy();
-    expect(formChecks.保存ボタン).toBeTruthy();
+    // 基本皁E��フォーム要素が存在することを確誁E
+    expect(formChecks.名前入劁E.toBeTruthy();
+    expect(formChecks.保存�Eタン).toBeTruthy();
   });
 });

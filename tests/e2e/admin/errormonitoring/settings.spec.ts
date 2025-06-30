@@ -1,15 +1,16 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('errormonitoring - settings', () => {
-  test('閾値設定', async ({ page }) => {
-    // ページに移動
+  test('閾値設宁E, async ({ page }) => {
+    // ペ�Eジに移勁E
     await page.goto('/admin');
     await page.waitForLoadState('networkidle');
     
-    // ページが正常に読み込まれたことを確認
+    // ペ�Eジが正常に読み込まれたことを確誁E
     await expect(page.locator('body')).toBeVisible();
     
-    // TODO: 実際のテストロジックを実装
-    // このテストは基本的な動作確認のみ行います
+    // TODO: 実際のチE��トロジチE��を実裁E
+    // こ�EチE��ト�E基本皁E��動作確認�Eみ行いまぁE
   });
 });
+

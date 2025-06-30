@@ -1,26 +1,26 @@
 import { test, expect } from '@playwright/test';
 
-test('基本的な動作確認', async ({ page }) => {
-  // トップページにアクセス
+test('基本皁E��動作確誁E, async ({ page }) => {
+  // トップ�Eージにアクセス
   await page.goto('/');
   
-  // ページが読み込まれるのを待つ
+  // ペ�Eジが読み込まれるのを征E��
   await page.waitForLoadState('networkidle');
   
-  // スクリーンショットを撮る
+  // スクリーンショチE��を撮めE
   await page.screenshot({ path: 'homepage.png' });
   
-  // ログインページに移動
+  // ログインペ�Eジに移勁E
   await page.goto('/ja/login');
   await page.waitForLoadState('networkidle');
   
-  // スクリーンショットを撮る
+  // スクリーンショチE��を撮めE
   await page.screenshot({ path: 'login-page.png' });
   
-  // ページに何か表示されているか確認
+  // ペ�Eジに何か表示されてぁE��か確誁E
   const pageContent = await page.textContent('body');
-  console.log('ページ内容:', pageContent);
+  console.log('ペ�Eジ冁E��:', pageContent);
   
-  // 何かしら表示されていることを確認
+  // 何かしら表示されてぁE��ことを確誁E
   expect(pageContent).toBeTruthy();
 });

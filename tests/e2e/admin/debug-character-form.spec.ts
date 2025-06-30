@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('キャラクター作成フォームのデバッグ', () => {
-  test('フォームの読み込み状態を詳細に確認', async ({ browser }) => {
+test.describe('キャラクター作�EフォームのチE��チE��', () => {
+  test('フォームの読み込み状態を詳細に確誁E, async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
     
-    console.log('🚀 デバッグテスト開始');
+    console.log('🚀 チE��チE��チE��ト開姁E);
     
     // Step 1: ログイン
     await page.goto('/admin/login');
@@ -15,26 +15,26 @@ test.describe('キャラクター作成フォームのデバッグ', () => {
     await page.fill('input[type="password"]', 'admin123');
     await page.click('button[type="submit"]');
     
-    // ダッシュボードへの遷移を待つ
+    // ダチE��ュボ�Eドへの遷移を征E��
     try {
       await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
-      console.log('✅ ログイン成功');
+      console.log('✁Eログイン成功');
     } catch (e) {
-      console.log('❌ ログイン失敗');
+      console.log('❁Eログイン失敁E);
       await page.screenshot({ path: 'login-failed-debug.png' });
       await context.close();
       return;
     }
     
-    // Step 2: 十分な待機
+    // Step 2: 十�Eな征E��E
     await page.waitForTimeout(5000);
     await page.close();
     
-    // Step 3: 新しいページで開く
+    // Step 3: 新しいペ�Eジで開く
     const newPage = await context.newPage();
-    console.log('\n📄 キャラクター作成ページを開く...');
+    console.log('\n📄 キャラクター作�Eペ�Eジを開ぁE..');
     
-    // ネットワークログを有効化
+    // ネットワークログを有効匁E
     newPage.on('response', response => {
       if (response.url().includes('/admin/characters/new')) {
         console.log(`📡 Response: ${response.status()} ${response.url()}`);
@@ -46,32 +46,32 @@ test.describe('キャラクター作成フォームのデバッグ', () => {
       timeout: 30000 
     });
     
-    // Step 4: ページの状態を詳しく確認
-    console.log('\n🔍 ページ状態の確認:');
+    // Step 4: ペ�Eジの状態を詳しく確誁E
+    console.log('\n🔍 ペ�Eジ状態�E確誁E');
     console.log('- URL:', newPage.url());
     console.log('- タイトル:', await newPage.title());
     
-    // HTMLの内容を確認
+    // HTMLの冁E��を確誁E
     const bodyText = await newPage.locator('body').innerText();
-    console.log('- ページの最初の100文字:', bodyText.substring(0, 100));
+    console.log('- ペ�Eジの最初�E100斁E��E', bodyText.substring(0, 100));
     
-    // エラーメッセージを探す
+    // エラーメチE��ージを探ぁE
     const errorMessages = await newPage.locator('.error, .text-red-600, [role="alert"]').allTextContents();
     if (errorMessages.length > 0) {
-      console.log('⚠️ エラーメッセージ:', errorMessages);
+      console.log('⚠�E�EエラーメチE��ージ:', errorMessages);
     }
     
-    // Step 5: フォーム要素を段階的に確認
-    console.log('\n📋 フォーム要素の詳細確認:');
+    // Step 5: フォーム要素を段階的に確誁E
+    console.log('\n📋 フォーム要素の詳細確誁E');
     
-    // 基本的な要素の存在確認
+    // 基本皁E��要素の存在確誁E
     const formExists = await newPage.locator('form').count() > 0;
-    console.log(`- <form>タグ: ${formExists ? '存在する' : '存在しない'}`);
+    console.log(`- <form>タグ: ${formExists ? '存在する' : '存在しなぁE}`);
     
-    // より広範なセレクターで確認
+    // より庁E��E��セレクターで確誁E
     const inputElements = {
       'すべての<input>': await newPage.locator('input').count(),
-      'テキスト型<input>': await newPage.locator('input[type="text"]').count(),
+      'チE��スト型<input>': await newPage.locator('input[type="text"]').count(),
       'すべての<select>': await newPage.locator('select').count(),
       'すべての<textarea>': await newPage.locator('textarea').count(),
       'すべての<button>': await newPage.locator('button').count(),
@@ -82,14 +82,14 @@ test.describe('キャラクター作成フォームのデバッグ', () => {
       console.log(`- ${name}: ${count}個`);
     }
     
-    // Step 6: 具体的なフィールドを名前で探す
-    console.log('\n🔍 具体的なフィールドの検索:');
+    // Step 6: 具体的なフィールドを名前で探ぁE
+    console.log('\n🔍 具体的なフィールド�E検索:');
     
     const fieldSelectors = [
-      { name: '名前フィールド', selectors: ['input[name*="name"]', 'input[placeholder*="名前"]', 'input[placeholder*="Name"]'] },
-      { name: '説明フィールド', selectors: ['textarea[name*="description"]', 'textarea[placeholder*="説明"]'] },
-      { name: '性格選択', selectors: ['select[name*="personality"]', 'select[name*="preset"]'] },
-      { name: '保存ボタン', selectors: ['button:has-text("保存")', 'button:has-text("作成")', 'button:has-text("Save")'] }
+      { name: '名前フィールチE, selectors: ['input[name*="name"]', 'input[placeholder*="名前"]', 'input[placeholder*="Name"]'] },
+      { name: '説明フィールチE, selectors: ['textarea[name*="description"]', 'textarea[placeholder*="説昁E]'] },
+      { name: '性格選抁E, selectors: ['select[name*="personality"]', 'select[name*="preset"]'] },
+      { name: '保存�Eタン', selectors: ['button:has-text("保孁E)', 'button:has-text("作�E")', 'button:has-text("Save")'] }
     ];
     
     for (const field of fieldSelectors) {
@@ -97,25 +97,25 @@ test.describe('キャラクター作成フォームのデバッグ', () => {
       for (const selector of field.selectors) {
         const count = await newPage.locator(selector).count();
         if (count > 0) {
-          console.log(`✅ ${field.name}: "${selector}" で ${count}個見つかりました`);
+          console.log(`✁E${field.name}: "${selector}" で ${count}個見つかりました`);
           found = true;
           break;
         }
       }
       if (!found) {
-        console.log(`❌ ${field.name}: 見つかりません`);
+        console.log(`❁E${field.name}: 見つかりません`);
       }
     }
     
-    // Step 7: ページ全体の構造を確認
-    console.log('\n📐 ページ構造の確認:');
+    // Step 7: ペ�Eジ全体�E構造を確誁E
+    console.log('\n📐 ペ�Eジ構造の確誁E');
     const mainContent = await newPage.locator('main, .main-content, #content, .container').count();
-    console.log(`- メインコンテンツエリア: ${mainContent}個`);
+    console.log(`- メインコンチE��チE��リア: ${mainContent}個`);
     
     const sidebar = await newPage.locator('aside, .sidebar, nav').count();
     console.log(`- サイドバー/ナビゲーション: ${sidebar}個`);
     
-    // Step 8: JavaScriptエラーを確認
+    // Step 8: JavaScriptエラーを確誁E
     const jsErrors: string[] = [];
     newPage.on('pageerror', error => {
       jsErrors.push(error.message);
@@ -123,18 +123,18 @@ test.describe('キャラクター作成フォームのデバッグ', () => {
     
     await newPage.waitForTimeout(2000);
     if (jsErrors.length > 0) {
-      console.log('\n❌ JavaScriptエラー:');
+      console.log('\n❁EJavaScriptエラー:');
       jsErrors.forEach(error => console.log(`  - ${error}`));
     }
     
-    // スクリーンショット
+    // スクリーンショチE��
     await newPage.screenshot({ path: 'debug-character-form.png', fullPage: true });
-    console.log('\n📸 デバッグ用スクリーンショットを debug-character-form.png に保存');
+    console.log('\n📸 チE��チE��用スクリーンショチE��めEdebug-character-form.png に保孁E);
     
-    // HTMLを保存
+    // HTMLを保孁E
     const html = await newPage.content();
     require('fs').writeFileSync('debug-character-form.html', html);
-    console.log('📄 HTMLを debug-character-form.html に保存');
+    console.log('📄 HTMLめEdebug-character-form.html に保孁E);
     
     await context.close();
   });

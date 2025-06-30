@@ -1,16 +1,16 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('キャラクター作成 - 動作確認版', () => {
+test.describe('キャラクター作�E - 動作確認版', () => {
   test.setTimeout(60000);
   
   const adminEmail = 'admin@example.com';
   const adminPassword = 'admin123';
 
-  test('性格プリセット正しく選択する版', async ({ browser }) => {
+  test('性格プリセチE��正しく選択する版', async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
     
-    console.log('🚀 テスト開始');
+    console.log('🚀 チE��ト開姁E);
     
     try {
       // ログイン
@@ -21,12 +21,12 @@ test.describe('キャラクター作成 - 動作確認版', () => {
       await page.click('button[type="submit"]');
       
       await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
-      console.log('✅ ログイン成功');
+      console.log('✁Eログイン成功');
       
       await page.waitForTimeout(5000);
       await page.close();
       
-      // 新しいページでキャラクター作成ページへ
+      // 新しいペ�Eジでキャラクター作�Eペ�Eジへ
       const newPage = await context.newPage();
       await newPage.goto('/admin/characters/new', { 
         waitUntil: 'networkidle',
@@ -37,103 +37,103 @@ test.describe('キャラクター作成 - 動作確認版', () => {
       
       console.log('📍 現在のURL:', newPage.url());
       
-      // フォーム入力
-      console.log('\n📝 フォーム入力開始...');
+      // フォーム入劁E
+      console.log('\n📝 フォーム入力開姁E..');
       const timestamp = Date.now();
       
-      // 名前入力
+      // 名前入劁E
       const textInputs = await newPage.locator('input[type="text"]').all();
       if (textInputs.length >= 2) {
         await textInputs[0].fill(`動作確認キャラ_${timestamp}`);
         await textInputs[1].fill(`Working Char ${timestamp}`);
-        console.log('✅ 名前入力完了');
+        console.log('✁E名前入力完亁E);
       }
       
-      // 説明入力
+      // 説明�E劁E
       const textareas = await newPage.locator('textarea').all();
       if (textareas.length > 0) {
-        await textareas[0].fill('動作確認用のテストキャラクターです。');
-        console.log('✅ 説明入力完了');
+        await textareas[0].fill('動作確認用のチE��トキャラクターです、E);
+        console.log('✁E説明�E力完亁E);
       }
       
-      // セレクトボックスの詳細確認
+      // セレクト�EチE��スの詳細確誁E
       const selects = await newPage.locator('select').all();
-      console.log(`\n📋 セレクトボックス数: ${selects.length}`);
+      console.log(`\n📋 セレクト�EチE��ス数: ${selects.length}`);
       
       for (let i = 0; i < selects.length; i++) {
         const select = selects[i];
         const name = await select.getAttribute('name');
         const options = await select.locator('option').all();
-        console.log(`\nセレクト[${i}] name="${name}"`);
+        console.log(`\nセレクチE${i}] name="${name}"`);
         
-        // 各オプションの詳細
+        // 吁E��プションの詳細
         for (let j = 0; j < Math.min(options.length, 5); j++) {
           const value = await options[j].getAttribute('value');
           const text = await options[j].textContent();
           console.log(`  オプション[${j}]: value="${value}", text="${text}"`);
         }
         
-        // 性格プリセットの選択（nameまたはオプションの内容で判断）
+        // 性格プリセチE��の選択！Eameまた�Eオプションの冁E��で判断�E�E
         if (i === 1 || name === 'personalityPreset' || (options.length > 5 && await options[1].textContent()?.then(t => t?.includes('フレンドリー')))) {
-          console.log('⭐ これが性格プリセットセレクトです！');
+          console.log('⭁Eこれが性格プリセチE��セレクトです！E);
           
-          // 空でない最初の値を選択
+          // 空でなぁE��初�E値を選抁E
           for (let j = 1; j < options.length; j++) {
             const value = await options[j].getAttribute('value');
             if (value && value !== '') {
               await select.selectOption(value);
-              console.log(`✅ 性格プリセット選択: ${value}`);
+              console.log(`✁E性格プリセチE��選抁E ${value}`);
               break;
             }
           }
         } else if (i === 0) {
-          // 性別の選択
+          // 性別の選抁E
           const value = await options[1].getAttribute('value');
           if (value) {
             await select.selectOption(value);
-            console.log(`✅ 性別選択: ${value}`);
+            console.log(`✁E性別選抁E ${value}`);
           }
         }
       }
       
-      // 性格タグ選択
+      // 性格タグ選抁E
       const checkboxes = await newPage.locator('input[type="checkbox"]').all();
       if (checkboxes.length > 0) {
         await checkboxes[0].click();
-        console.log('✅ 性格タグ選択完了');
+        console.log('✁E性格タグ選択完亁E);
       }
       
-      // スクリーンショット
+      // スクリーンショチE��
       await newPage.screenshot({ path: 'working-form.png', fullPage: true });
-      console.log('\n📸 フォームのスクリーンショット保存');
+      console.log('\n📸 フォームのスクリーンショチE��保孁E);
       
-      // 保存ボタンクリック
+      // 保存�EタンクリチE��
       const saveButton = newPage.locator('button[type="submit"]').first();
       if (await saveButton.isVisible()) {
-        console.log('\n💾 保存処理...');
+        console.log('\n💾 保存�E琁E..');
         
-        // APIレスポンス監視
+        // APIレスポンス監要E
         const responsePromise = newPage.waitForResponse(
           response => response.url().includes('/api/v1/admin/characters') && response.request().method() === 'POST',
           { timeout: 10000 }
         ).catch(() => null);
         
         await saveButton.click();
-        console.log('✅ 保存ボタンクリック');
+        console.log('✁E保存�EタンクリチE��');
         
         const response = await responsePromise;
         if (response) {
           console.log(`\n📡 APIレスポンス: ${response.status()}`);
           if (response.status() !== 200 && response.status() !== 201) {
             const body = await response.text();
-            console.log('エラー内容:', body);
+            console.log('エラー冁E��:', body);
           }
         }
         
-        // 結果を待つ
+        // 結果を征E��
         await newPage.waitForTimeout(5000);
         
-        // 成功判定
+        // 成功判宁E
         const finalUrl = newPage.url();
         const hasSuccess = 
           !finalUrl.includes('/new') || 
@@ -141,7 +141,7 @@ test.describe('キャラクター作成 - 動作確認版', () => {
         
         console.log('\n📊 最終結果:');
         console.log(`- URL: ${finalUrl}`);
-        console.log(`- 成功: ${hasSuccess ? '✅' : '❌'}`);
+        console.log(`- 成功: ${hasSuccess ? '✁E : '❁E}`);
         
         if (!hasSuccess) {
           const errors = await newPage.locator('.error, .text-red-600').allTextContents();
@@ -152,7 +152,7 @@ test.describe('キャラクター作成 - 動作確認版', () => {
       }
       
     } catch (error) {
-      console.error('❌ テストエラー:', error);
+      console.error('❁EチE��トエラー:', error);
       throw error;
     } finally {
       await context.close();

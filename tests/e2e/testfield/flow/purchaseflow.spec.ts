@@ -1,15 +1,16 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('flow - purchaseflow', () => {
-  test('トークン購入 → 残高確認 → キャラクター購入 → チャット利用', async ({ page }) => {
-    // ページに移動
+  test('ト�Eクン購入 ↁE残高確誁EↁEキャラクター購入 ↁEチャチE��利用', async ({ page }) => {
+    // ペ�Eジに移勁E
     await page.goto('/ja');
     await page.waitForLoadState('networkidle');
     
-    // ページが正常に読み込まれたことを確認
+    // ペ�Eジが正常に読み込まれたことを確誁E
     await expect(page.locator('body')).toBeVisible();
     
-    // TODO: 実際のテストロジックを実装
-    // このテストは基本的な動作確認のみ行います
+    // TODO: 実際のチE��トロジチE��を実裁E
+    // こ�EチE��ト�E基本皁E��動作確認�Eみ行いまぁE
   });
 });
+

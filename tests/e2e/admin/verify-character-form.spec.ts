@@ -1,14 +1,14 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('キャラクター作成フォームの検証', () => {
-  test('管理画面のキャラクター作成フォームを確認', async ({ page }) => {
-    // 管理者ログインページへアクセス
+test.describe('キャラクター作�Eフォームの検証', () => {
+  test('管琁E��面のキャラクター作�Eフォームを確誁E, async ({ page }) => {
+    // 管琁E��E��グインペ�Eジへアクセス
     await page.goto('/admin/login');
     
-    // ページが読み込まれるのを待つ
+    // ペ�Eジが読み込まれるのを征E��
     await page.waitForLoadState('networkidle');
     
-    // ログインフォームが存在することを確認
+    // ログインフォームが存在することを確誁E
     const emailInput = page.locator('input[type="email"]');
     const passwordInput = page.locator('input[type="password"]');
     const submitButton = page.locator('button[type="submit"]');
@@ -17,86 +17,86 @@ test.describe('キャラクター作成フォームの検証', () => {
     await expect(passwordInput).toBeVisible();
     await expect(submitButton).toBeVisible();
     
-    // ログイン情報を入力
+    // ログイン惁E��を�E劁E
     await emailInput.fill('admin@example.com');
     await passwordInput.fill('admin123');
     await submitButton.click();
     
-    // ダッシュボードへの遷移を待つ（タイムアウトを短くして早期失敗）
+    // ダチE��ュボ�Eドへの遷移を征E���E�タイムアウトを短くして早期失敗！E
     try {
       await page.waitForURL('**/admin/dashboard', { timeout: 10000 });
-      console.log('✅ ログイン成功');
+      console.log('✁Eログイン成功');
       
-      // ページが完全に読み込まれるのを待つ
+      // ペ�Eジが完�Eに読み込まれるのを征E��
       await page.waitForLoadState('networkidle');
       
     } catch (e) {
-      console.log('⚠️ ダッシュボードへの遷移に失敗（データベース接続の問題の可能性）');
-      // ログインページのエラーメッセージを確認
+      console.log('⚠�E�EダチE��ュボ�Eドへの遷移に失敗（データベ�Eス接続�E問題�E可能性�E�E);
+      // ログインペ�EジのエラーメチE��ージを確誁E
       const errorMessages = await page.locator('.error, .text-red-600, [role="alert"]').allTextContents();
       if (errorMessages.length > 0) {
-        console.log('エラーメッセージ:', errorMessages.join(', '));
+        console.log('エラーメチE��ージ:', errorMessages.join(', '));
       }
       
-      // 現在のURLを確認
+      // 現在のURLを確誁E
       console.log('現在のURL:', page.url());
       
-      // スクリーンショットを保存
+      // スクリーンショチE��を保孁E
       await page.screenshot({ path: 'login-error.png' });
-      console.log('スクリーンショットを login-error.png に保存しました');
+      console.log('スクリーンショチE��めElogin-error.png に保存しました');
       
-      return; // テストを終了
+      return; // チE��トを終亁E
     }
     
-    // ダッシュボードが完全に読み込まれたことを確認
+    // ダチE��ュボ�Eドが完�Eに読み込まれたことを確誁E
     await expect(page).toHaveURL(/.*\/admin\/dashboard/);
     console.log('📍 現在のURL:', page.url());
     
-    // 十分な待機時間を確保（すべての非同期処理が完了するのを待つ）
-    console.log('⏱️ ページが安定するのを待機中...');
+    // 十�Eな征E��時間を確保（すべての非同期�E琁E��完亁E��る�Eを征E���E�E
+    console.log('⏱�E�Eペ�Eジが安定する�Eを征E��中...');
     await page.waitForTimeout(5000);
     
-    // JavaScriptで直接URLを変更（ナビゲーション競合を回避）
-    console.log('🚀 JavaScriptでキャラクター作成ページへ遷移');
+    // JavaScriptで直接URLを変更�E�ナビゲーション競合を回避�E�E
+    console.log('🚀 JavaScriptでキャラクター作�Eペ�Eジへ遷移');
     await page.evaluate(() => {
       window.location.href = '/admin/characters/new';
     });
     
-    // 新しいページの読み込みを待つ
+    // 新しいペ�Eジの読み込みを征E��
     try {
       await page.waitForURL('**/admin/characters/new', { timeout: 10000 });
-      console.log('✅ キャラクター作成ページに到達');
+      console.log('✁Eキャラクター作�Eペ�Eジに到遁E);
     } catch (e) {
-      console.log('⚠️ ページ遷移に失敗、現在のURL:', page.url());
-      // スクリーンショットを保存
+      console.log('⚠�E�Eペ�Eジ遷移に失敗、現在のURL:', page.url());
+      // スクリーンショチE��を保孁E
       await page.screenshot({ path: 'navigation-failed.png' });
       return;
     }
     
-    // ページが完全に読み込まれるのを待つ
+    // ペ�Eジが完�Eに読み込まれるのを征E��
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
     
     console.log('📍 現在のURL:', page.url());
     
-    // フォームの必須フィールドを確認
+    // フォームの忁E��フィールドを確誁E
     const nameInput = page.locator('input[type="text"]').first();
     const personalitySelect = page.locator('select').first();
     const personalityCheckbox = page.locator('input[type="checkbox"]').first();
     
-    // フォームフィールドの存在を確認
+    // フォームフィールド�E存在を確誁E
     await expect(nameInput).toBeVisible();
     await expect(personalitySelect).toBeVisible();
     await expect(personalityCheckbox).toBeVisible();
     
-    console.log('✅ キャラクター作成フォームの必須フィールドが表示されています');
+    console.log('✁Eキャラクター作�Eフォームの忁E��フィールドが表示されてぁE��ぁE);
     
-    // 性格プリセットのオプションを確認
+    // 性格プリセチE��のオプションを確誁E
     const options = await personalitySelect.locator('option').allTextContents();
-    console.log('性格プリセットのオプション:', options);
+    console.log('性格プリセチE��のオプション:', options);
     
-    // 性格タグのチェックボックス数を確認
+    // 性格タグのチェチE��ボックス数を確誁E
     const checkboxCount = await page.locator('input[type="checkbox"]').count();
-    console.log(`性格タグのチェックボックス数: ${checkboxCount}`);
+    console.log(`性格タグのチェチE��ボックス数: ${checkboxCount}`);
   });
 });

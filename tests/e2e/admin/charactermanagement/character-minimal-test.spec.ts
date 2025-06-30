@@ -1,16 +1,16 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('キャラクター作成 - 最小限テスト', () => {
+test.describe('キャラクター作�E - 最小限チE��チE, () => {
   test.setTimeout(60000);
   
   const adminEmail = 'admin@example.com';
   const adminPassword = 'admin123';
 
-  test('必須3項目のみで作成を試みる', async ({ browser }) => {
+  test('忁E��E頁E��のみで作�Eを試みめE, async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
     
-    console.log('🚀 最小限テスト開始');
+    console.log('🚀 最小限チE��ト開姁E);
     
     try {
       // ログイン
@@ -21,12 +21,12 @@ test.describe('キャラクター作成 - 最小限テスト', () => {
       await page.click('button[type="submit"]');
       
       await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
-      console.log('✅ ログイン成功');
+      console.log('✁Eログイン成功');
       
       await page.waitForTimeout(5000);
       await page.close();
       
-      // 新しいページでキャラクター作成ページへ
+      // 新しいペ�Eジでキャラクター作�Eペ�Eジへ
       const newPage = await context.newPage();
       await newPage.goto('/admin/characters/new', { 
         waitUntil: 'networkidle',
@@ -35,59 +35,59 @@ test.describe('キャラクター作成 - 最小限テスト', () => {
       
       await newPage.waitForTimeout(3000);
       
-      console.log('\n📝 必須3項目のみ入力:');
+      console.log('\n📝 忁E��E頁E��のみ入劁E');
       const timestamp = Date.now();
       
-      // 1. キャラクター名（日本語）- 最初のテキスト入力
+      // 1. キャラクター名（日本語！E 最初�EチE��スト�E劁E
       const nameJaInput = newPage.locator('input[type="text"]').first();
-      await nameJaInput.fill(`最小限テスト_${timestamp}`);
-      console.log('✅ 1. キャラクター名（日本語）入力');
+      await nameJaInput.fill(`最小限チE��チE${timestamp}`);
+      console.log('✁E1. キャラクター名（日本語）�E劁E);
       
-      // 英語名も入力してみる（必須でないかもしれないが）
+      // 英語名も�E力してみる（忁E��でなぁE��もしれなぁE���E�E
       const nameEnInput = newPage.locator('input[type="text"]').nth(1);
       await nameEnInput.fill(`Minimal Test ${timestamp}`);
-      console.log('✅ 英語名も入力（念のため）');
+      console.log('✁E英語名も�E力（念のため�E�E);
       
-      // 2. 性格プリセット - 2番目のセレクトボックス
+      // 2. 性格プリセチE�� - 2番目のセレクト�EチE��ス
       const selects = await newPage.locator('select').all();
       if (selects.length > 1) {
-        // 最初に性別を選択（必須でないかもしれないが）
+        // 最初に性別を選択（忁E��でなぁE��もしれなぁE���E�E
         await selects[0].selectOption({ index: 1 });
-        console.log('✅ 性別選択（念のため）');
+        console.log('✁E性別選択（念のため�E�E);
         
-        // 性格プリセットを選択
+        // 性格プリセチE��を選抁E
         const personalityOptions = await selects[1].locator('option').all();
         for (let i = 1; i < personalityOptions.length; i++) {
           const value = await personalityOptions[i].getAttribute('value');
           if (value && value !== '') {
             await selects[1].selectOption(value);
             const text = await personalityOptions[i].textContent();
-            console.log(`✅ 2. 性格プリセット選択: ${value} (${text})`);
+            console.log(`✁E2. 性格プリセチE��選抁E ${value} (${text})`);
             break;
           }
         }
       }
       
-      // 3. 性格タグ - 最低1つチェック
+      // 3. 性格タグ - 最佁EつチェチE��
       const firstCheckbox = newPage.locator('input[type="checkbox"]').first();
       await firstCheckbox.click();
-      console.log('✅ 3. 性格タグ選択（1つ）');
+      console.log('✁E3. 性格タグ選択！Eつ�E�E);
       
-      // スクリーンショット
+      // スクリーンショチE��
       await newPage.screenshot({ path: 'minimal-test-before-save.png', fullPage: true });
       
-      // 保存を試みる
-      console.log('\n💾 保存を試みる...');
+      // 保存を試みめE
+      console.log('\n💾 保存を試みめE..');
       const saveButton = newPage.locator('button[type="submit"]').first();
       
-      // APIレスポンス監視
+      // APIレスポンス監要E
       const responsePromise = newPage.waitForResponse(
         response => response.url().includes('/api/v1/admin/characters') && response.request().method() === 'POST',
         { timeout: 10000 }
       ).catch(() => null);
       
       await saveButton.click();
-      console.log('✅ 保存ボタンクリック');
+      console.log('✁E保存�EタンクリチE��');
       
       const response = await responsePromise;
       if (response) {
@@ -101,16 +101,16 @@ test.describe('キャラクター作成 - 最小限テスト', () => {
         }
       }
       
-      // 結果を待つ
+      // 結果を征E��
       await newPage.waitForTimeout(5000);
       
-      // エラーメッセージを収集
+      // エラーメチE��ージを収雁E
       const errorMessages = await newPage.locator('.error, .text-red-600, .toast-error').allTextContents();
       if (errorMessages.length > 0) {
-        console.log('\n❌ エラーメッセージ:', errorMessages);
+        console.log('\n❁EエラーメチE��ージ:', errorMessages);
       }
       
-      // 成功判定
+      // 成功判宁E
       const finalUrl = newPage.url();
       const isSuccess = 
         !finalUrl.includes('/new') || 
@@ -119,38 +119,38 @@ test.describe('キャラクター作成 - 最小限テスト', () => {
       
       console.log('\n📊 結果:');
       console.log(`- URL: ${finalUrl}`);
-      console.log(`- 成功: ${isSuccess ? '✅' : '❌'}`);
+      console.log(`- 成功: ${isSuccess ? '✁E : '❁E}`);
       
-      // 失敗時のスクリーンショット
+      // 失敗時のスクリーンショチE��
       if (!isSuccess) {
         await newPage.screenshot({ path: 'minimal-test-after-save.png', fullPage: true });
         
-        // 全てのテキストエリアの内容も確認
+        // 全てのチE��ストエリアの冁E��も確誁E
         const textareaCount = await newPage.locator('textarea').count();
-        console.log(`\n📝 テキストエリア数: ${textareaCount}`);
+        console.log(`\n📝 チE��ストエリア数: ${textareaCount}`);
         
-        // もしかしたら説明やプロンプトが必須かも？
+        // もしかしたら説明やプロンプトが忁E��かも！E
         if (textareaCount > 0) {
-          console.log('説明フィールドを追加で入力してみる...');
+          console.log('説明フィールドを追加で入力してみめE..');
           
-          // 日本語説明
+          // 日本語説昁E
           const descJa = newPage.locator('textarea').first();
-          await descJa.fill('最小限のテストキャラクターです。');
+          await descJa.fill('最小限のチE��トキャラクターです、E);
           
-          // 英語説明
+          // 英語説昁E
           if (textareaCount > 1) {
             const descEn = newPage.locator('textarea').nth(1);
             await descEn.fill('This is a minimal test character.');
           }
           
-          // 再度保存を試みる
-          console.log('\n💾 説明追加後、再度保存...');
+          // 再度保存を試みめE
+          console.log('\n💾 説明追加後、�E度保孁E..');
           await saveButton.click();
           await newPage.waitForTimeout(5000);
           
           const retryUrl = newPage.url();
           const retrySuccess = !retryUrl.includes('/new');
-          console.log(`- 再試行結果: ${retrySuccess ? '✅' : '❌'}`);
+          console.log(`- 再試行結果: ${retrySuccess ? '✁E : '❁E}`);
           
           if (!retrySuccess) {
             const retryErrors = await newPage.locator('.error, .text-red-600').allTextContents();
@@ -162,7 +162,7 @@ test.describe('キャラクター作成 - 最小限テスト', () => {
       expect(isSuccess).toBeTruthy();
       
     } catch (error) {
-      console.error('❌ テストエラー:', error);
+      console.error('❁EチE��トエラー:', error);
       await newPage.screenshot({ path: 'minimal-test-error.png', fullPage: true });
       throw error;
     } finally {

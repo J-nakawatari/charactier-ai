@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('キャラクター作成フォーム直接アクセス', () => {
-  test('直接URLでキャラクター作成ページにアクセス', async ({ page }) => {
-    console.log('🚀 テスト開始: キャラクター作成フォーム直接アクセス');
+test.describe('キャラクター作�Eフォーム直接アクセス', () => {
+  test('直接URLでキャラクター作�Eペ�Eジにアクセス', async ({ page }) => {
+    console.log('🚀 チE��ト開姁E キャラクター作�Eフォーム直接アクセス');
     
     // Step 1: ログイン
     await page.goto('/admin/login');
@@ -12,35 +12,35 @@ test.describe('キャラクター作成フォーム直接アクセス', () => {
     await page.locator('input[type="password"]').fill('admin123');
     await page.locator('button[type="submit"]').click();
     
-    // ログイン後のリダイレクトを待つ
+    // ログイン後�Eリダイレクトを征E��
     await page.waitForURL('**/admin/dashboard', { timeout: 10000 });
-    console.log('✅ ログイン成功');
+    console.log('✁Eログイン成功');
     
-    // Step 2: ダッシュボードが完全に読み込まれるまで待つ
+    // Step 2: ダチE��ュボ�Eドが完�Eに読み込まれるまで征E��
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000); // 追加の安全な待機
+    await page.waitForTimeout(2000); // 追加の安�Eな征E��E
     
-    // Step 3: 新しいタブで開くのと同じように、完全に新しいナビゲーションとして処理
+    // Step 3: 新しいタブで開くのと同じように、完�Eに新しいナビゲーションとして処琁E
     await page.evaluate(() => {
       window.location.href = '/admin/characters/new';
     });
     
-    // ページの読み込みを待つ
+    // ペ�Eジの読み込みを征E��
     await page.waitForURL('**/admin/characters/new', { timeout: 10000 });
     await page.waitForLoadState('networkidle');
-    console.log('✅ キャラクター作成ページに到達');
+    console.log('✁Eキャラクター作�Eペ�Eジに到遁E);
     console.log('📍 現在のURL:', page.url());
     
-    // Step 4: フォームフィールドの確認
-    console.log('\n📝 フォームフィールドの確認:');
+    // Step 4: フォームフィールド�E確誁E
+    console.log('\n📝 フォームフィールド�E確誁E');
     
-    // 基本的なフォーム要素の存在を確認
+    // 基本皁E��フォーム要素の存在を確誁E
     const formElements = {
-      'テキスト入力': 'input[type="text"]',
-      'セレクトボックス': 'select',
-      'チェックボックス': 'input[type="checkbox"]',
-      'テキストエリア': 'textarea',
-      '保存ボタン': 'button[type="submit"], button:has-text("保存"), button:has-text("作成")'
+      'チE��スト�E劁E: 'input[type="text"]',
+      'セレクト�EチE��ス': 'select',
+      'チェチE��ボックス': 'input[type="checkbox"]',
+      'チE��ストエリア': 'textarea',
+      '保存�Eタン': 'button[type="submit"], button:has-text("保孁E), button:has-text("作�E")'
     };
     
     for (const [name, selector] of Object.entries(formElements)) {
@@ -48,38 +48,38 @@ test.describe('キャラクター作成フォーム直接アクセス', () => {
       console.log(`- ${name}: ${count}個`);
     }
     
-    // Step 5: 必須フィールドのテスト入力
+    // Step 5: 忁E��フィールド�EチE��ト�E劁E
     try {
-      // 名前フィールドに入力
+      // 名前フィールドに入劁E
       const nameInput = page.locator('input[type="text"]').first();
-      await nameInput.fill('テストキャラクター');
-      console.log('✅ 名前フィールドに入力');
+      await nameInput.fill('チE��トキャラクター');
+      console.log('✁E名前フィールドに入劁E);
       
-      // 性格プリセットを選択
+      // 性格プリセチE��を選抁E
       const selectBox = page.locator('select').first();
       if (await selectBox.isVisible()) {
         const options = await selectBox.locator('option').allTextContents();
-        console.log('性格プリセットのオプション:', options.slice(0, 5)); // 最初の5個を表示
+        console.log('性格プリセチE��のオプション:', options.slice(0, 5)); // 最初�E5個を表示
         
         if (options.length > 1) {
           await selectBox.selectOption({ index: 1 });
-          console.log('✅ 性格プリセットを選択');
+          console.log('✁E性格プリセチE��を選抁E);
         }
       }
       
-      // 性格タグを選択
+      // 性格タグを選抁E
       const checkbox = page.locator('input[type="checkbox"]').first();
       if (await checkbox.isVisible()) {
         await checkbox.click();
-        console.log('✅ 性格タグを選択');
+        console.log('✁E性格タグを選抁E);
       }
       
     } catch (error) {
-      console.log('⚠️ フォームフィールドの操作中にエラー:', error);
+      console.log('⚠�E�Eフォームフィールド�E操作中にエラー:', error);
     }
     
-    // スクリーンショットを保存
+    // スクリーンショチE��を保孁E
     await page.screenshot({ path: 'character-form-direct.png', fullPage: true });
-    console.log('\n📸 スクリーンショットを character-form-direct.png に保存しました');
+    console.log('\n📸 スクリーンショチE��めEcharacter-form-direct.png に保存しました');
   });
 });

@@ -1,25 +1,25 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('デバッグテスト', () => {
-  test('ブラウザ起動確認', async ({ page }) => {
-    console.log('テスト開始');
+test.describe('チE��チE��チE��チE, () => {
+  test('ブラウザ起動確誁E, async ({ page }) => {
+    console.log('チE��ト開姁E);
     
     try {
-      // シンプルなページアクセス
+      // シンプルなペ�Eジアクセス
       await page.goto('http://localhost:3001/admin/login');
-      console.log('ページアクセス成功');
+      console.log('ペ�Eジアクセス成功');
       
-      // タイトル取得
+      // タイトル取征E
       const title = await page.title();
-      console.log('ページタイトル:', title);
+      console.log('ペ�Eジタイトル:', title);
       
-      // スクリーンショット
+      // スクリーンショチE��
       await page.screenshot({ path: 'debug-screenshot.png' });
-      console.log('スクリーンショット保存');
+      console.log('スクリーンショチE��保孁E);
       
       expect(title).toBeTruthy();
     } catch (error) {
-      console.error('エラー発生:', error);
+      console.error('エラー発甁E', error);
       throw error;
     }
   });

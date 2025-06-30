@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('authaccountmanagement - login', () => {
-  test('正しい認証情報でのログイン成功', async ({ page }) => {
-    // まず新規登録でテストユーザーを作成
+  test('正しい認証惁E��でのログイン成功', async ({ page }) => {
+    // まず新規登録でチE��トユーザーを作�E
     const timestamp = Date.now();
     const testEmail = `test-${timestamp}@example.com`;
     const testPassword = 'Test123!';
@@ -14,24 +14,25 @@ test.describe('authaccountmanagement - login', () => {
     await page.locator('#confirmPassword').fill(testPassword);
     await page.locator('button[type="submit"]').click();
     
-    // 登録完了を待つ
+    // 登録完亁E��征E��
     await page.waitForURL('**/register-complete', { timeout: 10000 });
     
-    // ログインページに移動
+    // ログインペ�Eジに移勁E
     await page.goto('/ja/login');
     
-    // ログインフォームに入力
+    // ログインフォームに入劁E
     await page.locator('input[type="email"]').fill(testEmail);
     await page.locator('input[type="password"]').fill(testPassword);
     
-    // ログインボタンをクリック
+    // ログインボタンをクリチE��
     await page.locator('button[type="submit"]').click();
     
-    // メール認証エラーメッセージが表示されることを確認
-    // （新規登録直後はメール認証が必要なため、これが正常な動作）
-    await expect(page.getByText('メールアドレスが認証されていません')).toBeVisible();
+    // メール認証エラーメチE��ージが表示されることを確誁E
+    // �E�新規登録直後�Eメール認証が忁E��なため、これが正常な動作！E
+    await expect(page.getByText('メールアドレスが認証されてぁE��せん')).toBeVisible();
     
-    // この状態でログインはブロックされるため、これをテストの成功とする
-    console.log('メール認証が必要なため、ログインはブロックされました（期待通りの動作）');
+    // こ�E状態でログインはブロチE��されるため、これをチE��ト�E成功とする
+    console.log('メール認証が忁E��なため、ログインはブロチE��されました�E�期征E��りの動作！E);
   });
 });
+

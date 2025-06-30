@@ -1,48 +1,48 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('キャラクター作成フォームの検証 v2', () => {
-  test('新しいコンテキストでキャラクター作成フォームを確認', async ({ browser }) => {
-    // 新しいブラウザコンテキストを作成
+test.describe('キャラクター作�Eフォームの検証 v2', () => {
+  test('新しいコンチE��ストでキャラクター作�Eフォームを確誁E, async ({ browser }) => {
+    // 新しいブラウザコンチE��ストを作�E
     const context = await browser.newContext();
     const page = await context.newPage();
     
-    console.log('🚀 テスト開始: キャラクター作成フォームの検証 v2');
+    console.log('🚀 チE��ト開姁E キャラクター作�Eフォームの検証 v2');
     
     // Step 1: ログイン
     await page.goto('/admin/login');
     await page.waitForLoadState('networkidle');
     
-    // ログインフォームに入力
+    // ログインフォームに入劁E
     await page.locator('input[type="email"]').fill('admin@example.com');
     await page.locator('input[type="password"]').fill('admin123');
     await page.locator('button[type="submit"]').click();
     
-    // ダッシュボードへの遷移を待つ
+    // ダチE��ュボ�Eドへの遷移を征E��
     try {
       await page.waitForURL('**/admin/dashboard', { timeout: 10000 });
-      console.log('✅ ログイン成功');
+      console.log('✁Eログイン成功');
       console.log('📍 現在のURL:', page.url());
     } catch (e) {
-      console.log('❌ ログイン失敗');
+      console.log('❁Eログイン失敁E);
       const errorMessages = await page.locator('.error, .text-red-600, [role="alert"]').allTextContents();
       if (errorMessages.length > 0) {
-        console.log('エラーメッセージ:', errorMessages.join(', '));
+        console.log('エラーメチE��ージ:', errorMessages.join(', '));
       }
       await page.screenshot({ path: 'login-error-v2.png' });
       await context.close();
       return;
     }
     
-    // Step 2: ダッシュボードが完全に読み込まれるまで待つ
-    console.log('⏱️ ダッシュボードの安定を待機中...');
+    // Step 2: ダチE��ュボ�Eドが完�Eに読み込まれるまで征E��
+    console.log('⏱�E�EダチE��ュボ�Eド�E安定を征E��中...');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
     
-    // 現在のページを閉じる
+    // 現在のペ�Eジを閉じる
     await page.close();
     
-    // Step 3: 新しいページでキャラクター作成ページを開く
-    console.log('📄 新しいページでキャラクター作成ページを開く');
+    // Step 3: 新しいペ�Eジでキャラクター作�Eペ�Eジを開ぁE
+    console.log('📄 新しいペ�Eジでキャラクター作�Eペ�Eジを開ぁE);
     const newPage = await context.newPage();
     
     try {
@@ -51,44 +51,44 @@ test.describe('キャラクター作成フォームの検証 v2', () => {
         timeout: 30000 
       });
       
-      // URLが正しいことを確認
+      // URLが正しいことを確誁E
       const currentUrl = newPage.url();
       console.log('📍 現在のURL:', currentUrl);
       
       if (!currentUrl.includes('/admin/characters/new')) {
-        throw new Error(`期待したURLではありません: ${currentUrl}`);
+        throw new Error(`期征E��たURLではありません: ${currentUrl}`);
       }
       
-      console.log('✅ キャラクター作成ページに到達');
+      console.log('✁Eキャラクター作�Eペ�Eジに到遁E);
       
     } catch (error) {
-      console.log('❌ キャラクター作成ページへの遷移に失敗:', error.message);
+      console.log('❁Eキャラクター作�Eペ�Eジへの遷移に失敁E', error.message);
       await newPage.screenshot({ path: 'navigation-error-v2.png' });
       await context.close();
       return;
     }
     
-    // Step 4: ページが完全に読み込まれるのを待つ
+    // Step 4: ペ�Eジが完�Eに読み込まれるのを征E��
     await newPage.waitForLoadState('networkidle');
-    await newPage.waitForTimeout(3000); // 追加の待機
+    await newPage.waitForTimeout(3000); // 追加の征E��E
     
-    console.log('\n📋 フォームフィールドの確認:');
+    console.log('\n📋 フォームフィールド�E確誁E');
     
-    // 各要素の数をカウント（より確実に）
+    // 吁E��素の数をカウント（より確実に�E�E
     const elements = {
-      'テキスト入力': await newPage.locator('input[type="text"]').count(),
-      'セレクトボックス': await newPage.locator('select').count(),
-      'チェックボックス': await newPage.locator('input[type="checkbox"]').count(),
-      'テキストエリア': await newPage.locator('textarea').count(),
-      '保存ボタン': await newPage.locator('button[type="submit"], button:has-text("保存"), button:has-text("作成")').count()
+      'チE��スト�E劁E: await newPage.locator('input[type="text"]').count(),
+      'セレクト�EチE��ス': await newPage.locator('select').count(),
+      'チェチE��ボックス': await newPage.locator('input[type="checkbox"]').count(),
+      'チE��ストエリア': await newPage.locator('textarea').count(),
+      '保存�Eタン': await newPage.locator('button[type="submit"], button:has-text("保孁E), button:has-text("作�E")').count()
     };
     
-    // デバッグ情報を追加
+    // チE��チE��惁E��を追加
     console.log('要素数:', elements);
     
-    // もし要素が見つからない場合、より広範囲で検索
-    if (elements['テキスト入力'] === 0) {
-      console.log('⚠️ テキスト入力が見つかりません。すべてのinput要素を確認...');
+    // もし要素が見つからなぁE��合、より庁E��E��で検索
+    if (elements['チE��スト�E劁E] === 0) {
+      console.log('⚠�E�EチE��スト�E力が見つかりません。すべてのinput要素を確誁E..');
       const allInputs = await newPage.locator('input').count();
       console.log(`全input要素: ${allInputs}個`);
     }
@@ -97,23 +97,23 @@ test.describe('キャラクター作成フォームの検証 v2', () => {
       console.log(`- ${name}: ${count}個`);
     }
     
-    // 必須フィールドの存在を確認
-    expect(elements['テキスト入力']).toBeGreaterThan(0);
-    expect(elements['セレクトボックス']).toBeGreaterThan(0);
-    expect(elements['チェックボックス']).toBeGreaterThan(0);
+    // 忁E��フィールド�E存在を確誁E
+    expect(elements['チE��スト�E劁E]).toBeGreaterThan(0);
+    expect(elements['セレクト�EチE��ス']).toBeGreaterThan(0);
+    expect(elements['チェチE��ボックス']).toBeGreaterThan(0);
     
-    console.log('\n✅ キャラクター作成フォームの必須フィールドが正しく表示されています');
+    console.log('\n✁Eキャラクター作�Eフォームの忁E��フィールドが正しく表示されてぁE��ぁE);
     
-    // スクリーンショットを保存
+    // スクリーンショチE��を保孁E
     await newPage.screenshot({ path: 'character-form-v2.png', fullPage: true });
-    console.log('📸 スクリーンショットを character-form-v2.png に保存しました');
+    console.log('📸 スクリーンショチE��めEcharacter-form-v2.png に保存しました');
     
-    // クリーンアップ
+    // クリーンアチE�E
     await context.close();
   });
   
-  test('管理画面の認証状態を維持してページ遷移', async ({ page, context }) => {
-    console.log('🔐 認証状態を維持したページ遷移テスト');
+  test('管琁E��面の認証状態を維持してペ�Eジ遷移', async ({ page, context }) => {
+    console.log('🔐 認証状態を維持した�Eージ遷移チE��チE);
     
     // ログイン
     await page.goto('/admin/login');
@@ -121,11 +121,11 @@ test.describe('キャラクター作成フォームの検証 v2', () => {
     await page.fill('input[type="password"]', 'admin123');
     await page.click('button[type="submit"]');
     
-    // ダッシュボードを待つ
+    // ダチE��ュボ�Eドを征E��
     await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
-    console.log('✅ ログイン完了');
+    console.log('✁Eログイン完亁E);
     
-    // 十分に待つ
+    // 十�Eに征E��
     await page.waitForTimeout(5000);
     
     // JavaScriptで直接遷移
@@ -133,7 +133,7 @@ test.describe('キャラクター作成フォームの検証 v2', () => {
       window.location.href = '/admin/characters/new';
     });
     
-    // 新しいページの読み込みを待つ
+    // 新しいペ�Eジの読み込みを征E��
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
     
@@ -141,13 +141,13 @@ test.describe('キャラクター作成フォームの検証 v2', () => {
     console.log('📍 最終URL:', finalUrl);
     
     if (finalUrl.includes('/admin/characters/new')) {
-      console.log('✅ キャラクター作成ページに到達（JavaScript遷移）');
+      console.log('✁Eキャラクター作�Eペ�Eジに到達！EavaScript遷移�E�E);
       
-      // フォームの簡易確認
+      // フォームの簡易確誁E
       const hasForm = await page.locator('form, input[type="text"], select').count() > 0;
-      console.log(`フォーム要素: ${hasForm ? '存在する' : '存在しない'}`);
+      console.log(`フォーム要素: ${hasForm ? '存在する' : '存在しなぁE}`);
     } else {
-      console.log('❌ 期待したページに到達できませんでした');
+      console.log('❁E期征E��た�Eージに到達できませんでした');
     }
   });
 });

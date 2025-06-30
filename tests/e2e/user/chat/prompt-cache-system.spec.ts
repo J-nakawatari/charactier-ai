@@ -1,26 +1,26 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('プロンプトキャッシュシステムのE2Eテスト', () => {
+test.describe('プロンプトキャチE��ュシスチE��のE2EチE��チE, () => {
   let userToken: string;
   const testEmail = `test-cache-${Date.now()}@example.com`;
   const testPassword = 'Test123!';
 
   test.beforeAll(async ({ page }) => {
-    // テストユーザーの作成
+    // チE��トユーザーの作�E
     await page.goto('/ja/register');
     await page.locator('#email').fill(testEmail);
     await page.locator('#password').fill(testPassword);
     await page.locator('#confirmPassword').fill(testPassword);
     await page.locator('button[type="submit"]').click();
     
-    // 登録完了を待つ
+    // 登録完亁E��征E��
     await page.waitForURL('**/register-complete', { timeout: 10000 });
     
-    // メール認証をスキップ（テスト環境のため）
-    // 実際のテストではメール認証APIを直接呼ぶ必要があるかもしれません
+    // メール認証をスキチE�E�E�テスト環墁E�Eため�E�E
+    // 実際のチE��トではメール認証APIを直接呼ぶ忁E��があるかもしれません
   });
 
-  test('初回チャット時のプロンプトキャッシュ作成', async ({ page }) => {
+  test('初回チャチE��時�EプロンプトキャチE��ュ作�E', async ({ page }) => {
     // ログイン
     await page.goto('/ja/login');
     await page.locator('input[type="email"]').fill(testEmail);
@@ -31,12 +31,12 @@ test.describe('プロンプトキャッシュシステムのE2Eテスト', () =>
     await page.goto('/ja/characters');
     await page.waitForLoadState('networkidle');
     
-    // 最初のキャラクターを選択
+    // 最初�Eキャラクターを選抁E
     const firstCharacter = page.locator('.character-card').first();
     const characterName = await firstCharacter.locator('.character-name').textContent();
     await firstCharacter.click();
     
-    // チャット画面に遷移
+    // チャチE��画面に遷移
     await page.waitForURL('**/chat/**');
     
     // APIレスポンスをインターセプト
@@ -44,23 +44,23 @@ test.describe('プロンプトキャッシュシステムのE2Eテスト', () =>
       response => response.url().includes('/api/v1/chat/send') && response.request().method() === 'POST'
     );
     
-    // メッセージを送信
-    const messageInput = page.locator('textarea[placeholder*="メッセージ"]');
-    await messageInput.fill('こんにちは！');
+    // メチE��ージを送信
+    const messageInput = page.locator('textarea[placeholder*="メチE��ージ"]');
+    await messageInput.fill('こんにちは�E�E);
     await page.locator('button[type="submit"]').click();
     
     const response = await chatResponsePromise;
     const responseData = await response.json();
     
-    // レスポンスヘッダーでキャッシュ状態を確認
+    // レスポンスヘッダーでキャチE��ュ状態を確誁E
     const cacheStatus = response.headers()['x-prompt-cache-status'];
-    console.log(`初回チャット - キャッシュステータス: ${cacheStatus}`);
+    console.log(`初回チャチE�� - キャチE��ュスチE�Eタス: ${cacheStatus}`);
     
-    // 初回はキャッシュミスのはず
+    // 初回はキャチE��ュミスのはぁE
     expect(cacheStatus).toBe('miss');
     
-    // 同じキャラクターに再度メッセージを送信
-    await messageInput.fill('元気ですか？');
+    // 同じキャラクターに再度メチE��ージを送信
+    await messageInput.fill('允E��ですか�E�E);
     
     const secondResponsePromise = page.waitForResponse(
       response => response.url().includes('/api/v1/chat/send') && response.request().method() === 'POST'
@@ -70,23 +70,23 @@ test.describe('プロンプトキャッシュシステムのE2Eテスト', () =>
     
     const secondResponse = await secondResponsePromise;
     const secondCacheStatus = secondResponse.headers()['x-prompt-cache-status'];
-    console.log(`2回目のチャット - キャッシュステータス: ${secondCacheStatus}`);
+    console.log(`2回目のチャチE�� - キャチE��ュスチE�Eタス: ${secondCacheStatus}`);
     
-    // 2回目はキャッシュヒットのはず
+    // 2回目はキャチE��ュヒット�EはぁE
     expect(secondCacheStatus).toBe('hit');
   });
 
-  test('親密度レベル変化時のキャッシュ無効化', async ({ page }) => {
+  test('親寁E��レベル変化時�EキャチE��ュ無効匁E, async ({ page }) => {
     // ログイン済みの前提
     await page.goto('/ja/characters');
     await page.waitForLoadState('networkidle');
     
-    // テスト用キャラクターを選択
+    // チE��ト用キャラクターを選抁E
     const characterCard = page.locator('.character-card').first();
     await characterCard.click();
     
-    // 複数回メッセージを送信して親密度を上げる
-    const messageInput = page.locator('textarea[placeholder*="メッセージ"]');
+    // 褁E��回メチE��ージを送信して親寁E��を上げめE
+    const messageInput = page.locator('textarea[placeholder*="メチE��ージ"]');
     const levelDisplay = page.locator('.affinity-level-display');
     
     let initialLevel = 0;
@@ -95,7 +95,7 @@ test.describe('プロンプトキャッシュシステムのE2Eテスト', () =>
       initialLevel = parseInt(levelText?.match(/\d+/)?.[0] || '0');
     }
     
-    // 親密度が上がるまでメッセージを送信
+    // 親寁E��が上がるまでメチE��ージを送信
     let messageCount = 0;
     let levelChanged = false;
     
@@ -104,32 +104,32 @@ test.describe('プロンプトキャッシュシステムのE2Eテスト', () =>
         response => response.url().includes('/api/v1/chat/send') && response.request().method() === 'POST'
       );
       
-      await messageInput.fill(`テストメッセージ ${messageCount + 1}`);
+      await messageInput.fill(`チE��トメチE��ージ ${messageCount + 1}`);
       await page.locator('button[type="submit"]').click();
       
       const response = await responsePromise;
       const cacheStatus = response.headers()['x-prompt-cache-status'];
       
-      // レベルアップポップアップが表示されたか確認
+      // レベルアチE�EポップアチE�Eが表示されたか確誁E
       const levelUpPopup = page.locator('.level-up-popup');
       if (await levelUpPopup.isVisible({ timeout: 1000 })) {
         levelChanged = true;
-        console.log('親密度レベルが変化しました');
+        console.log('親寁E��レベルが変化しました');
         
-        // レベル変化後のキャッシュステータスを確認
-        expect(cacheStatus).toBe('miss'); // 新しいレベルなのでキャッシュミス
+        // レベル変化後�EキャチE��ュスチE�Eタスを確誁E
+        expect(cacheStatus).toBe('miss'); // 新しいレベルなのでキャチE��ュミス
       }
       
       messageCount++;
-      await page.waitForTimeout(1000); // レート制限対策
+      await page.waitForTimeout(1000); // レート制限対筁E
     }
   });
 
-  test('プロンプトがAPIに正しく渡されているか検証', async ({ page }) => {
+  test('プロンプトがAPIに正しく渡されてぁE��か検証', async ({ page }) => {
     await page.goto('/ja/characters');
     await page.waitForLoadState('networkidle');
     
-    // キャラクターを選択
+    // キャラクターを選抁E
     const characterCard = page.locator('.character-card').first();
     await characterCard.click();
     
@@ -137,63 +137,63 @@ test.describe('プロンプトキャッシュシステムのE2Eテスト', () =>
     await page.route('**/api/v1/chat/send', async (route, request) => {
       const postData = request.postDataJSON();
       
-      // リクエストボディの検証
+      // リクエスト�EチE��の検証
       expect(postData).toHaveProperty('message');
       expect(postData).toHaveProperty('characterId');
       
-      // プロンプトが含まれているか確認（デバッグ用）
+      // プロンプトが含まれてぁE��か確認（デバッグ用�E�E
       console.log('送信されたデータ:', {
         characterId: postData.characterId,
         messageLength: postData.message?.length,
         hasSessionId: !!postData.sessionId
       });
       
-      // リクエストを続行
+      // リクエストを続衁E
       await route.continue();
     });
     
-    // メッセージ送信
-    const messageInput = page.locator('textarea[placeholder*="メッセージ"]');
-    await messageInput.fill('プロンプトテスト');
+    // メチE��ージ送信
+    const messageInput = page.locator('textarea[placeholder*="メチE��ージ"]');
+    await messageInput.fill('プロンプトチE��チE);
     await page.locator('button[type="submit"]').click();
     
-    // レスポンスを待つ
+    // レスポンスを征E��
     await page.waitForSelector('.message-bubble.ai-message', { timeout: 10000 });
   });
 
-  test('キャッシュ統計情報の確認', async ({ page }) => {
-    // 管理者としてログイン
+  test('キャチE��ュ統計情報の確誁E, async ({ page }) => {
+    // 管琁E��E��してログイン
     await page.goto('/admin/login');
     await page.locator('input[type="email"]').fill('admin@example.com');
     await page.locator('input[type="password"]').fill('admin123');
     await page.locator('button[type="submit"]').click();
     
-    // ダッシュボードへ
+    // ダチE��ュボ�Eドへ
     await page.waitForURL('**/admin/dashboard');
     
-    // キャッシュ統計ページへ（存在する場合）
-    const cacheStatsLink = page.locator('a:has-text("キャッシュ統計")');
+    // キャチE��ュ統計�Eージへ�E�存在する場合！E
+    const cacheStatsLink = page.locator('a:has-text("キャチE��ュ統訁E)');
     if (await cacheStatsLink.isVisible()) {
       await cacheStatsLink.click();
       
-      // キャッシュヒット率の表示を確認
+      // キャチE��ュヒット率の表示を確誁E
       const hitRatio = page.locator('.cache-hit-ratio');
       if (await hitRatio.isVisible()) {
         const ratioText = await hitRatio.textContent();
-        console.log(`キャッシュヒット率: ${ratioText}`);
+        console.log(`キャチE��ュヒット率: ${ratioText}`);
         
-        // ヒット率が0以上であることを確認
+        // ヒット率ぁE以上であることを確誁E
         const ratioValue = parseFloat(ratioText?.match(/\d+\.?\d*/)?.[0] || '0');
         expect(ratioValue).toBeGreaterThanOrEqual(0);
       }
     }
   });
 
-  test('複数キャラクター間でのキャッシュ分離', async ({ page }) => {
+  test('褁E��キャラクター間でのキャチE��ュ刁E��', async ({ page }) => {
     await page.goto('/ja/characters');
     await page.waitForLoadState('networkidle');
     
-    // 最初のキャラクターでチャット
+    // 最初�EキャラクターでチャチE��
     const firstCharacter = page.locator('.character-card').nth(0);
     const firstName = await firstCharacter.locator('.character-name').textContent();
     await firstCharacter.click();
@@ -201,9 +201,9 @@ test.describe('プロンプトキャッシュシステムのE2Eテスト', () =>
     await page.waitForURL('**/chat/**');
     const firstCharacterId = page.url().split('/').pop();
     
-    // メッセージ送信
-    const messageInput = page.locator('textarea[placeholder*="メッセージ"]');
-    await messageInput.fill('キャッシュテスト1');
+    // メチE��ージ送信
+    const messageInput = page.locator('textarea[placeholder*="メチE��ージ"]');
+    await messageInput.fill('キャチE��ュチE��チE');
     
     const firstResponsePromise = page.waitForResponse(
       response => response.url().includes('/api/v1/chat/send')
@@ -213,10 +213,10 @@ test.describe('プロンプトキャッシュシステムのE2Eテスト', () =>
     const firstResponse = await firstResponsePromise;
     const firstCacheStatus = firstResponse.headers()['x-prompt-cache-status'];
     
-    // キャラクター一覧に戻る
+    // キャラクター一覧に戻めE
     await page.goto('/ja/characters');
     
-    // 2番目のキャラクターでチャット
+    // 2番目のキャラクターでチャチE��
     const secondCharacter = page.locator('.character-card').nth(1);
     const secondName = await secondCharacter.locator('.character-name').textContent();
     await secondCharacter.click();
@@ -224,8 +224,8 @@ test.describe('プロンプトキャッシュシステムのE2Eテスト', () =>
     await page.waitForURL('**/chat/**');
     const secondCharacterId = page.url().split('/').pop();
     
-    // 同じメッセージを送信
-    await messageInput.fill('キャッシュテスト1');
+    // 同じメチE��ージを送信
+    await messageInput.fill('キャチE��ュチE��チE');
     
     const secondResponsePromise = page.waitForResponse(
       response => response.url().includes('/api/v1/chat/send')
@@ -238,7 +238,7 @@ test.describe('プロンプトキャッシュシステムのE2Eテスト', () =>
     console.log(`キャラクター1 (${firstName}): ${firstCacheStatus}`);
     console.log(`キャラクター2 (${secondName}): ${secondCacheStatus}`);
     
-    // 異なるキャラクターなので、2番目もキャッシュミスのはず
+    // 異なるキャラクターなので、E番目もキャチE��ュミスのはぁE
     if (firstCharacterId !== secondCharacterId) {
       expect(secondCacheStatus).toBe('miss');
     }

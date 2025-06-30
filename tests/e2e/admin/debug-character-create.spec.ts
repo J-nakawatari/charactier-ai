@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('キャラクター管理デバッグ', () => {
+test.describe('キャラクター管琁E��バッグ', () => {
   const adminEmail = 'admin@example.com';
   const adminPassword = 'admin123';
 
-  test('管理画面へのアクセスと新規作成ボタンの確認', async ({ page }) => {
+  test('管琁E��面へのアクセスと新規作�Eボタンの確誁E, async ({ page }) => {
     // 1. ログイン
-    console.log('1. 管理者ログイン開始');
+    console.log('1. 管琁E��E��グイン開姁E);
     await page.goto('/admin/login');
     await page.waitForLoadState('networkidle');
     
@@ -14,29 +14,29 @@ test.describe('キャラクター管理デバッグ', () => {
     await page.locator('input[type="password"]').fill(adminPassword);
     await page.locator('button[type="submit"]').click();
     
-    // ログイン後の遷移を待つ
+    // ログイン後�E遷移を征E��
     try {
       await page.waitForURL('**/admin/dashboard', { timeout: 10000 });
-      console.log('✅ ダッシュボードへ遷移成功');
+      console.log('✁EダチE��ュボ�Eドへ遷移成功');
     } catch (e) {
-      console.log('❌ ダッシュボードへ遷移失敗');
+      console.log('❁EダチE��ュボ�Eドへ遷移失敁E);
       console.log('現在のURL:', page.url());
       await page.screenshot({ path: 'admin-login-failed.png' });
       return;
     }
     
-    // 2. キャラクター管理ページへ
-    console.log('2. キャラクター管理ページへ移動');
+    // 2. キャラクター管琁E�Eージへ
+    console.log('2. キャラクター管琁E�Eージへ移勁E);
     await page.goto('/admin/characters');
     await page.waitForLoadState('networkidle');
     
     console.log('現在のURL:', page.url());
     await page.screenshot({ path: 'admin-characters-page.png' });
     
-    // 新規作成ボタンを探す
+    // 新規作�Eボタンを探ぁE
     const createButtons = [
-      'button:has-text("新規作成")',
-      'a:has-text("新規作成")',
+      'button:has-text("新規作�E")',
+      'a:has-text("新規作�E")',
       'button:has-text("Create")',
       'a:has-text("Create")',
       'button:has-text("追加")',
@@ -51,14 +51,14 @@ test.describe('キャラクター管理デバッグ', () => {
       const button = page.locator(selector);
       if (await button.isVisible({ timeout: 1000 }).catch(() => false)) {
         createButton = button;
-        console.log(`✅ 新規作成ボタンが見つかりました: ${selector}`);
+        console.log(`✁E新規作�Eボタンが見つかりました: ${selector}`);
         break;
       }
     }
     
     if (!createButton) {
-      console.log('❌ 新規作成ボタンが見つかりません');
-      // ページ内のボタンとリンクを全て表示
+      console.log('❁E新規作�Eボタンが見つかりません');
+      // ペ�Eジ冁E�Eボタンとリンクを�Eて表示
       const allButtons = await page.locator('button').all();
       console.log(`ボタン数: ${allButtons.length}`);
       for (let i = 0; i < Math.min(5, allButtons.length); i++) {
@@ -76,16 +76,16 @@ test.describe('キャラクター管理デバッグ', () => {
       return;
     }
     
-    // 3. 新規作成ボタンをクリック
-    console.log('3. 新規作成ボタンをクリック');
+    // 3. 新規作�EボタンをクリチE��
+    console.log('3. 新規作�EボタンをクリチE��');
     await createButton.click();
     
-    // ページ遷移またはモーダル表示を待つ
+    // ペ�Eジ遷移また�Eモーダル表示を征E��
     await page.waitForTimeout(2000);
     console.log('現在のURL:', page.url());
     await page.screenshot({ path: 'admin-character-create-form.png' });
     
-    // フォーム要素を探す
+    // フォーム要素を探ぁE
     const formFields = [
       'input[name="name.ja"]',
       'input[name="nameJa"]',
@@ -95,14 +95,14 @@ test.describe('キャラクター管理デバッグ', () => {
       'input[type="text"]'
     ];
     
-    console.log('4. フォームフィールドを探す');
+    console.log('4. フォームフィールドを探ぁE);
     for (const selector of formFields) {
       const field = page.locator(selector);
       const count = await field.count();
       if (count > 0) {
-        console.log(`✅ フィールドが見つかりました: ${selector} (${count}個)`);
+        console.log(`✁Eフィールドが見つかりました: ${selector} (${count}倁E`);
         const isVisible = await field.first().isVisible();
-        console.log(`   表示状態: ${isVisible}`);
+        console.log(`   表示状慁E ${isVisible}`);
       }
     }
     
@@ -113,7 +113,7 @@ test.describe('キャラクター管理デバッグ', () => {
       const name = await allInputs[i].getAttribute('name');
       const placeholder = await allInputs[i].getAttribute('placeholder');
       const type = await allInputs[i].getAttribute('type');
-      console.log(`  入力${i + 1}: name="${name}" placeholder="${placeholder}" type="${type}"`);
+      console.log(`  入劁E{i + 1}: name="${name}" placeholder="${placeholder}" type="${type}"`);
     }
   });
 });

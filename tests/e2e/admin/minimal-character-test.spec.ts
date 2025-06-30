@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('最小限のキャラクター作成テスト', () => {
-  test('セッション維持でキャラクター作成ページにアクセス', async ({ page, context }) => {
-    console.log('🚀 最小限のテスト開始');
+test.describe('最小限のキャラクター作�EチE��チE, () => {
+  test('セチE��ョン維持でキャラクター作�Eペ�Eジにアクセス', async ({ page, context }) => {
+    console.log('🚀 最小限のチE��ト開姁E);
     
     // Step 1: ログイン
     await page.goto('/admin/login');
@@ -10,41 +10,41 @@ test.describe('最小限のキャラクター作成テスト', () => {
     await page.fill('input[type="password"]', 'admin123');
     await page.click('button[type="submit"]');
     
-    // ダッシュボードに到達するまで待つ
+    // ダチE��ュボ�Eドに到達するまで征E��
     await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
-    console.log('✅ ログイン成功');
+    console.log('✁Eログイン成功');
     
-    // Step 2: 十分な待機時間を確保
+    // Step 2: 十�Eな征E��時間を確俁E
     await page.waitForTimeout(5000);
-    console.log('⏱️ 5秒待機完了');
+    console.log('⏱�E�E5秒征E��完亁E);
     
-    // Step 3: 新しいページインスタンスでキャラクター作成ページを開く
+    // Step 3: 新しいペ�Eジインスタンスでキャラクター作�Eペ�Eジを開ぁE
     const newPage = await context.newPage();
     await newPage.goto('/admin/characters/new');
     await newPage.waitForLoadState('networkidle');
     
-    console.log('✅ 新しいタブでキャラクター作成ページを開きました');
+    console.log('✁E新しいタブでキャラクター作�Eペ�Eジを開きました');
     console.log('📍 URL:', newPage.url());
     
-    // Step 4: フォームの基本確認
+    // Step 4: フォームの基本確誁E
     const hasTextInput = await newPage.locator('input[type="text"]').count() > 0;
     const hasSelect = await newPage.locator('select').count() > 0;
     const hasCheckbox = await newPage.locator('input[type="checkbox"]').count() > 0;
     const hasTextarea = await newPage.locator('textarea').count() > 0;
-    const hasSubmitButton = await newPage.locator('button[type="submit"], button:has-text("保存"), button:has-text("作成")').count() > 0;
+    const hasSubmitButton = await newPage.locator('button[type="submit"], button:has-text("保孁E), button:has-text("作�E")').count() > 0;
     
-    console.log('\n📋 フォーム要素の確認:');
-    console.log(`- テキスト入力: ${hasTextInput ? '✅' : '❌'}`);
-    console.log(`- セレクトボックス: ${hasSelect ? '✅' : '❌'}`);
-    console.log(`- チェックボックス: ${hasCheckbox ? '✅' : '❌'}`);
-    console.log(`- テキストエリア: ${hasTextarea ? '✅' : '❌'}`);
-    console.log(`- 送信ボタン: ${hasSubmitButton ? '✅' : '❌'}`);
+    console.log('\n📋 フォーム要素の確誁E');
+    console.log(`- チE��スト�E劁E ${hasTextInput ? '✁E : '❁E}`);
+    console.log(`- セレクト�EチE��ス: ${hasSelect ? '✁E : '❁E}`);
+    console.log(`- チェチE��ボックス: ${hasCheckbox ? '✁E : '❁E}`);
+    console.log(`- チE��ストエリア: ${hasTextarea ? '✁E : '❁E}`);
+    console.log(`- 送信ボタン: ${hasSubmitButton ? '✁E : '❁E}`);
     
-    // スクリーンショット
+    // スクリーンショチE��
     await newPage.screenshot({ path: 'minimal-test-result.png' });
-    console.log('\n📸 スクリーンショットを minimal-test-result.png に保存');
+    console.log('\n📸 スクリーンショチE��めEminimal-test-result.png に保孁E);
     
-    // 必須フィールドがすべて存在することを確認
+    // 忁E��フィールドがすべて存在することを確誁E
     expect(hasTextInput).toBeTruthy();
     expect(hasSelect).toBeTruthy();
     expect(hasCheckbox).toBeTruthy();

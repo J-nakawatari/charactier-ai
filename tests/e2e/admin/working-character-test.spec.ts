@@ -1,13 +1,13 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('動作確認済みのキャラクターテスト', () => {
+test.describe('動作確認済みのキャラクターチE��チE, () => {
   test('debug-character-formと同じアプローチを使用', async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
     
-    console.log('🚀 動作確認済みアプローチでテスト開始');
+    console.log('🚀 動作確認済みアプローチでチE��ト開姁E);
     
-    // Step 1: ログイン（debug-character-formと同じ）
+    // Step 1: ログイン�E�Eebug-character-formと同じ�E�E
     await page.goto('/admin/login');
     await page.waitForLoadState('networkidle');
     
@@ -15,83 +15,83 @@ test.describe('動作確認済みのキャラクターテスト', () => {
     await page.fill('input[type="password"]', 'admin123');
     await page.click('button[type="submit"]');
     
-    // ダッシュボードへの遷移を待つ
+    // ダチE��ュボ�Eドへの遷移を征E��
     await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
-    console.log('✅ ログイン成功');
+    console.log('✁Eログイン成功');
     
-    // Step 2: 十分な待機（debug-character-formと同じ）
+    // Step 2: 十�Eな征E��！Eebug-character-formと同じ�E�E
     await page.waitForTimeout(5000);
     await page.close();
     
-    // Step 3: 新しいページで開く（debug-character-formと同じ）
+    // Step 3: 新しいペ�Eジで開く�E�Eebug-character-formと同じ�E�E
     const newPage = await context.newPage();
-    console.log('\n📄 新しいページでキャラクター作成ページを開く...');
+    console.log('\n📄 新しいペ�Eジでキャラクター作�Eペ�Eジを開ぁE..');
     
     await newPage.goto('/admin/characters/new', { 
       waitUntil: 'networkidle',
       timeout: 30000 
     });
     
-    // Step 4: ページが完全に読み込まれるのを待つ
+    // Step 4: ペ�Eジが完�Eに読み込まれるのを征E��
     await newPage.waitForLoadState('networkidle');
     await newPage.waitForTimeout(3000);
     
-    console.log('✅ キャラクター作成ページに到達');
+    console.log('✁Eキャラクター作�Eペ�Eジに到遁E);
     console.log('📍 URL:', newPage.url());
     
-    // Step 5: フォーム要素の確認
+    // Step 5: フォーム要素の確誁E
     const elements = {
-      'テキスト入力': await newPage.locator('input[type="text"]').count(),
-      'セレクトボックス': await newPage.locator('select').count(),
-      'チェックボックス': await newPage.locator('input[type="checkbox"]').count(),
-      'テキストエリア': await newPage.locator('textarea').count(),
-      '保存ボタン': await newPage.locator('button[type="submit"], button:has-text("保存"), button:has-text("作成")').count()
+      'チE��スト�E劁E: await newPage.locator('input[type="text"]').count(),
+      'セレクト�EチE��ス': await newPage.locator('select').count(),
+      'チェチE��ボックス': await newPage.locator('input[type="checkbox"]').count(),
+      'チE��ストエリア': await newPage.locator('textarea').count(),
+      '保存�Eタン': await newPage.locator('button[type="submit"], button:has-text("保孁E), button:has-text("作�E")').count()
     };
     
     console.log('\n📋 フォーム要素:', elements);
     
-    // Step 6: 実際にフォームに入力してみる
-    if (elements['テキスト入力'] > 0) {
+    // Step 6: 実際にフォームに入力してみめE
+    if (elements['チE��スト�E劁E] > 0) {
       const nameInput = newPage.locator('input[type="text"]').first();
-      await nameInput.fill('テストキャラクター_' + Date.now());
-      console.log('✅ 名前を入力');
+      await nameInput.fill('チE��トキャラクター_' + Date.now());
+      console.log('✁E名前を�E劁E);
     }
     
-    if (elements['セレクトボックス'] > 0) {
+    if (elements['セレクト�EチE��ス'] > 0) {
       const select = newPage.locator('select').first();
       const options = await select.locator('option').count();
       if (options > 1) {
         await select.selectOption({ index: 1 });
-        console.log('✅ 性格プリセットを選択');
+        console.log('✁E性格プリセチE��を選抁E);
       }
     }
     
-    if (elements['チェックボックス'] > 0) {
+    if (elements['チェチE��ボックス'] > 0) {
       await newPage.locator('input[type="checkbox"]').first().click();
-      console.log('✅ 性格タグを選択');
+      console.log('✁E性格タグを選抁E);
     }
     
-    if (elements['テキストエリア'] > 0) {
+    if (elements['チE��ストエリア'] > 0) {
       const textarea = newPage.locator('textarea').first();
-      await textarea.fill('これはE2Eテストで作成されたキャラクターです。');
-      console.log('✅ 説明を入力');
+      await textarea.fill('これはE2EチE��トで作�Eされたキャラクターです、E);
+      console.log('✁E説明を入劁E);
     }
     
-    // スクリーンショット
+    // スクリーンショチE��
     await newPage.screenshot({ path: 'working-character-form.png', fullPage: true });
-    console.log('\n📸 スクリーンショットを working-character-form.png に保存');
+    console.log('\n📸 スクリーンショチE��めEworking-character-form.png に保孁E);
     
     // アサーション
-    expect(elements['テキスト入力']).toBeGreaterThan(0);
-    expect(elements['セレクトボックス']).toBeGreaterThan(0);
-    expect(elements['チェックボックス']).toBeGreaterThan(0);
+    expect(elements['チE��スト�E劁E]).toBeGreaterThan(0);
+    expect(elements['セレクト�EチE��ス']).toBeGreaterThan(0);
+    expect(elements['チェチE��ボックス']).toBeGreaterThan(0);
     
-    console.log('\n✅ すべてのテストが成功しました！');
+    console.log('\n✁EすべてのチE��トが成功しました�E�E);
     
     await context.close();
   });
   
-  test('キャラクター一覧ページの確認', async ({ browser }) => {
+  test('キャラクター一覧ペ�Eジの確誁E, async ({ browser }) => {
     const context = await browser.newContext();
     const loginPage = await context.newPage();
     
@@ -104,22 +104,22 @@ test.describe('動作確認済みのキャラクターテスト', () => {
     await loginPage.waitForTimeout(3000);
     await loginPage.close();
     
-    // 新しいページでキャラクター一覧を開く
+    // 新しいペ�Eジでキャラクター一覧を開ぁE
     const listPage = await context.newPage();
     await listPage.goto('/admin/characters', { waitUntil: 'networkidle' });
     await listPage.waitForTimeout(2000);
     
-    console.log('📍 キャラクター一覧ページ:', listPage.url());
+    console.log('📍 キャラクター一覧ペ�Eジ:', listPage.url());
     
-    // 新規作成ボタンを探す
-    const newButton = listPage.locator('a[href="/admin/characters/new"], button:has-text("新規作成")');
+    // 新規作�Eボタンを探ぁE
+    const newButton = listPage.locator('a[href="/admin/characters/new"], button:has-text("新規作�E")');
     const buttonExists = await newButton.count() > 0;
-    console.log(`新規作成ボタン: ${buttonExists ? '✅ 存在する' : '❌ 存在しない'}`);
+    console.log(`新規作�Eボタン: ${buttonExists ? '✁E存在する' : '❁E存在しなぁE}`);
     
     if (buttonExists) {
       await newButton.first().click();
       await listPage.waitForURL('**/admin/characters/new', { timeout: 10000 });
-      console.log('✅ 新規作成ボタンから遷移成功');
+      console.log('✁E新規作�Eボタンから遷移成功');
     }
     
     await context.close();
