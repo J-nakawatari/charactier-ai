@@ -29,7 +29,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3001',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3002',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -49,13 +49,6 @@ export default defineConfig({
   
   /* Configure output folders */
   outputDir: './test-results',
-  
-  /* Configure reporters */
-  reporter: [
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
-    ['json', { outputFile: 'test-results/results.json' }],
-    ['junit', { outputFile: 'test-results/junit.xml' }],
-  ],
 
   /* Configure projects for major browsers */
   projects: [
@@ -88,7 +81,7 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: process.env.CI ? undefined : {
     command: 'npm run dev',
-    url: 'http://localhost:3001',
+    url: 'http://localhost:3002',
     reuseExistingServer: true, // 既存のサーバーを使用
     timeout: 120 * 1000,
     ignoreHTTPSErrors: true,
