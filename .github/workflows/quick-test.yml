@@ -15,6 +15,16 @@ jobs:
     env:
       LANG: ja_JP.UTF-8
       LC_ALL: ja_JP.UTF-8
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       
@@ -32,6 +42,7 @@ jobs:
         run: |
           pnpm install --no-frozen-lockfile
           cd frontend && pnpm install --no-frozen-lockfile
+          cd ../backend && pnpm install --no-frozen-lockfile
         
       - name: Install Playwright
         run: |
