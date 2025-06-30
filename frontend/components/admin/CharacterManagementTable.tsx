@@ -229,11 +229,12 @@ export default function CharacterManagementTable({ characters, onCharacterDelete
       </div>
 
       {/* デスクトップ用テーブルビュー */}
-      <div className="hidden lg:block overflow-x-auto">
-        <table className="w-full min-w-full">
+      <div className="hidden lg:block">
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px] max-w-[250px]">
                 キャラクター
               </th>
               <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -242,19 +243,19 @@ export default function CharacterManagementTable({ characters, onCharacterDelete
               <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 ステータス
               </th>
-              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                 価格
               </th>
-              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                 チャット数
               </th>
-              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                 平均親密度
               </th>
-              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                 作成日
               </th>
-              <th className="px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50">
                 操作
               </th>
             </tr>
@@ -279,14 +280,14 @@ export default function CharacterManagementTable({ characters, onCharacterDelete
                         </span>
                       )}
                     </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{character.name?.ja || 'N/A'}</div>
-                      <div className="text-sm text-gray-500">ID: {character._id ? character._id.slice(-8) : 'N/A'}</div>
+                    <div className="ml-4 min-w-0 max-w-[150px]">
+                      <div className="text-sm font-medium text-gray-900 truncate" title={character.name?.ja || 'N/A'}>{character.name?.ja || 'N/A'}</div>
+                      <div className="text-sm text-gray-500 truncate">ID: {character._id ? character._id.slice(-8) : 'N/A'}</div>
                     </div>
                   </div>
                 </td>
                 <td className="px-3 md:px-6 py-4">
-                  <div className="text-sm text-gray-900 font-medium">{character.personalityPreset || 'N/A'}</div>
+                  <div className="text-sm text-gray-900 font-medium truncate">{character.personalityPreset || 'N/A'}</div>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {character.personalityTags ? character.personalityTags.slice(0, 3).map((tag, index) => (
                       <span 
@@ -324,7 +325,7 @@ export default function CharacterManagementTable({ characters, onCharacterDelete
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatDate(character.createdAt)}
                 </td>
-                <td className="px-3 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-3 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white">
                   <div className="flex items-center justify-end space-x-2">
                     <button 
                       onClick={() => handleViewCharacter(character)}
@@ -369,7 +370,8 @@ export default function CharacterManagementTable({ characters, onCharacterDelete
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   );
