@@ -21,7 +21,7 @@ test.describe('99%利益確保システムのE2Eテスト', () => {
 
   test('トークンパック作成時の99%利益率計算検証', async ({ page }) => {
     // トークンパック管理ページへ
-    await page.goto('/admin/token-packs');
+    await page.goto('/admin/tokens');
     await page.waitForLoadState('networkidle');
     
     // 新規作成ボタンをクリック
@@ -60,7 +60,7 @@ test.describe('99%利益確保システムのE2Eテスト', () => {
 
   test('為替レート変動時の価格再計算', async ({ page }) => {
     // トークンパック管理ページへ
-    await page.goto('/admin/token-packs');
+    await page.goto('/admin/tokens');
     await page.waitForLoadState('networkidle');
     
     // 既存のトークンパックの編集ボタンをクリック
@@ -85,7 +85,7 @@ test.describe('99%利益確保システムのE2Eテスト', () => {
 
   test('Stripe Price IDの正確な登録と取得', async ({ page }) => {
     // トークンパック管理ページへ
-    await page.goto('/admin/token-packs');
+    await page.goto('/admin/tokens');
     await page.waitForLoadState('networkidle');
     
     // 新規作成
@@ -114,7 +114,7 @@ test.describe('99%利益確保システムのE2Eテスト', () => {
 
   test('利益率計算のエッジケース', async ({ page }) => {
     // トークンパック管理ページへ
-    await page.goto('/admin/token-packs');
+    await page.goto('/admin/tokens');
     
     // 新規作成
     await page.locator('button:has-text("新規作成")').click();
