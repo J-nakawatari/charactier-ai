@@ -13,20 +13,36 @@ test.describe('New User Complete Flow', () => {
     // Wait for page to load
     await page.waitForLoadState('networkidle');
     
+    // Debug: Take screenshot before clicking
+    await page.screenshot({ path: 'before-register-click.png' });
+    
     // Click on the register button/link based on the homepage structure
     // The homepage has a button with onClick that navigates to register page
-    await page.click('button:has-text("新規登録")');
-    await page.waitForURL('**/register');
+    const registerButton = page.locator('button:has-text("新規登録")');
+    
+    // Wait for button to be visible and clickable
+    await expect(registerButton).toBeVisible({ timeout: 10000 });
+    await registerButton.click();
+    
+    // Wait for navigation to complete
+    await page.waitForURL('**/register', { timeout: 15000 });
+    
+    // Debug: Take screenshot after navigation
+    await page.screenshot({ path: 'after-register-click.png' });
+    
+    // Additional wait for form to be ready
+    // Note: The register page uses id attributes, not name attributes
+    await page.waitForSelector('input#email', { state: 'visible', timeout: 10000 });
     
     // Step 2: Fill registration form
-    await page.fill('input[name="username"]', testUsername);
-    await page.fill('input[name="email"]', testEmail);
-    await page.fill('input[name="password"]', testPassword);
-    await page.fill('input[name="confirmPassword"]', testPassword);
+    // The form uses id attributes for fields
+    await page.fill('input#email', testEmail);
+    await page.fill('input#password', testPassword);
+    await page.fill('input#confirmPassword', testPassword);
     
-    // Step 3: Accept terms and submit
-    await page.check('input[name="agreeToTerms"]');
-    await page.click('button[type="submit"]:has-text("登録")');
+    // Step 3: Submit the form
+    // The register page doesn't have a terms checkbox - it's implied by submitting
+    await page.click('button[type="submit"]');
     
     // Step 4: Verify registration success message
     await expect(page.locator('.toast-success, [role="alert"]:has-text("確認メール")')).toBeVisible({ timeout: 10000 });
@@ -46,8 +62,12 @@ test.describe('New User Complete Flow', () => {
     // Step 7: After email verification, user should be redirected to setup
     // For testing, we'll login with the created account
     await page.goto('/ja/login');
-    await page.fill('input[name="email"]', testEmail);
-    await page.fill('input[name="password"]', testPassword);
+    
+    // Wait for login form to be ready
+    await page.waitForSelector('input#email', { state: 'visible' });
+    
+    await page.fill('input#email', testEmail);
+    await page.fill('input#password', testPassword);
     await page.click('button[type="submit"]');
     
     // Step 8: Verify initial bonus tokens (10,000)
@@ -63,29 +83,33 @@ test.describe('New User Complete Flow', () => {
   });
 
   test('Registration form validation', async ({ page }) => {
-    await page.goto('/ja/register');
+    // Navigate to registration page via homepage
+    await page.goto('/ja');
+    await page.waitForLoadState('networkidle');
+    
+    const registerButton = page.locator('button:has-text("新規登録")');
+    await expect(registerButton).toBeVisible({ timeout: 10000 });
+    await registerButton.click();
+    await page.waitForURL('**/register', { timeout: 15000 });
+    
+    // Wait for form to be ready
+    await page.waitForSelector('button[type="submit"]', { state: 'visible' });
     
     // Test 1: Required fields validation
     await page.click('button[type="submit"]');
-    await expect(page.locator('.error-message, .field-error').first()).toBeVisible();
+    await expect(page.locator('.error-message, .field-error, [role="alert"]').first()).toBeVisible();
     
     // Test 2: Email format validation
-    await page.fill('input[name="email"]', 'invalid-email');
+    await page.fill('input#email', 'invalid-email');
     await page.click('button[type="submit"]');
-    await expect(page.locator('[data-error="email"], .email-error')).toBeVisible();
+    await expect(page.locator('div:has-text("正しいメールアドレス"), div:has-text("valid email")')).toBeVisible();
     
     // Test 3: Password confirmation mismatch
-    await page.fill('input[name="email"]', 'test@example.com');
-    await page.fill('input[name="password"]', 'Password123!');
-    await page.fill('input[name="confirmPassword"]', 'DifferentPassword123!');
+    await page.fill('input#email', 'test@example.com');
+    await page.fill('input#password', 'Password123!');
+    await page.fill('input#confirmPassword', 'DifferentPassword123!');
     await page.click('button[type="submit"]');
-    await expect(page.locator(':has-text("パスワードが一致"), :has-text("do not match")')).toBeVisible();
-    
-    // Test 4: Terms agreement required
-    await page.fill('input[name="confirmPassword"]', 'Password123!');
-    await page.uncheck('input[name="agreeToTerms"]');
-    await page.click('button[type="submit"]');
-    await expect(page.locator(':has-text("利用規約"), :has-text("terms")')).toBeVisible();
+    await expect(page.locator('div:has-text("パスワードが一致"), div:has-text("do not match")')).toBeVisible();
   });
 
   test('Email verification flow', async ({ page, request }) => {
