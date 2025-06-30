@@ -1,7 +1,7 @@
 const { readFileSync, writeFileSync, mkdirSync, existsSync } = require('fs');
 const { dirname } = require('path');
 
-const inputPath = 'coverage/playwright-results.json';
+const inputPath = 'test-results/results.json';
 const outputPath = 'coverage/failures.md';
 
 try {
@@ -20,6 +20,31 @@ try {
 
   // Extract failures from test results
   const extractFailures = (suite, projectName = '') => {
+    // Handle specs array (new format)
+    if (suite.specs) {
+      suite.specs.forEach((spec) => {
+        if (spec.tests) {
+          spec.tests.forEach((test) => {
+            test.results.forEach((result) => {
+              if (result.status === 'failed' || result.status === 'timedOut') {
+                const error = result.errors && result.errors[0] 
+                  ? (result.errors[0].message || result.errors[0].value || 'Unknown error')
+                  : 'Test failed';
+                
+                failures.push({
+                  file: `${spec.file || spec.location?.file || 'unknown'}:${test.line || test.location?.line || 0}`,
+                  title: test.title,
+                  browser: result.projectName || projectName || 'unknown',
+                  error: error.split('\n')[0].substring(0, 100) + (error.length > 100 ? '...' : '')
+                });
+              }
+            });
+          });
+        }
+      });
+    }
+    
+    // Handle old format with tests array
     if (suite.tests) {
       suite.tests.forEach((test) => {
         test.results.forEach((result) => {
@@ -38,11 +63,25 @@ try {
         });
       });
     }
+    
+    // Recursively process nested suites
     if (suite.suites) {
       suite.suites.forEach((s) => extractFailures(s, suite.projectName || projectName));
     }
   };
 
+  // Also check for errors in the report
+  if (report.errors && report.errors.length > 0) {
+    report.errors.forEach((error, index) => {
+      failures.push({
+        file: error.location?.file || 'unknown',
+        title: error.message || `Error ${index + 1}`,
+        browser: 'unknown',
+        error: (error.message || 'Unknown error').split('\n')[0].substring(0, 100)
+      });
+    });
+  }
+  
   report.suites.forEach(suite => extractFailures(suite));
 
   // Generate markdown

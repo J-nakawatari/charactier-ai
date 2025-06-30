@@ -66,8 +66,10 @@ jobs:
           cd frontend
           pnpm install --no-frozen-lockfile
         
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+      - name: Install Playwright browsers and dependencies
+        run: |
+          sudo npx playwright install-deps
+          npx playwright install --with-deps
         
       - name: Run E2E tests
         run: |
