@@ -1,0 +1,56 @@
+name: Quick E2E Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      test-pattern:
+        description: 'テストファイルパターン'
+        required: false
+        default: 'simple-registration-test'
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      LANG: ja_JP.UTF-8
+      LC_ALL: ja_JP.UTF-8
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Install dependencies
+        run: |
+          pnpm install --no-frozen-lockfile
+          cd frontend && pnpm install --no-frozen-lockfile
+        
+      - name: Install Playwright
+        run: |
+          sudo npx playwright install-deps
+          npx playwright install --with-deps
+        
+      - name: Run specific test
+        run: |
+          npm run test:e2e -- --grep "${{ github.event.inputs.test-pattern }}"
+        
+      - name: Generate failure report
+        if: always()
+        run: npm run failures:md || echo "No test results found"
+        
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            playwright-report
+            test-results/
+            coverage/failures.md
