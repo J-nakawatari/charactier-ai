@@ -70,7 +70,7 @@ jobs:
           export STRIPE_WEBHOOK_SECRET=whsec_test_dummy
           
           # バックエンドサーバーを起動
-          cd backend && cp .env.test .env && npm run dev > backend.log 2>&1 &
+          cd backend && NODE_ENV=test MONGO_URI=mongodb://localhost:27017/test JWT_SECRET=test-secret-key JWT_REFRESH_SECRET=test-refresh-secret FRONTEND_URL=http://localhost:3000 SMTP_HOST=localhost SMTP_PORT=1025 npm run dev > backend.log 2>&1 &
           BACKEND_PID=$!
           sleep 10
           
