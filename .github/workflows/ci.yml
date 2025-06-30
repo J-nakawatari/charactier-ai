@@ -80,14 +80,13 @@ jobs:
           cd backend
           pnpm install --no-frozen-lockfile
         
-      - name: Install Playwright browsers and dependencies
+      - name: Install Playwright browsers
         run: |
           # システムパッケージを更新
           sudo apt-get update
-          # Playwrightの依存関係をインストール
-          sudo npx playwright install-deps chromium firefox webkit
-          # ブラウザをインストール
-          npx playwright install chromium firefox webkit
+          # Playwrightをインストール
+          cd ${{ github.workspace }}
+          npx playwright install --with-deps chromium firefox webkit
       
       - name: Build frontend
         run: |
