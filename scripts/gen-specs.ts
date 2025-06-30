@@ -2,6 +2,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
+import { writeUtf8 } from './_shared/fs';
 
 interface TestItem {
   id: string;
@@ -364,7 +365,7 @@ async function main() {
     
     // specファイルを生成
     const specContent = generateSpecFile(item);
-    fs.writeFileSync(filePath, specContent);
+    writeUtf8(filePath, specContent);
     created++;
   }
   
@@ -376,7 +377,7 @@ async function main() {
       return acc;
     }, {} as CoverageData);
   
-  fs.writeFileSync(coveragePath, yaml.stringify(sortedCoverage, { lineWidth: 0 }));
+  writeUtf8(coveragePath, yaml.stringify(sortedCoverage, { lineWidth: 0 }));
   
   console.log(`\n✅ Test generation complete:`);
   console.log(`   - Created: ${created} new spec files`);
