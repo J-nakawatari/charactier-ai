@@ -37,8 +37,29 @@ jobs:
         run: |
           sudo npx playwright install-deps
           npx playwright install --with-deps
+      
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+      
+      - name: Start servers
+        run: |
+          # バックエンドサーバーを起動
+          cd backend && npm run dev &
+          sleep 5
+          
+          # フロントエンドサーバーを起動  
+          cd frontend && npm run start &
+          sleep 10
+          
+          # サーバーが起動したか確認
+          curl -f http://localhost:5000/health || echo "Backend not ready"
+          curl -f http://localhost:3000 || echo "Frontend not ready"
         
       - name: Run specific test
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
         run: |
           npm run test:e2e -- --grep "${{ github.event.inputs.test-pattern }}"
         
