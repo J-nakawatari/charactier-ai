@@ -28,7 +28,7 @@
     "auto-restore-images": "cd backend && npx ts-node src/scripts/auto-restore-images.ts",
     "check-user-purchases": "cd backend && npx ts-node src/scripts/check-user-purchases.ts",
     "reset-rate-limit": "cd backend && npx ts-node src/scripts/reset-rate-limit.ts",
-    "failures:md": "tsx scripts/parse-playwright.ts",
+    "failures:md": "node scripts/parse-playwright.js",
     "prepare": "husky || true",
     "test:e2e": "npx cross-env DISABLE_RATE_LIMIT=true playwright test",
     "test:e2e:admin": "npx cross-env DISABLE_RATE_LIMIT=true playwright test tests/e2e/admin",
