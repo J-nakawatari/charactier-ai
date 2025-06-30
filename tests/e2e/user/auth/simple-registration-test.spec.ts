@@ -11,7 +11,7 @@ test.describe('Simple Registration Test', () => {
     await registerButton.click();
     
     // Verify we're on registration page
-    await expect(page).toHaveURL(/register/);
+    await expect(page).toHaveURL(/\/register/);
     
     // Verify form fields exist using label locators
     await expect(page.getByLabel('メールアドレス')).toBeVisible();
