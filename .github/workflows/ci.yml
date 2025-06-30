@@ -50,13 +50,18 @@ jobs:
         with:
           node-version: '20'
           
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
       - name: Install root dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
         
       - name: Install frontend dependencies
         run: |
           cd frontend
-          npm ci
+          pnpm install --frozen-lockfile
         
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
