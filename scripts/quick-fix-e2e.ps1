@@ -110,13 +110,13 @@ foreach ($file in $specFiles) {
     $hasIssue = $false
     
     # h1セレクタの問題をチェック
-    if ($content -match "page\.locator\('h1'\)\.textContent\(\)") {
+    if ($content -match 'page\.locator\(''h1''\)\.textContent\(\)') {
         $hasIssue = $true
         Write-Host "  ⚠️  $($file.Name): h1セレクタを修正が必要" -ForegroundColor Yellow
     }
     
     # buttonセレクタの問題をチェック
-    if ($content -match "page\.locator\('button'\)" -and $content -notmatch "button:has-text") {
+    if ($content -match 'page\.locator\(''button''\)' -and $content -notmatch 'button:has-text') {
         $hasIssue = $true
         Write-Host "  ⚠️  $($file.Name): buttonセレクタに:has-text()を追加推奨" -ForegroundColor Yellow
     }
@@ -141,11 +141,11 @@ foreach ($file in $issueFiles) {
     $content = Get-Content $file.FullName -Raw
     $issues = @()
     
-    if ($content -match "page\.locator\('h1'\)") {
+    if ($content -match 'page\.locator\(''h1''\)') {
         $issues += "- [ ] h1セレクタをより具体的に（例: h1:has-text('特定のテキスト')）"
     }
     
-    if ($content -match "\.click\(\)" -and $content -notmatch "waitFor") {
+    if ($content -match '\.click\(\)' -and $content -notmatch 'waitFor') {
         $issues += "- [ ] クリック前に要素の表示を待つ（.waitFor({ state: 'visible' })）"
     }
     
@@ -166,7 +166,7 @@ Write-Host @"
 
 # h1セレクタを修正
 Get-ChildItem -Path "tests/e2e" -Filter "*.spec.ts" -Recurse | ForEach-Object {
-    (Get-Content `$_.FullName) -replace "page\.locator\('h1'\)", "page.locator('h1').first()" | Set-Content `$_.FullName
+    (Get-Content `$_.FullName) -replace 'page\.locator\(''h1''\)', 'page.locator(''h1'').first()' | Set-Content `$_.FullName
 }
 
 # 特定のテストだけ実行
