@@ -11,7 +11,8 @@
     "prepare": "husky",
     "test:e2e": "playwright test",
     "test:e2e:security": "playwright test --grep @security",
-    "validate:translations": "node scripts/validate-translations.js"
+    "validate:translations": "node scripts/validate-translations.js",
+    "failures:md": "tsx ../scripts/parse-playwright.ts"
   },
   "dependencies": {
     "@types/js-cookie": "^3.0.6",
