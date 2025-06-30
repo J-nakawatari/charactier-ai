@@ -79,24 +79,46 @@ test.describe('99%利益確保システムのE2Eテスト', () => {
     await page.locator('button:has-text("パック管理")').click();
     await page.waitForTimeout(1000);
     
-    // 既存のトークンパックの編集ボタンをクリック
-    const firstEditButton = page.locator('button:has-text("編集")').first();
-    await firstEditButton.click();
+    // テスト用のトークンパックを作成
+    await page.locator('button:has-text("新規作成")').click();
+    await page.locator('input[name="name"]').fill('為替レートテストパック');
+    await page.locator('input[name="price"]').fill('2000');
+    await page.waitForTimeout(1000);
+    
+    // 保存して一覧に戻る
+    await page.locator('button:has-text("保存")').click();
+    await page.waitForResponse(response => response.url().includes('/api/v1/admin/token-packs') && response.status() === 201);
+    await page.waitForTimeout(2000);
+    
+    // 作成したパックの編集ボタンをクリック
+    const editButton = page.locator('tr:has-text("為替レートテストパック") button:has-text("編集")');
+    await editButton.waitFor({ state: 'visible', timeout: 5000 });
+    await editButton.click();
+    
+    // 編集フォームが表示されるまで待つ
+    await page.waitForSelector('input[name="tokenAmount"]', { state: 'visible', timeout: 5000 });
     
     // 現在のトークン数を記録
     const tokenAmountField = page.locator('input[name="tokenAmount"]');
     const originalTokenAmount = await tokenAmountField.inputValue();
+    const originalPrice = await page.locator('input[name="price"]').inputValue();
     
-    // 為替レート更新ボタンがあれば押す（実装されている場合）
-    const refreshButton = page.locator('button:has-text("為替レート更新")');
-    if (await refreshButton.isVisible()) {
-      await refreshButton.click();
-      await page.waitForTimeout(2000); // 更新を待つ
-      
-      // トークン数が再計算されることを確認
-      const newTokenAmount = await tokenAmountField.inputValue();
-      console.log(`為替レート更新: ${originalTokenAmount} → ${newTokenAmount} トークン`);
-    }
+    console.log(`初期値: 価格=${originalPrice}円, トークン数=${originalTokenAmount}`);
+    
+    // 価格を変更してトークン数が再計算されることを確認
+    await page.locator('input[name="price"]').fill('3000');
+    await page.waitForTimeout(1000); // 計算を待つ
+    
+    const newTokenAmount = await tokenAmountField.inputValue();
+    console.log(`価格変更後: 価格=3000円, トークン数=${newTokenAmount}`);
+    
+    // トークン数が変更されていることを確認
+    expect(newTokenAmount).not.toBe(originalTokenAmount);
+    
+    // 99%利益率が維持されていることを確認
+    const ratio = parseInt(newTokenAmount) / parseInt(originalTokenAmount);
+    const expectedRatio = 3000 / 2000;
+    expect(Math.abs(ratio - expectedRatio)).toBeLessThan(0.1); // 誤差10%以内
   });
 
   test('Stripe Price IDの正確な登録と取得', async ({ page }) => {
