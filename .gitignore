@@ -114,3 +114,4 @@ docs/load-test-*.md
 # Test scripts with hardcoded credentials
 scripts/test-*.js
 scripts/test-*.sh
+package-lock.json
