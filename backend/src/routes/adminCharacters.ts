@@ -16,6 +16,7 @@ const router: Router = Router();
 // Rate limiters
 const adminRateLimit = createRateLimiter('admin');
 const uploadRateLimit = createRateLimiter('upload');
+const adminUploadRateLimit = createRateLimiter('adminUpload');
 
 // 管理者用キャラクター一覧取得（統計情報付き）
 router.get('/', adminRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
@@ -586,7 +587,7 @@ router.put('/:id/translations', adminRateLimit, authenticateToken, validateObjec
 });
 
 // 画像アップロード（管理者用）
-router.post('/upload/image', uploadRateLimit, authenticateToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/upload/image', adminUploadRateLimit, authenticateToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // デバッグ：認証情報を確認
     log.debug('Image upload request', {

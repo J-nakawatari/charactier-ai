@@ -45,6 +45,13 @@ export const rateLimitConfigs = {
     points: 5,
     duration: 3600,
     blockDuration: 3600
+  },
+  
+  // 管理者用ファイルアップロード（大幅に緩和）
+  adminUpload: {
+    points: 100,      // 1時間に100回まで
+    duration: 3600,   // 1時間
+    blockDuration: 60 // 1分間のブロック（短縮）
   }
 };
 
