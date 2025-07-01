@@ -212,7 +212,12 @@ export default function CharactersPage() {
 
   // ドラッグモードの保存
   const saveDragMode = async () => {
-    await saveCharacterOrder(characters.map(c => c._id));
+    // 実際のIDを確認
+    const ids = characters.map(c => c._id);
+    console.log('🔍 IDs to save:', ids);
+    console.log('🔍 ID types:', ids.map(id => ({ id, type: typeof id, length: id?.length })));
+    
+    await saveCharacterOrder(ids);
     setIsDragMode(false);
   };
 

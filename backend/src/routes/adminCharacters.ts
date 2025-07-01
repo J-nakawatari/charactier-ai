@@ -802,6 +802,8 @@ router.put('/reorder',
 
     // 各IDがObjectIDとして有効かチェック
     const ObjectId = mongoose.Types.ObjectId;
+    const invalidIds: { index: number; id: any; reason: string }[] = [];
+    
     for (let i = 0; i < characterIds.length; i++) {
       const id = characterIds[i];
       log.debug('Checking ID validity', {
@@ -811,21 +813,27 @@ router.put('/reorder',
         isValid: ObjectId.isValid(id)
       });
       
-      if (!id || !ObjectId.isValid(id)) {
-        log.error('Invalid ID detected', {
-          index: i,
-          id: id,
-          type: typeof id,
-          stringified: JSON.stringify(id),
-          idLength: id ? id.length : 0,
-          isNull: id === null,
-          isUndefined: id === undefined,
-          isEmpty: id === '',
-          characterIds: JSON.stringify(characterIds)
-        });
-        sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, `無効なIDが指定されました: インデックス ${i} のID "${id}" は無効です`);
-        return;
+      if (!id) {
+        invalidIds.push({ index: i, id: id, reason: 'IDが空またはnull' });
+      } else if (typeof id !== 'string') {
+        invalidIds.push({ index: i, id: id, reason: `IDが文字列ではない（型: ${typeof id}）` });
+      } else if (id.length !== 24) {
+        invalidIds.push({ index: i, id: id, reason: `IDの長さが不正（${id.length}文字、期待値: 24文字）` });
+      } else if (!ObjectId.isValid(id)) {
+        invalidIds.push({ index: i, id: id, reason: 'ObjectIDとして無効な形式' });
       }
+    }
+    
+    if (invalidIds.length > 0) {
+      log.error('Invalid IDs detected', {
+        invalidIds,
+        allCharacterIds: JSON.stringify(characterIds)
+      });
+      const errorDetails = invalidIds.map(item => 
+        `インデックス ${item.index}: "${item.id}" - ${item.reason}`
+      ).join(', ');
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, `無効なIDが指定されました: ${errorDetails}`);
+      return;
     }
 
     // バルクアップデートで並び順を更新
