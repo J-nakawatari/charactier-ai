@@ -763,6 +763,14 @@ router.put('/reorder',
 
     const { characterIds } = req.body;
 
+    log.info('Reorder request received', {
+      adminId: req.admin._id,
+      body: req.body,
+      characterIds: characterIds,
+      characterIdsType: typeof characterIds,
+      isArray: Array.isArray(characterIds)
+    });
+
     if (!Array.isArray(characterIds) || characterIds.length === 0) {
       sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD, 'Character IDs array is required');
       return;
@@ -770,9 +778,22 @@ router.put('/reorder',
 
     // 各IDがObjectIDとして有効かチェック
     const ObjectId = mongoose.Types.ObjectId;
-    for (const id of characterIds) {
-      if (!ObjectId.isValid(id)) {
-        sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, `無効なIDが指定されました: ${id}`);
+    for (let i = 0; i < characterIds.length; i++) {
+      const id = characterIds[i];
+      log.debug('Checking ID validity', {
+        index: i,
+        id: id,
+        type: typeof id,
+        isValid: ObjectId.isValid(id)
+      });
+      
+      if (!id || !ObjectId.isValid(id)) {
+        log.error('Invalid ID detected', {
+          id: id,
+          type: typeof id,
+          stringified: JSON.stringify(id)
+        });
+        sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, '無効なIDが指定されました');
         return;
       }
     }

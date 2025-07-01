@@ -149,12 +149,20 @@ export default function CharactersPage() {
   const saveCharacterOrder = async (characterIds: string[]) => {
     try {
       setIsSorting(true);
+      console.log('📤 Saving character order:', {
+        characterIds,
+        count: characterIds.length,
+        firstId: characterIds[0],
+        lastId: characterIds[characterIds.length - 1]
+      });
+      
       const response = await adminPut('/api/v1/admin/characters/reorder', { characterIds });
 
       if (response.ok) {
         success('並び順を保存しました');
       } else {
         const error = await response.json();
+        console.error('📛 Reorder error response:', error);
         throw new Error(error.message || '並び順の保存に失敗しました');
       }
     } catch (error) {
