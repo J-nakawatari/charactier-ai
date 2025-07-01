@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { getAuthHeadersSync } from '@/utils/auth';
 import { 
   MessageSquare, 
@@ -83,10 +83,14 @@ interface ChatDiagnostics {
 
 export default function ChatDiagnosticsPage() {
   const params = useParams();
+  const router = useRouter();
+  const locale = (params?.locale as string) || 'ja';
   const characterId = params.characterId as string;
   const [diagnostics, setDiagnostics] = useState<ChatDiagnostics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [characters, setCharacters] = useState<Array<{_id: string, name: any}>>([]);
+  const [showCharacterSelect, setShowCharacterSelect] = useState(false);
 
   const fetchDiagnostics = useCallback(async () => {
     try {
@@ -113,6 +117,29 @@ export default function ChatDiagnosticsPage() {
   useEffect(() => {
     fetchDiagnostics();
   }, [characterId, fetchDiagnostics]);
+
+  // キャラクター一覧を取得
+  useEffect(() => {
+    const fetchCharacters = async () => {
+      try {
+        const response = await fetch('/api/v1/characters', {
+          headers: getAuthHeadersSync()
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCharacters(data.characters || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch characters:', err);
+      }
+    };
+    fetchCharacters();
+  }, []);
+
+  const handleCharacterChange = (newCharacterId: string) => {
+    router.push(`/${locale}/debug/chat/${newCharacterId}`);
+    setShowCharacterSelect(false);
+  };
 
   if (loading) {
     return (
@@ -146,14 +173,54 @@ export default function ChatDiagnosticsPage() {
     <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">チャットシステム診断</h1>
-        <button 
-          onClick={fetchDiagnostics}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-        >
-          <RefreshCw className="w-4 h-4" />
-          更新
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setShowCharacterSelect(!showCharacterSelect)}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+          >
+            <Brain className="w-4 h-4" />
+            キャラクター変更
+          </button>
+          <button 
+            onClick={fetchDiagnostics}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+          >
+            <RefreshCw className="w-4 h-4" />
+            更新
+          </button>
+        </div>
       </div>
+
+      {/* キャラクター選択モーダル */}
+      {showCharacterSelect && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">キャラクターを選択</h3>
+            <div className="space-y-2">
+              {characters.map((char) => (
+                <button
+                  key={char._id}
+                  onClick={() => handleCharacterChange(char._id)}
+                  className={`w-full text-left p-3 rounded-lg hover:bg-gray-100 ${
+                    char._id === characterId ? 'bg-purple-100 border-purple-500 border' : 'bg-gray-50'
+                  }`}
+                >
+                  <div className="font-medium">
+                    {typeof char.name === 'string' ? char.name : (char.name?.ja || char.name?.en || 'Unknown')}
+                  </div>
+                  <div className="text-sm text-gray-500">ID: {char._id}</div>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowCharacterSelect(false)}
+              className="mt-4 w-full px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* システムステータス */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
