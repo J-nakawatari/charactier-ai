@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import * as path from 'path';
 
 // git diff でステージングされたファイルを取得
@@ -16,6 +16,11 @@ for (const file of stagedFiles) {
   const ext = path.extname(file);
   
   if (!targetExtensions.includes(ext)) {
+    continue;
+  }
+
+  // ファイルが存在しない場合はスキップ（削除されたファイル）
+  if (!existsSync(file)) {
     continue;
   }
 
