@@ -42,6 +42,9 @@ jobs:
           DISABLE_RATE_LIMIT: true
           TEST_USER_EMAIL: global-test@example.com
           TEST_USER_PASSWORD: Test123!
+          NEXT_PUBLIC_API_URL: http://localhost:5000
+          API_URL: http://localhost:5000
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
         run: |
           cd backend && npm run dev > ../backend.log 2>&1 &
           cd ../frontend && npm run start > ../frontend.log 2>&1 &
