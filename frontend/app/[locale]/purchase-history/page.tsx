@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { getAuthHeadersSync } from '@/utils/auth';
-import { ShoppingCart, Calendar, CreditCard, Package, Filter, Download, RefreshCw } from 'lucide-react';
+import { ShoppingCart, Calendar, CreditCard, Package, Filter } from 'lucide-react';
 import UserSidebar from '@/components/user/UserSidebar';
 
 interface PurchaseItem {
@@ -290,9 +290,6 @@ export default function PurchaseHistoryPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {t('table.status')}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('table.actions')}
-                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -330,18 +327,6 @@ export default function PurchaseHistoryPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getStatusBadge(purchase.status)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="flex items-center space-x-2">
-                            {purchase.invoiceUrl && (
-                              <button className="text-purple-600 hover:text-purple-700">
-                                <Download className="w-4 h-4" />
-                              </button>
-                            )}
-                            <button className="text-gray-400 hover:text-gray-600">
-                              <RefreshCw className="w-4 h-4" />
-                            </button>
-                          </div>
                         </td>
                       </tr>
                     ))}
@@ -398,19 +383,6 @@ export default function PurchaseHistoryPage() {
                           </div>
                         </div>
                         
-                        {/* アクション */}
-                        <div className="mt-3 flex items-center space-x-3">
-                          {purchase.invoiceUrl && (
-                            <button className="flex items-center space-x-1 text-purple-600 hover:text-purple-700">
-                              <Download className="w-3 h-3" />
-                              <span className="text-xs">{t('details.invoice')}</span>
-                            </button>
-                          )}
-                          <button className="flex items-center space-x-1 text-gray-400 hover:text-gray-600">
-                            <RefreshCw className="w-3 h-3" />
-                            <span className="text-xs">{t('details.details')}</span>
-                          </button>
-                        </div>
                       </div>
                     </div>
                   </div>
