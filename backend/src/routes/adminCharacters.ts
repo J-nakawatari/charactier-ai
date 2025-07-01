@@ -749,43 +749,39 @@ router.post('/reorder-debug',
   authenticateToken,
   async (req: AuthRequest, res: Response): Promise<void> => {
     const { characterIds } = req.body;
-    const ObjectId = mongoose.Types.ObjectId;
     
-    // 各IDの検証結果を詳細に記録
-    const validationResults = characterIds?.map((id: any, index: number) => ({
-      index,
-      id,
-      type: typeof id,
-      length: id?.length,
-      isValid: ObjectId.isValid(id),
-      mongooseVersion: mongoose.version,
-      testNewObjectId: (() => {
-        try {
-          new ObjectId(id);
-          return 'success';
-        } catch (e: any) {
-          return e.message;
+    try {
+      // 実際にバルクアップデートを試してみる
+      const bulkOps = characterIds?.map((id: string, index: number) => ({
+        updateOne: {
+          filter: { _id: id },
+          update: { $set: { sortOrder: 999 + index } } // テスト用に999から開始
         }
-      })()
-    }));
-    
-    res.json({
-      debug: true,
-      headers: {
-        'content-type': req.headers['content-type'],
-        'content-length': req.headers['content-length']
-      },
-      body: req.body,
-      bodyKeys: Object.keys(req.body || {}),
-      characterIds: req.body?.characterIds,
-      isArray: Array.isArray(req.body?.characterIds),
-      validationResults,
-      mongooseInfo: {
-        version: mongoose.version,
-        ObjectIdExists: !!ObjectId,
-        isValidFunction: typeof ObjectId.isValid
-      }
-    });
+      }));
+
+      const result = await CharacterModel.bulkWrite(bulkOps || []);
+      
+      res.json({
+        debug: true,
+        success: true,
+        characterIds,
+        bulkWriteResult: {
+          modifiedCount: result.modifiedCount,
+          matchedCount: result.matchedCount,
+          acknowledged: result.acknowledged
+        },
+        testMessage: 'bulkWriteが成功しました'
+      });
+    } catch (error: any) {
+      res.json({
+        debug: true,
+        success: false,
+        error: error.message,
+        errorStack: error.stack,
+        characterIds,
+        testMessage: 'bulkWriteでエラーが発生しました'
+      });
+    }
   });
 
 // キャラクターの並び順を更新
