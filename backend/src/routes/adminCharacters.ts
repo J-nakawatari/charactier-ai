@@ -1,5 +1,6 @@
 import type { AuthRequest } from '../middleware/auth';
 import { Router, Response, NextFunction, Request } from 'express';
+import mongoose from 'mongoose';
 import { CharacterModel } from '../models/CharacterModel';
 import { UserModel } from '../models/UserModel';
 import { authenticateToken, hasWritePermission } from '../middleware/auth';
@@ -767,10 +768,19 @@ router.put('/reorder',
       return;
     }
 
+    // 各IDがObjectIDとして有効かチェック
+    const ObjectId = mongoose.Types.ObjectId;
+    for (const id of characterIds) {
+      if (!ObjectId.isValid(id)) {
+        sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, `無効なIDが指定されました: ${id}`);
+        return;
+      }
+    }
+
     // バルクアップデートで並び順を更新
     const bulkOps = characterIds.map((id, index) => ({
       updateOne: {
-        filter: { _id: id },
+        filter: { _id: new ObjectId(id) },
         update: { sortOrder: index }
       }
     }));
