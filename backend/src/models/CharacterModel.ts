@@ -122,6 +122,9 @@ export interface ICharacter extends Document {
   averageAffinityLevel: number;
   totalRevenue: number;
   
+  // 並び順
+  sortOrder: number;
+  
   createdAt: Date;
   updatedAt: Date;
 }
@@ -434,6 +437,11 @@ const CharacterSchema = new Schema<ICharacter>({
     type: Number,
     default: 0,
     min: 0
+  },
+  sortOrder: {
+    type: Number,
+    default: 0,
+    index: true
   }
 }, {
   timestamps: true,

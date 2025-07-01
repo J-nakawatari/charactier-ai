@@ -1,11 +1,26 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import CharacterStats from '@/components/admin/CharacterStats';
 import CharacterManagementTable from '@/components/admin/CharacterManagementTable';
 import { useToast } from '@/contexts/ToastContext';
-import { adminFetch, adminPost } from '@/utils/admin-api';
-import { Search, Filter, Plus, Download, Users, RefreshCw } from 'lucide-react';
+import { adminFetch, adminPost, adminPut } from '@/utils/admin-api';
+import { Search, Filter, Plus, Download, Users, RefreshCw, GripVertical, Save, X } from 'lucide-react';
 
 interface Character {
   _id: string;
@@ -22,6 +37,7 @@ interface Character {
   totalMessages?: number;
   totalUsers?: number;
   averageAffinityLevel?: number;
+  sortOrder?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -33,7 +49,18 @@ export default function CharactersPage() {
   const [error, setError] = useState<string | null>(null);
   const [updatingStats, setUpdatingStats] = useState(false);
   const [lastStatsUpdate, setLastStatsUpdate] = useState<Date | null>(null);
+  const [sortMode, setSortMode] = useState<'custom' | 'newest' | 'popular'>('newest');
+  const [isSorting, setIsSorting] = useState(false);
+  const [isDragMode, setIsDragMode] = useState(false);
+  const [originalOrder, setOriginalOrder] = useState<Character[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // キャラクター一覧を取得
   useEffect(() => {
@@ -50,17 +77,22 @@ export default function CharactersPage() {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [sortMode]);
 
   const fetchCharacters = async () => {
     try {
       setIsLoading(true);
       
-      const response = await adminFetch('/api/v1/admin/characters?locale=ja&includeInactive=true');
+      const response = await adminFetch(`/api/v1/admin/characters?locale=ja&includeInactive=true&sort=${sortMode}`);
 
       if (response.ok) {
         const data = await response.json();
         console.log('📊 Characters API response:', data);
+        console.log('📊 Character sort orders:', data.characters?.map((c: Character) => ({ 
+          id: c._id, 
+          name: c.name.ja, 
+          sortOrder: c.sortOrder 
+        })));
         setCharacters(data.characters || []);
       } else {
         console.error('❌ Characters API error:', response.status, response.statusText);
@@ -100,6 +132,60 @@ export default function CharactersPage() {
     }
   }, [success, warning]);
 
+  // ドラッグ終了時の処理
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = characters.findIndex(c => c._id === active.id);
+      const newIndex = characters.findIndex(c => c._id === over?.id);
+
+      const newCharacters = arrayMove(characters, oldIndex, newIndex);
+      setCharacters(newCharacters);
+    }
+  };
+
+  // 並び順をサーバーに保存
+  const saveCharacterOrder = async (characterIds: string[]) => {
+    try {
+      setIsSorting(true);
+      const response = await adminPut('/api/v1/admin/characters/reorder', { characterIds });
+
+      if (response.ok) {
+        success('並び順を保存しました');
+      } else {
+        const error = await response.json();
+        throw new Error(error.message || '並び順の保存に失敗しました');
+      }
+    } catch (error) {
+      console.error('Order save error:', error);
+      warning('保存エラー', '並び順の保存に失敗しました');
+      // 元の順序に戻す
+      fetchCharacters();
+    } finally {
+      setIsSorting(false);
+    }
+  };
+
+  // ドラッグモードの開始
+  const startDragMode = () => {
+    setIsDragMode(true);
+    setOriginalOrder([...characters]);
+    setSortMode('custom');
+  };
+
+  // ドラッグモードの保存
+  const saveDragMode = async () => {
+    await saveCharacterOrder(characters.map(c => c._id));
+    setIsDragMode(false);
+  };
+
+  // ドラッグモードのキャンセル
+  const cancelDragMode = () => {
+    setCharacters(originalOrder);
+    setIsDragMode(false);
+  };
+
   return (
     <div className="flex-1 flex flex-col">
       {/* ヘッダー */}
@@ -132,6 +218,36 @@ export default function CharactersPage() {
           </div>
           
           <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+            {/* ソートモード切り替え */}
+            {!isDragMode ? (
+              <button
+                onClick={startDragMode}
+                className="flex items-center space-x-2 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+                title="並び順を変更"
+              >
+                <GripVertical className="w-4 h-4" />
+                <span className="text-sm hidden sm:inline">並び替え</span>
+              </button>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={saveDragMode}
+                  disabled={isSorting}
+                  className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  <span className="text-sm hidden sm:inline">保存</span>
+                </button>
+                <button
+                  onClick={cancelDragMode}
+                  disabled={isSorting}
+                  className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+                >
+                  <X className="w-4 h-4" />
+                  <span className="text-sm hidden sm:inline">キャンセル</span>
+                </button>
+              </div>
+            )}
             {/* 検索 */}
             <div className="relative flex-1 sm:flex-none">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -188,10 +304,30 @@ export default function CharactersPage() {
               <CharacterStats characters={characters} />
               
               {/* キャラクター管理テーブル */}
-              <CharacterManagementTable 
-        characters={characters} 
-        onCharacterDeleted={fetchCharacters}
-      />
+              {isDragMode ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={characters.map(c => c._id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <CharacterManagementTable 
+                      characters={characters} 
+                      onCharacterDeleted={fetchCharacters}
+                      isSortMode={true}
+                    />
+                  </SortableContext>
+                </DndContext>
+              ) : (
+                <CharacterManagementTable 
+                  characters={characters} 
+                  onCharacterDeleted={fetchCharacters}
+                  isSortMode={false}
+                />
+              )}
             </>
           )}
         </div>

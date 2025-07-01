@@ -80,6 +80,9 @@ router.get('/', adminRateLimit, authenticateToken, async (req: AuthRequest, res:
     // ソート条件
     let sortQuery: Record<string, 1 | -1> = {};
     switch (sort) {
+      case 'custom':
+        sortQuery = { sortOrder: 1, createdAt: -1 };
+        break;
       case 'popular':
         sortQuery = { totalConversations: -1 };
         break;
@@ -733,6 +736,59 @@ router.delete('/:id', adminRateLimit, authenticateToken, validateObjectId('id'),
   } catch (error) {
     log.error('Character deletion error', error, {
       characterId: req.params.id,
+      adminId: req.admin?._id
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
+// キャラクターの並び順を更新
+router.put('/reorder', 
+  adminRateLimit,
+  authenticateToken,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 管理者権限チェック
+    if (!req.admin) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
+      return;
+    }
+
+    // 書き込み権限チェック（super_adminのみ）
+    if (!hasWritePermission(req)) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Only super admin can reorder characters');
+      return;
+    }
+
+    const { characterIds } = req.body;
+
+    if (!Array.isArray(characterIds) || characterIds.length === 0) {
+      sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD, 'Character IDs array is required');
+      return;
+    }
+
+    // バルクアップデートで並び順を更新
+    const bulkOps = characterIds.map((id, index) => ({
+      updateOne: {
+        filter: { _id: id },
+        update: { sortOrder: index }
+      }
+    }));
+
+    const result = await CharacterModel.bulkWrite(bulkOps);
+
+    log.info('Characters reordered by admin', {
+      adminId: req.admin._id,
+      count: result.modifiedCount
+    });
+
+    res.json({
+      success: true,
+      message: `${result.modifiedCount}件のキャラクターの並び順を更新しました`
+    });
+
+  } catch (error) {
+    log.error('Character reorder error', error, {
       adminId: req.admin?._id
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);

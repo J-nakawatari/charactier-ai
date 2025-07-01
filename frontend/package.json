@@ -15,6 +15,9 @@
     "failures:md": "node ../scripts/parse-playwright.js"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@types/js-cookie": "^3.0.6",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
