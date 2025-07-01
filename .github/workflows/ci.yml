@@ -113,6 +113,9 @@ jobs:
           # すべてのブラウザをインストール
           npx playwright install
       
+      - name: Install wait-on
+        run: npm install -g wait-on
+      
       - name: Build frontend
         run: |
           cd frontend
@@ -133,20 +136,25 @@ jobs:
           echo "=== Checking MongoDB ==="
           nc -zv localhost 27017 || echo "MongoDB not available"
           
+          # テストデータをシード
+          echo "=== Seeding test data ==="
+          node scripts/seed-test-data.js
+          
           # バックエンドサーバーを起動
           cd backend && NODE_ENV=test DISABLE_RATE_LIMIT=true MONGO_URI=mongodb://localhost:27017/test JWT_SECRET=test-secret-key JWT_REFRESH_SECRET=test-refresh-secret FRONTEND_URL=http://localhost:3000 SMTP_HOST=localhost SMTP_PORT=1025 npm run dev > backend.log 2>&1 &
           BACKEND_PID=$!
           
           # バックエンドの起動を待つ
           echo "=== Waiting for backend to start ==="
-          for i in {1..30}; do
-            if curl -s http://localhost:5000/api/v1/health > /dev/null; then
-              echo "Backend is ready!"
-              break
-            fi
-            echo "Waiting for backend... ($i/30)"
-            sleep 2
-          done
+          npx wait-on http://localhost:5000/api/v1/health -t 60000
+          echo "Backend is ready!"
+          
+          # APIエンドポイントの動作確認
+          echo "=== Testing API endpoints ==="
+          curl -X POST http://localhost:5000/api/v1/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"global-test@example.com","password":"Test123!"}' \
+            || echo "Login endpoint test failed"
           
           # フロントエンドサーバーを起動
           cd ../frontend && npm run start > frontend.log 2>&1 &
@@ -154,14 +162,8 @@ jobs:
           
           # フロントエンドの起動を待つ
           echo "=== Waiting for frontend to start ==="
-          for i in {1..30}; do
-            if curl -s http://localhost:3000 > /dev/null; then
-              echo "Frontend is ready!"
-              break
-            fi
-            echo "Waiting for frontend... ($i/30)"
-            sleep 2
-          done
+          npx wait-on http://localhost:3000 -t 60000
+          echo "Frontend is ready!"
           
           # 最終確認
           echo "=== Final server status check ==="
