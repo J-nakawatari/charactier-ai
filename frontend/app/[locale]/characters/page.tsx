@@ -135,8 +135,34 @@ function CharactersPageContent({
       }
 
       const data = await response.json();
-      setCharacters(data.characters || []);
-      setTotalCount(data.total || 0);
+      
+      // Validate and normalize character data
+      const normalizedCharacters = (data.characters || []).map((char: any) => {
+        try {
+          // Ensure required fields exist
+          if (!char._id || !char.name || !char.description) {
+            console.error('Invalid character data:', char);
+            return null;
+          }
+          
+          return {
+            ...char,
+            // Ensure LocalizedString format
+            name: typeof char.name === 'string' 
+              ? { ja: char.name, en: char.name } 
+              : { ja: char.name?.ja || '', en: char.name?.en || char.name?.ja || '' },
+            description: typeof char.description === 'string'
+              ? { ja: char.description, en: char.description }
+              : { ja: char.description?.ja || '', en: char.description?.en || char.description?.ja || '' }
+          };
+        } catch (err) {
+          console.error('Error normalizing character:', err, char);
+          return null;
+        }
+      }).filter(Boolean); // Remove null entries
+      
+      setCharacters(normalizedCharacters);
+      setTotalCount(data.total || normalizedCharacters.length);
 
     } catch (err) {
       console.error('Character list fetch error:', err);
@@ -277,13 +303,6 @@ function CharactersPageContent({
           <CharacterGrid
             characters={characters.map(char => ({
               ...char,
-              // LocalizedString型に正規化
-              name: typeof char.name === 'string' 
-                ? { ja: char.name, en: char.name } 
-                : char.name,
-              description: typeof char.description === 'string'
-                ? { ja: char.description, en: char.description }
-                : char.description,
               characterAccessType: char.characterAccessType === 'free' ? 'free' : 'purchaseOnly',
               imageChatAvatar: (char as any).imageChatAvatar || '/uploads/placeholder.png',
               imageChatBackground: (char as any).imageChatBackground || '/uploads/placeholder.png',

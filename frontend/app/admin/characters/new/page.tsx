@@ -209,8 +209,14 @@ export default function CharacterNewPage() {
       }
 
       const payload = {
-        name: formData.name,
-        description: formData.description,
+        name: {
+          ja: formData.name.ja,
+          en: formData.name.en || formData.name.ja // Use Japanese as fallback for English
+        },
+        description: {
+          ja: formData.description.ja,
+          en: formData.description.en || formData.description.ja // Use Japanese as fallback for English
+        },
         personalityPreset: formData.personalityPreset,
         personalityTags: formData.personalityTags,
         gender: formData.gender,
@@ -224,7 +230,7 @@ export default function CharacterNewPage() {
         }, // デフォルトプロンプトを設定
         defaultMessage: {
           ja: formData.defaultMessage.ja || 'こんにちは！よろしくお願いします。',
-          en: formData.defaultMessage.en || 'Hello! Nice to meet you!'
+          en: formData.defaultMessage.en || formData.defaultMessage.ja || 'Hello! Nice to meet you!'
         },
         affinitySettings: {
           maxLevel: 100,

@@ -376,10 +376,60 @@ router.post('/', adminRateLimit, authenticateToken, validate({ body: characterSc
       purchasePrice
     } = req.body;
 
+    // Validate required fields
+    if (!name?.ja || !name.ja.trim()) {
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Character name (Japanese) is required');
+      return;
+    }
+
+    if (!description?.ja || !description.ja.trim()) {
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Character description (Japanese) is required');
+      return;
+    }
+
+    if (!gender) {
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Gender is required');
+      return;
+    }
+
+    if (!personalityPreset) {
+      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 'Personality preset is required');
+      return;
+    }
+
+    // Ensure English translations have values (use Japanese as fallback)
+    const normalizedName = {
+      ja: name.ja.trim(),
+      en: (name.en && name.en.trim()) || name.ja.trim()
+    };
+
+    const normalizedDescription = {
+      ja: description.ja.trim(),
+      en: (description.en && description.en.trim()) || description.ja.trim()
+    };
+
+    const normalizedDefaultMessage = {
+      ja: defaultMessage?.ja || 'こんにちは！よろしくお願いします。',
+      en: defaultMessage?.en || defaultMessage?.ja || 'Hello! Nice to meet you!'
+    };
+
+    const normalizedPersonalityPrompt = personalityPrompt || {
+      ja: personalityPreset ? `${personalityPreset}な性格のキャラクターです。` : 'フレンドリーで親しみやすいキャラクターです。',
+      en: personalityPreset ? `A character with ${personalityPreset} personality.` : 'A friendly and approachable character.'
+    };
+
+    const normalizedAffinitySettings = affinitySettings || {
+      maxLevel: 100,
+      experienceMultiplier: 1.0,
+      decayRate: 0.1,
+      decayThreshold: 7,
+      levelUpBonuses: []
+    };
+
     // 新しいキャラクターを作成
     const character = new CharacterModel({
-      name,
-      description,
+      name: normalizedName,
+      description: normalizedDescription,
       age,
       occupation,
       characterAccessType,
@@ -387,15 +437,15 @@ router.post('/', adminRateLimit, authenticateToken, validate({ body: characterSc
       gender,
       personalityPreset,
       personalityTags,
-      personalityPrompt,
+      personalityPrompt: normalizedPersonalityPrompt,
       themeColor,
       imageCharacterSelect,
       imageDashboard,
       imageChatAvatar,
       imageChatBackground,
       galleryImages,
-      defaultMessage,
-      affinitySettings,
+      defaultMessage: normalizedDefaultMessage,
+      affinitySettings: normalizedAffinitySettings,
       stripeProductId,
       purchasePrice,
       isActive: true

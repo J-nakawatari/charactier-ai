@@ -55,22 +55,51 @@ router.post('/',
       purchasePrice
     } = req.body;
 
+    // Ensure English translations have values (use Japanese as fallback)
+    const normalizedName = {
+      ja: name?.ja || '',
+      en: name?.en || name?.ja || ''
+    };
+
+    const normalizedDescription = {
+      ja: description?.ja || '',
+      en: description?.en || description?.ja || ''
+    };
+
+    const normalizedDefaultMessage = {
+      ja: defaultMessage?.ja || 'こんにちは！よろしくお願いします。',
+      en: defaultMessage?.en || defaultMessage?.ja || 'Hello! Nice to meet you!'
+    };
+
+    const normalizedPersonalityPrompt = personalityPrompt || {
+      ja: personalityPreset ? `${personalityPreset}な性格のキャラクターです。` : 'フレンドリーで親しみやすいキャラクターです。',
+      en: personalityPreset ? `A character with ${personalityPreset} personality.` : 'A friendly and approachable character.'
+    };
+
+    const normalizedAffinitySettings = affinitySettings || {
+      maxLevel: 100,
+      experienceMultiplier: 1.0,
+      decayRate: 0.1,
+      decayThreshold: 7,
+      levelUpBonuses: []
+    };
+
     // 新しいキャラクターを作成
     const character = new CharacterModel({
-      name,
-      description,
+      name: normalizedName,
+      description: normalizedDescription,
       characterAccessType,
       aiModel,
       gender,
       personalityPreset,
       personalityTags,
-      personalityPrompt,
+      personalityPrompt: normalizedPersonalityPrompt,
       themeColor,
       imageCharacterSelect,
       imageDashboard,
       imageChatAvatar,
-      defaultMessage,
-      affinitySettings,
+      defaultMessage: normalizedDefaultMessage,
+      affinitySettings: normalizedAffinitySettings,
       stripeProductId,
       purchasePrice,
       isActive: true
