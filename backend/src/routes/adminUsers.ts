@@ -57,8 +57,10 @@ router.get('/',
 
     // クエリ構築
     const query: any = {
-      // 削除済みユーザーを除外
-      email: { $not: /^deleted_.*@deleted\.local$/ }
+      // 削除済みユーザーを除外（deleted_で始まるメールアドレスを除外）
+      email: { $not: /^deleted_/ },
+      // または明示的にaccountStatusで除外
+      accountStatus: { $ne: 'deleted' }
     };
 
     if (search) {
