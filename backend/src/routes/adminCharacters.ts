@@ -767,8 +767,7 @@ router.post('/reorder-debug',
         characterIds,
         bulkWriteResult: {
           modifiedCount: result.modifiedCount,
-          matchedCount: result.matchedCount,
-          acknowledged: result.acknowledged
+          matchedCount: result.matchedCount
         },
         testMessage: 'bulkWriteが成功しました'
       });
