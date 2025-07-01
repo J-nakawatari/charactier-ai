@@ -1,5 +1,5 @@
 const { MongoClient } = require('mongodb');
-const bcrypt = require('bcryptjs');
+const argon2 = require('argon2');
 
 async function seedTestData() {
   console.log('🌱 Starting test data seeding...');
@@ -13,9 +13,21 @@ async function seedTestData() {
     
     const db = client.db();
     
-    // テストユーザーのパスワードをハッシュ化
-    const testUserPassword = await bcrypt.hash('Test123!', 10);
-    const adminPassword = await bcrypt.hash('admin123', 10);
+    // テストユーザーのパスワードをArgon2でハッシュ化
+    const testUserPassword = await argon2.hash('Test123!', {
+      type: argon2.argon2id,
+      memoryCost: 65536,
+      timeCost: 3,
+      parallelism: 4,
+      hashLength: 32
+    });
+    const adminPassword = await argon2.hash('admin123', {
+      type: argon2.argon2id,
+      memoryCost: 65536,
+      timeCost: 3,
+      parallelism: 4,
+      hashLength: 32
+    });
     
     // グローバルテストユーザーを作成
     await db.collection('users').updateOne(
