@@ -84,7 +84,7 @@ jobs:
           
           # テストデータをシード
           echo "=== Seeding test data ==="
-          cd backend && node ../scripts/seed-test-data.js
+          cd backend && node src/scripts/seed-test-data.js
           cd ..
           
           # バックエンドサーバーを起動
