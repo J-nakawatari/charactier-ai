@@ -3,7 +3,12 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import log from '../utils/logger';
 import { UserModel } from '../models/UserModel';
 import { CharacterModel } from '../models/CharacterModel';
+import { ChatModel } from '../models/ChatModel';
 import { createRateLimiter } from '../middleware/rateLimiter';
+import CharacterPromptCache from '../../models/CharacterPromptCache';
+import TokenUsage from '../../models/TokenUsage';
+import { getRedisClient } from '../../lib/redis';
+import mongoose from 'mongoose';
 
 const router = Router();
 
@@ -212,6 +217,168 @@ router.get('/affinity-details/:userId', generalRateLimit, async (req: Request, r
     res.status(500).json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// チャットシステム診断エンドポイント
+router.get('/chat-diagnostics/:characterId', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    const { characterId } = req.params;
+    
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // 1. キャラクター情報とモデル設定
+    const character = await CharacterModel.findById(characterId);
+    if (!character) {
+      res.status(404).json({ error: 'Character not found' });
+      return;
+    }
+
+    // 2. チャット履歴確認
+    const chat = await ChatModel.findOne({ userId, characterId })
+      .select('messages totalTokensUsed lastActivityAt createdAt');
+    
+    // 3. キャッシュ状態確認（MongoDBのCharacterPromptCacheを確認）
+    let cacheStatus = { enabled: true, exists: false, data: null, count: 0 };
+    
+    try {
+      // ユーザーの親密度レベルを取得
+      const user = userId ? await UserModel.findById(userId) : null;
+      let userAffinityLevel = 0;
+      if (user) {
+        const affinity = user.affinities.find(
+          aff => aff.character.toString() === characterId
+        );
+        userAffinityLevel = affinity?.level || 0;
+      }
+      
+      // キャッシュ検索（親密度レベル±5で検索）
+      const affinityRange = 5; // API消費を抑えるため範囲を広めに設定
+      const cachedPrompts = await CharacterPromptCache.find({
+        userId: userId,
+        characterId: characterId,
+        'promptConfig.affinityLevel': {
+          $gte: Math.max(0, userAffinityLevel - affinityRange),
+          $lte: Math.min(100, userAffinityLevel + affinityRange)
+        },
+        'promptConfig.languageCode': 'ja',
+        ttl: { $gt: new Date() }, // TTL未期限切れ
+        characterVersion: '1.0.0'
+      }).sort({ 
+        useCount: -1, // 使用回数順
+        lastUsed: -1  // 最終使用日順
+      }).limit(1);
+      
+      const cachedPrompt = cachedPrompts[0];
+      cacheStatus = {
+        enabled: true,
+        exists: !!cachedPrompt,
+        data: cachedPrompt ? {
+          useCount: cachedPrompt.useCount,
+          lastUsed: cachedPrompt.lastUsed,
+          ttl: cachedPrompt.ttl,
+          affinityLevel: cachedPrompt.promptConfig?.affinityLevel,
+          promptLength: cachedPrompt.systemPrompt?.length || 0
+        } : null,
+        count: await CharacterPromptCache.countDocuments({
+          characterId: characterId,
+          ttl: { $gt: new Date() }
+        })
+      };
+    } catch (err) {
+      cacheStatus.enabled = false;
+    }
+
+    // 4. 最新のトークン使用状況
+    const recentTokenUsage = await TokenUsage.findOne({
+      userId,
+      characterId
+    }).sort({ createdAt: -1 });
+
+    // 5. プロンプトの診断情報
+    const promptInfo = {
+      personalityPrompt: character.personalityPrompt ? {
+        ja: character.personalityPrompt.ja?.substring(0, 200) + '...',
+        en: character.personalityPrompt.en?.substring(0, 200) + '...'
+      } : null,
+      characterInfo: {
+        age: character.age || '未設定',
+        occupation: character.occupation || '未設定',
+        personalityPreset: character.personalityPreset || '未設定',
+        personalityTags: character.personalityTags || []
+      },
+      promptLength: {
+        personality: {
+          ja: character.personalityPrompt?.ja?.length || 0,
+          en: character.personalityPrompt?.en?.length || 0
+        }
+      }
+    };
+
+    // MongoDB接続状態を確認
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    res.json({
+      diagnostics: {
+        character: {
+          id: character._id,
+          name: character.name,
+          aiModel: character.aiModel || process.env.OPENAI_MODEL || 'gpt-4o-mini',
+          isActive: character.isActive,
+          updatedAt: character.updatedAt
+        },
+        chat: {
+          exists: !!chat,
+          messageCount: chat?.messages?.length || 0,
+          totalTokensUsed: chat?.totalTokensUsed || 0,
+          lastActivity: chat?.lastActivityAt,
+          createdAt: chat?.createdAt,
+          recentMessages: chat?.messages?.slice(-5).map(m => ({
+            role: m.role,
+            timestamp: m.timestamp,
+            tokensUsed: m.tokensUsed,
+            contentPreview: m.content.substring(0, 50) + '...'
+          })) || [],
+          conversationHistory: {
+            description: 'AI記憶システム: 最新10件のメッセージ（各120文字まで）を会話コンテキストとして送信',
+            sentToAI: chat?.messages?.slice(-10).map(msg => ({
+              role: msg.role,
+              content: msg.content.length > 120 ? msg.content.substring(0, 120) + '...' : msg.content,
+              originalLength: msg.content.length,
+              timestamp: msg.timestamp
+            })) || [],
+            totalMessagesInDB: chat?.messages?.length || 0,
+            messagesUsedForContext: Math.min(10, chat?.messages?.length || 0),
+            contextWindowSize: '最大10メッセージ',
+            truncationLimit: '120文字/メッセージ'
+          }
+        },
+        cache: cacheStatus,
+        tokenUsage: recentTokenUsage ? {
+          lastUsed: recentTokenUsage.createdAt,
+          tokensUsed: recentTokenUsage.tokensUsed,
+          aiModel: recentTokenUsage.aiModel,
+          cacheHit: !!(recentTokenUsage as any).cacheHit,
+          apiCost: recentTokenUsage.apiCost
+        } : null,
+        prompt: promptInfo,
+        system: {
+          mongoConnected: isMongoConnected,
+          redisConnected: !!(await getRedisClient()),
+          currentModel: character.aiModel || process.env.OPENAI_MODEL || 'gpt-4o-mini'
+        }
+      }
+    });
+  } catch (error) {
+    log.error('Chat diagnostics error', error);
+    res.status(500).json({ 
+      error: 'Diagnostics failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
