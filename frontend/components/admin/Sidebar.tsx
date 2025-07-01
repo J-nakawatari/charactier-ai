@@ -13,7 +13,8 @@ import {
   UserCog,
   Cpu,
   BarChart3,
-  AlertTriangle
+  AlertTriangle,
+  Bug
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -30,6 +31,7 @@ const sidebarItems = [
   { href: '/admin/notifications', icon: Bell, label: '通知管理' },
   { href: '/admin/security', icon: Shield, label: 'セキュリティ' },
   { href: '/admin/errors', icon: AlertTriangle, label: 'エラー統計' },
+  { href: '/admin/chat-diagnostics', icon: Bug, label: 'チャット診断' },
   { href: '/admin/settings/analytics', icon: BarChart3, label: 'Google Analytics' },
 ];
 
