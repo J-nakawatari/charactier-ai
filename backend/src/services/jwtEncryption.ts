@@ -169,7 +169,7 @@ export function getDecryptedJwtSecret(): string {
  */
 export function generateEncryptedAccessToken(userId: string): string {
   const secret = getDecryptedJwtSecret();
-  return jwt.sign({ userId }, secret, { expiresIn: '24h' });
+  return jwt.sign({ userId }, secret, { expiresIn: '15m' });
 }
 
 /**
