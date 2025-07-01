@@ -71,3 +71,4 @@ See `coverage/summary.json` for test coverage metrics.
 ## License
 
 Proprietary - All rights reserved
+### CI note — PROJECT env で単一ブラウザ指定可

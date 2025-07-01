@@ -146,11 +146,13 @@ jobs:
       - name: Run E2E tests
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:3000
+          PROJECT: ${{ github.event.inputs.browsers || '' }}
         run: |
-          if [ "${{ github.event.inputs.browsers }}" = "all" ]; then
-            npm run test:e2e
+          # inputs.browsers が空なら全プロジェクト実行
+          if [ -n "$PROJECT" ]; then
+            npx cross-env DISABLE_RATE_LIMIT=true playwright test --project="$PROJECT"
           else
-            npm run test:e2e -- --project=${{ github.event.inputs.browsers }}
+            npx cross-env DISABLE_RATE_LIMIT=true playwright test
           fi
         
       - name: Generate failure report

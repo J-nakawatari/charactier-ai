@@ -31,7 +31,7 @@
     "reset-rate-limit": "cd backend && npx ts-node src/scripts/reset-rate-limit.ts",
     "failures:md": "node scripts/parse-playwright.js",
     "prepare": "husky",
-    "test:e2e": "npx cross-env DISABLE_RATE_LIMIT=true playwright test",
+    "test:e2e": "playwright test",
     "test:e2e:admin": "npx cross-env DISABLE_RATE_LIMIT=true playwright test tests/e2e/admin",
     "test:e2e:stable": "npx cross-env DISABLE_RATE_LIMIT=true playwright test --config=playwright.config.stable.ts",
     "test:e2e:admin:stable": "npx cross-env DISABLE_RATE_LIMIT=true playwright test --config=playwright.config.stable.ts tests/e2e/admin",

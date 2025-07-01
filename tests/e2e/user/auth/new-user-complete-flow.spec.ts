@@ -227,14 +227,14 @@ test.describe('New User Complete Flow', () => {
     // Test 2: Email format validation
     await page.getByLabel('メールアドレス').fill('invalid-email');
     await page.getByRole('button', { name: '利用規約に同意して登録する' }).click();
-    await expect(page.locator('div:has-text("正しいメールアドレス"), div:has-text("valid email")')).toBeVisible();
+    await expect(page.getByText(/正しいメールアドレスを入力してください/)).toBeVisible();
     
     // Test 3: Password confirmation mismatch
     await page.getByLabel('メールアドレス').fill('test@example.com');
     await page.getByLabel('パスワード', { exact: true }).fill('Password123!');
     await page.getByLabel('パスワード確認').fill('DifferentPassword123!');
     await page.getByRole('button', { name: '利用規約に同意して登録する' }).click();
-    await expect(page.locator('div:has-text("パスワードが一致"), div:has-text("do not match")')).toBeVisible();
+    await expect(page.getByText(/パスワード.*一致しません/)).toBeVisible();
   });
 
   test('Email verification flow', async ({ page, request }) => {
