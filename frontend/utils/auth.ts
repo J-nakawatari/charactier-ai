@@ -272,20 +272,59 @@ export function isAuthenticatedSync(): boolean {
  */
 export async function refreshToken(): Promise<boolean> {
   try {
+    // 無限ループを防ぐため、リフレッシュ中フラグをチェック
+    if ((window as any).__refreshing) {
+      console.warn('Refresh already in progress, skipping');
+      return false;
+    }
+    
+    (window as any).__refreshing = true;
+    
+    const flags = await getFeatureFlags();
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json'
+    };
+    
+    // CSRFトークンを追加
+    if (typeof window !== 'undefined') {
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('XSRF-TOKEN='))
+        ?.split('=')[1];
+      
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+      }
+    }
+    
+    // 従来方式の場合はリフレッシュトークンをボディに含める
+    const body = !flags.SECURE_COOKIE_AUTH && getRefreshToken() 
+      ? JSON.stringify({ refreshToken: getRefreshToken() })
+      : undefined;
+    
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
       method: 'POST',
       credentials: 'include', // クッキーを送信
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
+      body
     });
 
     if (response.ok) {
-      // HttpOnlyクッキーで新しいトークンが自動的に設定される
+      // 従来方式の場合はレスポンスからトークンを取得して保存
+      if (!flags.SECURE_COOKIE_AUTH) {
+        const data = await response.json();
+        if (data.accessToken) {
+          setAccessToken(data.accessToken);
+        }
+      }
       return true;
+    } else {
+      console.error('Token refresh failed with status:', response.status);
     }
   } catch (error) {
     console.error('Token refresh failed:', error);
+  } finally {
+    (window as any).__refreshing = false;
   }
 
   return false;
@@ -338,6 +377,12 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
 
   // 401の場合はトークンリフレッシュを試行
   if (response.status === 401) {
+    // リフレッシュエンドポイントへのリクエストの場合はスキップ
+    if (url.includes('/auth/refresh')) {
+      logout();
+      throw new Error('Refresh token is invalid');
+    }
+    
     const refreshed = await refreshToken();
     if (refreshed) {
       // リフレッシュ成功時は再リクエスト

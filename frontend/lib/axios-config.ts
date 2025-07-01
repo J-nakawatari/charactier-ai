@@ -93,12 +93,23 @@ apiClient.interceptors.response.use(
 
     // 401エラーかつリトライではない場合
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // リフレッシュエンドポイント自体への401エラーの場合は、無限ループを防ぐためログアウト
+      if (originalRequest.url?.includes('/auth/refresh')) {
+        console.error('Refresh token is invalid or expired');
+        logout();
+        return Promise.reject(error);
+      }
+      
       // 既にリフレッシュ中の場合はキューに追加
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(() => {
           // リフレッシュが成功したら元のリクエストを再実行
+          const token = getAccessToken();
+          if (token && originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+          }
           return apiClient(originalRequest);
         }).catch(err => {
           return Promise.reject(err);
@@ -114,8 +125,14 @@ apiClient.interceptors.response.use(
         
         if (success) {
           // キューのリクエストを処理
-          processQueue(null, getAccessToken());
+          const newToken = getAccessToken();
+          processQueue(null, newToken);
           isRefreshing = false;
+          
+          // 元のリクエストのヘッダーを更新
+          if (newToken && originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          }
           
           // 元のリクエストを再実行
           return apiClient(originalRequest);
