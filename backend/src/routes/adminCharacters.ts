@@ -743,6 +743,24 @@ router.delete('/:id', adminRateLimit, authenticateToken, validateObjectId('id'),
   }
 });
 
+// デバッグ用エンドポイント
+router.post('/reorder-debug', 
+  adminRateLimit,
+  authenticateToken,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    res.json({
+      debug: true,
+      headers: {
+        'content-type': req.headers['content-type'],
+        'content-length': req.headers['content-length']
+      },
+      body: req.body,
+      bodyKeys: Object.keys(req.body || {}),
+      characterIds: req.body?.characterIds,
+      isArray: Array.isArray(req.body?.characterIds)
+    });
+  });
+
 // キャラクターの並び順を更新
 router.put('/reorder', 
   adminRateLimit,

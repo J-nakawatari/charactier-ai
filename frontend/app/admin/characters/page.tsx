@@ -175,11 +175,39 @@ export default function CharactersPage() {
     }
   };
 
+  // デバッグ用テスト関数
+  const testReorderDebug = async () => {
+    try {
+      const testIds = characters.slice(0, 3).map(c => c._id);
+      console.log('🧪 Testing reorder-debug with IDs:', testIds);
+      
+      const response = await adminPost('/api/v1/admin/characters/reorder-debug', { 
+        characterIds: testIds 
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🧪 Debug response:', data);
+        if (!data.isArray || !data.characterIds) {
+          console.error('❌ Body parsing issue detected!', data);
+        } else {
+          console.log('✅ Body parsing working correctly');
+        }
+      } else {
+        console.error('❌ Debug request failed:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Debug test error:', error);
+    }
+  };
+
   // ドラッグモードの開始
   const startDragMode = () => {
     setIsDragMode(true);
     setOriginalOrder([...characters]);
     setSortMode('custom');
+    // デバッグテストを実行
+    testReorderDebug();
   };
 
   // ドラッグモードの保存
