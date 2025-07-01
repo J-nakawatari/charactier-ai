@@ -49,7 +49,7 @@ export default function CharactersPage() {
   const [error, setError] = useState<string | null>(null);
   const [updatingStats, setUpdatingStats] = useState(false);
   const [lastStatsUpdate, setLastStatsUpdate] = useState<Date | null>(null);
-  const [sortMode, setSortMode] = useState<'custom' | 'newest' | 'popular'>('newest');
+  const [sortMode, setSortMode] = useState<'custom' | 'newest' | 'popular'>('custom');
   const [isSorting, setIsSorting] = useState(false);
   const [isDragMode, setIsDragMode] = useState(false);
   const [originalOrder, setOriginalOrder] = useState<Character[]>([]);
@@ -219,6 +219,8 @@ export default function CharactersPage() {
     
     await saveCharacterOrder(ids);
     setIsDragMode(false);
+    // 並び順を保存した後はカスタムソートモードを維持
+    setSortMode('custom');
   };
 
   // ドラッグモードのキャンセル
@@ -259,8 +261,20 @@ export default function CharactersPage() {
           </div>
           
           <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+            {/* ソートモード選択 */}
+            <select
+              value={sortMode}
+              onChange={(e) => setSortMode(e.target.value as any)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+              disabled={isDragMode}
+            >
+              <option value="custom">カスタム順</option>
+              <option value="newest">新しい順</option>
+              <option value="popular">人気順</option>
+            </select>
+            
             {/* ソートモード切り替え */}
-            {!isDragMode ? (
+            {!isDragMode && sortMode === 'custom' ? (
               <button
                 onClick={startDragMode}
                 className="flex items-center space-x-2 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
