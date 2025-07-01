@@ -3,6 +3,7 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.44.0-jammy
     services:
       mongodb:
         image: mongo:7
@@ -21,8 +22,6 @@ jobs:
           pnpm install
           cd frontend && pnpm install && cd ..
           cd backend && pnpm install && cd ..
-      - name: Install Playwright
-        run: npx playwright install --with-deps chromium
       - name: Build
         run: cd frontend && npm run build
       - name: Lint & Type Check
