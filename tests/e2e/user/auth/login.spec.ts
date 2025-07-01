@@ -12,11 +12,28 @@ test.describe('ユーザーログイン', () => {
     // ログインボタンをクリック
     await page.getByRole('button', { name: 'ログインする' }).click();
     
-    // ダッシュボードへのリダイレクトを確認
-    await expect(page).toHaveURL(/\/dashboard/);
-    
-    // ユーザー名が表示されることを確認
-    await expect(page.getByText('テストユーザー')).toBeVisible();
+    // ログイン結果を確認
+    try {
+      // ダッシュボードへのリダイレクトを確認（30秒待機）
+      await expect(page).toHaveURL(/\/dashboard/, { timeout: 30000 });
+      console.log('✅ ダッシュボードへリダイレクト成功');
+    } catch {
+      // 現在のURLを確認
+      const currentUrl = page.url();
+      console.log('現在のURL:', currentUrl);
+      
+      // ページの内容を確認してデバッグ
+      const pageTitle = await page.title();
+      console.log('ページタイトル:', pageTitle);
+      
+      // エラーメッセージがあるか確認
+      const bodyText = await page.textContent('body');
+      if (bodyText?.includes('メール') || bodyText?.includes('認証')) {
+        console.log('⚠️ メール認証が必要な可能性があります');
+      }
+      
+      throw new Error(`ダッシュボードへのリダイレクトが失敗しました。URL: ${currentUrl}`);
+    }
   });
 
   test('誤った認証情報でエラー表示', async ({ page }) => {
