@@ -748,6 +748,27 @@ router.post('/reorder-debug',
   adminRateLimit,
   authenticateToken,
   async (req: AuthRequest, res: Response): Promise<void> => {
+    const { characterIds } = req.body;
+    const ObjectId = mongoose.Types.ObjectId;
+    
+    // 各IDの検証結果を詳細に記録
+    const validationResults = characterIds?.map((id: any, index: number) => ({
+      index,
+      id,
+      type: typeof id,
+      length: id?.length,
+      isValid: ObjectId.isValid(id),
+      mongooseVersion: mongoose.version,
+      testNewObjectId: (() => {
+        try {
+          new ObjectId(id);
+          return 'success';
+        } catch (e: any) {
+          return e.message;
+        }
+      })()
+    }));
+    
     res.json({
       debug: true,
       headers: {
@@ -757,7 +778,13 @@ router.post('/reorder-debug',
       body: req.body,
       bodyKeys: Object.keys(req.body || {}),
       characterIds: req.body?.characterIds,
-      isArray: Array.isArray(req.body?.characterIds)
+      isArray: Array.isArray(req.body?.characterIds),
+      validationResults,
+      mongooseInfo: {
+        version: mongoose.version,
+        ObjectIdExists: !!ObjectId,
+        isValidFunction: typeof ObjectId.isValid
+      }
     });
   });
 
@@ -781,66 +808,16 @@ router.put('/reorder',
 
     const { characterIds } = req.body;
 
-    log.info('Reorder request received', {
-      adminId: req.admin._id,
-      headers: {
-        'content-type': req.headers['content-type'],
-        'content-length': req.headers['content-length']
-      },
-      bodyKeys: Object.keys(req.body),
-      body: JSON.stringify(req.body),
-      characterIds: characterIds,
-      characterIdsType: typeof characterIds,
-      isArray: Array.isArray(characterIds),
-      firstCharacterId: characterIds ? characterIds[0] : undefined
-    });
-
     if (!Array.isArray(characterIds) || characterIds.length === 0) {
       sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD, 'Character IDs array is required');
       return;
     }
 
-    // 各IDがObjectIDとして有効かチェック
-    const ObjectId = mongoose.Types.ObjectId;
-    const invalidIds: { index: number; id: any; reason: string }[] = [];
-    
-    for (let i = 0; i < characterIds.length; i++) {
-      const id = characterIds[i];
-      log.debug('Checking ID validity', {
-        index: i,
-        id: id,
-        type: typeof id,
-        isValid: ObjectId.isValid(id)
-      });
-      
-      if (!id) {
-        invalidIds.push({ index: i, id: id, reason: 'IDが空またはnull' });
-      } else if (typeof id !== 'string') {
-        invalidIds.push({ index: i, id: id, reason: `IDが文字列ではない（型: ${typeof id}）` });
-      } else if (id.length !== 24) {
-        invalidIds.push({ index: i, id: id, reason: `IDの長さが不正（${id.length}文字、期待値: 24文字）` });
-      } else if (!ObjectId.isValid(id)) {
-        invalidIds.push({ index: i, id: id, reason: 'ObjectIDとして無効な形式' });
-      }
-    }
-    
-    if (invalidIds.length > 0) {
-      log.error('Invalid IDs detected', {
-        invalidIds,
-        allCharacterIds: JSON.stringify(characterIds)
-      });
-      const errorDetails = invalidIds.map(item => 
-        `インデックス ${item.index}: "${item.id}" - ${item.reason}`
-      ).join(', ');
-      sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, `無効なIDが指定されました: ${errorDetails}`);
-      return;
-    }
-
     // バルクアップデートで並び順を更新
-    const bulkOps = characterIds.map((id, index) => ({
+    const bulkOps = characterIds.map((id: string, index: number) => ({
       updateOne: {
-        filter: { _id: new ObjectId(id) },
-        update: { sortOrder: index }
+        filter: { _id: id },
+        update: { $set: { sortOrder: index } }
       }
     }));
 
@@ -848,7 +825,8 @@ router.put('/reorder',
 
     log.info('Characters reordered by admin', {
       adminId: req.admin._id,
-      count: result.modifiedCount
+      count: result.modifiedCount,
+      total: characterIds.length
     });
 
     res.json({
@@ -858,7 +836,8 @@ router.put('/reorder',
 
   } catch (error) {
     log.error('Character reorder error', error, {
-      adminId: req.admin?._id
+      adminId: req.admin?._id,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error'
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }
