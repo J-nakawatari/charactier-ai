@@ -127,26 +127,57 @@ jobs:
           export SENDGRID_API_KEY=dummy-key-for-test
           export STRIPE_SECRET_KEY=sk_test_dummy
           export STRIPE_WEBHOOK_SECRET=whsec_test_dummy
+          export DISABLE_RATE_LIMIT=true
+          
+          # MongoDBが起動しているか確認
+          echo "=== Checking MongoDB ==="
+          nc -zv localhost 27017 || echo "MongoDB not available"
           
           # バックエンドサーバーを起動
-          cd backend && NODE_ENV=test MONGO_URI=mongodb://localhost:27017/test JWT_SECRET=test-secret-key JWT_REFRESH_SECRET=test-refresh-secret FRONTEND_URL=http://localhost:3000 SMTP_HOST=localhost SMTP_PORT=1025 npm run dev > backend.log 2>&1 &
+          cd backend && NODE_ENV=test DISABLE_RATE_LIMIT=true MONGO_URI=mongodb://localhost:27017/test JWT_SECRET=test-secret-key JWT_REFRESH_SECRET=test-refresh-secret FRONTEND_URL=http://localhost:3000 SMTP_HOST=localhost SMTP_PORT=1025 npm run dev > backend.log 2>&1 &
           BACKEND_PID=$!
-          sleep 10
+          
+          # バックエンドの起動を待つ
+          echo "=== Waiting for backend to start ==="
+          for i in {1..30}; do
+            if curl -s http://localhost:5000/api/v1/health > /dev/null; then
+              echo "Backend is ready!"
+              break
+            fi
+            echo "Waiting for backend... ($i/30)"
+            sleep 2
+          done
           
           # フロントエンドサーバーを起動
-          cd frontend && npm run start > frontend.log 2>&1 &
+          cd ../frontend && npm run start > frontend.log 2>&1 &
           FRONTEND_PID=$!
-          sleep 15
           
-          # サーバーが起動したか確認
-          echo "=== Checking server status ==="
-          curl -f http://localhost:5000/api/v1/health || (echo "Backend not ready"; cat backend/backend.log | tail -50; exit 1)
-          curl -f http://localhost:3000 || (echo "Frontend not ready"; cat frontend/frontend.log | tail -50; exit 1)
+          # フロントエンドの起動を待つ
+          echo "=== Waiting for frontend to start ==="
+          for i in {1..30}; do
+            if curl -s http://localhost:3000 > /dev/null; then
+              echo "Frontend is ready!"
+              break
+            fi
+            echo "Waiting for frontend... ($i/30)"
+            sleep 2
+          done
+          
+          # 最終確認
+          echo "=== Final server status check ==="
+          curl -f http://localhost:5000/api/v1/health || (echo "Backend failed"; cat backend/backend.log | tail -100; exit 1)
+          curl -f http://localhost:3000 || (echo "Frontend failed"; cat frontend/frontend.log | tail -100; exit 1)
         
       - name: Run E2E tests
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:3000
           PROJECT: ${{ github.event.inputs.browsers || '' }}
+          NODE_ENV: test
+          DISABLE_RATE_LIMIT: true
+          TEST_USER_EMAIL: global-test@example.com
+          TEST_USER_PASSWORD: Test123!
+          TEST_ADMIN_EMAIL: admin@example.com
+          TEST_ADMIN_PASSWORD: admin123
         run: |
           # inputs.browsers が空なら全プロジェクト実行
           if [ -n "$PROJECT" ]; then
