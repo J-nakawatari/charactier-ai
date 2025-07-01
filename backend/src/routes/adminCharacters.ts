@@ -813,7 +813,7 @@ router.put('/reorder',
       const id = characterIds[i];
       if (!id || typeof id !== 'string' || id.length !== 24) {
         sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 
-          `無効なIDが指定されました (index: ${i}, id: ${id}, type: ${typeof id}, length: ${id?.length})`);
+          `無効なIDが指定されました [reorder endpoint: index=${i}, id=${id}, type=${typeof id}, length=${id?.length}]`);
         return;
       }
     }
