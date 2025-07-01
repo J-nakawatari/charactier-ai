@@ -23,7 +23,7 @@ async function seedTestData() {
       { 
         $set: { 
           email: 'global-test@example.com',
-          password: testUserPassword,
+          passwordHash: testUserPassword,
           name: 'グローバルテストユーザー',
           isVerified: true,
           emailVerified: true,
@@ -42,7 +42,7 @@ async function seedTestData() {
       { 
         $set: { 
           email: 'admin@example.com',
-          password: adminPassword,
+          passwordHash: adminPassword,
           name: 'テスト管理者',
           isAdmin: true,
           isVerified: true,

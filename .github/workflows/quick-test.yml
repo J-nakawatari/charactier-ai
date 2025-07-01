@@ -104,7 +104,7 @@ jobs:
             || echo "Login endpoint test failed"
           
           # フロントエンドサーバーを起動
-          cd ../frontend && npm run start > frontend.log 2>&1 &
+          cd ${{ github.workspace }}/frontend && npm run start > frontend.log 2>&1 &
           FRONTEND_PID=$!
           
           # フロントエンドの起動を待つ
