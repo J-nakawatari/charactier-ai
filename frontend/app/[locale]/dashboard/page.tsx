@@ -9,7 +9,6 @@ import AffinitySection from '@/components/user/AffinitySection';
 import TokenStatusCard from '@/components/user/TokenStatusCard';
 import RecentChatHistory from '@/components/user/RecentChatHistory';
 import PurchaseHistorySummary from '@/components/user/PurchaseHistorySummary';
-import BadgeGallery from '@/components/user/BadgeGallery';
 import AnalyticsCharts from '@/components/user/AnalyticsCharts';
 import { getAuthHeadersSync } from '@/utils/auth';
 // 将来実装用コンポーネント（現在は非表示）
@@ -35,7 +34,6 @@ interface DashboardData {
   purchaseHistory: Array<any>;
   loginHistory: Array<any>;
   notifications: Array<any>;
-  badges: Array<any>;
   analytics: any;
 }
 
@@ -186,13 +184,6 @@ export default function DashboardPage() {
                   />
                 </div>
 
-                {/* バッジギャラリー */}
-                <div className="md:col-span-2 lg:col-span-3">
-                  <BadgeGallery 
-                    badges={dashboardData.badges}
-                    locale={locale}
-                  />
-                </div>
 
                 {/* 統計グラフ */}
                 <div className="md:col-span-2 lg:col-span-3">
