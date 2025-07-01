@@ -302,7 +302,13 @@ function CharactersPageContent({
         {characters.length > 0 ? (
           <CharacterGrid
             characters={characters.map(char => ({
-              ...char,
+              _id: char._id,
+              name: typeof char.name === 'string' 
+                ? { ja: char.name, en: char.name } 
+                : char.name,
+              description: typeof char.description === 'string'
+                ? { ja: char.description, en: char.description }
+                : char.description,
               characterAccessType: char.characterAccessType === 'free' ? 'free' : 'purchaseOnly',
               imageChatAvatar: (char as any).imageChatAvatar || '/uploads/placeholder.png',
               imageChatBackground: (char as any).imageChatBackground || '/uploads/placeholder.png',
@@ -310,7 +316,8 @@ function CharactersPageContent({
               themeColor: (char as any).themeColor || '#8B5CF6',
               aiModel: (char as any).aiModel || 'gpt-4o-mini',
               isActive: true,
-              createdAt: (char as any).createdAt || new Date().toISOString()
+              createdAt: (char as any).createdAt || new Date().toISOString(),
+              affinityStats: (char as any).affinityStats
             }))}
             onCharacterClick={(gridChar) => {
               // GridCharacterをCharacterに変換してhandleCharacterClickに渡す
