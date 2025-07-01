@@ -51,6 +51,6 @@ test.describe('Debug Navigation', () => {
     // Check if form exists
     const emailInput = await page.locator('input[type="email"]').count();
     const passwordInput = await page.locator('input[type="password"]').count();
-    console.log('7. Form inputs found:', { email: emailInput, password: passwordInput });
+    console.log('7. Form inputs found:', { emailInputCount: emailInput, passwordInputCount: passwordInput });
   });
 });
