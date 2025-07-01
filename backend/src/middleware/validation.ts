@@ -161,7 +161,7 @@ export function validateObjectId(paramName: string = 'id') {
       log.debug('Invalid ObjectId', { id, param: paramName });
       res.status(400).json({
         error: ClientErrorCode.INVALID_INPUT,
-        message: '無効なIDが指定されました'
+        message: `無効なIDが指定されました (validateObjectId: ${paramName})`
       });
       return;
     }

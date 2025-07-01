@@ -808,6 +808,16 @@ router.put('/reorder',
       return;
     }
 
+    // 各IDのバリデーション（デバッグ用）
+    for (let i = 0; i < characterIds.length; i++) {
+      const id = characterIds[i];
+      if (!id || typeof id !== 'string' || id.length !== 24) {
+        sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 
+          `無効なIDが指定されました (index: ${i}, id: ${id}, type: ${typeof id}, length: ${id?.length})`);
+        return;
+      }
+    }
+
     // バルクアップデートで並び順を更新
     const bulkOps = characterIds.map((id: string, index: number) => ({
       updateOne: {
