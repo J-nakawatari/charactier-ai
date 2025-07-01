@@ -37,6 +37,7 @@ import publicSystemSettingsRoutes from './routes/publicSystemSettings';
 import systemRoutes from './routes/system';
 import debugRoutes from './routes/debug';
 import userRoutes from './routes/user';
+import healthRoutes from './routes/health';
 import { monitoringMiddleware } from './middleware/monitoring';
 import { registrationRateLimit } from './middleware/registrationLimit';
 import { createRateLimiter } from './middleware/rateLimiter';
@@ -983,6 +984,9 @@ app.use(API_PREFIX, createRateLimiter('general'));
 
 // CSRFトークン取得エンドポイント
 app.get(`${API_PREFIX}/csrf-token`, getCsrfToken);
+
+// ヘルスチェックエンドポイント（公開）
+app.use(`${API_PREFIX}`, healthRoutes);
 
 // 認証ルート
 app.use(`${API_PREFIX}/auth`, authRoutes);

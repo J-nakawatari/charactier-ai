@@ -8,6 +8,8 @@
         "test:windows": "set NODE_ENV=test&& set DISABLE_RATE_LIMIT=true&& ts-node src/index.ts",
         "build": "tsc -p tsconfig.json",
         "start": "node dist/src/index.js",
+        "start:ci": "node dist/src/index.js & ts-node scripts/seed-ci.ts && wait",
+        "seed:ci": "ts-node scripts/seed-ci.ts",
         "lint": "eslint src/**/*.ts",
         "lint:fix": "eslint src/**/*.ts --fix",
         "type-check": "tsc --noEmit",

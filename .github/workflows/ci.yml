@@ -29,27 +29,52 @@ jobs:
           npm run lint
           npm run type-check
       - name: Setup test data
-        run: cd backend && node src/scripts/seed-test-data.js
+        run: cd backend && npm run seed:ci
         env:
           MONGO_URI: mongodb://localhost:27017/test
-      - name: Run E2E tests
+      - name: Start backend
         env:
           MONGO_URI: mongodb://localhost:27017/test
           NODE_ENV: test
-          JWT_SECRET: test-secret
-          JWT_REFRESH_SECRET: test-refresh-secret
+          JWT_SECRET: test-secret-key-for-ci
+          JWT_REFRESH_SECRET: test-refresh-secret-key-for-ci
           FRONTEND_URL: http://localhost:3000
           DISABLE_RATE_LIMIT: true
-          TEST_USER_EMAIL: global-test@example.com
-          TEST_USER_PASSWORD: Test123!
-          NEXT_PUBLIC_API_URL: http://localhost:5000
-          API_URL: http://localhost:5000
-          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          STRIPE_SECRET_KEY: sk_test_dummy
+          STRIPE_PUBLISHABLE_KEY: pk_test_dummy
         run: |
           cd backend && npm run dev > ../backend.log 2>&1 &
-          cd ../frontend && npm run start > ../frontend.log 2>&1 &
-          npx wait-on http://localhost:5000/api/v1/health http://localhost:3000 -t 60000
-          npm run test:e2e
+          echo "Waiting for backend to start..."
+          for i in {1..30}; do
+            curl -fsSL http://localhost:5000/api/v1/health && echo "Backend is ready!" && break
+            echo "Attempt $i/30: Backend not ready yet..."
+            sleep 2
+          done
+          if ! curl -fsSL http://localhost:5000/api/v1/health; then
+            echo "::error ::Backend did not start within 60 seconds"
+            echo "=== Backend logs ==="
+            cat ../backend.log
+            exit 1
+          fi
+      
+      - name: Start frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:5000
+          API_URL: http://localhost:5000
+        run: |
+          cd frontend && npm run start > ../frontend.log 2>&1 &
+          echo "Waiting for frontend to start..."
+          npx wait-on http://localhost:3000 -t 60000
+          echo "Frontend is ready!"
+      
+      - name: Run E2E tests
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          TEST_USER_EMAIL: global-test@example.com
+          TEST_USER_PASSWORD: Test123!
+          TEST_ADMIN_EMAIL: admin@example.com
+          TEST_ADMIN_PASSWORD: admin123
+        run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: always()
         with:
