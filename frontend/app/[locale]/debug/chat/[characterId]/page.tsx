@@ -205,7 +205,7 @@ export default function ChatDiagnosticsPage() {
                     char._id === characterId ? 'bg-purple-100 border-purple-500 border' : 'bg-gray-50'
                   }`}
                 >
-                  <div className="font-medium">
+                  <div className="font-medium text-gray-900">
                     {typeof char.name === 'string' ? char.name : (char.name?.ja || char.name?.en || 'Unknown')}
                   </div>
                   <div className="text-sm text-gray-500">ID: {char._id}</div>
