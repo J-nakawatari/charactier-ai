@@ -479,6 +479,71 @@ router.post('/', adminRateLimit, authenticateToken, validate({ body: characterSc
   }
 });
 
+// キャラクターの並び順を更新
+router.put('/reorder', 
+  adminRateLimit,
+  authenticateToken,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 管理者権限チェック
+    if (!req.admin) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
+      return;
+    }
+
+    // 書き込み権限チェック（super_adminのみ）
+    if (!hasWritePermission(req)) {
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Only super admin can reorder characters');
+      return;
+    }
+
+    const { characterIds } = req.body;
+
+    if (!Array.isArray(characterIds) || characterIds.length === 0) {
+      sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD, 'Character IDs array is required');
+      return;
+    }
+
+    // 各IDのバリデーション（デバッグ用）
+    for (let i = 0; i < characterIds.length; i++) {
+      const id = characterIds[i];
+      if (!id || typeof id !== 'string' || id.length !== 24) {
+        sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 
+          `無効なIDが指定されました [reorder endpoint: index=${i}, id=${id}, type=${typeof id}, length=${id?.length}]`);
+        return;
+      }
+    }
+
+    // バルクアップデートで並び順を更新
+    const bulkOps = characterIds.map((id: string, index: number) => ({
+      updateOne: {
+        filter: { _id: id },
+        update: { $set: { sortOrder: index } }
+      }
+    }));
+
+    const result = await CharacterModel.bulkWrite(bulkOps);
+
+    log.info('Characters reordered by admin', {
+      adminId: req.admin._id,
+      count: result.modifiedCount,
+      total: characterIds.length
+    });
+
+    res.json({
+      success: true,
+      message: `${result.modifiedCount}件のキャラクターの並び順を更新しました`
+    });
+
+  } catch (error) {
+    log.error('Character reorder error', error, {
+      adminId: req.admin?._id,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error'
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
 // キャラクター更新（管理者用）
 router.put('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -782,70 +847,5 @@ router.post('/reorder-debug',
       });
     }
   });
-
-// キャラクターの並び順を更新
-router.put('/reorder', 
-  adminRateLimit,
-  authenticateToken,
-  async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    // 管理者権限チェック
-    if (!req.admin) {
-      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Admin access required');
-      return;
-    }
-
-    // 書き込み権限チェック（super_adminのみ）
-    if (!hasWritePermission(req)) {
-      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Only super admin can reorder characters');
-      return;
-    }
-
-    const { characterIds } = req.body;
-
-    if (!Array.isArray(characterIds) || characterIds.length === 0) {
-      sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD, 'Character IDs array is required');
-      return;
-    }
-
-    // 各IDのバリデーション（デバッグ用）
-    for (let i = 0; i < characterIds.length; i++) {
-      const id = characterIds[i];
-      if (!id || typeof id !== 'string' || id.length !== 24) {
-        sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, 
-          `無効なIDが指定されました [reorder endpoint: index=${i}, id=${id}, type=${typeof id}, length=${id?.length}]`);
-        return;
-      }
-    }
-
-    // バルクアップデートで並び順を更新
-    const bulkOps = characterIds.map((id: string, index: number) => ({
-      updateOne: {
-        filter: { _id: id },
-        update: { $set: { sortOrder: index } }
-      }
-    }));
-
-    const result = await CharacterModel.bulkWrite(bulkOps);
-
-    log.info('Characters reordered by admin', {
-      adminId: req.admin._id,
-      count: result.modifiedCount,
-      total: characterIds.length
-    });
-
-    res.json({
-      success: true,
-      message: `${result.modifiedCount}件のキャラクターの並び順を更新しました`
-    });
-
-  } catch (error) {
-    log.error('Character reorder error', error, {
-      adminId: req.admin?._id,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error'
-    });
-    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
-  }
-});
 
 export default router;
