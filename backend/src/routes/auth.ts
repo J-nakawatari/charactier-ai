@@ -21,6 +21,8 @@ import {
   getAccessTokenCookieOptions,
   getRefreshTokenCookieOptions,
   clearAllAuthCookies,
+  clearUserAuthCookies,
+  clearAdminAuthCookies,
   estimateCookieSize,
   COOKIE_SIZE_WARNING_THRESHOLD
 } from '../config/cookieConfig';
@@ -1077,8 +1079,8 @@ router.get('/verify-token', authRateLimit, authenticateToken, async (req: AuthRe
 // ログアウト
 router.post('/logout', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
-    // すべての認証関連Cookieをクリア
-    clearAllAuthCookies(res);
+    // ユーザー認証関連Cookieのみクリア
+    clearUserAuthCookies(res);
     
     res.json({
       success: true,
@@ -1093,8 +1095,8 @@ router.post('/logout', generalRateLimit, async (req: Request, res: Response): Pr
 // 管理者ログアウト
 router.post('/admin/logout', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
-    // すべての認証関連Cookieをクリア
-    clearAllAuthCookies(res);
+    // 管理者認証関連Cookieのみクリア
+    clearAdminAuthCookies(res);
     
     log.info('Admin logout successful');
     

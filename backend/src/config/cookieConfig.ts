@@ -72,6 +72,28 @@ export const clearAllAuthCookies = (res: any): void => {
   });
 };
 
+// ユーザー認証関連Cookieのみクリア
+export const clearUserAuthCookies = (res: any): void => {
+  const clearOptions = getCookieClearOptions();
+  
+  // ユーザーCookieのみクリア
+  res.clearCookie(COOKIE_NAMES.USER_ACCESS, clearOptions);
+  res.clearCookie(COOKIE_NAMES.USER_REFRESH, clearOptions);
+  
+  // 古いCookie（互換性のため）
+  res.clearCookie(COOKIE_NAMES.LEGACY_ACCESS, clearOptions);
+  res.clearCookie(COOKIE_NAMES.LEGACY_REFRESH, clearOptions);
+};
+
+// 管理者認証関連Cookieのみクリア
+export const clearAdminAuthCookies = (res: any): void => {
+  const clearOptions = getCookieClearOptions();
+  
+  // 管理者Cookieのみクリア
+  res.clearCookie(COOKIE_NAMES.ADMIN_ACCESS, clearOptions);
+  res.clearCookie(COOKIE_NAMES.ADMIN_REFRESH, clearOptions);
+};
+
 // Cookie合計サイズの推定
 export const estimateCookieSize = (cookies: Record<string, string>): number => {
   let totalSize = 0;

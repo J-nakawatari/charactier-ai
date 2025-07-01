@@ -15,6 +15,8 @@ const ARGON2_CONFIG = {
 const HASH_PREFIX = {
   ARGON2: '$argon2',
   BCRYPT: '$2a$',
+  BCRYPT_2B: '$2b$',  // bcrypt variant
+  BCRYPT_2Y: '$2y$',  // PHP bcrypt variant
 };
 
 /**
@@ -42,7 +44,9 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
       const isValid = await argon2.verify(hash, password);
       log.debug('Password verified with Argon2id', { valid: isValid });
       return isValid;
-    } else if (hash.startsWith(HASH_PREFIX.BCRYPT)) {
+    } else if (hash.startsWith(HASH_PREFIX.BCRYPT) || 
+               hash.startsWith(HASH_PREFIX.BCRYPT_2B) || 
+               hash.startsWith(HASH_PREFIX.BCRYPT_2Y)) {
       // bcrypt形式（移行期間用）
       const isValid = await bcrypt.compare(password, hash);
       log.debug('Password verified with bcrypt (legacy)', { valid: isValid });
@@ -62,7 +66,9 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
  */
 export function needsRehash(hash: string): boolean {
   // bcrypt形式の場合は再ハッシュ化が必要
-  if (hash.startsWith(HASH_PREFIX.BCRYPT)) {
+  if (hash.startsWith(HASH_PREFIX.BCRYPT) || 
+      hash.startsWith(HASH_PREFIX.BCRYPT_2B) || 
+      hash.startsWith(HASH_PREFIX.BCRYPT_2Y)) {
     return true;
   }
   
@@ -155,7 +161,9 @@ export function getHashInfo(hash: string): {
       algorithm: 'argon2id',
       needsUpgrade: argon2.needsRehash(hash, ARGON2_CONFIG)
     };
-  } else if (hash.startsWith(HASH_PREFIX.BCRYPT)) {
+  } else if (hash.startsWith(HASH_PREFIX.BCRYPT) || 
+             hash.startsWith(HASH_PREFIX.BCRYPT_2B) || 
+             hash.startsWith(HASH_PREFIX.BCRYPT_2Y)) {
     return {
       algorithm: 'bcrypt',
       needsUpgrade: true
