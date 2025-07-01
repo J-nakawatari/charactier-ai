@@ -1,225 +1,62 @@
-name: E2E Tests
-
-on:
-  # 手動実行
-  workflow_dispatch:
-    inputs:
-      browsers:
-        description: 'ブラウザ選択'
-        required: false
-        default: 'all'
-        type: choice
-        options:
-          - all
-          - chromium
-          - firefox
-          - webkit
-  
-  # プッシュ時の自動実行（すべてのブランチ）
-  push:
-    branches: [ "**" ]
-  
-  # プルリクエスト時は自動実行（オプション）
-  pull_request:
-    types: [opened, synchronize]
-    branches: [main]
-
-# 同時実行の制御
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
+name: e2e
+on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      LANG: ja_JP.UTF-8
-      LC_ALL: ja_JP.UTF-8
     services:
       mongodb:
         image: mongo:7
         ports:
           - 27017:27017
-        options: >-
-          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      mailhog:
-        image: mailhog/mailhog
-        ports: ['1025:1025', '8025:8025']
-      # stripe:
-      #   image: stripe/stripe-cli
-      #   ports: ['12111:12111']
-      # minio:
-      #   image: minio/minio:latest
-      #   env:
-      #     MINIO_ROOT_USER: minio
-      #     MINIO_ROOT_PASSWORD: minio123
-      #   ports: 
-      #     - 9000:9000
-      #   options: >-
-      #     --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
-      #     --health-interval 10s
-      #     --health-timeout 5s
-      #     --health-retries 5
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Setup locale
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y locales
-          sudo locale-gen ja_JP.UTF-8
-          echo "LANG=ja_JP.UTF-8" >> $GITHUB_ENV
-          echo "LC_ALL=ja_JP.UTF-8" >> $GITHUB_ENV
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v2
         with:
           version: 8
-          
-      - name: Install root dependencies
-        run: pnpm install --no-frozen-lockfile
-        
-      - name: Install frontend dependencies
+      - name: Install dependencies
         run: |
-          cd frontend
-          pnpm install --no-frozen-lockfile
-          
-      - name: Install backend dependencies
+          pnpm install
+          cd frontend && pnpm install && cd ..
+          cd backend && pnpm install && cd ..
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Build
+        run: cd frontend && npm run build
+      - name: Lint & Type Check
         run: |
-          cd backend
-          pnpm install --no-frozen-lockfile
-        
-      - name: Install system deps for Playwright
-        run: |
-          sudo apt-get update
-          # Playwright公式の依存関係をすべてインストール
-          sudo apt-get install -y \
-            libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
-            libdrm2 libxkbcommon0 libatspi2.0-0 libxcomposite1 \
-            libxdamage1 libxfixes3 libxrandr2 libgbm1 libxcb1 \
-            libxss1 libgtk-3-0 libpango-1.0-0 libcairo2 libasound2 \
-            libglib2.0-0
-        
-      - name: Install Playwright browsers
-        run: |
-          # まずPlaywright CLIをインストール
-          cd frontend && npx playwright install --with-deps chromium firefox webkit
-          cd ..
-      
-      - name: Install wait-on
-        run: npm install -g wait-on
-      
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm run build
-      
-      - name: Start servers
-        run: |
-          # 環境変数を設定
-          export NODE_ENV=test
-          export JWT_SECRET=test-secret-key
-          export MONGO_URI=mongodb://localhost:27017/test
-          export SENDGRID_API_KEY=dummy-key-for-test
-          export STRIPE_SECRET_KEY=sk_test_dummy
-          export STRIPE_WEBHOOK_SECRET=whsec_test_dummy
-          export DISABLE_RATE_LIMIT=true
-          export FRONTEND_URL=http://localhost:3000
-          
-          # MongoDBが起動しているか確認
-          echo "=== Checking MongoDB ==="
-          nc -zv localhost 27017 || echo "MongoDB not available"
-          
-          # 環境変数を確認
-          echo "=== Environment variables ==="
-          echo "NODE_ENV=$NODE_ENV"
-          echo "MONGO_URI=$MONGO_URI"
-          echo "JWT_SECRET is set: $([ -n \"$JWT_SECRET\" ] && echo 'yes' || echo 'no')"
-          echo "DISABLE_RATE_LIMIT=$DISABLE_RATE_LIMIT"
-          
-          # テストデータをシード
-          echo "=== Seeding test data ==="
-          cd backend && node src/scripts/seed-test-data.js
-          cd ..
-          
-          # バックエンドサーバーを起動
-          cd backend && NODE_ENV=test DISABLE_RATE_LIMIT=true MONGO_URI=mongodb://localhost:27017/test JWT_SECRET=test-secret-key JWT_REFRESH_SECRET=test-refresh-secret FRONTEND_URL=http://localhost:3000 SMTP_HOST=localhost SMTP_PORT=1025 npm run dev > backend.log 2>&1 &
-          BACKEND_PID=$!
-          
-          # バックエンドの起動を待つ
-          echo "=== Waiting for backend to start ==="
-          npx wait-on http://localhost:5000/api/v1/health -t 60000
-          echo "Backend is ready!"
-          
-          # APIエンドポイントの動作確認
-          echo "=== Testing API endpoints ==="
-          
-          # データベースのユーザーを確認
-          cd backend && node -e "const {MongoClient} = require('mongodb'); (async()=>{const client = new MongoClient('mongodb://localhost:27017/test'); await client.connect(); const users = await client.db().collection('users').find({}).toArray(); console.log('Users in DB:', users); await client.close();})()"
-          cd ..
-          
-          # ログインAPIをテスト
-          curl -X POST http://localhost:5000/api/v1/auth/login \
-            -H "Content-Type: application/json" \
-            -d '{"email":"global-test@example.com","password":"Test123!"}' \
-            -v || echo "Login endpoint test failed"
-          
-          # バックエンドのログを確認
-          echo "=== Backend logs (last 50 lines) ==="
-          cat backend/backend.log | tail -50 || echo "No backend log found"
-          
-          # フロントエンドサーバーを起動
-          cd ${{ github.workspace }}/frontend && npm run start > frontend.log 2>&1 &
-          FRONTEND_PID=$!
-          
-          # フロントエンドの起動を待つ
-          echo "=== Waiting for frontend to start ==="
-          npx wait-on http://localhost:3000 -t 60000
-          echo "Frontend is ready!"
-          
-          # 最終確認
-          echo "=== Final server status check ==="
-          curl -f http://localhost:5000/api/v1/health || (echo "Backend failed"; cat backend/backend.log | tail -100; exit 1)
-          curl -f http://localhost:3000 || (echo "Frontend failed"; cat frontend/frontend.log | tail -100; exit 1)
-        
+          npm run lint
+          npm run type-check
+      - name: Setup test data
+        run: cd backend && node src/scripts/seed-test-data.js
+        env:
+          MONGO_URI: mongodb://localhost:27017/test
       - name: Run E2E tests
         env:
-          PLAYWRIGHT_BASE_URL: http://localhost:3000
-          PROJECT: ${{ github.event.inputs.browsers || '' }}
+          MONGO_URI: mongodb://localhost:27017/test
           NODE_ENV: test
+          JWT_SECRET: test-secret
+          JWT_REFRESH_SECRET: test-refresh-secret
+          FRONTEND_URL: http://localhost:3000
           DISABLE_RATE_LIMIT: true
           TEST_USER_EMAIL: global-test@example.com
           TEST_USER_PASSWORD: Test123!
-          TEST_ADMIN_EMAIL: admin@example.com
-          TEST_ADMIN_PASSWORD: admin123
         run: |
-          # inputs.browsers が空なら全プロジェクト実行
-          if [ -n "$PROJECT" ]; then
-            npx cross-env DISABLE_RATE_LIMIT=true playwright test --project="$PROJECT"
-          else
-            npx cross-env DISABLE_RATE_LIMIT=true playwright test
-          fi
-        
-      - name: Generate failure report
-        run: |
-          npm run failures:md || echo "No test results found"
-        if: always()
-        
+          cd backend && npm run dev > ../backend.log 2>&1 &
+          cd ../frontend && npm run start > ../frontend.log 2>&1 &
+          npx wait-on http://localhost:5000/api/v1/health http://localhost:3000 -t 60000
+          npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
-          path: |
-            playwright-report
-            coverage/playwright-results.json
-            coverage/failures.md
+          path: playwright-report/
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          echo "=== Backend logs ==="
+          cat backend.log || true
+          echo "=== Frontend logs ==="
+          cat frontend.log || true
