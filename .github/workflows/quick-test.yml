@@ -54,10 +54,16 @@ jobs:
         
       - name: Install Playwright browsers
         run: |
-          # Playwright公式の依存関係インストールコマンドを使用
-          sudo npx playwright install-deps
+          # システム依存関係をインストール
+          sudo apt-get install -y \
+            libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+            libdrm2 libxkbcommon0 libatspi2.0-0 libxcomposite1 \
+            libxdamage1 libxfixes3 libxrandr2 libgbm1 libxcb1 \
+            libxss1 libgtk-3-0 libpango-1.0-0 libcairo2 libasound2 \
+            libglib2.0-0
           # Chromiumのみインストール
-          npx playwright install chromium
+          cd frontend && npx playwright install chromium
+          cd ..
       
       - name: Install wait-on
         run: npm install -g wait-on
@@ -77,6 +83,7 @@ jobs:
           export STRIPE_SECRET_KEY=sk_test_dummy
           export STRIPE_WEBHOOK_SECRET=whsec_test_dummy
           export DISABLE_RATE_LIMIT=true
+          export FRONTEND_URL=http://localhost:3000
           
           # MongoDBが起動しているか確認
           echo "=== Checking MongoDB ==="
@@ -98,10 +105,20 @@ jobs:
           
           # APIエンドポイントの動作確認
           echo "=== Testing API endpoints ==="
+          
+          # データベースのユーザーを確認
+          cd backend && node -e "const {MongoClient} = require('mongodb'); (async()=>{const client = new MongoClient('mongodb://localhost:27017/test'); await client.connect(); const users = await client.db().collection('users').find({}).toArray(); console.log('Users in DB:', users); await client.close();})()"
+          cd ..
+          
+          # ログインAPIをテスト
           curl -X POST http://localhost:5000/api/v1/auth/login \
             -H "Content-Type: application/json" \
             -d '{"email":"global-test@example.com","password":"Test123!"}' \
-            || echo "Login endpoint test failed"
+            -v || echo "Login endpoint test failed"
+          
+          # バックエンドのログを確認
+          echo "=== Backend logs (last 50 lines) ==="
+          cat backend/backend.log | tail -50 || echo "No backend log found"
           
           # フロントエンドサーバーを起動
           cd ${{ github.workspace }}/frontend && npm run start > frontend.log 2>&1 &
