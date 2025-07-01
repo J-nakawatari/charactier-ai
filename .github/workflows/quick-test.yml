@@ -56,9 +56,11 @@ jobs:
         run: |
           # システムパッケージを更新
           sudo apt-get update
+          # 必要な依存関係を明示的にインストール
+          sudo apt-get install -y libnspr4 libnss3 libasound2t64 libgbm1
           # Playwrightをインストール
           cd ${{ github.workspace }}
-          npx playwright install --with-deps chromium firefox webkit
+          npx playwright install --with-deps chromium
       
       - name: Build frontend
         run: |
