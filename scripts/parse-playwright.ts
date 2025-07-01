@@ -97,7 +97,11 @@ try {
     markdown += '|------|------------|---------|-------|\n';
     
     failures.forEach(failure => {
-      markdown += `| ${failure.file} | ${failure.title} | ${failure.browser} | ${failure.error.replace(/\|/g, '\\|')} |\n`;
+      // Escape both pipe characters and backslashes for proper Markdown table rendering
+      const escapedError = failure.error
+        .replace(/\\/g, '\\\\')  // Escape backslashes first
+        .replace(/\|/g, '\\|');  // Then escape pipe characters
+      markdown += `| ${failure.file} | ${failure.title} | ${failure.browser} | ${escapedError} |\n`;
     });
   }
 
