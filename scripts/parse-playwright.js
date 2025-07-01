@@ -1,5 +1,6 @@
-const { readFileSync, writeFileSync, mkdirSync, existsSync } = require('fs');
+const { readFileSync, mkdirSync, existsSync } = require('fs');
 const { dirname } = require('path');
+const { writeUtf8 } = require('./_shared/fs');
 
 const inputPath = 'test-results/results.json';
 const outputPath = 'coverage/failures.md';
@@ -100,7 +101,7 @@ try {
     });
   }
 
-  writeFileSync(outputPath, markdown);
+  writeUtf8(outputPath, markdown);
   console.log(`✅ Generated ${outputPath} with ${failures.length} failure(s)`);
 
 } catch (error) {

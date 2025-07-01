@@ -1,24 +1,2 @@
-# Gitleaksチェック（インストールされている場合のみ）
-if command -v gitleaks >/dev/null 2>&1; then
-  echo "🔍 機密情報チェックを実行中..."
-  gitleaks detect --source . -v
-  if [ $? -ne 0 ]; then
-    echo "❌ 機密情報が検出されました！"
-    echo "詳細は上記のログを確認してください。"
-    exit 1
-  fi
-  echo "✅ 機密情報チェック完了"
-else
-  echo "🔍 機密情報チェックを実行中..."
-  echo "❌ gitleaksがインストールされていません"
-  echo "📦 インストール方法:"
-  echo ""
-  echo "  macOS:    brew install gitleaks"
-  echo "  Ubuntu:   sudo apt install gitleaks"
-  echo "  Windows:  scoop install gitleaks"
-  echo ""
-  echo "または https://github.com/gitleaks/gitleaks/releases からダウンロード"
-  echo ""
-  echo "⚠️  一時的にスキップするには: git commit --no-verify"
-  exit 1
-fi
+npm run check:encoding
+npm run lint-staged

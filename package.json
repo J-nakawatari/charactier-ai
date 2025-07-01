@@ -14,6 +14,7 @@
     "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
     "husky": "^9.1.7",
+    "lint-staged": "^16.1.2",
     "tar": "^7.4.3",
     "ts-node": "^10.9.2",
     "tsx": "^4.7.1",
@@ -29,7 +30,7 @@
     "check-user-purchases": "cd backend && npx ts-node src/scripts/check-user-purchases.ts",
     "reset-rate-limit": "cd backend && npx ts-node src/scripts/reset-rate-limit.ts",
     "failures:md": "node scripts/parse-playwright.js",
-    "prepare": "husky || true",
+    "prepare": "husky",
     "test:e2e": "npx cross-env DISABLE_RATE_LIMIT=true playwright test",
     "test:e2e:admin": "npx cross-env DISABLE_RATE_LIMIT=true playwright test tests/e2e/admin",
     "test:e2e:stable": "npx cross-env DISABLE_RATE_LIMIT=true playwright test --config=playwright.config.stable.ts",
@@ -45,7 +46,14 @@
     "test:smoke": "playwright test --config=playwright.config.production.ts",
     "monitor:production": "npx tsx scripts/production-monitor.ts",
     "ci": "npm run gen:specs && npm run test:e2e && npm run coverage:report",
-    "recode": "git ls-files | grep -E '\\.(ts|tsx|js|md|yml)$' | xargs -r dos2unix 2>/dev/null || echo 'dos2unix not installed, skipping...'"
+    "recode": "git ls-files | grep -E '\\.(ts|tsx|js|md|yml)$' | xargs -r dos2unix 2>/dev/null || echo 'dos2unix not installed, skipping...'",
+    "check:encoding": "npx tsx scripts/check-encoding.ts",
+    "lint-staged": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,md,yml,yaml,json}": [
+      "npm run check:encoding"
+    ]
   },
   "packageManager": "pnpm@10.12.1+sha512.f0dda8580f0ee9481c5c79a1d927b9164f2c478e90992ad268bbb2465a736984391d6333d2c327913578b2804af33474ca554ba29c04a8b13060a717675ae3ac"
 }

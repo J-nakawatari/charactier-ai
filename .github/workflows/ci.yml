@@ -57,6 +57,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Setup locale
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y locales
+          sudo locale-gen ja_JP.UTF-8
+          echo "LANG=ja_JP.UTF-8" >> $GITHUB_ENV
+          echo "LC_ALL=ja_JP.UTF-8" >> $GITHUB_ENV
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
