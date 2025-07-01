@@ -15,10 +15,19 @@ on:
           - firefox
           - webkit
   
+  # プッシュ時の自動実行（すべてのブランチ）
+  push:
+    branches: [ "**" ]
+  
   # プルリクエスト時は自動実行（オプション）
   pull_request:
     types: [opened, synchronize]
     branches: [main]
+
+# 同時実行の制御
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -56,6 +65,8 @@ jobs:
       #     --health-retries 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       
       - name: Setup locale
         run: |
@@ -88,7 +99,14 @@ jobs:
           cd backend
           pnpm install --no-frozen-lockfile
         
+      - name: Install system deps for Playwright
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3 libatk-bridge2.0-0 libgtk-3-0
+        
       - name: Install Playwright browsers
+        env:
+          DEBUG: pw:browser*
         run: |
           # Playwright公式の依存関係インストールコマンドを使用
           sudo npx playwright install-deps
