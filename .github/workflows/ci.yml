@@ -90,13 +90,10 @@ jobs:
         
       - name: Install Playwright browsers
         run: |
-          # システムパッケージを更新
-          sudo apt-get update
-          # 必要な依存関係を明示的にインストール
-          sudo apt-get install -y libnspr4 libnss3 libasound2t64 libgbm1
-          # Playwrightをインストール
-          cd ${{ github.workspace }}
-          npx playwright install --with-deps chromium
+          # Playwright公式の依存関係インストールコマンドを使用
+          sudo npx playwright install-deps
+          # すべてのブラウザをインストール
+          npx playwright install
       
       - name: Build frontend
         run: |
