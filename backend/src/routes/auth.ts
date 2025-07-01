@@ -1,7 +1,6 @@
 import type { AuthRequest } from '../types/express';
 import { generateEmailVerificationHTML } from '../utils/emailTemplates';
 import { Router, Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import escapeHtml from 'escape-html';
 import { UserModel } from '../models/UserModel';
@@ -952,12 +951,24 @@ router.post('/admin/login', authRateLimit, async (req: Request, res: Response): 
       return;
     }
 
-    // パスワード検証
-    const isValidPassword = await bcrypt.compare(password, admin.password);
+    // パスワード検証（Argon2id/bcrypt両対応）
+    const isValidPassword = await verifyPassword(password, admin.password);
     if (!isValidPassword) {
       log.warn('Admin login attempt with invalid password', { email, adminId: admin._id.toString() });
       sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
       return;
+    }
+    
+    // パスワードハッシュの移行が必要な場合
+    if (needsRehash(admin.password)) {
+      try {
+        const newHash = await hashPassword(password);
+        await AdminModel.findByIdAndUpdate(admin._id, { $set: { password: newHash } });
+        log.info('Admin password hash migrated to Argon2id', { adminId: admin._id.toString() });
+      } catch (migrationError) {
+        log.error('Admin password hash migration failed', migrationError);
+        // 移行に失敗してもログインは続行
+      }
     }
 
     // ログイン日時を更新
@@ -1115,9 +1126,8 @@ router.post('/create-admin', authRateLimit, async (req: Request, res: Response):
       return;
     }
 
-    // パスワードをハッシュ化
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
+    // パスワードをハッシュ化（Argon2id）
+    const hashedPassword = await hashPassword(adminPassword);
 
     // 管理者を作成
     const adminUser = new AdminModel({

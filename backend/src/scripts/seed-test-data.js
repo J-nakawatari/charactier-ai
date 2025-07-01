@@ -35,11 +35,12 @@ async function seedTestData() {
       { 
         $set: { 
           email: 'global-test@example.com',
-          passwordHash: testUserPassword,
+          password: testUserPassword,  // passwordHash → password に修正
           name: 'グローバルテストユーザー',
-          isVerified: true,
-          emailVerified: true,
-          tokens: 10000,
+          emailVerified: true,  // isVerified は削除（存在しない）
+          tokenBalance: 10000,  // tokens → tokenBalance に修正
+          isActive: true,       // アクティブフラグを追加
+          isSetupComplete: true, // セットアップ完了フラグを追加
           createdAt: new Date(),
           updatedAt: new Date()
         } 
@@ -48,17 +49,16 @@ async function seedTestData() {
     );
     console.log('✅ Created global test user');
     
-    // 管理者ユーザーを作成
-    await db.collection('users').updateOne(
+    // 管理者ユーザーを作成（adminsコレクションに作成）
+    await db.collection('admins').updateOne(
       { email: 'admin@example.com' },
       { 
         $set: { 
           email: 'admin@example.com',
-          passwordHash: adminPassword,
+          password: adminPassword,  // passwordHash → password に修正
           name: 'テスト管理者',
-          isAdmin: true,
-          isVerified: true,
-          emailVerified: true,
+          role: 'super_admin',      // 管理者の役割を追加
+          isActive: true,
           createdAt: new Date(),
           updatedAt: new Date()
         } 
