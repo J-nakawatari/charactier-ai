@@ -765,10 +765,16 @@ router.put('/reorder',
 
     log.info('Reorder request received', {
       adminId: req.admin._id,
-      body: req.body,
+      headers: {
+        'content-type': req.headers['content-type'],
+        'content-length': req.headers['content-length']
+      },
+      bodyKeys: Object.keys(req.body),
+      body: JSON.stringify(req.body),
       characterIds: characterIds,
       characterIdsType: typeof characterIds,
-      isArray: Array.isArray(characterIds)
+      isArray: Array.isArray(characterIds),
+      firstCharacterId: characterIds ? characterIds[0] : undefined
     });
 
     if (!Array.isArray(characterIds) || characterIds.length === 0) {
@@ -789,11 +795,17 @@ router.put('/reorder',
       
       if (!id || !ObjectId.isValid(id)) {
         log.error('Invalid ID detected', {
+          index: i,
           id: id,
           type: typeof id,
-          stringified: JSON.stringify(id)
+          stringified: JSON.stringify(id),
+          idLength: id ? id.length : 0,
+          isNull: id === null,
+          isUndefined: id === undefined,
+          isEmpty: id === '',
+          characterIds: JSON.stringify(characterIds)
         });
-        sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, '無効なIDが指定されました');
+        sendErrorResponse(res, 400, ClientErrorCode.INVALID_INPUT, `無効なIDが指定されました: インデックス ${i} のID "${id}" は無効です`);
         return;
       }
     }
