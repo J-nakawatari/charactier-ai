@@ -29,7 +29,7 @@ const getBaseCookieOptions = (isProduction: boolean): CookieOptions => ({
 // アクセストークン用Cookie設定（短時間）
 export const getAccessTokenCookieOptions = (isProduction: boolean = process.env.NODE_ENV === 'production'): CookieOptions => ({
   ...getBaseCookieOptions(isProduction),
-  maxAge: 15 * 60 * 1000, // 15分（短縮）
+  maxAge: 25 * 60 * 1000, // 25分（トークン15分＋更新バッファ10分）
 });
 
 // リフレッシュトークン用Cookie設定
