@@ -414,6 +414,56 @@ export default function AdminChatDiagnosticsDetailPage({
                 </div>
               </div>
 
+              {/* 最新のトークン使用情報 */}
+              {diagnostics.tokenUsage && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <Cpu className="w-5 h-5 mr-2" />
+                    最新のトークン使用情報
+                  </h2>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">最終使用日時</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {formatDate(diagnostics.tokenUsage.lastUsed)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">トークン使用量</span>
+                      <span className="font-medium text-gray-900">
+                        {formatNumber(diagnostics.tokenUsage.tokensUsed)} トークン
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">AIモデル</span>
+                      <span className="font-medium text-gray-900">{diagnostics.tokenUsage.aiModel}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">キャッシュヒット</span>
+                      <div className="flex items-center space-x-2">
+                        {diagnostics.tokenUsage.cacheHit ? (
+                          <>
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <span className="text-green-700">ヒット</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-4 h-4 text-red-500" />
+                            <span className="text-red-700">ミス</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">API使用コスト</span>
+                      <span className="font-medium text-gray-900">
+                        ${diagnostics.tokenUsage.apiCost.toFixed(4)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* システム状態 */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">

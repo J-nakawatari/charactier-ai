@@ -304,39 +304,87 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
     
     const chat = await ChatModel.findOne(chatQuery).sort({ createdAt: -1 });
     
-    // キャッシュ状態を確認
-    const cacheKey = userId 
-      ? `prompt:${userId}:${characterId}` 
-      : `prompt:*:${characterId}`;
-    
+    // キャッシュ状態を確認（MongoDBとRedis両方チェック）
     let cacheStatus = {
       enabled: true,
       exists: false,
       data: null as any,
-      count: 0
+      count: 0,
+      mongoCache: null as any,
+      redisCache: null as any
     };
 
     try {
+      // 1. MongoDBキャッシュをチェック（優先）
+      if (userId) {
+        // ユーザーの親密度レベルを取得
+        const user = await UserModel.findById(userId);
+        let userAffinityLevel = 0;
+        if (user) {
+          const affinity = user.affinities?.find(
+            (aff: any) => aff.character?.toString() === characterId
+          );
+          userAffinityLevel = affinity?.level || 0;
+        }
+        
+        // キャッシュ検索（親密度レベル±5で検索）
+        const affinityRange = 5;
+        const cachedPrompts = await CharacterPromptCache.find({
+          userId: userId,
+          characterId: characterId,
+          'promptConfig.affinityLevel': {
+            $gte: Math.max(0, userAffinityLevel - affinityRange),
+            $lte: Math.min(100, userAffinityLevel + affinityRange)
+          },
+          ttl: { $gt: new Date() } // TTL未期限切れ
+        }).sort({ 
+          useCount: -1, // 使用回数順
+          lastUsed: -1  // 最終使用日順
+        }).limit(1);
+        
+        const cachedPrompt = cachedPrompts[0];
+        if (cachedPrompt) {
+          cacheStatus.exists = true;
+          cacheStatus.mongoCache = {
+            useCount: cachedPrompt.useCount || 0,
+            lastUsed: cachedPrompt.lastUsed,
+            ttl: cachedPrompt.ttl,
+            affinityLevel: cachedPrompt.promptConfig?.affinityLevel || userAffinityLevel,
+            promptLength: cachedPrompt.systemPrompt?.length || 0,
+            languageCode: cachedPrompt.promptConfig?.languageCode || 'ja'
+          };
+          cacheStatus.data = cacheStatus.mongoCache;
+        }
+      }
+      
+      // 全体のMongoDBキャッシュ数を取得
+      cacheStatus.count = await CharacterPromptCache.countDocuments({
+        characterId: characterId,
+        ttl: { $gt: new Date() }
+      });
+      
+      // 2. Redisキャッシュもチェック（フォールバック）
       const redisClient = await getRedisClient();
       if (redisClient) {
         if (userId) {
+          const cacheKey = `prompt:${userId}:${characterId}`;
           const cachedPrompt = await redisClient.get(cacheKey);
           if (cachedPrompt) {
             const parsed = JSON.parse(cachedPrompt);
-            cacheStatus.exists = true;
-            cacheStatus.data = {
+            cacheStatus.redisCache = {
               useCount: parsed.useCount || 0,
               lastUsed: parsed.lastUsed || 'N/A',
               ttl: await redisClient.ttl(cacheKey),
               affinityLevel: parsed.affinityLevel || 0,
               promptLength: parsed.prompt?.length || 0
             };
+            // MongoDBキャッシュがない場合はRedisを使用
+            if (!cacheStatus.exists) {
+              cacheStatus.exists = true;
+              cacheStatus.data = cacheStatus.redisCache;
+            }
           }
         }
-        
-        // 全体のキャッシュ数を取得
-        const keys = await redisClient.keys(`prompt:*:${characterId}`);
-        cacheStatus.count = keys.length;
       }
     } catch (cacheError) {
       log.warn('Cache check failed', cacheError);
