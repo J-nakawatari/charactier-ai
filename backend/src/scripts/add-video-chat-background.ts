@@ -3,13 +3,35 @@ import { CharacterModel } from '../models/CharacterModel';
 import * as dotenv from 'dotenv';
 import path from 'path';
 
-// .envファイルを読み込む
-dotenv.config({ path: path.join(__dirname, '../../../.env') });
+// .envファイルを読み込む（複数の場所を試す）
+const envPaths = [
+  path.join(__dirname, '../../.env'),  // backend/.env
+  path.join(__dirname, '../../../.env'),  // プロジェクトルート
+  path.join(process.cwd(), '.env'),  // 現在のディレクトリ
+];
+
+let envLoaded = false;
+for (const envPath of envPaths) {
+  const result = dotenv.config({ path: envPath });
+  if (!result.error) {
+    console.log(`✅ .envファイルを読み込みました: ${envPath}`);
+    envLoaded = true;
+    break;
+  }
+}
+
+if (!envLoaded) {
+  console.log('⚠️  .envファイルが見つかりません。環境変数を使用します。');
+}
 
 async function addVideoChatBackgroundField() {
   try {
+    // MongoDB URI確認
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/charactier-ai';
+    console.log('🔍 MongoDB URI:', mongoUri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@')); // パスワードを隠す
+    
     // MongoDB接続
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/charactier-ai');
+    await mongoose.connect(mongoUri);
     console.log('✅ MongoDBに接続しました');
 
     // すべてのキャラクターを取得
