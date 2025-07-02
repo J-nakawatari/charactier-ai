@@ -44,6 +44,11 @@ export default function AdminLoginPage() {
       // 管理者情報のみlocalStorageに保存
       localStorage.setItem('adminUser', JSON.stringify(data.user));
       
+      // Feature Flagsを保存（adminTokenRefresh.tsで使用）
+      if (data.featureFlags) {
+        localStorage.setItem('featureFlags', JSON.stringify(data.featureFlags));
+      }
+      
       // 従来方式の場合はトークンもlocalStorageに保存
       if (data.tokens) {
         localStorage.setItem('adminAccessToken', data.tokens.accessToken);

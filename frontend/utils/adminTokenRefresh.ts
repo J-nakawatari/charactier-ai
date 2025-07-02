@@ -1,5 +1,6 @@
 /**
  * 管理者用トークン自動リフレッシュユーティリティ
+ * HttpOnlyクッキー対応版
  */
 
 import { API_BASE_URL } from '@/lib/api-config';
@@ -15,6 +16,9 @@ interface JWTPayload {
 // リフレッシュ状態を管理
 let refreshTimer: NodeJS.Timeout | null = null;
 let isRefreshing = false;
+
+// 最後のリフレッシュ時刻を記録
+let lastRefreshTime = 0;
 
 /**
  * JWTトークンをデコード（署名検証なし）
@@ -46,12 +50,34 @@ function getTokenExpirationTime(token: string): number | null {
 }
 
 /**
- * HttpOnlyクッキーからアクセストークンを取得
- * 注意: HttpOnlyクッキーはJavaScriptからアクセスできないため、
- * この関数は通常のクッキーまたはlocalStorageからトークンを取得
+ * HttpOnlyクッキーモードかどうかを判定
+ */
+function isHttpOnlyCookieMode(): boolean {
+  // Feature Flagの状態をlocalStorageから取得（初回ログイン時に保存される想定）
+  const featureFlags = localStorage.getItem('featureFlags');
+  if (featureFlags) {
+    try {
+      const flags = JSON.parse(featureFlags);
+      return flags.SECURE_COOKIE_AUTH === true;
+    } catch {
+      // パースエラーの場合はデフォルト値を使用
+    }
+  }
+  // デフォルトはfalse（従来方式）
+  return false;
+}
+
+/**
+ * アクセストークンを取得（従来方式のみ）
+ * HttpOnlyクッキーモードでは null を返す
  */
 function getAdminAccessToken(): string | null {
-  // localStorageから取得（従来方式の場合）
+  if (isHttpOnlyCookieMode()) {
+    // HttpOnlyクッキーモードではJavaScriptからトークンを取得できない
+    return null;
+  }
+  
+  // 従来方式: localStorageから取得
   if (typeof window !== 'undefined') {
     return localStorage.getItem('adminAccessToken');
   }
@@ -87,6 +113,7 @@ export async function refreshAdminToken(): Promise<boolean> {
       }
       
       console.log('Admin token refreshed successfully');
+      lastRefreshTime = Date.now();
       return true;
     } else {
       console.error('Admin token refresh failed:', response.status);
@@ -159,12 +186,50 @@ function scheduleNextRefresh(token: string): void {
  * 管理者トークン自動リフレッシュを初期化
  */
 export function initAdminTokenRefresh(): void {
-  // HttpOnly Cookie方式の場合は、サーバー側でトークンの有効期限を管理
-  // ここでは従来方式（localStorage）の場合のみ処理
-  const token = getAdminAccessToken();
+  if (isHttpOnlyCookieMode()) {
+    // HttpOnlyクッキーモード: 定期的にリフレッシュを試みる
+    // アクセストークンは2時間有効なので、1時間45分ごとにリフレッシュ
+    scheduleHttpOnlyRefresh();
+  } else {
+    // 従来方式: トークンの有効期限を見てスケジューリング
+    const token = getAdminAccessToken();
+    if (token) {
+      scheduleNextRefresh(token);
+    }
+  }
+}
+
+/**
+ * HttpOnlyクッキーモード用の定期リフレッシュ
+ */
+function scheduleHttpOnlyRefresh(): void {
+  // 既存のタイマーをクリア
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
+  }
   
-  if (token) {
-    scheduleNextRefresh(token);
+  // 初回は即座にリフレッシュを試みる（ページリロード後など）
+  const now = Date.now();
+  const timeSinceLastRefresh = now - lastRefreshTime;
+  
+  // 最後のリフレッシュから30分以上経過していたら即座にリフレッシュ
+  if (timeSinceLastRefresh > 30 * 60 * 1000) {
+    refreshAdminToken().then((success) => {
+      if (success) {
+        lastRefreshTime = Date.now();
+        // 次回は1時間45分後
+        refreshTimer = setTimeout(() => {
+          scheduleHttpOnlyRefresh();
+        }, 105 * 60 * 1000); // 1時間45分
+      }
+    });
+  } else {
+    // 最近リフレッシュしていたら、次の定期リフレッシュまで待つ
+    const nextRefreshIn = Math.max(0, 105 * 60 * 1000 - timeSinceLastRefresh);
+    refreshTimer = setTimeout(() => {
+      scheduleHttpOnlyRefresh();
+    }, nextRefreshIn);
   }
 }
 

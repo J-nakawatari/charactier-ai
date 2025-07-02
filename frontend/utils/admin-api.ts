@@ -1,4 +1,5 @@
 import Cookies from 'js-cookie';
+import { adminFetch as adminFetchWithRefresh } from './adminTokenRefresh';
 
 interface AdminApiOptions extends RequestInit {
   // Additional options can be added here
@@ -7,8 +8,9 @@ interface AdminApiOptions extends RequestInit {
 /**
  * Admin API utility for making authenticated requests
  * Uses HttpOnly cookies for authentication instead of localStorage
+ * NOTE: この関数は adminTokenRefresh.ts の adminFetch を使用するようにエクスポートを変更
  */
-export async function adminFetch(endpoint: string, options: AdminApiOptions = {}) {
+async function adminFetchOld(endpoint: string, options: AdminApiOptions = {}) {
   // For production, use relative URLs that will be proxied by Next.js
   // This ensures cookies are sent properly
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
@@ -70,6 +72,9 @@ export async function adminFetch(endpoint: string, options: AdminApiOptions = {}
 
   return response;
 }
+
+// adminTokenRefresh.tsのadminFetchをエクスポート（自動リフレッシュ機能付き）
+export const adminFetch = adminFetchWithRefresh;
 
 /**
  * GET request helper

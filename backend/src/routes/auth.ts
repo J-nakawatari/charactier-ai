@@ -15,7 +15,7 @@ import log from '../utils/logger';
 import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
 import { hashPassword, verifyPassword, needsRehash, validatePasswordStrength } from '../services/passwordHash';
 import { getCookieConfig, getRefreshCookieConfig, getFeatureFlags } from '../config/featureFlags';
-import { generateCompactAccessToken, generateCompactRefreshToken } from '../utils/jwtUtils';
+import { generateCompactAccessToken, generateCompactRefreshToken, CompactTokenPayload } from '../utils/jwtUtils';
 import { 
   COOKIE_NAMES,
   getAccessTokenCookieOptions,
@@ -982,7 +982,7 @@ router.post('/admin/login', authRateLimit, async (req: Request, res: Response): 
     // コンパクトなJWTトークン生成（管理者専用）
     const adminId = admin._id as string;
     const accessToken = generateCompactAccessToken(adminId.toString(), 'admin', '2h');
-    const refreshToken = generateCompactRefreshToken(adminId.toString(), 'admin', '4h');
+    const refreshToken = generateCompactRefreshToken(adminId.toString(), 'admin', '7d');
     
     // Feature Flag取得
     const flags = getFeatureFlags();
@@ -1027,7 +1027,8 @@ router.post('/admin/login', authRateLimit, async (req: Request, res: Response): 
           email: admin.email,
           role: admin.role,
           isAdmin: true // フロントエンド互換性のため
-        }
+        },
+        featureFlags: flags // フロントエンドで認証方式を判定するため
       });
     } else {
       // 従来方式: トークンをレスポンスに含める
@@ -1043,7 +1044,8 @@ router.post('/admin/login', authRateLimit, async (req: Request, res: Response): 
           email: admin.email,
           role: admin.role,
           isAdmin: true // フロントエンド互換性のため
-        }
+        },
+        featureFlags: flags // フロントエンドで認証方式を判定するため
       });
     }
 
@@ -1191,12 +1193,12 @@ router.post('/admin/refresh', authRateLimit, async (req: Request, res: Response)
       return;
     }
 
-    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId: string };
+    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as CompactTokenPayload;
 
-    // 管理者として検索
-    const admin = await AdminModel.findById(decoded.userId);
+    // 管理者として検索（コンパクトトークンは'id'フィールドを使用）
+    const admin = await AdminModel.findById(decoded.id);
     if (!admin || !admin.isActive) {
-      log.warn('Admin token refresh failed - admin not found or inactive', { userId: decoded.userId });
+      log.warn('Admin token refresh failed - admin not found or inactive', { userId: decoded.id });
       sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);
       return;
     }
