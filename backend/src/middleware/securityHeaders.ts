@@ -52,7 +52,11 @@ export function configureSecurityHeaders(app: Express): void {
           "https://checkout.stripe.com"
         ],
         objectSrc: ["'none'"],
-        mediaSrc: ["'self'"],
+        mediaSrc: [
+          "'self'",
+          "blob:", // 動画プレビュー用のblob URLを許可
+          "data:"
+        ],
         childSrc: ["'self'"],
         formAction: ["'self'"],
         ...(process.env.NODE_ENV === 'production' && {
