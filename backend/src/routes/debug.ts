@@ -221,7 +221,188 @@ router.get('/affinity-details/:userId', generalRateLimit, async (req: Request, r
   }
 });
 
-// チャットシステム診断エンドポイント
+// 管理者用チャットシステム診断エンドポイント
+router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 管理者権限チェック
+    const isAdminPath = req.originalUrl?.includes('/admin/');
+    if (!isAdminPath || !req.admin) {
+      res.status(403).json({ 
+        error: 'Forbidden',
+        message: '管理者権限が必要です'
+      });
+      return;
+    }
+
+    const { characterId } = req.params;
+    const { userId } = req.query; // オプション：特定ユーザーの診断
+    
+    const character = await CharacterModel.findById(characterId);
+    if (!character) {
+      res.status(404).json({ error: 'Character not found' });
+      return;
+    }
+
+    // MongoDBとRedisの接続状態を確認
+    const isMongoConnected = mongoose.connection.readyState === 1;
+    
+    // ユーザーごとのチャット統計を取得
+    let users = [];
+    if (!userId) {
+      // 全ユーザーの統計を取得
+      const chatsWithUsers = await ChatModel.find({ characterId })
+        .populate('userId', 'name email')
+        .sort({ lastActivity: -1 })
+        .limit(50); // 最新50件まで
+        
+      users = await Promise.all(chatsWithUsers.map(async (chat) => {
+        const affinity = await AffinityModel.findOne({
+          userId: chat.userId._id,
+          characterId
+        });
+        
+        return {
+          userId: chat.userId._id,
+          userName: (chat.userId as any).name || 'Unknown',
+          userEmail: (chat.userId as any).email || 'Unknown',
+          affinityLevel: affinity?.level || 0,
+          lastInteraction: chat.lastActivity,
+          messageCount: chat.messages?.length || 0,
+          totalTokensUsed: chat.messages?.reduce((sum: number, msg: any) => 
+            sum + (msg.tokensUsed || 0), 0) || 0
+        };
+      }));
+    }
+
+    // 特定ユーザーまたは全体のチャット情報を取得
+    const chatQuery = userId ? { userId, characterId } : { characterId };
+    const chat = await ChatModel.findOne(chatQuery).sort({ createdAt: -1 });
+    
+    // キャッシュ状態を確認
+    const cacheKey = userId 
+      ? `prompt:${userId}:${characterId}` 
+      : `prompt:*:${characterId}`;
+    
+    let cacheStatus = {
+      enabled: true,
+      exists: false,
+      data: null as any,
+      count: 0
+    };
+
+    try {
+      const redisClient = await getRedisClient();
+      if (redisClient) {
+        if (userId) {
+          const cachedPrompt = await redisClient.get(cacheKey);
+          if (cachedPrompt) {
+            const parsed = JSON.parse(cachedPrompt);
+            cacheStatus.exists = true;
+            cacheStatus.data = {
+              useCount: parsed.useCount || 0,
+              lastUsed: parsed.lastUsed || 'N/A',
+              ttl: await redisClient.ttl(cacheKey),
+              affinityLevel: parsed.affinityLevel || 0,
+              promptLength: parsed.prompt?.length || 0
+            };
+          }
+        }
+        
+        // 全体のキャッシュ数を取得
+        const keys = await redisClient.keys(`prompt:*:${characterId}`);
+        cacheStatus.count = keys.length;
+      }
+    } catch (cacheError) {
+      log.warn('Cache check failed', cacheError);
+    }
+
+    // 最新のトークン使用情報を取得
+    const recentTokenUsageQuery = userId 
+      ? { userId, characterId } 
+      : { characterId };
+    const recentTokenUsage = await TokenUsageModel.findOne(recentTokenUsageQuery)
+      .sort({ createdAt: -1 });
+
+    // プロンプト情報を取得
+    const promptInfo = {
+      personalityPrompt: character.personalityPrompt || null,
+      characterInfo: {
+        age: character.age || 'N/A',
+        occupation: character.occupation || 'N/A',
+        personalityPreset: character.personalityPreset || 'default',
+        personalityTags: character.personalityTags || []
+      },
+      promptLength: {
+        personality: {
+          ja: character.personalityPrompt?.ja?.length || 0,
+          en: character.personalityPrompt?.en?.length || 0
+        }
+      }
+    };
+
+    res.json({
+      diagnostics: {
+        character: {
+          id: character._id,
+          name: character.name,
+          aiModel: character.aiModel || process.env.OPENAI_MODEL || 'gpt-4o-mini',
+          isActive: character.isActive || false,
+          updatedAt: character.updatedAt
+        },
+        chat: {
+          exists: !!chat,
+          messageCount: chat?.messages?.length || 0,
+          totalTokensUsed: chat?.messages?.reduce((sum: number, msg: any) => 
+            sum + (msg.tokensUsed || 0), 0) || 0,
+          lastActivity: chat?.lastActivity || 'N/A',
+          createdAt: chat?.createdAt || 'N/A',
+          recentMessages: chat?.messages?.slice(-5).map((msg: any) => ({
+            role: msg.role,
+            timestamp: msg.timestamp,
+            tokensUsed: msg.tokensUsed || 0,
+            contentPreview: msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : '')
+          })) || [],
+          conversationHistory: {
+            description: 'AI記憶システム（最新10メッセージ）',
+            sentToAI: chat?.messages?.slice(-10).map((msg: any) => ({
+              role: msg.role,
+              content: msg.content.length > 120 ? msg.content.substring(0, 120) + '...' : msg.content,
+              originalLength: msg.content.length,
+              timestamp: msg.timestamp
+            })) || [],
+            totalMessagesInDB: chat?.messages?.length || 0,
+            messagesUsedForContext: Math.min(10, chat?.messages?.length || 0),
+            contextWindowSize: '最大10メッセージ',
+            truncationLimit: '120文字/メッセージ'
+          }
+        },
+        cache: cacheStatus,
+        tokenUsage: recentTokenUsage ? {
+          lastUsed: recentTokenUsage.createdAt,
+          tokensUsed: recentTokenUsage.tokensUsed,
+          aiModel: recentTokenUsage.aiModel,
+          cacheHit: !!(recentTokenUsage as any).cacheHit,
+          apiCost: recentTokenUsage.apiCost
+        } : null,
+        prompt: promptInfo,
+        system: {
+          mongoConnected: isMongoConnected,
+          redisConnected: !!(await getRedisClient()),
+          currentModel: character.aiModel || process.env.OPENAI_MODEL || 'gpt-4o-mini'
+        },
+        users: users // 管理者用：全ユーザーリスト
+      }
+    });
+  } catch (error) {
+    log.error('Admin chat diagnostics error', error);
+    res.status(500).json({ 
+      error: 'Diagnostics failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// ユーザー用チャットシステム診断エンドポイント（既存）
 router.get('/chat-diagnostics/:characterId', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id || req.user?._id;
