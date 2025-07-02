@@ -10,7 +10,7 @@ interface AffinityBarProps {
   currentExp: number;
   nextLevelExp: number;
   themeColor: string;
-  mood?: 'excited' | 'melancholic' | 'happy' | 'sad' | 'angry' | 'neutral';
+  mood?: 'excited' | 'melancholic' | 'happy' | 'sad' | 'angry' | 'neutral' | 'shy';
   characterId?: string;
   onAffinityUpdate?: (newAffinity: { level: number; experience: number }) => void;
 }

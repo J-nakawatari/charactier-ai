@@ -35,7 +35,7 @@ interface Character {
   imageChatAvatar?: string;
   videoChatBackground?: string; // 3-5秒のループ動画
   // 🎭 その他のフィールド
-  currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
+  currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited' | 'neutral' | 'melancholic';
   themeColor: string;
   // 🤖 AIモデル情報
   aiModel?: string;
@@ -50,7 +50,7 @@ interface UserCharacterAffinity {
   currentExp: number;
   nextLevelExp: number;
   unlockedIllustrations: string[];
-  currentMood?: 'happy' | 'sad' | 'angry' | 'shy' | 'excited' | 'neutral';
+  currentMood?: 'happy' | 'sad' | 'angry' | 'shy' | 'excited' | 'neutral' | 'melancholic';
 }
 
 interface TokenStatus {
