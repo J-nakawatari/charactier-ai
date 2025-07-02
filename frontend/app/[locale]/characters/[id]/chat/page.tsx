@@ -381,6 +381,32 @@ export default function ChatPage() {
     loadChatData();
   }, [loadChatData]);
 
+  // 購入完了後の処理
+  useEffect(() => {
+    const handleFocus = () => {
+      // ページがフォーカスされた時（購入完了ページから戻ってきた時など）
+      const purchaseCompleted = localStorage.getItem('characterPurchaseCompleted');
+      const tokenPurchaseCompleted = localStorage.getItem('tokenPurchaseCompleted');
+      
+      if (purchaseCompleted || tokenPurchaseCompleted) {
+        console.log('購入完了を検出、データを再読み込みします');
+        loadChatData();
+        localStorage.removeItem('characterPurchaseCompleted');
+        localStorage.removeItem('tokenPurchaseCompleted');
+      }
+    };
+
+    // ページがフォーカスされた時のイベント
+    window.addEventListener('focus', handleFocus);
+    
+    // 初回チェック
+    handleFocus();
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [loadChatData]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-dvh">
