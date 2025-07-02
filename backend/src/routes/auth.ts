@@ -979,8 +979,8 @@ router.post('/admin/login', authRateLimit, async (req: Request, res: Response): 
 
     // コンパクトなJWTトークン生成（管理者専用）
     const adminId = admin._id as string;
-    const accessToken = generateCompactAccessToken(adminId.toString(), 'admin', '15m');
-    const refreshToken = generateCompactRefreshToken(adminId.toString(), 'admin', '7d');
+    const accessToken = generateCompactAccessToken(adminId.toString(), 'admin', '2h');
+    const refreshToken = generateCompactRefreshToken(adminId.toString(), 'admin', '4h');
     
     // Feature Flag取得
     const flags = getFeatureFlags();

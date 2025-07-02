@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Sidebar from '@/components/admin/Sidebar';
 import TopBar from '@/components/admin/TopBar';
 import CsrfTokenInitializer from '@/components/CsrfTokenInitializer';
+import { initAdminTokenRefresh, stopAdminTokenRefresh } from '@/utils/adminTokenRefresh';
 
 export default function AdminLayout({
   children,
@@ -40,6 +41,9 @@ export default function AdminLayout({
       }
       
       setIsAuthenticated(true);
+      
+      // 管理者トークン自動リフレッシュを初期化
+      initAdminTokenRefresh();
     } catch (error) {
       console.error('Admin auth error:', error);
       router.push('/admin/login');
@@ -47,6 +51,11 @@ export default function AdminLayout({
     }
     
     setIsLoading(false);
+    
+    // クリーンアップ: コンポーネントがアンマウントされたらリフレッシュを停止
+    return () => {
+      stopAdminTokenRefresh();
+    };
   }, [pathname, router, isLoginPage]);
 
   if (isLoginPage) {

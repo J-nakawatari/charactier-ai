@@ -43,6 +43,12 @@ export default function AdminLoginPage() {
       // HttpOnlyクッキーでトークンが自動的に設定される
       // 管理者情報のみlocalStorageに保存
       localStorage.setItem('adminUser', JSON.stringify(data.user));
+      
+      // 従来方式の場合はトークンもlocalStorageに保存
+      if (data.tokens) {
+        localStorage.setItem('adminAccessToken', data.tokens.accessToken);
+        localStorage.setItem('adminRefreshToken', data.tokens.refreshToken);
+      }
 
       // デバッグ: ログイン成功
       console.log('✅ 管理者ログイン成功');
