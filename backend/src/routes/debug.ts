@@ -382,8 +382,8 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
         
         // まず、TTLを無視して全キャッシュを確認（デバッグ用）
         const allCaches = await CharacterPromptCache.find({
-          userId: userId,
-          characterId: characterId
+          userId: { $eq: userId },
+          characterId: { $eq: characterId }
         }).limit(5);
         
         log.info('All caches for user/character (ignoring TTL)', {
@@ -402,8 +402,8 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
         // キャッシュ検索（親密度レベル±10で検索、範囲を広げる）
         const affinityRange = 10;
         const cachedPrompts = await CharacterPromptCache.find({
-          userId: userId,
-          characterId: characterId,
+          userId: { $eq: userId },
+          characterId: { $eq: characterId },
           'promptConfig.affinityLevel': {
             $gte: Math.max(0, userAffinityLevel - affinityRange),
             $lte: Math.min(100, userAffinityLevel + affinityRange)
@@ -439,7 +439,7 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
       } else {
         // ユーザーIDがない場合は、キャラクターの全キャッシュから最新のものを取得
         const cachedPrompts = await CharacterPromptCache.find({
-          characterId: characterId,
+          characterId: { $eq: characterId },
           ttl: { $gt: new Date() }
         }).sort({ 
           lastUsed: -1  // 最終使用日順
@@ -468,7 +468,7 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
       
       // 全体のMongoDBキャッシュ数を取得
       cacheStatus.count = await CharacterPromptCache.countDocuments({
-        characterId: characterId,
+        characterId: { $eq: characterId },
         ttl: { $gt: new Date() }
       });
       
@@ -631,8 +631,8 @@ router.get('/chat-diagnostics/:characterId', generalRateLimit, authenticateToken
       // キャッシュ検索（親密度レベル±5で検索）
       const affinityRange = 5; // API消費を抑えるため範囲を広めに設定
       const cachedPrompts = await CharacterPromptCache.find({
-        userId: userId,
-        characterId: characterId,
+        userId: { $eq: userId },
+        characterId: { $eq: characterId },
         'promptConfig.affinityLevel': {
           $gte: Math.max(0, userAffinityLevel - affinityRange),
           $lte: Math.min(100, userAffinityLevel + affinityRange)
@@ -657,7 +657,7 @@ router.get('/chat-diagnostics/:characterId', generalRateLimit, authenticateToken
           promptLength: cachedPrompt.systemPrompt?.length || 0
         } : null,
         count: await CharacterPromptCache.countDocuments({
-          characterId: characterId,
+          characterId: { $eq: characterId },
           ttl: { $gt: new Date() }
         })
       };
