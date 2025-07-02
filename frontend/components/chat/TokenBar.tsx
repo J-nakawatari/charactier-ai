@@ -34,7 +34,9 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
     try {
       isRefreshingRef.current = true;
       // APIを再度有効化
-      const response = await fetch('/api/v1/user/profile');
+      const response = await fetch('/api/v1/user/profile', {
+        headers: getAuthHeadersSync()
+      });
       if (response.ok) {
         const data = await response.json();
         // Handle different API response structures
@@ -73,21 +75,37 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
   
   // ページのフォーカス時に自動更新
   useEffect(() => {
-    // 購入完了イベントがあるため、フォーカスイベントは不要
-    
     const intervalHandler = () => {
       if (refreshTokenBalanceRef.current) {
         refreshTokenBalanceRef.current();
       }
     };
     
-    // フォーカス/表示イベントを削除（過剰なAPI呼び出しを防ぐ）
+    // ページがフォーカスされた時（購入完了ページから戻ってきた時など）
+    const handleFocus = () => {
+      if (refreshTokenBalanceRef.current) {
+        console.log('TokenBar: Page focused, refreshing token balance');
+        refreshTokenBalanceRef.current();
+      }
+    };
     
-    // 定期的な更新（180秒間隔に延長してサーバー負荷を軽減）
-    const interval = setInterval(intervalHandler, 180000);
+    // 購入完了イベント
+    const handlePurchaseComplete = () => {
+      if (refreshTokenBalanceRef.current) {
+        console.log('TokenBar: Purchase complete event, refreshing token balance');
+        refreshTokenBalanceRef.current();
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('purchaseComplete', handlePurchaseComplete);
+    
+    // 定期的な更新（60秒間隔）
+    const interval = setInterval(intervalHandler, 60000);
     
     return () => {
-      // イベントリスナーを削除
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('purchaseComplete', handlePurchaseComplete);
       clearInterval(interval);
     };
   }, []); // 依存関係を空にして無限ループを防止, 関数はrefで参照
@@ -224,12 +242,12 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
 
       {/* チャージボタン */}
       <button 
-        className={`flex items-center space-x-1 sm:space-x-2 p-[0.7rem] rounded-lg text-sm font-medium transition-colors ${
+        className={`flex items-center space-x-1 sm:space-x-2 p-[0.7rem] rounded-lg text-sm font-medium text-white transition-colors ${
           isCriticalBalance
-            ? 'bg-red-600 text-white hover:bg-red-700'
+            ? 'bg-red-600 hover:bg-red-700'
             : isLowBalance
-              ? 'bg-yellow-600 text-white hover:bg-yellow-700'
-              : 'bg-purple-600 text-white hover:bg-purple-700'
+              ? 'bg-yellow-600 hover:bg-yellow-700'
+              : 'bg-purple-600 hover:bg-purple-700'
         }`}
         onClick={() => {
           onPurchaseClick?.();

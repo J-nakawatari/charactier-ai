@@ -12,6 +12,7 @@ interface ChatInputProps {
   onSendMessage: (message: string) => void;
   onTyping?: () => void;
   onStopTyping?: () => void;
+  moodButtonClass?: string;
 }
 
 export const ChatInput = memo(function ChatInput({
@@ -21,7 +22,8 @@ export const ChatInput = memo(function ChatInput({
   isLoading,
   onSendMessage,
   onTyping,
-  onStopTyping
+  onStopTyping,
+  moodButtonClass
 }: ChatInputProps) {
   const t = useTranslations('chatLayout');
   const [inputMessage, setInputMessage] = useState('');
@@ -72,8 +74,7 @@ export const ChatInput = memo(function ChatInput({
         <button
           onClick={handleSendMessage}
           disabled={!inputMessage.trim() || isLoading}
-          className="px-4 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg min-h-[52px]"
-          style={{ backgroundColor: themeColor }}
+          className={`px-4 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg min-h-[52px] ${moodButtonClass || 'bg-purple-600 hover:bg-purple-700'}`}
         >
           {isLoading ? (
             <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>

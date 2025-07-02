@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 // 気分状態の型定義
-export type MoodState = 'excited' | 'melancholic' | 'happy' | 'sad' | 'angry' | 'neutral';
+export type MoodState = 'excited' | 'melancholic' | 'happy' | 'sad' | 'angry' | 'neutral' | 'shy';
 
 // 親密度ストアの状態
 interface AffinityState {
@@ -114,6 +114,13 @@ export const getMoodStyles = (mood: MoodState) => {
       borderColor: 'border-gray-300',
       icon: '😐',
       label: '普通'
+    },
+    shy: {
+      bgColor: 'bg-pink-100',
+      textColor: 'text-pink-800',
+      borderColor: 'border-pink-300',
+      icon: '😊',
+      label: '恥ずかしい'
     }
   };
   

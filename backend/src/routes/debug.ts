@@ -678,10 +678,11 @@ ${character.personalityTags?.map(tag => `- ${tag}`).join('\n') || '- 優しく�
     ];
 
     // プロンプトのトークン数を概算（1文字 ≈ 0.5トークン for Japanese）
+    const messageLength = String(messageStr).length;
     const estimatedTokens = {
       systemPrompt: Math.ceil(systemPrompt.length * 0.5),
-      userMessage: Math.ceil(messageStr.length * 0.5),
-      total: Math.ceil((systemPrompt.length + messageStr.length) * 0.5)
+      userMessage: Math.ceil(messageLength * 0.5),
+      total: Math.ceil((systemPrompt.length + messageLength) * 0.5)
     };
 
     res.json({
@@ -706,7 +707,7 @@ ${character.personalityTags?.map(tag => `- ${tag}`).join('\n') || '- 優しく�
           system: systemPrompt,
           systemLength: systemPrompt.length,
           messages: messages,
-          totalLength: systemPrompt.length + messageStr.length
+          totalLength: systemPrompt.length + messageLength
         },
         tokens: estimatedTokens,
         cost: {

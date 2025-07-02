@@ -157,6 +157,11 @@ function PurchaseSuccessContent() {
     if (purchaseData?.type === 'character') {
       localStorage.setItem('characterPurchaseCompleted', 'true');
       localStorage.setItem('purchasedCharacterId', purchaseData.characterId || '');
+    } else if (purchaseData?.type === 'token') {
+      // トークン購入の場合も購入完了フラグを設定
+      localStorage.setItem('tokenPurchaseCompleted', 'true');
+      // 購入完了イベントを発火
+      window.dispatchEvent(new Event('purchaseComplete'));
     }
     
     if (purchaseData?.type === 'character' && purchaseData.characterId) {

@@ -18,7 +18,7 @@ import { ConnectionIndicator } from './ConnectionIndicator';
 import AdvancedChatIndicators from './AdvancedChatIndicators';
 import { useRealtimeChat, useTypingDebounce, useChatConnectionStatus } from '@/hooks/useRealtimeChat';
 import { useAffinityStore } from '@/store/affinityStore';
-import { getMoodBackgroundGradient } from '@/utils/moodUtils';
+import { getMoodBackgroundGradient, getMoodUIColors } from '@/utils/moodUtils';
 import { getAuthHeadersSync } from '@/utils/auth';
 import { getSafeImageUrl } from '@/utils/imageUtils';
 import { validateMessageBeforeSend } from '@/utils/contentFilter';
@@ -35,7 +35,7 @@ interface Character {
   imageChatAvatar?: string;
   videoChatBackground?: string; // 3-5秒のループ動画
   // 🎭 その他のフィールド
-  currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
+  currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited' | 'neutral' | 'melancholic';
   themeColor: string;
   // 🤖 AIモデル情報
   aiModel?: string;
@@ -50,6 +50,7 @@ interface UserCharacterAffinity {
   currentExp: number;
   nextLevelExp: number;
   unlockedIllustrations: string[];
+  currentMood?: 'happy' | 'sad' | 'angry' | 'shy' | 'excited' | 'neutral' | 'melancholic';
 }
 
 interface TokenStatus {
@@ -108,8 +109,9 @@ export const ChatLayout = memo(function ChatLayout({
   const { updateAffinity } = useAffinityStore();
   
   // 🎨 感情に基づく背景スタイル
-  const currentMood = (affinity as any).currentMood || 'neutral';
+  const currentMood = affinity.currentMood || 'neutral';
   const moodGradient = useMemo(() => getMoodBackgroundGradient(currentMood), [currentMood]);
+  const moodUIColors = useMemo(() => getMoodUIColors(currentMood), [currentMood]);
   
   // デバッグ: 画像URLを確認
   useEffect(() => {
@@ -119,7 +121,14 @@ export const ChatLayout = memo(function ChatLayout({
       imageChatAvatar: character.imageChatAvatar,
       imageCharacterSelect: character.imageCharacterSelect
     });
-  }, [character]);
+    console.log('ChatLayout - Mood colors:', {
+      currentMood,
+      moodUIColors,
+      affinity,
+      backgroundClass: moodUIColors.background,
+      borderClass: moodUIColors.border
+    });
+  }, [character, currentMood, moodUIColors]);
   
   // リアルタイムチャット機能
   const realtimeChat = useRealtimeChat(character._id);
@@ -147,7 +156,7 @@ export const ChatLayout = memo(function ChatLayout({
     updateAffinity({
       level: affinity.level,
       experience: affinity.currentExp,
-      mood: (affinity as any).currentMood || 'neutral'
+      mood: affinity.currentMood || 'neutral'
     });
   }, [affinity, updateAffinity]);
 
@@ -258,19 +267,11 @@ export const ChatLayout = memo(function ChatLayout({
       
       {/* メインチャットエリア */}
       <div 
-        className="flex-1 flex flex-col relative lg:ml-64 transition-all duration-1000 ease-in-out"
-        style={{
-          backgroundImage: moodGradient.background,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
+        className="flex-1 flex flex-col relative lg:ml-64 transition-all duration-1000 ease-in-out bg-white"
       >
-        {/* 感情に基づく背景オーバーレイ */}
-        <div className={`absolute inset-0 backdrop-blur-sm transition-all duration-1000 ease-in-out ${moodGradient.overlay}`}></div>
       
       {/* ヘッダー */}
-      <header className="relative z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200/50 p-3 sm:p-4" style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top, 20px))' }}>
+      <header className={`relative z-10 ${moodUIColors.background} backdrop-blur-sm border-b ${moodUIColors.border} p-3 sm:p-4 transition-all duration-1000 ease-in-out`} style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top, 20px))' }}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between max-w-4xl mx-auto">
           {/* モバイル: TokenBarを上に配置、デスクトップ: 左側にキャラクター情報 */}
           <div className="sm:hidden mb-2">
@@ -339,14 +340,14 @@ export const ChatLayout = memo(function ChatLayout({
       </header>
 
       {/* 親密度バー */}
-      <div className={`relative z-10 bg-white/75 backdrop-blur-sm border-b border-gray-200/50 transition-all duration-1000 ease-in-out`}>
+      <div className={`relative z-10 ${moodUIColors.background.replace('/90', '/75')} backdrop-blur-sm border-b ${moodUIColors.border} transition-all duration-1000 ease-in-out`}>
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <AffinityBar 
             level={affinity.level}
             currentExp={affinity.currentExp}
             nextLevelExp={affinity.nextLevelExp}
             themeColor={character.themeColor}
-            mood={(affinity as any).currentMood || 'neutral'}
+            mood={affinity.currentMood || 'neutral'}
             characterId={character._id}
             onAffinityUpdate={(newAffinity) => {
               // Affinity update handled silently
@@ -483,7 +484,7 @@ export const ChatLayout = memo(function ChatLayout({
       </div>
 
       {/* 入力エリア - スティッキー/固定配置 */}
-      <div className="sticky bottom-0 z-20 bg-white/95 backdrop-blur-sm border-t border-gray-200/50 p-3 sm:p-4 pb-safe shadow-lg">
+      <div className={`sticky bottom-0 z-20 ${moodUIColors.background.replace('/90', '/95')} backdrop-blur-sm border-t ${moodUIColors.border} p-3 sm:p-4 pb-safe shadow-lg transition-all duration-1000 ease-in-out`}>
         <ChatInput
           characterName={character.name}
           themeColor={character.themeColor}
@@ -492,6 +493,7 @@ export const ChatLayout = memo(function ChatLayout({
           onSendMessage={handleSendMessage}
           onTyping={handleTyping}
           onStopTyping={stopTyping}
+          moodButtonClass={moodUIColors.button}
         />
       </div>
 
