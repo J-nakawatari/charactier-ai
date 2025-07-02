@@ -31,6 +31,7 @@ export default function ImageCropper({
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
+  const [minZoom, setMinZoom] = useState(1);
 
   // 画像タイプに応じて形状とアスペクト比を決定
   const getCropSettings = (type: string) => {
@@ -109,10 +110,44 @@ export default function ImageCropper({
             onRotationChange={setRotation}
             cropShape={cropSettings.shape}
             showGrid={cropSettings.shape === 'rect'}
+            restrictPosition={false}
+            minZoom={minZoom}
+            onMediaLoaded={(mediaSize) => {
+              // 画像が読み込まれた時に最適なズーム値を計算
+              const { width, height } = mediaSize;
+              const imageAspect = width / height;
+              const cropAspect = cropSettings.aspect || 1;
+              
+              // クロップエリアが画像内に収まるための最小ズーム値を計算
+              let calculatedMinZoom;
+              let initialZoom;
+              
+              if (imageAspect > cropAspect) {
+                // 画像が横長の場合：高さを基準に計算
+                calculatedMinZoom = cropAspect / imageAspect;
+                // 初期ズームは画像の高さ全体を使うように設定
+                initialZoom = 1;
+              } else {
+                // 画像が縦長の場合：幅を基準に計算
+                calculatedMinZoom = 1;
+                // 初期ズームは画像の幅全体を使うように設定
+                initialZoom = imageAspect / cropAspect;
+              }
+              
+              // 最小ズーム値を設定
+              setMinZoom(calculatedMinZoom);
+              
+              // 初期ズーム値を設定（クロップエリアが画像の60-80%程度を占めるように）
+              const zoomFactor = 1.2; // クロップエリアを大きくするための係数
+              setZoom(Math.max(1, initialZoom * zoomFactor));
+            }}
             style={{
               containerStyle: {
                 background: 'transparent',
               },
+              cropAreaStyle: {
+                border: '2px solid #fff',
+              }
             }}
           />
         </div>
@@ -126,7 +161,7 @@ export default function ImageCropper({
             </label>
             <input
               type="range"
-              min={1}
+              min={minZoom}
               max={3}
               step={0.1}
               value={zoom}
