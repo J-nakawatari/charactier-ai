@@ -604,6 +604,9 @@ router.get('/admin/prompt-preview/:characterId', generalRateLimit, authenticateT
     const { characterId } = req.params;
     const { userId, message = 'こんにちは！今日はどんな一日でしたか？' } = req.query;
 
+    // messageパラメータの型検証
+    const messageStr = Array.isArray(message) ? message[0] : String(message);
+
     // キャラクター情報を取得
     const character = await CharacterModel.findOne({ _id: { $eq: new mongoose.Types.ObjectId(characterId) } });
     if (!character) {
@@ -670,15 +673,15 @@ ${character.personalityTags?.map(tag => `- ${tag}`).join('\n') || '- 優しく�
       },
       {
         role: 'user',
-        content: message as string
+        content: messageStr
       }
     ];
 
     // プロンプトのトークン数を概算（1文字 ≈ 0.5トークン for Japanese）
     const estimatedTokens = {
       systemPrompt: Math.ceil(systemPrompt.length * 0.5),
-      userMessage: Math.ceil((message as string).length * 0.5),
-      total: Math.ceil((systemPrompt.length + (message as string).length) * 0.5)
+      userMessage: Math.ceil(messageStr.length * 0.5),
+      total: Math.ceil((systemPrompt.length + messageStr.length) * 0.5)
     };
 
     res.json({
@@ -703,7 +706,7 @@ ${character.personalityTags?.map(tag => `- ${tag}`).join('\n') || '- 優しく�
           system: systemPrompt,
           systemLength: systemPrompt.length,
           messages: messages,
-          totalLength: systemPrompt.length + (message as string).length
+          totalLength: systemPrompt.length + messageStr.length
         },
         tokens: estimatedTokens,
         cost: {

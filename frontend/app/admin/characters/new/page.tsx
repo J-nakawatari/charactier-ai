@@ -432,11 +432,15 @@ export default function CharacterNewPage() {
       const video = document.createElement('video');
       video.preload = 'metadata';
       
+      // URLオブジェクトを安全に作成
+      const videoUrl = URL.createObjectURL(file);
+      
       video.onloadedmetadata = () => {
         const duration = video.duration;
         if (duration < 3 || duration > 5) {
           error('動画エラー', '動画は3秒から5秒の間にしてください（現在: ' + duration.toFixed(1) + '秒）');
           e.target.value = '';
+          URL.revokeObjectURL(videoUrl); // メモリリークを防ぐ
           return;
         }
 
@@ -447,9 +451,15 @@ export default function CharacterNewPage() {
           videoChatBackgroundUrl: URL.createObjectURL(file)
         }));
         success('動画設定', '動画が設定されました');
+        URL.revokeObjectURL(videoUrl); // 元のURLを解放
       };
 
-      video.src = URL.createObjectURL(file);
+      video.onerror = () => {
+        error('動画エラー', '動画ファイルの読み込みに失敗しました');
+        URL.revokeObjectURL(videoUrl);
+      };
+
+      video.src = videoUrl;
     }
     e.target.value = '';
   };
