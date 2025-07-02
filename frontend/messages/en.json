@@ -240,7 +240,7 @@
       },
       "article12": {
         "title": "Article 12 (Changes to Terms)",
-        "content": "These Terms may be revised as necessary. Use after revision constitutes agreement to the new terms."
+        "content": "These Terms may be revised as necessary. We will notify changes on this site at least 30 days before the effective date. Use after revision constitutes agreement to the new terms."
       },
       "article13": {
         "title": "Article 13 (Governing Law and Jurisdiction)",
@@ -383,7 +383,7 @@
       },
       "section4": {
         "title": "4. Use of Cookies, etc.",
-        "content": "This site uses cookies for session management and behavior analysis. You can disable cookies in your browser, but some features may be limited.",
+        "content": "This site uses cookies for session management and behavior analysis. You can disable cookies in your browser, but some features may be limited. Analytics cookies can be rejected at any time from the 'Cookie Settings' banner at the bottom of the screen.",
         "description": "Personal information collected will not be provided to third parties except in the following cases:",
         "item1": "When user consent is obtained",
         "item2": "When required by law",
@@ -391,10 +391,10 @@
       },
       "section5": {
         "title": "5. Security Management Measures",
-        "content": "AES-256-GCM encryption for sensitive data, WAF/rate limiting, access control management, etc.",
-        "item1": "Communications are encrypted with TLS",
-        "item2": "Important data is managed with minimal access permissions",
-        "item3": "Log audits based on internal policies"
+        "content": "",
+        "item1": "Organizational security: Minimization of access rights, bi-annual log audits",
+        "item2": "Technical security: DB encryption with AES-256-GCM, WAF and rate limiting operations",
+        "item3": "Physical security: Cloud data center access control, geographically redundant backups"
       },
       "section6": {
         "title": "6. Requests for Disclosure, Correction, or Deletion",
@@ -403,7 +403,7 @@
       },
       "section7": {
         "title": "7. GDPR Additional Provisions",
-        "content": "EU users can request data portability and processing suspension. They have the right to file complaints with supervisory authorities."
+        "content": "We process personal data based on contract performance (GDPR Art.6(1)(b)) and legitimate interests (Art.6(1)(f)) as legal grounds. EU users can request data portability and processing suspension. They have the right to file complaints with supervisory authorities."
       },
       "section8": {
         "title": "8. Contact Information",
@@ -412,12 +412,6 @@
       "section9": {
         "title": "9. Retention Period",
         "content": "Personal information collected will be deleted or anonymized within (a) 30 days after user withdrawal, and chat history within 90 days after last access. Unless otherwise required by law, data will not be retained for more than 5 years."
-      },
-      "section10": {
-        "title": "10. Security Management Measures",
-        "item1": "Organizational security: Minimization of access rights, bi-annual log audits",
-        "item2": "Technical security: DB encryption with AES-256-GCM, WAF and rate limiting operations",
-        "item3": "Physical security: Cloud data center access control, geographically redundant backups"
       },
       "section11": {
         "title": "11. Additional Rights under GDPR",
@@ -1049,7 +1043,7 @@
         },
         "environment": {
           "label": "Operating Environment",
-          "content": "Latest Google Chrome/Safari/Edge"
+          "content": "Latest Google Chrome/Safari/Edge and standard browsers on iOS 17 / Android 13 or later"
         },
         "specialConditions": {
           "label": "Special Sales Conditions",
