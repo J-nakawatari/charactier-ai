@@ -16,7 +16,7 @@ interface Character {
   description: string; // すでに多言語処理済み文字列
   imageChatAvatar?: string;
   imageChatBackground?: string;
-  currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
+  currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited' | 'neutral' | 'melancholic';
   themeColor: string;
 }
 

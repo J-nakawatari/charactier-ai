@@ -18,7 +18,7 @@ interface Character {
   imageChatBackground?: string;
   imageChatAvatar?: string;
   // 🎭 その他のフィールド
-  currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
+  currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited' | 'neutral' | 'melancholic';
   themeColor: string;
 }
 
