@@ -13,6 +13,7 @@ interface AffinityBarProps {
   mood?: 'excited' | 'melancholic' | 'happy' | 'sad' | 'angry' | 'neutral';
   characterId?: string;
   onAffinityUpdate?: (newAffinity: { level: number; experience: number }) => void;
+  moodProgressBarClass?: string;
 }
 
 export function AffinityBar({ 
@@ -22,7 +23,8 @@ export function AffinityBar({
   themeColor, 
   mood = 'neutral',
   characterId,
-  onAffinityUpdate
+  onAffinityUpdate,
+  moodProgressBarClass
 }: AffinityBarProps) {
   const t = useTranslations('affinity');
   const moodT = useTranslations('moods');
@@ -138,7 +140,8 @@ export function AffinityBar({
           className={`sm:hidden w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm transition-all duration-500 ${
             isLevelingUp ? 'animate-bounce scale-110 shadow-lg' : ''
           }`}
-          style={{ backgroundColor: themeColor }}
+          style={{ backgroundColor: moodProgressBarClass ? undefined : themeColor }}
+          className={moodProgressBarClass ? `${moodProgressBarClass} text-white` : ''}
         >
           {Math.floor(level)}
         </div>
@@ -171,9 +174,10 @@ export function AffinityBar({
             className={`absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out ${
               isExpGaining ? 'shadow-lg shadow-blue-300/50' : ''
             }`}
+            className={moodProgressBarClass ? moodProgressBarClass : ''}
             style={{ 
               width: `${expPercentage}%`,
-              backgroundColor: themeColor 
+              backgroundColor: moodProgressBarClass ? undefined : themeColor 
             }}
           >
             {/* キラキラエフェクト */}
