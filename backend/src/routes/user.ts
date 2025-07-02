@@ -107,10 +107,19 @@ router.get('/dashboard', generalRateLimit, authenticateToken, async (req: AuthRe
     }).select('name imageChatAvatar purchasePrice');
 
     // 最近のチャット取得（最新5件）
-    const recentChats = await ChatModel.find({ userId })
-      .sort({ lastActivityAt: -1 })
-      .limit(5)
-      .populate('characterId', 'name imageChatAvatar');
+    let recentChats = [];
+    try {
+      recentChats = await ChatModel.find({ userId })
+        .sort({ lastActivityAt: -1 })
+        .limit(5)
+        .populate('characterId', 'name imageChatAvatar');
+      
+      // populateが失敗したチャットをフィルタリング
+      recentChats = recentChats.filter(chat => chat && chat.characterId);
+    } catch (chatError) {
+      log.error('Failed to fetch recent chats:', chatError);
+      recentChats = [];
+    }
 
     // チャット統計を計算
     const chats = await ChatModel.find({ userId });
@@ -232,19 +241,26 @@ router.get('/dashboard', generalRateLimit, authenticateToken, async (req: AuthRe
         tokenUsagePerDay: [],
         affinityProgress: []
       }, // TODO: 実装が必要
-      recentChats: recentChats.map(chat => ({
-        _id: chat._id,
-        character: {
-          _id: (chat.characterId as any)._id || chat.characterId,
-          name: (chat.characterId as any).name || { ja: 'Unknown', en: 'Unknown' },
-          imageCharacterSelect: (chat.characterId as any).imageChatAvatar || '/uploads/placeholder.png'
-        },
-        lastMessage: chat.messages && chat.messages.length > 0 
-          ? chat.messages[chat.messages.length - 1].content 
-          : 'チャットを開始しましょう',
-        lastMessageAt: chat.lastActivityAt,
-        messageCount: chat.messages.length
-      })),
+      recentChats: recentChats.map(chat => {
+        const character = chat.characterId as any;
+        if (!character) {
+          log.warn('Chat has no characterId:', { chatId: chat._id });
+          return null;
+        }
+        return {
+          _id: chat._id,
+          character: {
+            _id: character._id || chat.characterId,
+            name: character.name || { ja: 'Unknown', en: 'Unknown' },
+            imageCharacterSelect: character.imageChatAvatar || '/uploads/placeholder.png'
+          },
+          lastMessage: chat.messages && chat.messages.length > 0 
+            ? chat.messages[chat.messages.length - 1].content 
+            : 'チャットを開始しましょう',
+          lastMessageAt: chat.lastActivityAt,
+          messageCount: chat.messages?.length || 0
+        };
+      }).filter(chat => chat !== null),
       purchasedCharacters: purchasedCharacters.map(char => ({
         _id: char._id,
         name: char.name,
@@ -257,7 +273,11 @@ router.get('/dashboard', generalRateLimit, authenticateToken, async (req: AuthRe
     res.json(dashboardData);
 
   } catch (error) {
-    log.error('Dashboard API error:', error);
+    log.error('Dashboard API error:', error, {
+      userId: req.user?._id,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      errorStack: error instanceof Error ? error.stack : undefined
+    });
     const errorCode = mapErrorToClientCode(error);
     sendErrorResponse(res, 500, errorCode, error);
   }

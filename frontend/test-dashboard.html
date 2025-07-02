@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard API Test</title>
+</head>
+<body>
+    <h1>Dashboard API Test</h1>
+    <button onclick="testAPI()">Test Dashboard API</button>
+    <pre id="result"></pre>
+    
+    <script>
+    async function testAPI() {
+        const resultEl = document.getElementById('result');
+        resultEl.textContent = 'Testing...';
+        
+        try {
+            // First, check if user is logged in
+            const profileRes = await fetch('/api/v1/user/profile', {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            resultEl.textContent += '\n\nProfile API Status: ' + profileRes.status;
+            
+            if (profileRes.ok) {
+                const profileData = await profileRes.json();
+                resultEl.textContent += '\nUser: ' + JSON.stringify(profileData.user?.name || 'Unknown');
+            } else {
+                resultEl.textContent += '\nProfile API Error: ' + await profileRes.text();
+            }
+            
+            // Then test dashboard API
+            const dashboardRes = await fetch('/api/v1/user/dashboard', {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            resultEl.textContent += '\n\nDashboard API Status: ' + dashboardRes.status;
+            resultEl.textContent += '\nHeaders: ' + JSON.stringify(Object.fromEntries(dashboardRes.headers));
+            
+            if (dashboardRes.ok) {
+                const data = await dashboardRes.json();
+                resultEl.textContent += '\n\nDashboard Data:';
+                resultEl.textContent += '\n- User: ' + (data.user?.name || 'N/A');
+                resultEl.textContent += '\n- Token Balance: ' + (data.tokens?.balance || 0);
+                resultEl.textContent += '\n- Affinities: ' + (data.affinities?.length || 0);
+                resultEl.textContent += '\n- Recent Chats: ' + (data.recentChats?.length || 0);
+                resultEl.textContent += '\n\nFull Response:\n' + JSON.stringify(data, null, 2);
+            } else {
+                const errorText = await dashboardRes.text();
+                resultEl.textContent += '\n\nError Response: ' + errorText;
+            }
+            
+            // Check localStorage
+            resultEl.textContent += '\n\nLocalStorage:';
+            resultEl.textContent += '\n- authToken: ' + (localStorage.getItem('authToken') ? 'Present' : 'Not found');
+            resultEl.textContent += '\n- refreshToken: ' + (localStorage.getItem('refreshToken') ? 'Present' : 'Not found');
+            resultEl.textContent += '\n- user: ' + (localStorage.getItem('user') ? 'Present' : 'Not found');
+            
+            // Check cookies
+            resultEl.textContent += '\n\nCookies: ' + document.cookie;
+            
+        } catch (error) {
+            resultEl.textContent += '\n\nJavaScript Error: ' + error.message;
+            console.error('Full error:', error);
+        }
+    }
+    </script>
+</body>
+</html>
