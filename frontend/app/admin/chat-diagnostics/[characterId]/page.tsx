@@ -464,6 +464,92 @@ export default function AdminChatDiagnosticsDetailPage({
                 </div>
               )}
 
+              {/* プロンプト詳細 */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Brain className="w-5 h-5 mr-2" />
+                  プロンプト詳細
+                </h2>
+                <div className="space-y-4">
+                  {/* パーソナリティ設定 */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2">性格設定</h3>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">プリセット</p>
+                        <p className="text-sm text-gray-900">{diagnostics.prompt.characterInfo.personalityPreset || 'なし'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">タグ</p>
+                        <div className="flex flex-wrap gap-1">
+                          {diagnostics.prompt.characterInfo.personalityTags.map((tag, index) => (
+                            <span key={index} className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 会話履歴のプレビュー */}
+                  {diagnostics.chat.conversationHistory.sentToAI && diagnostics.chat.conversationHistory.sentToAI.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900 mb-2">AIに送信される会話履歴</h3>
+                      <div className="bg-gray-50 rounded-lg p-3 space-y-2 max-h-64 overflow-y-auto">
+                        {diagnostics.chat.conversationHistory.sentToAI.map((msg, index) => (
+                          <div key={index} className="border-b border-gray-200 pb-2 last:border-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className={`text-xs font-medium ${
+                                msg.role === 'system' ? 'text-purple-600' :
+                                msg.role === 'assistant' ? 'text-blue-600' : 'text-gray-600'
+                              }`}>
+                                {msg.role === 'system' ? 'システム' :
+                                 msg.role === 'assistant' ? 'AI' : 'ユーザー'}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {msg.originalLength}文字
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-700 whitespace-pre-wrap break-words">
+                              {msg.content.substring(0, 200)}
+                              {msg.content.length > 200 && '...'}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* パーソナリティプロンプト */}
+                  {diagnostics.prompt.personalityPrompt && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900 mb-2">パーソナリティプロンプト</h3>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">日本語 ({diagnostics.prompt.promptLength.personality.ja}文字)</p>
+                          <div className="bg-gray-50 rounded-lg p-3 max-h-40 overflow-y-auto">
+                            <p className="text-xs text-gray-700 whitespace-pre-wrap break-words">
+                              {diagnostics.prompt.personalityPrompt.ja}
+                            </p>
+                          </div>
+                        </div>
+                        {diagnostics.prompt.personalityPrompt.en && (
+                          <div>
+                            <p className="text-xs text-gray-600 mb-1">英語 ({diagnostics.prompt.promptLength.personality.en}文字)</p>
+                            <div className="bg-gray-50 rounded-lg p-3 max-h-40 overflow-y-auto">
+                              <p className="text-xs text-gray-700 whitespace-pre-wrap break-words">
+                                {diagnostics.prompt.personalityPrompt.en}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* システム状態 */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
