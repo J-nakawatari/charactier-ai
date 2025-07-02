@@ -9,12 +9,23 @@ NC='\033[0m' # No Color
 echo -e "${YELLOW}📊 videoChatBackgroundフィールドをすべてのキャラクターに追加します...${NC}"
 
 # MongoDB接続情報を.envから読み込む
+# スクリプトがどこから実行されても動作するように複数のパスをチェック
 if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
 elif [ -f ../.env ]; then
     export $(grep -v '^#' ../.env | xargs)
+elif [ -f /var/www/charactier-ai/.env ]; then
+    export $(grep -v '^#' /var/www/charactier-ai/.env | xargs)
+elif [ -f /var/www/charactier-ai/backend/.env ]; then
+    export $(grep -v '^#' /var/www/charactier-ai/backend/.env | xargs)
 else
     echo -e "${RED}❌ .envファイルが見つかりません${NC}"
+    echo "現在のディレクトリ: $(pwd)"
+    echo "チェックしたパス:"
+    echo "  - ./.env"
+    echo "  - ../.env"
+    echo "  - /var/www/charactier-ai/.env"
+    echo "  - /var/www/charactier-ai/backend/.env"
     exit 1
 fi
 
