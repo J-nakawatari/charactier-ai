@@ -128,7 +128,7 @@ export const ChatLayout = memo(function ChatLayout({
       backgroundClass: moodUIColors.background,
       borderClass: moodUIColors.border
     });
-  }, [character, currentMood, moodUIColors]);
+  }, [character, currentMood, moodUIColors, affinity]);
   
   // リアルタイムチャット機能
   const realtimeChat = useRealtimeChat(character._id);

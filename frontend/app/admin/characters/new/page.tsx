@@ -161,7 +161,7 @@ export default function CharacterNewPage() {
         URL.revokeObjectURL(videoPreviewUrl);
       }
     };
-  }, [videoPreviewUrl]);
+  }, [videoPreviewUrl, formData.videoChatBackground]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
