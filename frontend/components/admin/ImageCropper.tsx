@@ -137,9 +137,14 @@ export default function ImageCropper({
               // 最小ズーム値を設定
               setMinZoom(calculatedMinZoom);
               
-              // 初期ズーム値を設定（クロップエリアが画像の60-80%程度を占めるように）
-              const zoomFactor = 1.2; // クロップエリアを大きくするための係数
-              setZoom(Math.max(1, initialZoom * zoomFactor));
+              // 初期ズーム値を設定（クロップエリアが画像の大部分を占めるように）
+              const zoomFactor = 1.5; // クロップエリアを大きくするための係数
+              // 3:4の縦長画像の場合は特別な調整
+              if (cropSettings.aspect === 3/4) {
+                setZoom(Math.max(1.2, initialZoom * zoomFactor));
+              } else {
+                setZoom(Math.max(1, initialZoom * zoomFactor));
+              }
             }}
             style={{
               containerStyle: {
