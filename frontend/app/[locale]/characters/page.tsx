@@ -83,9 +83,18 @@ function CharactersPageContent({
           converted: purchasedIds
         });
         setUserPurchasedCharacters(purchasedIds);
-        // localStorageも更新
+        // localStorageも更新（selectedCharacterをID文字列として保持）
         if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
+          const userToStore = {
+            ...data.user,
+            // selectedCharacterがオブジェクトの場合、IDのみを保存
+            selectedCharacter: data.user.selectedCharacter 
+              ? (typeof data.user.selectedCharacter === 'string' 
+                  ? data.user.selectedCharacter 
+                  : data.user.selectedCharacter._id)
+              : null
+          };
+          localStorage.setItem('user', JSON.stringify(userToStore));
         }
       } else {
         // エラー時はlocalStorageから取得
@@ -420,11 +429,21 @@ function CharactersPageContent({
                   // ユーザーの選択済みキャラクターを取得
                   try {
                     const user = JSON.parse(localStorage.getItem('user') || '{}');
-                    const selectedCharacterId = user.selectedCharacter;
+                    const selectedCharacter = user.selectedCharacter;
                     
-                    if (selectedCharacterId) {
-                      // 選択済みキャラクターのチャット画面に遷移
-                      router.push(`/${locale}/characters/${selectedCharacterId}/chat`);
+                    if (selectedCharacter) {
+                      // selectedCharacterがオブジェクトまたは文字列の場合に対応
+                      const selectedCharacterId = typeof selectedCharacter === 'string' 
+                        ? selectedCharacter 
+                        : selectedCharacter._id;
+                      
+                      if (selectedCharacterId) {
+                        console.log('🚀 選択済みキャラクターへ遷移:', selectedCharacterId);
+                        // 選択済みキャラクターのチャット画面に遷移
+                        router.push(`/${locale}/characters/${selectedCharacterId}/chat`);
+                      } else {
+                        console.log('⚠️ No valid character ID found');
+                      }
                     } else {
                       // キャラクターが選択されていない場合は一覧画面に留まる
                       console.log('⚠️ No character selected');

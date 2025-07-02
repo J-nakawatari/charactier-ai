@@ -25,7 +25,6 @@ router.get('/profile', generalRateLimit, authenticateToken, async (req: AuthRequ
     const user = await UserModel.findById(userId)
       .select('-password')
       .populate('purchasedCharacters', '_id name')
-      .populate('selectedCharacter', '_id name')
       .populate('affinities.character', '_id name');
       
     if (!user) {
