@@ -13,6 +13,12 @@ info:
     - JWT Bearer Token認証（後方互換）
     - アクセストークンとリフレッシュトークンのペアで管理
     
+    ## トークン有効期限（2025-07-02更新）
+    - ユーザーアクセストークン: 2時間
+    - ユーザーリフレッシュトークン: 7日間
+    - 管理者アクセストークン: 2時間
+    - 管理者リフレッシュトークン: 4時間
+    
     ## レート制限
     - 一般API: 100リクエスト/分
     - チャットAPI: 60メッセージ/時間（ユーザーごと）
@@ -1664,6 +1670,47 @@ paths:
                     type: string
                   filter:
                     type: object
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/characters/reorder:
+    post:
+      summary: キャラクター並び順変更（super_adminのみ）
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - characterIds
+              properties:
+                characterIds:
+                  type: array
+                  items:
+                    type: string
+                  description: 新しい並び順のキャラクターID配列
+      responses:
+        '200':
+          description: 並び順変更成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "キャラクターの並び順を更新しました"
+                  updated:
+                    type: integer
+                    description: 更新されたキャラクター数
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/AuthenticationError'
         '403':

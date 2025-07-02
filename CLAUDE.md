@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-最終更新: 2025-06-26
+最終更新: 2025-07-02
 
 ## プロジェクト概要
 
@@ -321,3 +321,28 @@ FEATURE_LOG_UNKNOWN_FIELDS=false
 ### デバッグ用エンドポイント
 - `/api/v1/debug/auth-status` - 認証状態の確認
 - `/api/v1/debug/affinity-details/:userId` - 親密度詳細情報
+
+## 認証システムの改善（2025-07-02更新）
+
+### トークン有効期限の統一
+- **ユーザーアクセストークン**: 2時間（以前は15分）
+- **ユーザーリフレッシュトークン**: 7日間
+- **管理者アクセストークン**: 2時間
+- **管理者リフレッシュトークン**: 4時間（以前は7日間）
+
+### 管理画面の自動トークンリフレッシュ
+- `frontend/utils/adminTokenRefresh.ts`で実装
+- アクセストークンの有効期限5分前に自動更新
+- 401エラー時の自動リトライ機能
+- 最大4時間のセッション維持
+
+### クッキー分離による独立動作
+- **ユーザー用クッキー**: `userAccessToken`, `userRefreshToken`
+- **管理者用クッキー**: `adminAccessToken`, `adminRefreshToken`
+- ログイン時に他方のクッキーを削除しない
+- リフレッシュエンドポイントも分離
+
+### 管理画面の機能追加
+- **キャラクター並び替え**: ドラッグ&ドロップで順序変更
+- **並び順の反映**: 管理画面での並び順がユーザー画面に反映
+- **ギャラリー画像管理**: 複数画像の追加・削除・並び替え
