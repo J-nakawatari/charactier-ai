@@ -245,6 +245,16 @@
       "article13": {
         "title": "Article 13 (Governing Law and Jurisdiction)",
         "content": "These Terms are governed by Japanese law, and the Yokohama District Court shall have exclusive jurisdiction."
+      },
+      "article14": {
+        "title": "Article 14 (Refunds and Cancellations)",
+        "item1": "Digital products such as tokens and characters purchased by users on this service cannot be cancelled or refunded for customer convenience.",
+        "item2": "In cases of duplicate charges or other payment defects caused by us, we will promptly refund or compensate the equivalent amount after investigation."
+      },
+      "article15": {
+        "title": "Article 15 (Chargebacks)",
+        "item1": "If a user files a dispute with their credit card company and chargeback fees are incurred by us, the user shall bear such fees and administrative charges.",
+        "item2": "We may suspend the user's account until the fees mentioned in the preceding paragraph are paid."
       }
     },
     "commercialModal": {
@@ -398,6 +408,20 @@
       "section8": {
         "title": "8. Contact Information",
         "content": "support@charactier-ai.com"
+      },
+      "section9": {
+        "title": "9. Retention Period",
+        "content": "Personal information collected will be deleted or anonymized within (a) 30 days after user withdrawal, and chat history within 90 days after last access. Unless otherwise required by law, data will not be retained for more than 5 years."
+      },
+      "section10": {
+        "title": "10. Security Management Measures",
+        "item1": "Organizational security: Minimization of access rights, bi-annual log audits",
+        "item2": "Technical security: DB encryption with AES-256-GCM, WAF and rate limiting operations",
+        "item3": "Physical security: Cloud data center access control, geographically redundant backups"
+      },
+      "section11": {
+        "title": "11. Additional Rights under GDPR",
+        "content": "EU users can exercise rights of access, rectification, erasure, restriction of processing, data portability, and objection regarding personal data held by us. Please contact support@charactier-ai.com for requests. Users also have the right to lodge complaints with supervisory authorities."
       }
     },
     "menu": "Menu",
@@ -1047,6 +1071,14 @@
         "support": {
           "label": "Handling of Issues",
           "content": "If the service is unavailable, we will respond appropriately based on the Terms of Service and Privacy Policy."
+        },
+        "refundPolicy": {
+          "label": "Refund and Cancellation Policy",
+          "content": "Due to the nature of digital services, we do not accept any refunds or cancellations for customer convenience. However, in cases of payment issues such as duplicate charges caused by us, we will promptly refund or provide equivalent token compensation after investigation."
+        },
+        "phoneDisclosure": {
+          "label": "Phone Number Disclosure Request",
+          "content": "The phone number is not disclosed on this page to prevent spam. If you wish to request disclosure, please contact support@charactier-ai.com with 'Phone Number Disclosure Request' in the subject line. We will disclose it promptly within a reasonable scope."
         }
       }
     }

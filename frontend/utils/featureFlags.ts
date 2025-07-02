@@ -46,9 +46,11 @@ export async function getFeatureFlags(forceRefresh = false): Promise<FeatureFlag
   } catch (error) {
     console.error('Error fetching feature flags:', error);
     
-    // エラー時はデフォルト値を返す
+    // エラー時は本番環境のデフォルト値を返す
+    // 本番環境ではCookieベースの認証を使用しているため、trueに設定
+    console.warn('[FeatureFlags] Using default values due to error');
     return {
-      SECURE_COOKIE_AUTH: false,
+      SECURE_COOKIE_AUTH: true, // 本番環境ではCookie認証を使用
     };
   }
 }

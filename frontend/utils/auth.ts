@@ -270,15 +270,16 @@ export function isAuthenticatedSync(): boolean {
 /**
  * トークンリフレッシュ（HttpOnlyクッキー使用）
  */
-export async function refreshToken(): Promise<boolean> {
+export async function refreshToken(): Promise<{ success: boolean; error?: string }> {
   try {
     // 無限ループを防ぐため、リフレッシュ中フラグをチェック
     if ((window as any).__refreshing) {
-      console.warn('Refresh already in progress, skipping');
-      return false;
+      console.warn('[Auth] Refresh already in progress, skipping');
+      return { success: false, error: 'Already refreshing' };
     }
     
     (window as any).__refreshing = true;
+    console.log('[Auth] Starting token refresh...');
     
     const flags = await getFeatureFlags();
     const headers: HeadersInit = {
@@ -302,6 +303,12 @@ export async function refreshToken(): Promise<boolean> {
       ? JSON.stringify({ refreshToken: getRefreshToken() })
       : undefined;
     
+    console.log('[Auth] Sending refresh request with flags:', { 
+      SECURE_COOKIE_AUTH: flags.SECURE_COOKIE_AUTH,
+      hasRefreshToken: !!getRefreshToken(),
+      hasBody: !!body
+    });
+    
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
       method: 'POST',
       credentials: 'include', // クッキーを送信
@@ -315,19 +322,27 @@ export async function refreshToken(): Promise<boolean> {
         const data = await response.json();
         if (data.accessToken) {
           setAccessToken(data.accessToken);
+          console.log('[Auth] Token refresh successful (LocalStorage mode)');
         }
+      } else {
+        console.log('[Auth] Token refresh successful (Cookie mode)');
       }
-      return true;
+      return { success: true };
     } else {
-      console.error('Token refresh failed with status:', response.status);
+      const errorText = await response.text();
+      console.error('[Auth] Token refresh failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
+      return { success: false, error: `Status ${response.status}: ${errorText}` };
     }
   } catch (error) {
-    console.error('Token refresh failed:', error);
+    console.error('[Auth] Token refresh error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   } finally {
     (window as any).__refreshing = false;
   }
-
-  return false;
 }
 
 /**
@@ -383,8 +398,8 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
       throw new Error('Refresh token is invalid');
     }
     
-    const refreshed = await refreshToken();
-    if (refreshed) {
+    const refreshResult = await refreshToken();
+    if (refreshResult.success) {
       // リフレッシュ成功時は再リクエスト
       const newHeaders = await getAuthHeaders();
       return fetch(fullUrl, {

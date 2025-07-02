@@ -14,24 +14,28 @@ export default function TokenRefreshManager() {
     // 初回チェック
     const checkAndRefresh = async () => {
       try {
-        // アクセストークンが2時間有効なので、1時間50分後（110分）にリフレッシュ
-        // これにより、期限切れ前に確実にリフレッシュされる
-        await refreshToken();
+        console.log('[TokenRefreshManager] Starting token refresh...');
+        const result = await refreshToken();
+        if (result.success) {
+          console.log('[TokenRefreshManager] Token refresh successful');
+        } else {
+          console.error('[TokenRefreshManager] Token refresh failed:', result.error);
+        }
       } catch (error) {
-        console.error('Token refresh check failed:', error);
+        console.error('[TokenRefreshManager] Token refresh error:', error);
       }
     };
 
-    // 110分（1時間50分）ごとにリフレッシュを実行
-    const REFRESH_INTERVAL = 110 * 60 * 1000; // 110分
+    // 50分ごとにリフレッシュを実行（アクセストークンが2時間有効なので、余裕を持って）
+    const REFRESH_INTERVAL = 50 * 60 * 1000; // 50分
 
-    // 初回は30秒後に実行（ページロード直後は避ける）
+    // 初回は5分後に実行（ページロード直後の負荷を避けつつ、早めにチェック）
     const initialTimeout = setTimeout(() => {
       checkAndRefresh();
       
       // その後は定期的に実行
       intervalRef.current = setInterval(checkAndRefresh, REFRESH_INTERVAL);
-    }, 30000); // 30秒
+    }, 5 * 60 * 1000); // 5分
 
     return () => {
       clearTimeout(initialTimeout);
