@@ -265,21 +265,26 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
         characterId: new mongoose.Types.ObjectId(characterId) 
       })
         .populate('userId', 'name email')
-        .sort({ lastActivity: -1 })
+        .sort({ lastActivityAt: -1 })
         .limit(50); // 最新50件まで
         
       users = await Promise.all(chatsWithUsers.map(async (chat) => {
-        const affinity = await AffinityModel.findOne({
-          userId: chat.userId._id,
-          characterId: new mongoose.Types.ObjectId(characterId)
-        });
+        // populateされたuserIdオブジェクトを安全に扱う
+        const userDoc = chat.userId as any;
+        const userIdStr = userDoc._id || userDoc;
+        
+        // UserModelからaffinity情報を取得
+        const user = await UserModel.findById(userIdStr);
+        const affinity = user?.affinities?.find(
+          (aff: any) => aff.character?.toString() === characterId
+        );
         
         return {
-          userId: chat.userId._id,
-          userName: (chat.userId as any).name || 'Unknown',
-          userEmail: (chat.userId as any).email || 'Unknown',
+          userId: userIdStr,
+          userName: userDoc.name || 'Unknown',
+          userEmail: userDoc.email || 'Unknown',
           affinityLevel: affinity?.level || 0,
-          lastInteraction: chat.lastActivity,
+          lastInteraction: chat.lastActivityAt,
           messageCount: chat.messages?.length || 0,
           totalTokensUsed: chat.messages?.reduce((sum: number, msg: any) => 
             sum + (msg.tokensUsed || 0), 0) || 0
@@ -346,7 +351,7 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
       recentTokenUsageQuery.userId = new mongoose.Types.ObjectId(userId as string);
     }
     
-    const recentTokenUsage = await TokenUsageModel.findOne(recentTokenUsageQuery)
+    const recentTokenUsage = await TokenUsage.findOne(recentTokenUsageQuery)
       .sort({ createdAt: -1 });
 
     // プロンプト情報を取得
@@ -380,7 +385,7 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
           messageCount: chat?.messages?.length || 0,
           totalTokensUsed: chat?.messages?.reduce((sum: number, msg: any) => 
             sum + (msg.tokensUsed || 0), 0) || 0,
-          lastActivity: chat?.lastActivity || 'N/A',
+          lastActivity: chat?.lastActivityAt || 'N/A',
           createdAt: chat?.createdAt || 'N/A',
           recentMessages: chat?.messages?.slice(-5).map((msg: any) => ({
             role: msg.role,
