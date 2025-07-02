@@ -461,96 +461,89 @@ export default function CharacterEditPage() {
         return;
       }
 
-      // 動画の長さをチェック（3-5秒）
-      const video = document.createElement('video');
-      video.preload = 'metadata';
-      
-      // 動画のメタデータ読み込み用の一時URL
-      let tempVideoUrl: string | null = null;
-      
-      video.onloadedmetadata = async () => {
-        const duration = video.duration;
+      // 動画の長さを検証する関数
+      const validateVideoDuration = (videoFile: File): Promise<number> => {
+        return new Promise((resolve, reject) => {
+          const video = document.createElement('video');
+          const blobUrl = URL.createObjectURL(videoFile);
+          
+          video.onloadedmetadata = () => {
+            const duration = video.duration;
+            URL.revokeObjectURL(blobUrl);
+            video.remove(); // DOM要素を削除
+            resolve(duration);
+          };
+          
+          video.onerror = () => {
+            URL.revokeObjectURL(blobUrl);
+            video.remove(); // DOM要素を削除
+            reject(new Error('動画の読み込みに失敗しました'));
+          };
+          
+          // srcを直接設定せず、DOM操作を最小限に
+          video.style.display = 'none';
+          document.body.appendChild(video);
+          video.src = blobUrl;
+        });
+      };
+
+      try {
+        // 動画の長さを検証
+        const duration = await validateVideoDuration(file);
+        
         if (duration < 3 || duration > 5) {
           error('動画エラー', '動画は3秒から5秒の間にしてください（現在: ' + duration.toFixed(1) + '秒）');
           e.target.value = '';
-          if (tempVideoUrl) {
-            URL.revokeObjectURL(tempVideoUrl);
-          }
           return;
         }
 
-        try {
-          setIsUploading(true);
-          
-          // バックエンドに動画をアップロード
-          const formDataForUpload = new FormData();
-          formDataForUpload.append('video', file);
-          
-          const uploadResponse = await adminFetch(`${API_BASE_URL}/api/v1/admin/characters/upload/video`, {
-            method: 'POST',
-            body: formDataForUpload
-          });
-          
-          if (!uploadResponse.ok) {
-            const errorData = await uploadResponse.json();
-            error('アップロードエラー', errorData.message || '動画のアップロードに失敗しました');
-            return;
-          }
-          
-          const { videoUrl } = await uploadResponse.json();
-          
-          // キャラクターデータを即座に更新
-          const updateResponse = await adminFetch(`${API_BASE_URL}/api/v1/admin/characters/${characterId}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              videoChatBackground: videoUrl
-            })
-          });
-          
-          if (updateResponse.ok) {
-            setFormData(prev => ({ 
-              ...prev, 
-              videoChatBackground: file,
-              videoChatBackgroundUrl: videoUrl
-            }));
-            success('動画アップロード', '動画がアップロードされ、キャラクターデータに保存されました');
-          } else {
-            const errorData = await updateResponse.json();
-            error('保存エラー', errorData.message || 'キャラクターデータの更新に失敗しました');
-          }
-        } catch (err) {
-          console.error('Video upload failed:', err);
-          error('動画エラー', '動画のアップロードに失敗しました');
-        } finally {
-          setIsUploading(false);
-          if (tempVideoUrl) {
-            URL.revokeObjectURL(tempVideoUrl); // 処理完了後にURLを解放
-          }
+        setIsUploading(true);
+        
+        // バックエンドに動画をアップロード
+        const formDataForUpload = new FormData();
+        formDataForUpload.append('video', file);
+        
+        const uploadResponse = await adminFetch(`${API_BASE_URL}/api/v1/admin/characters/upload/video`, {
+          method: 'POST',
+          body: formDataForUpload
+        });
+        
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json();
+          error('アップロードエラー', errorData.message || '動画のアップロードに失敗しました');
+          return;
         }
-      };
-
-      video.onerror = () => {
-        error('動画エラー', '動画ファイルの読み込みに失敗しました');
-        if (tempVideoUrl) {
-          URL.revokeObjectURL(tempVideoUrl);
+        
+        const { videoUrl } = await uploadResponse.json();
+        
+        // キャラクターデータを即座に更新
+        const updateResponse = await adminFetch(`${API_BASE_URL}/api/v1/admin/characters/${characterId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            videoChatBackground: videoUrl
+          })
+        });
+        
+        if (updateResponse.ok) {
+          setFormData(prev => ({ 
+            ...prev, 
+            videoChatBackground: file,
+            videoChatBackgroundUrl: videoUrl
+          }));
+          success('動画アップロード', '動画がアップロードされ、キャラクターデータに保存されました');
+        } else {
+          const errorData = await updateResponse.json();
+          error('保存エラー', errorData.message || 'キャラクターデータの更新に失敗しました');
         }
-      };
-
-      // FileReaderを使用してより安全にメタデータを読み込む
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        tempVideoUrl = URL.createObjectURL(file);
-        // video要素のsrcObjectを使用（より安全）
-        if ('srcObject' in video) {
-          // 現代的なブラウザではsrcObjectが推奨
-          video.srcObject = null; // 初期化
-        }
-        video.src = tempVideoUrl;
-      };
-      reader.readAsArrayBuffer(file);
+      } catch (err) {
+        console.error('Video processing failed:', err);
+        error('動画エラー', err instanceof Error ? err.message : '動画の処理に失敗しました');
+      } finally {
+        setIsUploading(false);
+      }
     }
     e.target.value = '';
   };

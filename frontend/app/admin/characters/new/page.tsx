@@ -463,21 +463,39 @@ export default function CharacterNewPage() {
         return;
       }
 
-      // 動画の長さをチェック（3-5秒）
-      const video = document.createElement('video');
-      video.preload = 'metadata';
-      
-      // 動画のメタデータ読み込み用の一時URL
-      let tempVideoUrl: string | null = null;
-      
-      video.onloadedmetadata = () => {
-        const duration = video.duration;
+      // 動画の長さを検証する関数
+      const validateVideoDuration = (videoFile: File): Promise<number> => {
+        return new Promise((resolve, reject) => {
+          const video = document.createElement('video');
+          const blobUrl = URL.createObjectURL(videoFile);
+          
+          video.onloadedmetadata = () => {
+            const duration = video.duration;
+            URL.revokeObjectURL(blobUrl);
+            video.remove(); // DOM要素を削除
+            resolve(duration);
+          };
+          
+          video.onerror = () => {
+            URL.revokeObjectURL(blobUrl);
+            video.remove(); // DOM要素を削除
+            reject(new Error('動画の読み込みに失敗しました'));
+          };
+          
+          // srcを直接設定せず、DOM操作を最小限に
+          video.style.display = 'none';
+          document.body.appendChild(video);
+          video.src = blobUrl;
+        });
+      };
+
+      try {
+        // 動画の長さを検証
+        const duration = await validateVideoDuration(file);
+        
         if (duration < 3 || duration > 5) {
           error('動画エラー', '動画は3秒から5秒の間にしてください（現在: ' + duration.toFixed(1) + '秒）');
           e.target.value = '';
-          if (tempVideoUrl) {
-            URL.revokeObjectURL(tempVideoUrl);
-          }
           return;
         }
 
@@ -488,32 +506,10 @@ export default function CharacterNewPage() {
           videoChatBackgroundUrl: ''  // 実際のURLはuseMemoで管理
         }));
         success('動画設定', '動画が設定されました');
-        
-        // 一時URLをクリーンアップ
-        if (tempVideoUrl) {
-          URL.revokeObjectURL(tempVideoUrl);
-        }
-      };
-
-      video.onerror = () => {
-        error('動画エラー', '動画ファイルの読み込みに失敗しました');
-        if (tempVideoUrl) {
-          URL.revokeObjectURL(tempVideoUrl);
-        }
-      };
-
-      // FileReaderを使用してより安全にメタデータを読み込む
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        tempVideoUrl = URL.createObjectURL(file);
-        // video要素のsrcObjectを使用（より安全）
-        if ('srcObject' in video) {
-          // 現代的なブラウザではsrcObjectが推奨
-          video.srcObject = null; // 初期化
-        }
-        video.src = tempVideoUrl;
-      };
-      reader.readAsArrayBuffer(file);
+      } catch (err) {
+        console.error('Video validation failed:', err);
+        error('動画エラー', err instanceof Error ? err.message : '動画の処理に失敗しました');
+      }
     }
     e.target.value = '';
   };
