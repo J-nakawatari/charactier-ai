@@ -120,7 +120,11 @@ export const ChatLayout = memo(function ChatLayout({
       imageChatAvatar: character.imageChatAvatar,
       imageCharacterSelect: character.imageCharacterSelect
     });
-  }, [character]);
+    console.log('ChatLayout - Mood colors:', {
+      currentMood,
+      moodUIColors
+    });
+  }, [character, currentMood, moodUIColors]);
   
   // リアルタイムチャット機能
   const realtimeChat = useRealtimeChat(character._id);
@@ -344,7 +348,6 @@ export const ChatLayout = memo(function ChatLayout({
             onAffinityUpdate={(newAffinity) => {
               // Affinity update handled silently
             }}
-            moodProgressBarClass={moodUIColors.progressBar}
           />
         </div>
       </div>
