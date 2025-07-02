@@ -50,6 +50,7 @@ interface UserCharacterAffinity {
   currentExp: number;
   nextLevelExp: number;
   unlockedIllustrations: string[];
+  currentMood?: 'happy' | 'sad' | 'angry' | 'shy' | 'excited' | 'neutral';
 }
 
 interface TokenStatus {
@@ -108,7 +109,7 @@ export const ChatLayout = memo(function ChatLayout({
   const { updateAffinity } = useAffinityStore();
   
   // 🎨 感情に基づく背景スタイル
-  const currentMood = (affinity as any).currentMood || 'neutral';
+  const currentMood = affinity.currentMood || 'neutral';
   const moodGradient = useMemo(() => getMoodBackgroundGradient(currentMood), [currentMood]);
   const moodUIColors = useMemo(() => getMoodUIColors(currentMood), [currentMood]);
   
@@ -152,7 +153,7 @@ export const ChatLayout = memo(function ChatLayout({
     updateAffinity({
       level: affinity.level,
       experience: affinity.currentExp,
-      mood: (affinity as any).currentMood || 'neutral'
+      mood: affinity.currentMood || 'neutral'
     });
   }, [affinity, updateAffinity]);
 
@@ -343,7 +344,7 @@ export const ChatLayout = memo(function ChatLayout({
             currentExp={affinity.currentExp}
             nextLevelExp={affinity.nextLevelExp}
             themeColor={character.themeColor}
-            mood={(affinity as any).currentMood || 'neutral'}
+            mood={affinity.currentMood || 'neutral'}
             characterId={character._id}
             onAffinityUpdate={(newAffinity) => {
               // Affinity update handled silently
