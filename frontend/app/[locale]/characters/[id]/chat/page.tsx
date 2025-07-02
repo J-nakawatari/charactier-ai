@@ -85,7 +85,10 @@ export default function ChatPage() {
         console.log('Chat API response:', {
           userState: apiData.userState,
           tokenBalance: apiData.userState?.tokenBalance,
-          character: apiData.character?.name
+          character: apiData.character?.name,
+          affinity: apiData.userState?.affinity,
+          mood: apiData.userState?.affinity?.mood,
+          level: apiData.userState?.affinity?.level
         });
         
         // API レスポンスを ChatLayoutData 形式に変換
