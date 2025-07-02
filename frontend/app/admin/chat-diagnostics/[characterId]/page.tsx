@@ -17,7 +17,8 @@ import {
   ArrowLeft,
   Users,
   Code,
-  Eye
+  Eye,
+  X
 } from 'lucide-react';
 
 interface ChatDiagnostics {
