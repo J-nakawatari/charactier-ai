@@ -617,7 +617,7 @@ export default function CharacterNewPage() {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
                     {formData.imageChatBackground ? (
                       <div className="space-y-2">
-                        <div className="w-20 h-20 mx-auto bg-transparent rounded-lg flex items-center justify-center overflow-hidden border border-gray-200">
+                        <div className="w-20 h-15 mx-auto bg-transparent rounded-lg flex items-center justify-center overflow-hidden border border-gray-200">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img 
                             src={URL.createObjectURL(formData.imageChatBackground)} 
@@ -976,7 +976,7 @@ export default function CharacterNewPage() {
                       </div>
                       
                       <div className="flex items-start space-x-4">
-                        <div className="w-16 h-16 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
+                        <div className="w-16 h-12 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
                           {galleryItem?.file ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img 

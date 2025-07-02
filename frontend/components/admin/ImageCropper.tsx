@@ -39,12 +39,12 @@ export default function ImageCropper({
       case 'imageDashboard':
         return { shape: 'rect' as const, aspect: 1, label: '正方形', cropSize: { width: 400, height: 400 } }; // 四角形（正方形）
       case 'imageChatBackground':
-        return { shape: 'rect' as const, aspect: 9/16, label: '9:16（縦長）', cropSize: { width: 225, height: 400 } }; // 四角形（9:16 縦長）
+        return { shape: 'rect' as const, aspect: 4/3, label: '4:3（横長）', cropSize: { width: 400, height: 300 } }; // 四角形（4:3 横長）
       case 'imageChatAvatar':
         return { shape: 'round' as const, aspect: 1, label: '円形', cropSize: { width: 400, height: 400 } }; // 円形
       case 'gallery':
       case 'galleryImage':
-        return { shape: 'rect' as const, aspect: 9/16, label: '9:16（縦長・ギャラリー）', cropSize: { width: 225, height: 400 } }; // ギャラリー画像用（9:16縦長）
+        return { shape: 'rect' as const, aspect: 4/3, label: '4:3（横長・ギャラリー）', cropSize: { width: 400, height: 300 } }; // ギャラリー画像用（4:3横長）
       default:
         return { shape: 'rect' as const, aspect: 1, label: '正方形', cropSize: { width: 400, height: 400 } }; // デフォルト
     }
