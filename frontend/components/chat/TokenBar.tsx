@@ -224,12 +224,12 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: To
 
       {/* チャージボタン */}
       <button 
-        className={`flex items-center space-x-1 sm:space-x-2 p-[0.7rem] rounded-lg text-sm font-medium transition-colors ${
+        className={`flex items-center space-x-1 sm:space-x-2 p-[0.7rem] rounded-lg text-sm font-medium text-white transition-colors ${
           isCriticalBalance
-            ? 'bg-red-600 text-white hover:bg-red-700'
+            ? 'bg-red-600 hover:bg-red-700'
             : isLowBalance
-              ? 'bg-yellow-600 text-white hover:bg-yellow-700'
-              : 'bg-purple-600 text-white hover:bg-purple-700'
+              ? 'bg-yellow-600 hover:bg-yellow-700'
+              : 'bg-purple-600 hover:bg-purple-700'
         }`}
         onClick={() => {
           onPurchaseClick?.();
