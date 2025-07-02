@@ -26,6 +26,7 @@ interface ChatLayoutCharacter {
   description: string; // 文字列に変換済み
   imageChatAvatar: string;
   imageChatBackground: string;
+  videoChatBackground?: string; // 動画背景を追加
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
   // 🤖 AIモデル情報
@@ -99,6 +100,7 @@ export default function ChatPage() {
             description: getLocalizedString(apiData.character.description, locale),
             imageChatAvatar: apiData.character.imageChatAvatar || '/characters/luna.png',
             imageChatBackground: apiData.character.imageChatBackground || apiData.character.imageChatAvatar || '/characters/luna.png',
+            videoChatBackground: apiData.character.videoChatBackground, // 動画背景を追加
             currentMood: apiData.userState?.affinity?.mood || 'neutral', // 統一: affinityのmoodを使用
             themeColor: apiData.character.themeColor || '#8B5CF6',
             // 🤖 AIモデル情報を追加

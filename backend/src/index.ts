@@ -2108,6 +2108,7 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
       aiModel: character.aiModel, // フロントエンドの互換性のため両方返す
       imageChatAvatar: character.imageChatAvatar,
       imageChatBackground: character.imageChatBackground,
+      videoChatBackground: character.videoChatBackground, // 動画背景を追加
       themeColor: character.themeColor,
       // プロンプト情報を追加（デバッグ用）
       personalityPrompt: character.personalityPrompt
