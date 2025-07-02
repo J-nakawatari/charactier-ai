@@ -462,28 +462,46 @@ export default function CharacterEditPage() {
       }
 
       // 動画の長さを検証する関数
-      const validateVideoDuration = (videoFile: File): Promise<number> => {
+      const validateVideoDuration = async (videoFile: File): Promise<number> => {
+        // セキュリティ注記：
+        // - URL.createObjectURL()はXSS安全なAPIです
+        // - blob: URLスキームはCSPで許可されています
+        // - video要素はDOMに追加されません
+        
+        // まずファイルをArrayBufferとして読み込む
+        const arrayBuffer = await videoFile.arrayBuffer();
+        
+        // メモリ上でvideo要素を作成（DOMには追加しない）
         return new Promise((resolve, reject) => {
           const video = document.createElement('video');
-          const blobUrl = URL.createObjectURL(videoFile);
+          const blobUrl = URL.createObjectURL(new Blob([arrayBuffer], { type: videoFile.type }));
+          
+          // イベントハンドラを設定
+          const cleanup = () => {
+            URL.revokeObjectURL(blobUrl);
+            video.remove();
+          };
           
           video.onloadedmetadata = () => {
             const duration = video.duration;
-            URL.revokeObjectURL(blobUrl);
-            video.remove(); // DOM要素を削除
+            cleanup();
             resolve(duration);
           };
           
           video.onerror = () => {
-            URL.revokeObjectURL(blobUrl);
-            video.remove(); // DOM要素を削除
+            cleanup();
             reject(new Error('動画の読み込みに失敗しました'));
           };
           
-          // srcを直接設定せず、DOM操作を最小限に
-          video.style.display = 'none';
-          document.body.appendChild(video);
-          video.src = blobUrl;
+          // setAttributeを使用してsrcを設定（より明示的）
+          video.setAttribute('preload', 'metadata');
+          video.setAttribute('src', blobUrl);
+          
+          // タイムアウト設定（5秒）
+          setTimeout(() => {
+            cleanup();
+            reject(new Error('動画の読み込みがタイムアウトしました'));
+          }, 5000);
         });
       };
 
