@@ -160,6 +160,34 @@ router.get('/auth-routes', generalRateLimit, (req: Request, res: Response) => {
   });
 });
 
+// デバッグ用：キャラクター詳細情報取得
+router.get('/character-details/:characterId', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { characterId } = req.params;
+    
+    const character = await CharacterModel.findById(characterId).lean();
+    
+    if (!character) {
+      res.status(404).json({ error: 'Character not found' });
+      return;
+    }
+    
+    res.json({
+      _id: character._id,
+      name: character.name,
+      videoChatBackground: character.videoChatBackground || null,
+      imageChatBackground: character.imageChatBackground || null,
+      imageChatAvatar: character.imageChatAvatar || null,
+      hasVideoChatBackground: !!character.videoChatBackground,
+      allFields: Object.keys(character).sort()
+    });
+    
+  } catch (error) {
+    log.error('Error fetching character details', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // デバッグ用：親密度詳細情報取得
 router.get('/affinity-details/:userId', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
