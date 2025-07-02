@@ -22,10 +22,7 @@ export enum ClientErrorCode {
   // Validation errors
   INVALID_INPUT = 'INVALID_INPUT',
   MISSING_REQUIRED_FIELD = 'MISSING_REQUIRED_FIELD',
-<<<<<<< HEAD
-=======
   VALIDATION_ERROR = 'VALIDATION_ERROR',
->>>>>>> feature/white-background-mood-ui
   
   // Resource errors
   NOT_FOUND = 'NOT_FOUND',
@@ -48,10 +45,7 @@ const ERROR_MESSAGES: Record<ClientErrorCode, string> = {
   [ClientErrorCode.INSUFFICIENT_PERMISSIONS]: '権限が不足しています',
   [ClientErrorCode.INVALID_INPUT]: '入力内容が正しくありません',
   [ClientErrorCode.MISSING_REQUIRED_FIELD]: '必須項目が入力されていません',
-<<<<<<< HEAD
-=======
   [ClientErrorCode.VALIDATION_ERROR]: '入力内容に問題があります',
->>>>>>> feature/white-background-mood-ui
   [ClientErrorCode.NOT_FOUND]: 'リソースが見つかりません',
   [ClientErrorCode.ALREADY_EXISTS]: '既に存在します',
   [ClientErrorCode.RATE_LIMIT_EXCEEDED]: 'リクエスト数が制限を超えています',
