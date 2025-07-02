@@ -436,8 +436,8 @@ router.post('/login',
     // Feature Flag取得
     const flags = getFeatureFlags();
 
-    // 古いCookieを削除
-    clearAllAuthCookies(res);
+    // ユーザー用の古いCookieを削除（管理者クッキーは削除しない）
+    clearUserAuthCookies(res);
 
     // 新しいCookie設定
     const isProduction = process.env.NODE_ENV === 'production';
@@ -512,7 +512,8 @@ router.post('/refresh',
     
     if (flags.SECURE_COOKIE_AUTH) {
       // 新方式: HttpOnly Cookieから取得（ボディからは取得しない）
-      refreshToken = req.cookies?.refreshToken || req.cookies?.userRefreshToken || req.cookies?.adminRefreshToken;
+      // ユーザー用のリフレッシュエンドポイントなので、adminRefreshTokenは除外
+      refreshToken = req.cookies?.refreshToken || req.cookies?.userRefreshToken;
       
       if (!refreshToken) {
         log.warn('No refresh token found in cookies');
@@ -521,7 +522,8 @@ router.post('/refresh',
       }
     } else {
       // 従来方式: Cookieまたはボディから取得
-      refreshToken = req.cookies?.refreshToken || req.cookies?.userRefreshToken || req.cookies?.adminRefreshToken || req.body.refreshToken;
+      // ユーザー用のリフレッシュエンドポイントなので、adminRefreshTokenは除外
+      refreshToken = req.cookies?.refreshToken || req.cookies?.userRefreshToken || req.body.refreshToken;
     }
 
     // リフレッシュトークンを検証
@@ -985,8 +987,8 @@ router.post('/admin/login', authRateLimit, async (req: Request, res: Response): 
     // Feature Flag取得
     const flags = getFeatureFlags();
     
-    // 古いCookieを削除
-    clearAllAuthCookies(res);
+    // 管理者用の古いCookieを削除（ユーザークッキーは削除しない）
+    clearAdminAuthCookies(res);
     
     // 新しいCookie設定
     const isProduction = process.env.NODE_ENV === 'production';
