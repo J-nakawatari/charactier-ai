@@ -1201,8 +1201,8 @@ router.post('/admin/refresh', authRateLimit, async (req: Request, res: Response)
       return;
     }
 
-    // 新しいアクセストークンを生成
-    const newAccessToken = generateAccessToken(admin._id.toString());
+    // 新しいアクセストークンを生成（管理者用に2時間の有効期限）
+    const newAccessToken = generateCompactAccessToken(admin._id.toString(), 'admin', '2h');
     
     // Cookie設定（Feature Flag対応）
     const isProduction = process.env.NODE_ENV === 'production';
@@ -1213,7 +1213,7 @@ router.post('/admin/refresh', authRateLimit, async (req: Request, res: Response)
     }
     
     // Cookieに新しいアクセストークンを設定（管理者用）
-    res.cookie('adminAccessToken', newAccessToken, cookieOptions);
+    res.cookie(COOKIE_NAMES.ADMIN_ACCESS, newAccessToken, getAccessTokenCookieOptions(isProduction));
     
     log.info('Admin token refreshed successfully', { adminId: admin._id.toString() });
     
