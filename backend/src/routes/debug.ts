@@ -271,7 +271,24 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
       users = await Promise.all(chatsWithUsers.map(async (chat) => {
         // populateされたuserIdオブジェクトを安全に扱う
         const userDoc = chat.userId as any;
-        const userIdStr = userDoc._id || userDoc;
+        const userIdStr = typeof userDoc === 'string' ? userDoc : (userDoc._id || userDoc);
+        
+        // populateが失敗している場合は手動で取得
+        let userName = 'Unknown';
+        let userEmail = 'Unknown';
+        
+        if (typeof userDoc === 'object' && userDoc.name) {
+          // populateが成功している場合
+          userName = userDoc.name;
+          userEmail = userDoc.email || 'Unknown';
+        } else {
+          // populateが失敗している場合、手動でユーザー情報を取得
+          const userInfo = await UserModel.findById(userIdStr).select('name email');
+          if (userInfo) {
+            userName = userInfo.name || 'Unknown';
+            userEmail = userInfo.email || 'Unknown';
+          }
+        }
         
         // UserModelからaffinity情報を取得
         const user = await UserModel.findById(userIdStr);
@@ -281,8 +298,8 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
         
         return {
           userId: userIdStr,
-          userName: userDoc.name || 'Unknown',
-          userEmail: userDoc.email || 'Unknown',
+          userName: userName,
+          userEmail: userEmail,
           affinityLevel: affinity?.level || 0,
           lastInteraction: chat.lastActivityAt,
           messageCount: chat.messages?.length || 0,
@@ -315,6 +332,9 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
     };
 
     try {
+      // デバッグログ
+      log.info('Cache check start', { userId, characterId });
+      
       // 1. MongoDBキャッシュをチェック（優先）
       if (userId) {
         // ユーザーの親密度レベルを取得
@@ -327,8 +347,29 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
           userAffinityLevel = affinity?.level || 0;
         }
         
-        // キャッシュ検索（親密度レベル±5で検索）
-        const affinityRange = 5;
+        log.info('User affinity level', { userId, characterId, userAffinityLevel });
+        
+        // まず、TTLを無視して全キャッシュを確認（デバッグ用）
+        const allCaches = await CharacterPromptCache.find({
+          userId: userId,
+          characterId: characterId
+        }).limit(5);
+        
+        log.info('All caches for user/character (ignoring TTL)', {
+          userId,
+          characterId,
+          totalFound: allCaches.length,
+          caches: allCaches.map(c => ({
+            affinityLevel: c.promptConfig?.affinityLevel,
+            ttl: c.ttl,
+            expired: c.ttl < new Date(),
+            useCount: c.useCount,
+            lastUsed: c.lastUsed
+          }))
+        });
+        
+        // キャッシュ検索（親密度レベル±10で検索、範囲を広げる）
+        const affinityRange = 10;
         const cachedPrompts = await CharacterPromptCache.find({
           userId: userId,
           characterId: characterId,
@@ -341,6 +382,15 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
           useCount: -1, // 使用回数順
           lastUsed: -1  // 最終使用日順
         }).limit(1);
+        
+        log.info('MongoDB cache search result', { 
+          userId, 
+          characterId, 
+          found: cachedPrompts.length,
+          searchCriteria: {
+            affinityRange: [Math.max(0, userAffinityLevel - affinityRange), Math.min(100, userAffinityLevel + affinityRange)]
+          }
+        });
         
         const cachedPrompt = cachedPrompts[0];
         if (cachedPrompt) {
@@ -355,6 +405,34 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
           };
           cacheStatus.data = cacheStatus.mongoCache;
         }
+      } else {
+        // ユーザーIDがない場合は、キャラクターの全キャッシュから最新のものを取得
+        const cachedPrompts = await CharacterPromptCache.find({
+          characterId: characterId,
+          ttl: { $gt: new Date() }
+        }).sort({ 
+          lastUsed: -1  // 最終使用日順
+        }).limit(5); // 最新5件
+        
+        log.info('MongoDB cache search without userId', { 
+          characterId, 
+          found: cachedPrompts.length 
+        });
+        
+        if (cachedPrompts.length > 0) {
+          const cachedPrompt = cachedPrompts[0];
+          cacheStatus.exists = true;
+          cacheStatus.mongoCache = {
+            useCount: cachedPrompts.reduce((sum, p) => sum + (p.useCount || 0), 0),
+            lastUsed: cachedPrompt.lastUsed,
+            ttl: cachedPrompt.ttl,
+            affinityLevel: cachedPrompt.promptConfig?.affinityLevel || 0,
+            promptLength: cachedPrompt.systemPrompt?.length || 0,
+            languageCode: cachedPrompt.promptConfig?.languageCode || 'ja',
+            recentCaches: cachedPrompts.length
+          };
+          cacheStatus.data = cacheStatus.mongoCache;
+        }
       }
       
       // 全体のMongoDBキャッシュ数を取得
@@ -362,6 +440,8 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
         characterId: characterId,
         ttl: { $gt: new Date() }
       });
+      
+      log.info('Total cache count', { characterId, count: cacheStatus.count });
       
       // 2. Redisキャッシュもチェック（フォールバック）
       const redisClient = await getRedisClient();
