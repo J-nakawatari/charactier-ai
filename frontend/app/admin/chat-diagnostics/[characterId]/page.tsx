@@ -118,8 +118,8 @@ export default function AdminChatDiagnosticsDetailPage({
       setError(null);
       
       const url = userId 
-        ? `/api/v1/admin/chat-diagnostics/${characterId}?userId=${userId}`
-        : `/api/v1/admin/chat-diagnostics/${characterId}`;
+        ? `/api/v1/debug/admin/chat-diagnostics/${characterId}?userId=${userId}`
+        : `/api/v1/debug/admin/chat-diagnostics/${characterId}`;
         
       const response = await adminFetch(url);
       
