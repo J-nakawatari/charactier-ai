@@ -3095,6 +3095,12 @@ components:
           type: string
         stripeProductId:
           type: string
+        imageChatBackground:
+          type: string
+          description: チャット背景静止画像
+        videoChatBackground:
+          type: string
+          description: チャット背景動画（3-5秒ループ、PC専用）
         createdAt:
           type: string
           format: date-time

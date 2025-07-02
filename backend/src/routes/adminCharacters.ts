@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import { CharacterModel } from '../models/CharacterModel';
 import { UserModel } from '../models/UserModel';
 import { authenticateToken, hasWritePermission } from '../middleware/auth';
-import { uploadImage, optimizeImage } from '../utils/fileUpload';
+import { uploadImage, uploadVideo, optimizeImage } from '../utils/fileUpload';
 import { validate, validateObjectId } from '../middleware/validation';
 import { characterSchemas } from '../validation/schemas';
 import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
@@ -782,6 +782,68 @@ router.post('/upload/image', adminUploadRateLimit, authenticateToken, uploadImag
     
   } catch (error) {
     log.error('Admin image upload error', error, {
+      adminId: req.admin?._id,
+      fileName: req.file?.filename
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
+// 動画アップロード（管理者用）
+router.post('/upload/video', adminUploadRateLimit, authenticateToken, uploadVideo.single('video'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // デバッグ：認証情報を確認
+    log.debug('Video upload request', {
+      hasAdmin: !!req.admin,
+      adminRole: req.admin?.role,
+      adminId: req.admin?._id,
+      path: req.path
+    });
+    
+    // 書き込み権限チェック（super_adminのみ）
+    if (!hasWritePermission(req)) {
+      log.warn('Video upload permission denied', {
+        adminRole: req.admin?.role,
+        adminId: req.admin?._id
+      });
+      sendErrorResponse(res, 403, ClientErrorCode.INSUFFICIENT_PERMISSIONS, 'Only super admin can upload videos');
+      return;
+    }
+
+    if (!req.file) {
+      sendErrorResponse(res, 400, ClientErrorCode.MISSING_REQUIRED_FIELD, 'No video file provided');
+      return;
+    }
+
+    // ファイルタイプチェック
+    if (!req.file.mimetype.startsWith('video/')) {
+      sendErrorResponse(res, 400, ClientErrorCode.VALIDATION_ERROR, 'File must be a video');
+      return;
+    }
+
+    // ファイルサイズチェック（20MB制限）
+    if (req.file.size > 20 * 1024 * 1024) {
+      sendErrorResponse(res, 400, ClientErrorCode.VALIDATION_ERROR, 'Video file must be less than 20MB');
+      return;
+    }
+    
+    const videoUrl = `/uploads/videos/${req.file.filename}`;
+    log.info('Video uploaded by admin', {
+      adminId: req.admin?._id,
+      filename: req.file.filename,
+      size: req.file.size,
+      mimetype: req.file.mimetype
+    });
+    
+    res.json({
+      message: '動画アップロードが完了しました',
+      videoUrl,
+      filename: req.file.filename,
+      size: req.file.size
+    });
+    
+  } catch (error) {
+    log.error('Admin video upload error', error, {
       adminId: req.admin?._id,
       fileName: req.file?.filename
     });

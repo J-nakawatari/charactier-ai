@@ -94,6 +94,7 @@ export interface ICharacter extends Document {
   imageDashboard?: string;
   imageChatBackground?: string;
   imageChatAvatar?: string;
+  videoChatBackground?: string; // 3-5秒のループ動画
   sampleVoiceUrl?: string;
   
   // ギャラリー画像（親密度解放）
@@ -379,6 +380,7 @@ const CharacterSchema = new Schema<ICharacter>({
   imageDashboard: String,
   imageChatBackground: String,
   imageChatAvatar: String,
+  videoChatBackground: String, // 3-5秒のループ動画
   sampleVoiceUrl: String,
   
   // ギャラリー画像（親密度解放）

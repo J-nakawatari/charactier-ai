@@ -33,6 +33,7 @@ interface Character {
   imageDashboard?: string;
   imageChatBackground?: string;
   imageChatAvatar?: string;
+  videoChatBackground?: string; // 3-5秒のループ動画
   // 🎭 その他のフィールド
   currentMood: 'happy' | 'sad' | 'angry' | 'shy' | 'excited';
   themeColor: string;
@@ -356,35 +357,118 @@ export const ChatLayout = memo(function ChatLayout({
 
       {/* メッセージエリア */}
       <div className="flex-1 relative z-10 overflow-hidden" style={{ backgroundColor: 'transparent' }}>
-        {/* キャラクター画像（真ん中に配置） */}
-        {useMemo(() => character.imageChatBackground && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-            <Image 
-              src={getSafeImageUrl(character.imageChatBackground, character.name)}
-              alt={`${character.name}のキャラクター画像`}
-              width={600}
-              height={800}
-              className="object-contain opacity-100"
-              style={{ 
-                maxWidth: '90%',
-                maxHeight: '90%',
-                width: 'auto',
-                height: 'auto',
-                bottom: 0,
-                position: 'absolute'
-              }}
-              priority
-              placeholder="empty"
-              onError={(e) => {
-                console.error('ChatLayout background image loading error:', {
-                  characterId: character._id,
-                  imageChatBackground: character.imageChatBackground,
-                  finalSrc: getSafeImageUrl(character.imageChatBackground, character.name)
-                });
-              }}
-            />
-          </div>
-        ), [character.imageChatBackground, character.name, character._id])}
+        {/* キャラクター画像/動画（真ん中に配置） */}
+        {useMemo(() => {
+          const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+          
+          // SP: 静止画を表示
+          if (isMobile && character.imageChatBackground) {
+            return (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                <Image 
+                  src={getSafeImageUrl(character.imageChatBackground, character.name)}
+                  alt={`${character.name}のキャラクター画像`}
+                  width={600}
+                  height={800}
+                  className="object-contain opacity-100"
+                  style={{ 
+                    maxWidth: '90%',
+                    maxHeight: '90%',
+                    width: 'auto',
+                    height: 'auto',
+                    bottom: 0,
+                    position: 'absolute'
+                  }}
+                  priority
+                  placeholder="empty"
+                  onError={(e) => {
+                    console.error('ChatLayout background image loading error:', {
+                      characterId: character._id,
+                      imageChatBackground: character.imageChatBackground,
+                      finalSrc: getSafeImageUrl(character.imageChatBackground, character.name)
+                    });
+                  }}
+                />
+              </div>
+            );
+          }
+          
+          // PC: 動画があれば動画、なければ静止画
+          if (!isMobile && character.videoChatBackground) {
+            return (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="object-contain opacity-100"
+                  style={{ 
+                    maxWidth: '90%',
+                    maxHeight: '90%',
+                    width: 'auto',
+                    height: 'auto',
+                    bottom: 0,
+                    position: 'absolute'
+                  }}
+                  onError={(e) => {
+                    console.error('ChatLayout background video loading error:', {
+                      characterId: character._id,
+                      videoChatBackground: character.videoChatBackground
+                    });
+                  }}
+                >
+                  <source src={character.videoChatBackground} type="video/mp4" />
+                  {/* フォールバック: 動画が再生できない場合は静止画を表示 */}
+                  {character.imageChatBackground && (
+                    <Image 
+                      src={getSafeImageUrl(character.imageChatBackground, character.name)}
+                      alt={`${character.name}のキャラクター画像`}
+                      width={600}
+                      height={800}
+                      className="object-contain opacity-100"
+                      style={{ 
+                        maxWidth: '90%',
+                        maxHeight: '90%',
+                        width: 'auto',
+                        height: 'auto',
+                        bottom: 0,
+                        position: 'absolute'
+                      }}
+                    />
+                  )}
+                </video>
+              </div>
+            );
+          }
+          
+          // フォールバック: 静止画
+          if (character.imageChatBackground) {
+            return (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                <Image 
+                  src={getSafeImageUrl(character.imageChatBackground, character.name)}
+                  alt={`${character.name}のキャラクター画像`}
+                  width={600}
+                  height={800}
+                  className="object-contain opacity-100"
+                  style={{ 
+                    maxWidth: '90%',
+                    maxHeight: '90%',
+                    width: 'auto',
+                    height: 'auto',
+                    bottom: 0,
+                    position: 'absolute'
+                  }}
+                  priority
+                  placeholder="empty"
+                />
+              </div>
+            );
+          }
+          
+          return null;
+        }, [character.imageChatBackground, character.videoChatBackground, character.name, character._id])}
         
         <MessageList 
           messages={localMessages}

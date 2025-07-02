@@ -113,6 +113,8 @@ export default function CharacterNewPage() {
     imageDashboard: null,
     imageChatBackground: null,
     imageChatAvatar: null,
+    videoChatBackground: null as File | null,
+    videoChatBackgroundUrl: '',
     galleryImages: [] as { file: File; unlockLevel: number; title: string; description: string }[],
     
     // その他
@@ -206,6 +208,28 @@ export default function CharacterNewPage() {
       if (formData.imageChatAvatar) {
         const url = await uploadImage(formData.imageChatAvatar as any, 'imageChatAvatar');
         if (url) uploadedImages.imageChatAvatar = url;
+      }
+
+      // 動画アップロード
+      if (formData.videoChatBackground) {
+        const uploadFormData = new FormData();
+        uploadFormData.append('video', formData.videoChatBackground);
+        
+        try {
+          const uploadResponse = await adminFetch(`${API_BASE_URL}/api/v1/admin/characters/upload/video`, {
+            method: 'POST',
+            body: uploadFormData
+          });
+          
+          if (uploadResponse.ok) {
+            const { videoUrl } = await uploadResponse.json();
+            uploadedImages.videoChatBackground = videoUrl;
+          } else {
+            console.error('Failed to upload video:', await uploadResponse.text());
+          }
+        } catch (err) {
+          console.error('Error uploading video:', err);
+        }
       }
 
       const payload = {
@@ -387,6 +411,49 @@ export default function CharacterNewPage() {
     e.target.value = '';
   };
 
+  const handleVideoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // ファイルタイプチェック
+      if (!file.type.startsWith('video/')) {
+        error('ファイルエラー', '動画ファイルを選択してください（MP4形式推奨）');
+        e.target.value = '';
+        return;
+      }
+
+      // ファイルサイズチェック（20MB制限）
+      if (file.size > 20 * 1024 * 1024) {
+        error('ファイルエラー', '動画ファイルは20MB以下にしてください');
+        e.target.value = '';
+        return;
+      }
+
+      // 動画の長さをチェック（3-5秒）
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      
+      video.onloadedmetadata = () => {
+        const duration = video.duration;
+        if (duration < 3 || duration > 5) {
+          error('動画エラー', '動画は3秒から5秒の間にしてください（現在: ' + duration.toFixed(1) + '秒）');
+          e.target.value = '';
+          return;
+        }
+
+        // 動画ファイルをステートに保存
+        setFormData(prev => ({ 
+          ...prev, 
+          videoChatBackground: file,
+          videoChatBackgroundUrl: URL.createObjectURL(file)
+        }));
+        success('動画設定', '動画が設定されました');
+      };
+
+      video.src = URL.createObjectURL(file);
+    }
+    e.target.value = '';
+  };
+
   const handleCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
   };
@@ -469,6 +536,12 @@ export default function CharacterNewPage() {
       const newGalleryImages = [...formData.galleryImages];
       newGalleryImages.splice(galleryIndex, 1);
       setFormData({ ...formData, galleryImages: newGalleryImages });
+    } else if (imageType === 'videoChatBackground') {
+      setFormData({ 
+        ...formData, 
+        videoChatBackground: null,
+        videoChatBackgroundUrl: ''
+      });
     } else {
       setFormData({ ...formData, [imageType]: null });
     }
@@ -644,6 +717,52 @@ export default function CharacterNewPage() {
                       type="file"
                       accept="image/*"
                       onChange={(e) => handleImageChange(e, 'imageChatBackground')}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* チャット背景動画 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    チャット背景動画（PC専用）
+                  </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors relative">
+                    {formData.videoChatBackground || formData.videoChatBackgroundUrl ? (
+                      <div className="space-y-2">
+                        <div className="w-full mx-auto">
+                          <video 
+                            src={formData.videoChatBackground 
+                              ? URL.createObjectURL(formData.videoChatBackground) 
+                              : formData.videoChatBackgroundUrl
+                            } 
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full max-w-xs mx-auto rounded-lg"
+                          />
+                        </div>
+                        <p className="text-sm text-gray-600">動画が設定されています（3-5秒ループ）</p>
+                        <button
+                          type="button"
+                          onClick={() => removeImage('videoChatBackground')}
+                          className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                          削除
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto" />
+                        <p className="text-sm text-gray-500">クリックまたはドラッグ&ドロップで動画をアップロード</p>
+                        <p className="text-xs text-gray-400">MP4形式、3-5秒、最大20MB</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="video/mp4,video/*"
+                      onChange={handleVideoChange}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
                   </div>

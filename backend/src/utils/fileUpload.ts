@@ -40,6 +40,33 @@ export const uploadImage = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB制限
 });
 
+// 動画アップロード用の設定
+const videoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = createUploadDir('videos');
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
+
+const videoFileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  if (file.mimetype.startsWith('video/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('動画ファイルのみ許可されています！'));
+  }
+};
+
+export const uploadVideo = multer({
+  storage: videoStorage,
+  fileFilter: videoFileFilter,
+  limits: { fileSize: 20 * 1024 * 1024 } // 20MB制限
+});
+
 export const optimizeImage = (width: number = 800, height: number = 800, quality: number = 80) => 
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
