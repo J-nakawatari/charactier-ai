@@ -115,6 +115,22 @@ export function TermsContent() {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('article13.title')}</h2>
         <p className="text-gray-700">{t('article13.content')}</p>
       </section>
+
+      <section>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('article14.title')}</h2>
+        <ol className="list-decimal list-inside space-y-2 text-gray-700">
+          <li>{t('article14.item1')}</li>
+          <li>{t('article14.item2')}</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('article15.title')}</h2>
+        <ol className="list-decimal list-inside space-y-2 text-gray-700">
+          <li>{t('article15.item1')}</li>
+          <li>{t('article15.item2')}</li>
+        </ol>
+      </section>
     </div>
   );
 }

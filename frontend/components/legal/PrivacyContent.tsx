@@ -64,6 +64,25 @@ export function PrivacyContent() {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('section8.title')}</h2>
         <p className="text-gray-700">{t('section8.content')}</p>
       </section>
+
+      <section>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('section9.title')}</h2>
+        <p className="text-gray-700">{t('section9.content')}</p>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('section10.title')}</h2>
+        <ul className="list-disc list-inside space-y-2 text-gray-700">
+          <li>{t('section10.item1')}</li>
+          <li>{t('section10.item2')}</li>
+          <li>{t('section10.item3')}</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('section11.title')}</h2>
+        <p className="text-gray-700">{t('section11.content')}</p>
+      </section>
     </div>
   );
 }

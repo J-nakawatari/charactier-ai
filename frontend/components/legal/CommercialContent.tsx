@@ -120,6 +120,18 @@ export function CommercialContent() {
               {t('items.subscription.content')}
             </td>
           </tr>
+          <tr>
+            <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.refundPolicy.label')}</td>
+            <td className="px-6 py-4 text-sm text-gray-700">
+              {t('items.refundPolicy.content')}
+            </td>
+          </tr>
+          <tr>
+            <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.phoneDisclosure.label')}</td>
+            <td className="px-6 py-4 text-sm text-gray-700">
+              {t('items.phoneDisclosure.content')}
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
