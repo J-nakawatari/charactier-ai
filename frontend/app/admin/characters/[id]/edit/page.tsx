@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useToast } from '@/contexts/ToastContext';
@@ -96,6 +96,23 @@ export default function CharacterEditPage() {
   const [priceInfo, setPriceInfo] = useState<{ price: number; currency: string } | null>(null);
   const [priceError, setPriceError] = useState<string>('');
   const [isFetchingPrice, setIsFetchingPrice] = useState(false);
+
+  // 動画URLの安全な管理
+  const videoPreviewUrl = useMemo(() => {
+    if (formData.videoChatBackground) {
+      return URL.createObjectURL(formData.videoChatBackground);
+    }
+    return formData.videoChatBackgroundUrl || '';
+  }, [formData.videoChatBackground, formData.videoChatBackgroundUrl]);
+
+  // クリーンアップ
+  useEffect(() => {
+    return () => {
+      if (formData.videoChatBackground && videoPreviewUrl && videoPreviewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(videoPreviewUrl);
+      }
+    };
+  }, [videoPreviewUrl]);
 
   // 既存データの読み込み
   useEffect(() => {
@@ -498,7 +515,8 @@ export default function CharacterEditPage() {
         URL.revokeObjectURL(videoUrl);
       };
 
-      video.src = videoUrl;
+      // 安全にsrc属性を設定
+      video.setAttribute('src', videoUrl);
     }
     e.target.value = '';
   };
@@ -1114,17 +1132,16 @@ export default function CharacterEditPage() {
                     {formData.videoChatBackground || formData.videoChatBackgroundUrl ? (
                       <div className="space-y-2">
                         <div className="w-full mx-auto">
-                          <video 
-                            src={formData.videoChatBackground 
-                              ? URL.createObjectURL(formData.videoChatBackground) 
-                              : formData.videoChatBackgroundUrl
-                            } 
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            className="w-full max-w-xs mx-auto rounded-lg"
-                          />
+                          {videoPreviewUrl && (
+                            <video 
+                              src={videoPreviewUrl} 
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              className="w-full max-w-xs mx-auto rounded-lg"
+                            />
+                          )}
                         </div>
                         <p className="text-sm text-gray-600">動画が設定されています（3-5秒ループ）</p>
                         <button
