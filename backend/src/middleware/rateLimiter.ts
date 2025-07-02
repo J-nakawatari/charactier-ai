@@ -28,9 +28,9 @@ export const rateLimitConfigs = {
   
   // 決済関連
   payment: {
-    points: 10,
-    duration: 3600,
-    blockDuration: 3600
+    points: 50,      // 10から50に増加（1時間に50回まで）
+    duration: 3600,  // 1時間
+    blockDuration: 300 // ブロック時間を5分に短縮（3600秒から300秒へ）
   },
   
   // 管理者API（レート制限をさらに緩和）
