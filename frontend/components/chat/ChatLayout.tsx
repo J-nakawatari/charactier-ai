@@ -123,7 +123,10 @@ export const ChatLayout = memo(function ChatLayout({
     });
     console.log('ChatLayout - Mood colors:', {
       currentMood,
-      moodUIColors
+      moodUIColors,
+      affinity,
+      backgroundClass: moodUIColors.background,
+      borderClass: moodUIColors.border
     });
   }, [character, currentMood, moodUIColors]);
   

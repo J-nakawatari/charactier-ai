@@ -150,8 +150,8 @@ export const getMoodUIColors = (mood: string) => {
       progressBar: 'bg-red-600'
     },
     neutral: {
-      background: 'bg-white/90',
-      border: 'border-gray-200/50',
+      background: 'bg-purple-50/90',
+      border: 'border-purple-200/50',
       accent: 'text-purple-600',
       button: 'bg-purple-600 text-white hover:bg-purple-700',
       progressBar: 'bg-purple-600'
