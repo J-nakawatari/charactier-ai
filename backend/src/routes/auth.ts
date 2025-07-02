@@ -15,7 +15,7 @@ import log from '../utils/logger';
 import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
 import { hashPassword, verifyPassword, needsRehash, validatePasswordStrength } from '../services/passwordHash';
 import { getCookieConfig, getRefreshCookieConfig, getFeatureFlags } from '../config/featureFlags';
-import { generateCompactAccessToken, generateCompactRefreshToken, CompactTokenPayload } from '../utils/jwtUtils';
+import { generateCompactAccessToken, generateCompactRefreshToken, CompactTokenPayload, verifyCompactToken } from '../utils/jwtUtils';
 import { 
   COOKIE_NAMES,
   getAccessTokenCookieOptions,
@@ -534,42 +534,20 @@ router.post('/refresh',
       return;
     }
 
-    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId: string };
-
-    // まず管理者として検索
-    const admin = await AdminModel.findById(decoded.userId);
-    if (admin && admin.isActive) {
-      // 管理者用の新しいアクセストークンを生成
-      const newAccessToken = generateAccessToken(admin._id.toString());
-      
-      // Cookie設定（Feature Flag対応）
-      const isProduction = process.env.NODE_ENV === 'production';
-      const cookieOptions = getCookieConfig(isProduction);
-      const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
-      if (cookieDomain) {
-        cookieOptions.domain = cookieDomain;
+    // コンパクトトークンの場合、idフィールドをuserIdにマッピング
+    let decoded: any;
+    try {
+      decoded = verifyCompactToken(refreshToken, true);
+      // コンパクトトークンの場合、idフィールドをuserIdにマッピング
+      if (decoded.id) {
+        decoded.userId = decoded.id;
       }
-      
-      // 管理者用クッキー名で設定
-      res.cookie('adminAccessToken', newAccessToken, cookieOptions);
-      
-      // レスポンス（Feature Flag対応）
-      if (flags.SECURE_COOKIE_AUTH) {
-        // 新方式: トークンをレスポンスに含めない
-        res.json({
-          success: true,
-          message: 'トークンが更新されました'
-        });
-      } else {
-        // 従来方式: トークンをレスポンスに含める
-        res.json({
-          accessToken: newAccessToken
-        });
-      }
-      return;
+    } catch {
+      // 従来形式のトークンとして検証
+      decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId: string };
     }
 
-    // 管理者で見つからない場合は一般ユーザーとして検索
+    // ユーザー専用のリフレッシュエンドポイントなので、ユーザーのみを検索
     const user = await UserModel.findById(decoded.userId);
     if (!user || !user.isActive) {
       log.warn('Token refresh failed - user not found or inactive', { userId: decoded.userId });
@@ -577,19 +555,15 @@ router.post('/refresh',
       return;
     }
 
-    // 新しいアクセストークンを生成
-    const newAccessToken = generateAccessToken(user._id.toString());
+    // 新しいアクセストークンを生成（コンパクト版を使用）
+    const newAccessToken = generateCompactAccessToken(user._id.toString(), 'user', '2h');
     
-    // Cookie設定（Feature Flag対応）
+    // Cookie設定
     const isProduction = process.env.NODE_ENV === 'production';
-    const cookieOptions = getCookieConfig(isProduction);
-    const cookieDomain = process.env.COOKIE_DOMAIN || (isProduction ? '.charactier-ai.com' : undefined);
-    if (cookieDomain) {
-      cookieOptions.domain = cookieDomain;
-    }
+    const accessCookieOptions = getAccessTokenCookieOptions(isProduction);
     
     // ユーザー用クッキー名で設定
-    res.cookie('userAccessToken', newAccessToken, cookieOptions);
+    res.cookie(COOKIE_NAMES.USER_ACCESS, newAccessToken, accessCookieOptions);
 
     // レスポンス（Feature Flag対応）
     if (flags.SECURE_COOKIE_AUTH) {
@@ -1193,10 +1167,21 @@ router.post('/admin/refresh', authRateLimit, async (req: Request, res: Response)
       return;
     }
 
-    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as CompactTokenPayload;
+    // コンパクトトークンの場合、idフィールドをuserIdにマッピング
+    let decoded: any;
+    try {
+      decoded = verifyCompactToken(refreshToken, true);
+      // コンパクトトークンの場合、idフィールドをuserIdにマッピング
+      if (decoded.id) {
+        decoded.userId = decoded.id;
+      }
+    } catch {
+      // 従来形式のトークンとして検証
+      decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId: string };
+    }
 
-    // 管理者として検索（コンパクトトークンは'id'フィールドを使用）
-    const admin = await AdminModel.findById(decoded.id);
+    // 管理者として検索
+    const admin = await AdminModel.findById(decoded.userId);
     if (!admin || !admin.isActive) {
       log.warn('Admin token refresh failed - admin not found or inactive', { userId: decoded.id });
       sendErrorResponse(res, 401, ClientErrorCode.AUTH_FAILED);

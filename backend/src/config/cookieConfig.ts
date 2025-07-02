@@ -29,13 +29,13 @@ const getBaseCookieOptions = (isProduction: boolean): CookieOptions => ({
 // アクセストークン用Cookie設定（短時間）
 export const getAccessTokenCookieOptions = (isProduction: boolean = process.env.NODE_ENV === 'production'): CookieOptions => ({
   ...getBaseCookieOptions(isProduction),
-  maxAge: 25 * 60 * 1000, // 25分（トークン15分＋更新バッファ10分）
+  maxAge: 2 * 60 * 60 * 1000 + 10 * 60 * 1000, // 2時間10分（トークン2時間＋更新バッファ10分）
 });
 
 // リフレッシュトークン用Cookie設定
 export const getRefreshTokenCookieOptions = (isProduction: boolean = process.env.NODE_ENV === 'production'): CookieOptions => ({
   ...getBaseCookieOptions(isProduction),
-  maxAge: 14 * 24 * 60 * 60 * 1000, // 14日間
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
   httpOnly: true, // 必須
 });
 

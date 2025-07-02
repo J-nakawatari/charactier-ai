@@ -30,7 +30,7 @@ export interface ExtendedTokenPayload extends CompactTokenPayload {
 export function generateCompactAccessToken(
   userId: string, 
   type: 'user' | 'admin' = 'user',
-  expiresIn: string = '15m'
+  expiresIn: string = '2h'
 ): string {
   const payload: CompactTokenPayload = {
     id: userId,
@@ -63,7 +63,7 @@ export function generateCompactAccessToken(
 export function generateCompactRefreshToken(
   userId: string,
   type: 'user' | 'admin' = 'user',
-  expiresIn: string = '14d'
+  expiresIn: string = '7d'
 ): string {
   const payload: CompactTokenPayload = {
     id: userId,

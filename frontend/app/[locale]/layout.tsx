@@ -7,6 +7,7 @@ import { getActiveGAId } from '@/lib/ga-settings';
 import { Suspense } from 'react';
 import '../globals.css';
 import CsrfTokenInitializer from '@/components/CsrfTokenInitializer';
+import TokenRefreshManager from '@/components/TokenRefreshManager';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -46,6 +47,8 @@ export default async function LocaleLayout({
         </Suspense>
         {/* CSRFトークン初期化 */}
         <CsrfTokenInitializer />
+        {/* トークン自動リフレッシュ */}
+        <TokenRefreshManager />
       </body>
     </html>
   );
