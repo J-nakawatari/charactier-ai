@@ -115,13 +115,7 @@ export default function CharacterEditPage() {
     return formData.videoChatBackgroundUrl || '';
   }, [formData.videoChatBackground, formData.videoChatBackgroundUrl]);
 
-  // video要素のsrc属性を安全に設定（ループ防止のため条件を追加）
-  useEffect(() => {
-    if (videoRef.current && videoPreviewUrl && videoRef.current.getAttribute('src') !== videoPreviewUrl) {
-      // 属性を直接設定することで、XSSリスクを回避
-      videoRef.current.setAttribute('src', videoPreviewUrl);
-    }
-  }, [videoPreviewUrl]);
+  // video要素のsrc属性は直接設定するように変更したため、このuseEffectは削除
 
   // クリーンアップ
   useEffect(() => {
@@ -202,6 +196,7 @@ export default function CharacterEditPage() {
           console.log('  imageDashboardUrl:', character.imageDashboard || '');
           console.log('  imageChatBackgroundUrl:', character.imageChatBackground || '');
           console.log('  imageChatAvatarUrl:', character.imageChatAvatar || '');
+          console.log('  videoChatBackgroundUrl:', character.videoChatBackground || '');
           
           console.log('🔄 normalizeImageUrl適用後:');
           console.log('  imageCharacterSelect normalized:', normalizeImageUrl(character.imageCharacterSelect));
@@ -1193,15 +1188,21 @@ export default function CharacterEditPage() {
                     {formData.videoChatBackground || formData.videoChatBackgroundUrl ? (
                       <div className="space-y-2">
                         <div className="w-full mx-auto">
-                          {videoPreviewUrl && (
+                          {videoPreviewUrl ? (
                             <video 
                               ref={videoRef}
+                              src={videoPreviewUrl}
                               autoPlay
                               loop
                               muted
                               playsInline
-                              className="w-full max-w-xs mx-auto rounded-lg"
+                              className="w-full max-w-xs mx-auto rounded-lg bg-black"
+                              onError={() => console.error('動画プレビューエラー:', videoPreviewUrl)}
                             />
+                          ) : (
+                            <div className="bg-gray-200 w-full max-w-xs mx-auto rounded-lg aspect-video flex items-center justify-center">
+                              <p className="text-gray-500 text-sm">動画URLなし: {formData.videoChatBackgroundUrl || 'URLが設定されていません'}</p>
+                            </div>
                           )}
                         </div>
                         <p className="text-sm text-gray-600">動画が設定されています（3-5秒ループ）</p>
