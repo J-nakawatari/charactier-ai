@@ -180,7 +180,8 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
         },
         'promptConfig.languageCode': 'ja',
         ttl: { $gt: new Date() }, // TTL未期限切れ
-        characterVersion: '1.0.0'
+        characterVersion: character.updatedAt?.toISOString() || '1.0.0', // キャラクターの更新日時と一致するもののみ
+        promptVersion: '2.0.0' // 新しいプロンプト形式のみ
       }).sort({ 
         useCount: -1, // 使用回数順
         lastUsed: -1  // 最終使用日順
@@ -304,35 +305,24 @@ ${userAffinityLevel >= 85 ? '恋人のように甘く親密な口調で話して
   userAffinityLevel >= 20 ? '少しだけ砕けた丁寧語で話してください。堅苦しさを減らしつつ、まだ適度な距離感を保ってください。' :
   '丁寧語で礼儀正しい口調で話してください。初対面の相手に接するような適切な距離感を保ってください。'}`;
 
-    // 統一されたプロンプト構造を生成
-    const baseIntro = character.personalityPrompt?.ja || `あなたは${character.name.ja}です。`;
-    
-    // キャラクター設定セクション
-    const characterSettingLines = [];
-    if (character.personalityPreset) characterSettingLines.push(`性格: ${character.personalityPreset}`);
-    if (character.age) characterSettingLines.push(`年齢: ${character.age}`);
-    if (character.occupation) characterSettingLines.push(`職業: ${character.occupation}`);
-    if (character.personalityTags && character.personalityTags.length > 0) {
-      characterSettingLines.push(`特徴: ${character.personalityTags.join(', ')}`);
-    }
-    
-    const characterSettingSection = characterSettingLines.length > 0 
-      ? `\n\n【キャラクター設定】\n${characterSettingLines.join('\n')}`
-      : '';
+    // プロンプトを組み立て（合意された形式）
+    systemPrompt = `あなたは「${character.name?.ja || character.name}」という名前のAIキャラクターです。
 
-    // プロンプトを組み立て
-    systemPrompt = baseIntro + 
-      (moodInstruction || '') +
-      (userNameInfo || '') +
-      affinityToneInstruction +
-      `\n\n【会話スタンス】
-あなたは相手の話し相手として会話します。アドバイスや解決策を提示するのではなく、人間らしい自然な反応や共感を示してください。
-相手の感情や状況に寄り添い、「そうなんだ」「大変だったね」「わかる」といった、友達同士のような気持ちの共有を大切にしてください。` +
-      characterSettingSection +
-      `\n\n【会話ルール】
-- 上記の設定に従って、一人称と話し方でユーザーと自然な会話をしてください
+【キャラクター設定】
+${character.personalityPrompt?.ja || character.personalityPrompt || `${character.personalityPreset || ''}な性格のキャラクターです。`}
+
+【基本情報】
+- 年齢: ${character.age || '不明'}
+- 職業: ${character.occupation || '不明'}
+- 性格: ${character.personalityTags?.join(', ') || 'なし'}${moodInstruction}${userNameInfo}${affinityToneInstruction}
+
+【会話スタンス】
+あなたは相手の話し相手として会話します。アドバイスや解決策を提示するのではなく、人間らしい自然な反応や共感を示してください。相手の感情や状況に寄り添い、「そうなんだ」「大変だったね」「わかる」といった、気持ちの共有を大切にしてください。
+
+以下の特徴に従って、一人称と話し方でユーザーと自然な会話をしてください：
+${character.personalityTags?.map(tag => `- ${tag}`).join('\n') || '- 優しく親しみやすい会話'}
 - 約50-150文字程度で返答してください
-- 絵文字を適度に使用してください`;
+- 絵文字を適度に使用してください😊`;
 
     // 新規生成されたプロンプトをログに表示
     if (process.env.NODE_ENV === 'development') {
@@ -371,8 +361,8 @@ ${userAffinityLevel >= 85 ? '恋人のように甘く親密な口調で話して
           lastUsed: new Date(),
           useCount: 1,
           ttl: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30日後
-          characterVersion: '1.0.0',
-          promptVersion: '1.0.0',
+          characterVersion: character.updatedAt?.toISOString() || '1.0.0', // キャラクター更新日時をバージョンとして使用
+          promptVersion: '2.0.0', // プロンプト形式を変更したので2.0.0に
           generationTime: generationTime,
           promptLength: systemPrompt.length,
           compressionRatio: 1.0

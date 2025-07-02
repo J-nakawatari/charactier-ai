@@ -630,18 +630,18 @@ router.get('/admin/prompt-preview/:characterId', generalRateLimit, authenticateT
     const toneConfig = generateTonePrompt(affinityLevel, [], '');
 
     // 実際のチャットAPIと同じプロンプト生成ロジックを使用
-    const personalityPrompt = character.personalityPrompt?.ja || character.personalityPrompt || '';
+    const personalityPrompt = character.personalityPrompt?.ja || character.personalityPrompt || `${character.personalityPreset || ''}な性格のキャラクターです。`;
     
-    // キャラクターの基本プロンプト
+    // キャラクターの基本プロンプト（実際のチャットAPIと同じ形式）
     let systemPrompt = `あなたは「${character.name?.ja || character.name}」という名前のAIキャラクターです。
 
-【基本設定】
+【キャラクター設定】
+${personalityPrompt}
+
+【基本情報】
 - 年齢: ${character.age || '不明'}
 - 職業: ${character.occupation || '不明'}
 - 性格: ${character.personalityTags?.join(', ') || 'なし'}
-
-【パーソナリティ】
-${personalityPrompt}
 
 【話し相手について】
 あなたが会話している相手の名前は「${userName}」です。会話の中で自然に名前を呼んであげてください。
@@ -655,18 +655,12 @@ ${affinityLevel >= 85 ? '恋人のように甘く親密な口調で話してく�
   '丁寧語で礼儀正しい口調で話してください。初対面の相手に接するような適切な距離感を保ってください。'}
 
 【会話スタンス】
-- 自然で人間らしい会話を心がけてください
-- 相手の感情に寄り添い、共感的に応答してください
-- 長すぎる応答は避け、会話のキャッチボールを意識してください
-- 適度に質問を投げかけて、会話を盛り上げてください
+あなたは相手の話し相手として会話します。アドバイスや解決策を提示するのではなく、人間らしい自然な反応や共感を示してください。相手の感情や状況に寄り添い、「そうなんだ」「大変だったね」「わかる」といった、気持ちの共有を大切にしてください。
 
-【応答の指針】
-1. メッセージは2-3文程度を目安にしてください
-2. 絵文字や顔文字を適度に使ってください
-3. ユーザーの名前を自然に呼んでください
-4. 親密度に応じた適切な距離感を保ってください
-
-会話を楽しんでください！`;
+以下の特徴に従って、一人称と話し方でユーザーと自然な会話をしてください：
+${character.personalityTags?.map(tag => `- ${tag}`).join('\n') || '- 優しく親しみやすい会話'}
+- 約50-150文字程度で返答してください
+- 絵文字を適度に使用してください😊`;
 
     // OpenAI APIに送信される実際のメッセージ配列
     const messages = [
