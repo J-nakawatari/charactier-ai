@@ -28,7 +28,7 @@ interface Character {
 interface FilterState {
   keyword: string;
   characterType: 'all' | 'free' | 'purchased' | 'unpurchased';
-  sort: 'popular' | 'newest' | 'oldest' | 'name' | 'affinity';
+  sort: 'custom' | 'popular' | 'newest' | 'oldest' | 'name' | 'affinity';
 }
 
 function CharactersPageContent({
@@ -46,7 +46,7 @@ function CharactersPageContent({
   const [filters, setFilters] = useState<FilterState>({
     keyword: '',
     characterType: 'all',
-    sort: 'popular'
+    sort: 'custom'
   });
   // isLoading stateを削除（チラツキ防止）
   const [error, setError] = useState<string | null>(null);

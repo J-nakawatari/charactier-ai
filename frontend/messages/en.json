@@ -17,6 +17,7 @@
       "unpurchased": "Unpurchased Characters Only"
     },
     "sort": {
+      "custom": "Recommended",
       "popular": "Popular",
       "newest": "Newest",
       "oldest": "Oldest",

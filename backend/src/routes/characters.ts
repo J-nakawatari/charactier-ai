@@ -129,7 +129,7 @@ router.get('/', generalRateLimit, authenticateToken, async (req: AuthRequest, re
   try {
     const locale = (req.query.locale as string) || 'ja';
     const characterType = (req.query.characterType as string) || 'all';
-    const sort = (req.query.sort as string) || 'newest';
+    const sort = (req.query.sort as string) || 'custom';
     const keyword = (req.query.keyword as string) || '';
     
     log.debug('Characters API called', { locale, characterType, sort, hasKeyword: !!keyword });
@@ -196,6 +196,9 @@ router.get('/', generalRateLimit, authenticateToken, async (req: AuthRequest, re
     // Build sort
     let sortQuery: Record<string, 1 | -1> = {};
     switch (sort) {
+      case 'custom':
+        sortQuery = { sortOrder: 1, createdAt: -1 };
+        break;
       case 'popular':
         sortQuery = { totalConversations: -1 };
         break;
@@ -212,7 +215,7 @@ router.get('/', generalRateLimit, authenticateToken, async (req: AuthRequest, re
         sortQuery = { averageAffinity: -1 };
         break;
       default:
-        sortQuery = { createdAt: -1 };
+        sortQuery = { sortOrder: 1, createdAt: -1 };
     }
     
     log.debug('Character filter applied', { characterType, userPurchasedCount: userPurchasedCharacters.length });

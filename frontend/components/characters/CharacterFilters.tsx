@@ -7,7 +7,7 @@ import { Search, Filter, SortAsc, X } from 'lucide-react';
 interface FilterState {
   keyword: string;
   characterType: 'all' | 'free' | 'purchased' | 'unpurchased'; // キャラクター種別フィルター
-  sort: 'popular' | 'newest' | 'oldest' | 'name' | 'affinity';
+  sort: 'custom' | 'popular' | 'newest' | 'oldest' | 'name' | 'affinity';
 }
 
 interface CharacterFiltersProps {
@@ -39,11 +39,12 @@ export default function CharacterFilters({
     onFiltersChange({
       keyword: '',
       characterType: 'all',
-      sort: 'popular'
+      sort: 'custom'
     });
   };
 
   const sortOptions = [
+    { value: 'custom', label: t('sort.custom') },
     { value: 'popular', label: t('sort.popular') },
     { value: 'newest', label: t('sort.newest') },
     { value: 'oldest', label: t('sort.oldest') },
@@ -51,7 +52,7 @@ export default function CharacterFilters({
     { value: 'affinity', label: t('sort.affinity') }
   ];
 
-  const hasActiveFilters = filters.keyword || filters.characterType !== 'all' || filters.sort !== 'popular';
+  const hasActiveFilters = filters.keyword || filters.characterType !== 'all' || filters.sort !== 'custom';
 
   const characterTypeOptions = [
     { value: 'all', label: t('filters.all') },
@@ -178,11 +179,11 @@ export default function CharacterFilters({
             )}
             
             
-            {filters.sort !== 'popular' && (
+            {filters.sort !== 'custom' && (
               <span className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                 <span>{sortOptions.find(o => o.value === filters.sort)?.label}</span>
                 <button
-                  onClick={() => updateFilter('sort', 'popular')}
+                  onClick={() => updateFilter('sort', 'custom')}
                   className="text-blue-500 hover:text-blue-700"
                 >
                   <X className="h-3 w-3" />
