@@ -283,7 +283,7 @@ export default function AdminChatDiagnosticsDetailPage({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">AIモデル</p>
-                    <p className="font-medium">{diagnostics.character.aiModel}</p>
+                    <p className="font-medium text-gray-900">{diagnostics.character.aiModel}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">ステータス</p>
@@ -303,11 +303,11 @@ export default function AdminChatDiagnosticsDetailPage({
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">年齢</p>
-                    <p className="font-medium">{diagnostics.prompt.characterInfo.age}</p>
+                    <p className="font-medium text-gray-900">{diagnostics.prompt.characterInfo.age}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">職業</p>
-                    <p className="font-medium">{diagnostics.prompt.characterInfo.occupation}</p>
+                    <p className="font-medium text-gray-900">{diagnostics.prompt.characterInfo.occupation}</p>
                   </div>
                 </div>
               </div>
@@ -336,7 +336,7 @@ export default function AdminChatDiagnosticsDetailPage({
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">最終アクティビティ</p>
-                        <p className="text-sm font-medium">
+                        <p className="text-sm font-medium text-gray-900">
                           {formatDate(diagnostics.chat.lastActivity)}
                         </p>
                       </div>
@@ -350,19 +350,19 @@ export default function AdminChatDiagnosticsDetailPage({
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="text-gray-600">DB内の総メッセージ数</p>
-                          <p className="font-medium">{diagnostics.chat.conversationHistory.totalMessagesInDB}</p>
+                          <p className="font-medium text-gray-900">{diagnostics.chat.conversationHistory.totalMessagesInDB}</p>
                         </div>
                         <div>
                           <p className="text-gray-600">AIに送信されるメッセージ数</p>
-                          <p className="font-medium">{diagnostics.chat.conversationHistory.messagesUsedForContext}</p>
+                          <p className="font-medium text-gray-900">{diagnostics.chat.conversationHistory.messagesUsedForContext}</p>
                         </div>
                         <div>
                           <p className="text-gray-600">コンテキストウィンドウ</p>
-                          <p className="font-medium">{diagnostics.chat.conversationHistory.contextWindowSize}</p>
+                          <p className="font-medium text-gray-900">{diagnostics.chat.conversationHistory.contextWindowSize}</p>
                         </div>
                         <div>
                           <p className="text-gray-600">文字数制限</p>
-                          <p className="font-medium">{diagnostics.chat.conversationHistory.truncationLimit}</p>
+                          <p className="font-medium text-gray-900">{diagnostics.chat.conversationHistory.truncationLimit}</p>
                         </div>
                       </div>
                     </div>
@@ -399,17 +399,17 @@ export default function AdminChatDiagnosticsDetailPage({
                     <>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">使用回数</span>
-                        <span className="font-medium">{diagnostics.cache.data.useCount}回</span>
+                        <span className="font-medium text-gray-900">{diagnostics.cache.data.useCount}回</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">プロンプト長</span>
-                        <span className="font-medium">{diagnostics.cache.data.promptLength}文字</span>
+                        <span className="font-medium text-gray-900">{diagnostics.cache.data.promptLength}文字</span>
                       </div>
                     </>
                   )}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">総キャッシュ数</span>
-                    <span className="font-medium">{diagnostics.cache.count}件</span>
+                    <span className="font-medium text-gray-900">{diagnostics.cache.count}件</span>
                   </div>
                 </div>
               </div>
@@ -455,7 +455,7 @@ export default function AdminChatDiagnosticsDetailPage({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">現在のモデル</span>
-                    <span className="font-medium">{diagnostics.system.currentModel}</span>
+                    <span className="font-medium text-gray-900">{diagnostics.system.currentModel}</span>
                   </div>
                 </div>
               </div>
