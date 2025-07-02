@@ -165,7 +165,7 @@ router.get('/affinity-details/:userId', generalRateLimit, async (req: Request, r
   try {
     const { userId } = req.params;
     
-    const user = await UserModel.findById(userId)
+    const user = await UserModel.findOne({ _id: { $eq: new mongoose.Types.ObjectId(userId) } })
       .select('affinities')
       .populate({
         path: 'affinities.character',
@@ -248,7 +248,7 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
       return;
     }
     
-    const character = await CharacterModel.findById(characterId);
+    const character = await CharacterModel.findOne({ _id: { $eq: new mongoose.Types.ObjectId(characterId) } });
     if (!character) {
       res.status(404).json({ error: 'Character not found' });
       return;
@@ -308,7 +308,7 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
         } else {
           // populateが失敗している場合、手動でユーザー情報を取得
           try {
-            const userInfo = await UserModel.findById(userIdStr).select('name email');
+            const userInfo = await UserModel.findOne({ _id: { $eq: new mongoose.Types.ObjectId(userIdStr) } }).select('name email');
             if (userInfo) {
               userName = userInfo.name || 'Unknown';
               userEmail = userInfo.email || 'Unknown';
@@ -319,7 +319,7 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
         }
         
         // UserModelからaffinity情報を取得
-        const user = await UserModel.findById(userIdStr);
+        const user = await UserModel.findOne({ _id: { $eq: new mongoose.Types.ObjectId(userIdStr) } });
         const affinity = user?.affinities?.find(
           (aff: any) => aff.character?.toString() === characterId
         );
@@ -369,7 +369,8 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
       // 1. MongoDBキャッシュをチェック（優先）
       if (userId) {
         // ユーザーの親密度レベルを取得
-        const user = await UserModel.findById(userId);
+        // userIdは既に検証済み（mongoose.Types.ObjectId.isValid）
+        const user = await UserModel.findOne({ _id: { $eq: new mongoose.Types.ObjectId(userId as string) } });
         let userAffinityLevel = 0;
         if (user) {
           const affinity = user.affinities?.find(
@@ -604,7 +605,7 @@ router.get('/chat-diagnostics/:characterId', generalRateLimit, authenticateToken
     }
 
     // 1. キャラクター情報とモデル設定
-    const character = await CharacterModel.findById(characterId);
+    const character = await CharacterModel.findOne({ _id: { $eq: new mongoose.Types.ObjectId(characterId) } });
     if (!character) {
       res.status(404).json({ error: 'Character not found' });
       return;
@@ -619,7 +620,7 @@ router.get('/chat-diagnostics/:characterId', generalRateLimit, authenticateToken
     
     try {
       // ユーザーの親密度レベルを取得
-      const user = userId ? await UserModel.findById(userId) : null;
+      const user = userId ? await UserModel.findOne({ _id: { $eq: new mongoose.Types.ObjectId(userId) } }) : null;
       let userAffinityLevel = 0;
       if (user) {
         const affinity = user.affinities.find(
