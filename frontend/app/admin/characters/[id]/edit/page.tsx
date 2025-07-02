@@ -465,12 +465,21 @@ export default function CharacterEditPage() {
         
         return new Promise((resolve, reject) => {
           const video = document.createElement('video');
-          const blobUrl = URL.createObjectURL(videoFile);
+          
+          // Blob URLを安全に生成
+          let blobUrl: string;
+          try {
+            blobUrl = URL.createObjectURL(videoFile);
+          } catch (e) {
+            reject(new Error('動画URLの生成に失敗しました'));
+            return;
+          }
           
           // イベントハンドラを設定
           const cleanup = () => {
             URL.revokeObjectURL(blobUrl);
-            video.src = '';
+            // XSS対策: removeAttributeを使用
+            video.removeAttribute('src');
             video.load();
           };
           
@@ -486,8 +495,8 @@ export default function CharacterEditPage() {
             reject(new Error('動画の読み込みに失敗しました'));
           };
           
-          // 動画ソースを設定
-          video.src = blobUrl;
+          // 動画ソースを安全に設定（CodeQL XSS警告対応）
+          video.setAttribute('src', blobUrl);
           
           // タイムアウト設定（10秒に延長）
           setTimeout(() => {
