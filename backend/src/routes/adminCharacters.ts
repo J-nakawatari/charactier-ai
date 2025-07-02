@@ -373,6 +373,7 @@ router.post('/', adminRateLimit, authenticateToken, validate({ body: characterSc
       imageDashboard,
       imageChatAvatar,
       imageChatBackground,
+      videoChatBackground,
       galleryImages = [],
       defaultMessage,
       affinitySettings,
@@ -447,6 +448,7 @@ router.post('/', adminRateLimit, authenticateToken, validate({ body: characterSc
       imageDashboard,
       imageChatAvatar,
       imageChatBackground,
+      videoChatBackground,
       galleryImages,
       defaultMessage: normalizedDefaultMessage,
       affinitySettings: normalizedAffinitySettings,
@@ -566,7 +568,7 @@ router.put('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), as
       'purchasePrice', 'personalityPreset', 'personalityTags', 'gender', 'age',
       'occupation', 'personalityPrompt', 'adminPrompt', 'voice', 'themeColor',
       'imageCharacterSelect', 'imageDashboard', 'imageChatBackground', 'imageChatAvatar',
-      'sampleVoiceUrl', 'galleryImages', 'stripeProductId', 'purchaseType',
+      'videoChatBackground', 'sampleVoiceUrl', 'galleryImages', 'stripeProductId', 'purchaseType',
       'defaultMessage', 'limitMessage', 'affinitySettings', 'levelRewards',
       'specialMessages', 'giftPreferences', 'isActive'
     ];
