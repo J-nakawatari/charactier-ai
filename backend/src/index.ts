@@ -2132,6 +2132,16 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
       unlockedGalleryImages: characterAffinity?.unlockedRewards || []
     };
     
+    // デバッグ: emotionalStateを確認
+    log.info('Character affinity emotionalState:', {
+      characterId,
+      userId: user._id,
+      affinityExists: !!characterAffinity,
+      emotionalState: characterAffinity?.emotionalState,
+      affinityLevel: characterAffinity?.level,
+      mood: userState.affinity.mood
+    });
+    
     // デバッグログ
     log.info('Chat API response - userState:', {
       userId: user._id,
@@ -2470,7 +2480,7 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
                     level: affinityIncrease,
                     experience: 0,
                     experienceToNext: 10,
-                    emotionalState: 'neutral',
+                    emotionalState: 'excited', // デフォルトをexcitedに変更
                     relationshipType: 'stranger',
                     trustLevel: 0,
                     intimacyLevel: affinityIncrease,
