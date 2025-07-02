@@ -468,18 +468,15 @@ export default function CharacterEditPage() {
         // - blob: URLスキームはCSPで許可されています
         // - video要素はDOMに追加されません
         
-        // まずファイルをArrayBufferとして読み込む
-        const arrayBuffer = await videoFile.arrayBuffer();
-        
-        // メモリ上でvideo要素を作成（DOMには追加しない）
         return new Promise((resolve, reject) => {
           const video = document.createElement('video');
-          const blobUrl = URL.createObjectURL(new Blob([arrayBuffer], { type: videoFile.type }));
+          const blobUrl = URL.createObjectURL(videoFile);
           
           // イベントハンドラを設定
           const cleanup = () => {
             URL.revokeObjectURL(blobUrl);
-            video.remove();
+            video.src = '';
+            video.load();
           };
           
           video.onloadedmetadata = () => {
@@ -488,31 +485,44 @@ export default function CharacterEditPage() {
             resolve(duration);
           };
           
-          video.onerror = () => {
+          video.onerror = (e) => {
+            console.error('動画読み込みエラー:', e);
             cleanup();
             reject(new Error('動画の読み込みに失敗しました'));
           };
           
-          // setAttributeを使用してsrcを設定（より明示的）
-          video.setAttribute('preload', 'metadata');
-          video.setAttribute('src', blobUrl);
+          // 動画ソースを設定
+          video.src = blobUrl;
           
-          // タイムアウト設定（5秒）
+          // タイムアウト設定（10秒に延長）
           setTimeout(() => {
             cleanup();
             reject(new Error('動画の読み込みがタイムアウトしました'));
-          }, 5000);
+          }, 10000);
         });
       };
 
       try {
-        // 動画の長さを検証
-        const duration = await validateVideoDuration(file);
+        console.log('動画ファイル情報:', {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          lastModified: file.lastModified
+        });
         
-        if (duration < 3 || duration > 5) {
-          error('動画エラー', '動画は3秒から5秒の間にしてください（現在: ' + duration.toFixed(1) + '秒）');
-          e.target.value = '';
-          return;
+        // 動画の長さを検証（エラーが発生してもアップロードは続行）
+        try {
+          const duration = await validateVideoDuration(file);
+          console.log('動画の長さ:', duration, '秒');
+          
+          if (duration < 3 || duration > 5) {
+            // warningからsuccessに変更（warningトーストが利用できないため）
+            success('動画の長さ', '推奨: 3-5秒（現在: ' + duration.toFixed(1) + '秒）');
+            // エラーではなく通知に変更し、アップロードは続行
+          }
+        } catch (validationError) {
+          console.warn('動画検証エラー（アップロードは続行）:', validationError);
+          // 検証エラーは無視してアップロードを続行
         }
 
         setIsUploading(true);
