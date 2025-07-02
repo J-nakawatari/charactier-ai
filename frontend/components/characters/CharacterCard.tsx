@@ -291,7 +291,7 @@ export default function CharacterCard({
         </div>
 
         {/* 説明文 */}
-        <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+        <p className="text-sm text-gray-600 leading-relaxed">
           {getLocalizedText(character.description)}
         </p>
 
