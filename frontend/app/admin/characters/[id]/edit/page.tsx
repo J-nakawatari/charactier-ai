@@ -118,6 +118,7 @@ export default function CharacterEditPage() {
           console.log('  purchasePrice:', character.purchasePrice);
           
           // 既存のギャラリー画像を変換
+          console.log('🔍 取得したギャラリー画像データ:', character.galleryImages);
           const existingGalleryImages = character.galleryImages ? character.galleryImages.map((img: any) => ({
             file: null, // 既存画像はFileオブジェクトではない
             imageUrl: img.url,
@@ -125,6 +126,7 @@ export default function CharacterEditPage() {
             title: img.title?.ja || '',
             description: img.description?.ja || ''
           })) : [];
+          console.log('🔍 変換後のギャラリー画像データ:', existingGalleryImages);
 
           // 基本情報をフォームに反映
           console.log('🔍 画像URL取得状況:');
@@ -338,6 +340,10 @@ export default function CharacterEditPage() {
       console.log('  imageDashboardUrl:', formData.imageDashboardUrl);
       console.log('  imageChatBackgroundUrl:', formData.imageChatBackgroundUrl);
       console.log('  imageChatAvatarUrl:', formData.imageChatAvatarUrl);
+      console.log('🔍 ギャラリー画像の詳細:');
+      console.log('  元のgalleryImages数:', formData.galleryImages.length);
+      console.log('  保存用galleryImages数:', galleryImagesForSave.length);
+      console.log('  保存用galleryImagesデータ:', JSON.stringify(galleryImagesForSave, null, 2));
       
       const basicSaveResponse = await adminPut(`${API_BASE_URL}/api/v1/admin/characters/${characterId}`, basicData);
       

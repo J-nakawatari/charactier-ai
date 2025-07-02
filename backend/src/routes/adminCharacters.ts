@@ -578,6 +578,23 @@ router.put('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), as
       }
     }
 
+    // リクエストボディの全体をログ出力（デバッグ用）
+    log.info('Update request body keys', {
+      characterId: req.params.id,
+      bodyKeys: Object.keys(req.body),
+      hasGalleryImages: 'galleryImages' in req.body
+    });
+
+    // ギャラリー画像のデバッグログ
+    if (req.body.galleryImages !== undefined) {
+      log.info('Gallery images update requested', {
+        characterId: req.params.id,
+        galleryImagesCount: Array.isArray(req.body.galleryImages) ? req.body.galleryImages.length : 'not array',
+        galleryImagesData: req.body.galleryImages,
+        firstImage: Array.isArray(req.body.galleryImages) && req.body.galleryImages.length > 0 ? req.body.galleryImages[0] : null
+      });
+    }
+
     // 更新データを適用（NoSQL injection防止のため$set使用）
     const updatedCharacter = await CharacterModel.findByIdAndUpdate(
       req.params.id,
@@ -585,10 +602,20 @@ router.put('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), as
       { new: true, runValidators: true }
     );
 
+    // 更新後のギャラリー画像を確認
+    if (updatedCharacter && updatedCharacter.galleryImages) {
+      log.info('Gallery images after update', {
+        characterId: updatedCharacter._id,
+        galleryImagesCount: updatedCharacter.galleryImages.length,
+        galleryImagesData: updatedCharacter.galleryImages
+      });
+    }
+
     log.info('Character updated by admin', {
       characterId: character._id,
       adminId: req.admin?._id,
-      updates: Object.keys(req.body)
+      updates: Object.keys(req.body),
+      hasGalleryImages: !!req.body.galleryImages
     });
 
     res.json({
