@@ -39,9 +39,19 @@ body {
     rgb(var(--background-start-rgb));
 }
 
-/* グローバルルール: 色指定がない場合は黒 */
-* {
+/* グローバルルール: テキスト要素のデフォルトを黒に */
+p, span, div, h1, h2, h3, h4, h5, h6, li, td, th, label, a {
   color: rgb(17, 24, 39); /* text-gray-900 */
+}
+
+/* ボタン内のテキストは元の色を維持 */
+button, button * {
+  color: inherit;
+}
+
+/* SVGアイコンは元の色を維持 */
+svg {
+  color: currentColor;
 }
 
 /* 明示的な色指定を優先 */
@@ -53,8 +63,16 @@ body {
 [class*="text-yellow"],
 [class*="text-purple"],
 [class*="text-pink"],
-[class*="text-indigo"] {
-  color: revert;
+[class*="text-indigo"],
+[class*="text-orange"],
+[class*="text-cyan"],
+[class*="text-emerald"],
+[class*="text-rose"],
+[class*="text-stone"],
+[class*="text-neutral"],
+[class*="text-zinc"],
+[class*="text-slate"] {
+  color: revert !important;
 }
 
 /* Line clamp utilities */
