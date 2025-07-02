@@ -593,6 +593,137 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
   }
 });
 
+// 実際に送信されるプロンプトのプレビューを取得
+router.get('/admin/prompt-preview/:characterId', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.admin) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const { characterId } = req.params;
+    const { userId, message = 'こんにちは！今日はどんな一日でしたか？' } = req.query;
+
+    // キャラクター情報を取得
+    const character = await CharacterModel.findOne({ _id: { $eq: new mongoose.Types.ObjectId(characterId) } });
+    if (!character) {
+      res.status(404).json({ error: 'Character not found' });
+      return;
+    }
+
+    // ユーザー情報と親密度を取得
+    let affinityLevel = 0;
+    let userName = 'ゲスト';
+    if (userId) {
+      const user = await UserModel.findOne({ _id: { $eq: new mongoose.Types.ObjectId(userId as string) } });
+      if (user) {
+        const affinity = user.affinities?.find(
+          (aff: any) => aff.character?.toString() === characterId
+        );
+        affinityLevel = affinity?.level || 0;
+        userName = user.name || 'ユーザー';
+      }
+    }
+
+    // トーンとムード設定を取得
+    const { generateTonePrompt } = await import('../../utils/toneSystem');
+    const toneConfig = generateTonePrompt(affinityLevel, [], character.personalityPrompt?.ja || '');
+
+    // 会話履歴のサンプル
+    const conversationHistory = [
+      { role: 'system', content: 'これは会話履歴のサンプルです。実際の会話では過去のメッセージが含まれます。' },
+      { role: 'user', content: '前回は楽しかったね！' },
+      { role: 'assistant', content: 'はい、とても楽しい時間でしたね！また一緒に過ごせて嬉しいです。' }
+    ];
+
+    // 実際に構築されるシステムプロンプト
+    const systemPrompt = `あなたは「${character.name?.ja || character.name}」という名前のAIキャラクターです。
+
+【基本設定】
+- 年齢: ${character.age || '不明'}
+- 職業: ${character.occupation || '不明'}
+- 性格: ${character.personalityTags?.join(', ') || 'なし'}
+
+【パーソナリティ】
+${character.personalityPrompt?.ja || character.personalityPrompt || 'パーソナリティプロンプトが設定されていません'}
+
+【現在の関係性】
+- ユーザー名: ${userName}
+- 親密度レベル: ${affinityLevel}/100
+- 関係性: ${toneConfig.relationshipStatus}
+- 口調: ${toneConfig.toneLabel}
+
+【トーン指示】
+${toneConfig.moodAdjustedPrompt}
+
+【会話の注意点】
+${toneConfig.samplePhrases.map(phrase => `- ${phrase}`).join('\n')}
+
+【会話履歴】
+${conversationHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')}
+
+以上の設定に基づいて、キャラクターとして自然に応答してください。`;
+
+    // OpenAI APIに送信される実際のメッセージ配列
+    const messages = [
+      {
+        role: 'system',
+        content: systemPrompt
+      },
+      {
+        role: 'user',
+        content: message as string
+      }
+    ];
+
+    // プロンプトのトークン数を概算（1文字 ≈ 0.5トークン for Japanese）
+    const estimatedTokens = {
+      systemPrompt: Math.ceil(systemPrompt.length * 0.5),
+      userMessage: Math.ceil((message as string).length * 0.5),
+      total: Math.ceil((systemPrompt.length + (message as string).length) * 0.5)
+    };
+
+    res.json({
+      preview: {
+        character: {
+          id: character._id,
+          name: character.name,
+          model: character.aiModel || 'gpt-4o-mini'
+        },
+        user: {
+          id: userId || null,
+          name: userName,
+          affinityLevel
+        },
+        tone: {
+          style: toneConfig.toneStyle,
+          label: toneConfig.toneLabel,
+          relationshipStatus: toneConfig.relationshipStatus,
+          uiColor: toneConfig.uiColor
+        },
+        prompt: {
+          system: systemPrompt,
+          systemLength: systemPrompt.length,
+          messages: messages,
+          totalLength: systemPrompt.length + (message as string).length
+        },
+        tokens: estimatedTokens,
+        cost: {
+          model: character.aiModel || 'gpt-4o-mini',
+          estimatedInputTokens: estimatedTokens.total,
+          estimatedCost: `約 $${(estimatedTokens.total * 0.00015).toFixed(4)}` // GPT-4o-mini pricing
+        }
+      }
+    });
+  } catch (error) {
+    log.error('Prompt preview error', error);
+    res.status(500).json({ 
+      error: 'Failed to generate prompt preview',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // ユーザー用チャットシステム診断エンドポイント（既存）
 router.get('/chat-diagnostics/:characterId', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {

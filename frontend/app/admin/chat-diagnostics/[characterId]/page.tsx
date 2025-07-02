@@ -15,7 +15,9 @@ import {
   RefreshCw,
   Brain,
   ArrowLeft,
-  Users
+  Users,
+  Code,
+  Eye
 } from 'lucide-react';
 
 interface ChatDiagnostics {
@@ -111,6 +113,9 @@ export default function AdminChatDiagnosticsDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showPromptPreview, setShowPromptPreview] = useState(false);
+  const [promptPreview, setPromptPreview] = useState<any>(null);
+  const [loadingPrompt, setLoadingPrompt] = useState(false);
 
   const fetchDiagnostics = useCallback(async (userId?: string) => {
     try {
@@ -143,6 +148,30 @@ export default function AdminChatDiagnosticsDetailPage({
   const handleUserSelect = (userId: string) => {
     setSelectedUserId(userId);
     fetchDiagnostics(userId);
+  };
+
+  const fetchPromptPreview = async () => {
+    try {
+      setLoadingPrompt(true);
+      setShowPromptPreview(true);
+      
+      const url = selectedUserId 
+        ? `/api/v1/debug/admin/prompt-preview/${characterId}?userId=${selectedUserId}`
+        : `/api/v1/debug/admin/prompt-preview/${characterId}`;
+        
+      const response = await adminFetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`プロンプトプレビューの取得に失敗しました: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setPromptPreview(data.preview);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'プロンプトプレビューの取得に失敗しました');
+    } finally {
+      setLoadingPrompt(false);
+    }
   };
 
   if (loading) {
@@ -218,13 +247,22 @@ export default function AdminChatDiagnosticsDetailPage({
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => fetchDiagnostics(selectedUserId || undefined)}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span>更新</span>
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={fetchPromptPreview}
+                className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                <Eye className="w-4 h-4" />
+                <span>プロンプトを確認</span>
+              </button>
+              <button
+                onClick={() => fetchDiagnostics(selectedUserId || undefined)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>更新</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -598,6 +636,110 @@ export default function AdminChatDiagnosticsDetailPage({
             </div>
           </div>
         </div>
+
+        {/* プロンプトプレビューモーダル */}
+        {showPromptPreview && (
+          <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Code className="w-5 h-5 mr-2" />
+                  実際に送信されるプロンプト
+                </h3>
+                <button
+                  onClick={() => setShowPromptPreview(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-6">
+                {loadingPrompt ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                  </div>
+                ) : promptPreview ? (
+                  <div className="space-y-6">
+                    {/* プロンプト情報 */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="text-sm font-semibold text-blue-900 mb-2">送信情報</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="text-blue-700">モデル</p>
+                          <p className="font-medium text-blue-900">{promptPreview.character.model}</p>
+                        </div>
+                        <div>
+                          <p className="text-blue-700">推定トークン数</p>
+                          <p className="font-medium text-blue-900">{promptPreview.tokens.total.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-blue-700">推定コスト</p>
+                          <p className="font-medium text-blue-900">{promptPreview.cost.estimatedCost}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ユーザー情報 */}
+                    {promptPreview.user && (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 className="text-sm font-semibold text-gray-900 mb-2">ユーザー情報</h4>
+                        <div className="space-y-1 text-sm">
+                          <p><span className="text-gray-600">名前:</span> <span className="font-medium">{promptPreview.user.name}</span></p>
+                          <p><span className="text-gray-600">親密度:</span> <span className="font-medium">{promptPreview.user.affinityLevel}/100</span></p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* トーン設定 */}
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                      <h4 className="text-sm font-semibold text-purple-900 mb-2">トーン設定</h4>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-purple-700">口調スタイル</p>
+                          <p className="font-medium text-purple-900">{promptPreview.tone.label}</p>
+                        </div>
+                        <div>
+                          <p className="text-purple-700">関係性</p>
+                          <p className="font-medium text-purple-900">{promptPreview.tone.relationshipStatus}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* システムプロンプト */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                        システムプロンプト ({promptPreview.prompt.systemLength.toLocaleString()}文字)
+                      </h4>
+                      <div className="bg-gray-900 text-gray-100 rounded-lg p-4 font-mono text-xs overflow-x-auto">
+                        <pre className="whitespace-pre-wrap">{promptPreview.prompt.system}</pre>
+                      </div>
+                    </div>
+
+                    {/* メッセージ配列 */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">OpenAI APIに送信されるメッセージ</h4>
+                      <div className="space-y-2">
+                        {promptPreview.prompt.messages.map((msg: any, index: number) => (
+                          <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                            <p className="text-xs font-medium text-gray-600 mb-1">
+                              {msg.role === 'system' ? 'システム' : msg.role === 'user' ? 'ユーザー' : 'アシスタント'}
+                            </p>
+                            <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                              {msg.content}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500">プロンプトデータを読み込み中...</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
