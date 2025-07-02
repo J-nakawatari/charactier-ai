@@ -627,17 +627,13 @@ router.get('/admin/prompt-preview/:characterId', generalRateLimit, authenticateT
 
     // トーンとムード設定を取得
     const { generateTonePrompt } = await import('../../utils/toneSystem');
-    const toneConfig = generateTonePrompt(affinityLevel, [], character.personalityPrompt?.ja || '');
+    const toneConfig = generateTonePrompt(affinityLevel, [], '');
 
-    // 会話履歴のサンプル
-    const conversationHistory = [
-      { role: 'system', content: 'これは会話履歴のサンプルです。実際の会話では過去のメッセージが含まれます。' },
-      { role: 'user', content: '前回は楽しかったね！' },
-      { role: 'assistant', content: 'はい、とても楽しい時間でしたね！また一緒に過ごせて嬉しいです。' }
-    ];
-
-    // 実際に構築されるシステムプロンプト
-    const systemPrompt = `あなたは「${character.name?.ja || character.name}」という名前のAIキャラクターです。
+    // 実際のチャットAPIと同じプロンプト生成ロジックを使用
+    const personalityPrompt = character.personalityPrompt?.ja || character.personalityPrompt || '';
+    
+    // キャラクターの基本プロンプト
+    let systemPrompt = `あなたは「${character.name?.ja || character.name}」という名前のAIキャラクターです。
 
 【基本設定】
 - 年齢: ${character.age || '不明'}
@@ -645,24 +641,32 @@ router.get('/admin/prompt-preview/:characterId', generalRateLimit, authenticateT
 - 性格: ${character.personalityTags?.join(', ') || 'なし'}
 
 【パーソナリティ】
-${character.personalityPrompt?.ja || character.personalityPrompt || 'パーソナリティプロンプトが設定されていません'}
+${personalityPrompt}
 
-【現在の関係性】
-- ユーザー名: ${userName}
-- 親密度レベル: ${affinityLevel}/100
-- 関係性: ${toneConfig.relationshipStatus}
-- 口調: ${toneConfig.toneLabel}
+【話し相手について】
+あなたが会話している相手の名前は「${userName}」です。会話の中で自然に名前を呼んであげてください。
 
-【トーン指示】
-${toneConfig.moodAdjustedPrompt}
+【親密度と口調】
+現在の親密度レベル: ${affinityLevel}
+${affinityLevel >= 85 ? '恋人のように甘く親密な口調で話してください。愛情表現や特別な呼び方を使ってください。' :
+  affinityLevel >= 60 ? '親友のようにフレンドリーで親しみやすい口調で話してください。冗談を交えたり、タメ口を使ってください。' :
+  affinityLevel >= 40 ? '時々タメ口を交えた親しみやすい口調で話してください。距離感が縮まってきた感じを表現してください。' :
+  affinityLevel >= 20 ? '少しだけ砕けた丁寧語で話してください。堅苦しさを減らしつつ、まだ適度な距離感を保ってください。' :
+  '丁寧語で礼儀正しい口調で話してください。初対面の相手に接するような適切な距離感を保ってください。'}
 
-【会話の注意点】
-${toneConfig.samplePhrases.map(phrase => `- ${phrase}`).join('\n')}
+【会話スタンス】
+- 自然で人間らしい会話を心がけてください
+- 相手の感情に寄り添い、共感的に応答してください
+- 長すぎる応答は避け、会話のキャッチボールを意識してください
+- 適度に質問を投げかけて、会話を盛り上げてください
 
-【会話履歴】
-${conversationHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')}
+【応答の指針】
+1. メッセージは2-3文程度を目安にしてください
+2. 絵文字や顔文字を適度に使ってください
+3. ユーザーの名前を自然に呼んでください
+4. 親密度に応じた適切な距離感を保ってください
 
-以上の設定に基づいて、キャラクターとして自然に応答してください。`;
+会話を楽しんでください！`;
 
     // OpenAI APIに送信される実際のメッセージ配列
     const messages = [
