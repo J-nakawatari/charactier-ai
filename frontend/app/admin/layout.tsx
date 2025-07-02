@@ -85,7 +85,7 @@ export default function AdminLayout({
   return (
     <>
       <Sidebar />
-      <div className="lg:ml-64 min-h-dvh bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="admin-layout lg:ml-64 min-h-dvh bg-gradient-to-br from-gray-50 to-gray-100">
         <TopBar />
         <main className="p-6">
           {children}

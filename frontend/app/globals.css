@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  /* デフォルトのテキストカラーを黒に設定 */
+  html {
+    color: theme('colors.gray.900');
+  }
+  
+  body {
+    color: theme('colors.gray.900');
+  }
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -9,13 +20,14 @@
   --app-height: 100vh; /* Fallback value */
 }
 
-@media (prefers-color-scheme: dark) {
+/* ダークモードは無効化 - 常に黒いテキストを使用 */
+/* @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
     --background-start-rgb: 0, 0, 0;
     --background-end-rgb: 0, 0, 0;
   }
-}
+} */
 
 body {
   color: rgb(var(--foreground-rgb));
@@ -25,6 +37,24 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+}
+
+/* グローバルルール: 色指定がない場合は黒 */
+* {
+  color: rgb(17, 24, 39); /* text-gray-900 */
+}
+
+/* 明示的な色指定を優先 */
+[class*="text-white"],
+[class*="text-gray"],
+[class*="text-red"],
+[class*="text-blue"],
+[class*="text-green"],
+[class*="text-yellow"],
+[class*="text-purple"],
+[class*="text-pink"],
+[class*="text-indigo"] {
+  color: revert;
 }
 
 /* Line clamp utilities */
