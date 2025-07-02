@@ -422,7 +422,7 @@ router.post('/login',
     }
 
     // コンパクトなJWTトークンを生成
-    const accessToken = generateCompactAccessToken(user._id.toString(), 'user', '15m');
+    const accessToken = generateCompactAccessToken(user._id.toString(), 'user', '2h');
     const refreshToken = generateCompactRefreshToken(user._id.toString(), 'user', '7d');
 
     log.info('User logged in', { userId: user._id.toString(), email: user.email });
@@ -815,9 +815,9 @@ router.get('/verify-email', generalRateLimit, async (req: Request, res: Response
 
     await user.save();
 
-    // JWTトークンを生成
-    const accessToken = generateAccessToken(user._id.toString());
-    const refreshToken = generateRefreshToken(user._id.toString());
+    // JWTトークンを生成（コンパクト版を使用）
+    const accessToken = generateCompactAccessToken(user._id.toString(), 'user', '2h');
+    const refreshToken = generateCompactRefreshToken(user._id.toString(), 'user', '7d');
     
     // Cookie設定（Feature Flag対応）
     const isProduction = process.env.NODE_ENV === 'production';
