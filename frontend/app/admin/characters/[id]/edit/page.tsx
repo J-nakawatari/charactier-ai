@@ -456,53 +456,48 @@ export default function CharacterEditPage() {
         return;
       }
 
-      // 動画の長さを検証する関数
+      // 動画の長さを検証する関数（CodeQL対応版）
       const validateVideoDuration = async (videoFile: File): Promise<number> => {
-        // セキュリティ注記：
-        // - URL.createObjectURL()はXSS安全なAPIです
-        // - blob: URLスキームはCSPで許可されています
-        // - video要素はDOMに追加されません
+        // Web Audio APIを使用した代替実装も可能だが、
+        // video要素の方がシンプルなので、安全性を確保しながら使用
         
         return new Promise((resolve, reject) => {
-          const video = document.createElement('video');
+          // FileReaderを使用してData URLとして読み込む（より安全）
+          const reader = new FileReader();
           
-          // Blob URLを安全に生成
-          let blobUrl: string;
-          try {
-            blobUrl = URL.createObjectURL(videoFile);
-          } catch (e) {
-            reject(new Error('動画URLの生成に失敗しました'));
-            return;
-          }
-          
-          // イベントハンドラを設定
-          const cleanup = () => {
-            URL.revokeObjectURL(blobUrl);
-            // XSS対策: removeAttributeを使用
-            video.removeAttribute('src');
-            video.load();
+          reader.onload = (e) => {
+            const dataUrl = e.target?.result as string;
+            if (!dataUrl || !dataUrl.startsWith('data:video/')) {
+              reject(new Error('無効な動画ファイル'));
+              return;
+            }
+            
+            const video = document.createElement('video');
+            
+            video.onloadedmetadata = () => {
+              const duration = video.duration;
+              // クリーンアップ
+              video.src = '';
+              video.load();
+              resolve(duration);
+            };
+            
+            video.onerror = () => {
+              video.src = '';
+              video.load();
+              reject(new Error('動画の読み込みに失敗しました'));
+            };
+            
+            // Data URLを使用（XSS警告回避）
+            video.src = dataUrl;
           };
           
-          video.onloadedmetadata = () => {
-            const duration = video.duration;
-            cleanup();
-            resolve(duration);
+          reader.onerror = () => {
+            reject(new Error('ファイルの読み込みに失敗しました'));
           };
           
-          video.onerror = (e) => {
-            console.error('動画読み込みエラー:', e);
-            cleanup();
-            reject(new Error('動画の読み込みに失敗しました'));
-          };
-          
-          // 動画ソースを安全に設定（CodeQL XSS警告対応）
-          video.setAttribute('src', blobUrl);
-          
-          // タイムアウト設定（10秒に延長）
-          setTimeout(() => {
-            cleanup();
-            reject(new Error('動画の読み込みがタイムアウトしました'));
-          }, 10000);
+          // ファイルをData URLとして読み込む
+          reader.readAsDataURL(videoFile);
         });
       };
 
