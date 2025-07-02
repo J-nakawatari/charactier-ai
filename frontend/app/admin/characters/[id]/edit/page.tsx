@@ -115,9 +115,9 @@ export default function CharacterEditPage() {
     return formData.videoChatBackgroundUrl || '';
   }, [formData.videoChatBackground, formData.videoChatBackgroundUrl]);
 
-  // video要素のsrc属性を安全に設定
+  // video要素のsrc属性を安全に設定（ループ防止のため条件を追加）
   useEffect(() => {
-    if (videoRef.current && videoPreviewUrl) {
+    if (videoRef.current && videoPreviewUrl && videoRef.current.getAttribute('src') !== videoPreviewUrl) {
       // 属性を直接設定することで、XSSリスクを回避
       videoRef.current.setAttribute('src', videoPreviewUrl);
     }
@@ -130,7 +130,7 @@ export default function CharacterEditPage() {
         URL.revokeObjectURL(videoPreviewUrl);
       }
     };
-  }, [videoPreviewUrl]);
+  }, [videoPreviewUrl, formData.videoChatBackground]);
 
   // 既存データの読み込み
   useEffect(() => {
@@ -569,6 +569,12 @@ export default function CharacterEditPage() {
       } catch (err) {
         console.error('Video processing failed:', err);
         error('動画エラー', err instanceof Error ? err.message : '動画の処理に失敗しました');
+        // エラー時はプレビューをクリア
+        setFormData(prev => ({
+          ...prev,
+          videoChatBackground: null,
+          videoChatBackgroundUrl: ''
+        }));
       } finally {
         setIsUploading(false);
       }
