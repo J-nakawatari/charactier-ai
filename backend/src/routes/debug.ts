@@ -237,6 +237,17 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
     const { characterId } = req.params;
     const { userId } = req.query; // オプション：特定ユーザーの診断
     
+    // パラメータのサニタイズと検証
+    if (!mongoose.Types.ObjectId.isValid(characterId)) {
+      res.status(400).json({ error: 'Invalid character ID' });
+      return;
+    }
+    
+    if (userId && !mongoose.Types.ObjectId.isValid(userId as string)) {
+      res.status(400).json({ error: 'Invalid user ID' });
+      return;
+    }
+    
     const character = await CharacterModel.findById(characterId);
     if (!character) {
       res.status(404).json({ error: 'Character not found' });
@@ -250,7 +261,9 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
     let users = [];
     if (!userId) {
       // 全ユーザーの統計を取得
-      const chatsWithUsers = await ChatModel.find({ characterId })
+      const chatsWithUsers = await ChatModel.find({ 
+        characterId: new mongoose.Types.ObjectId(characterId) 
+      })
         .populate('userId', 'name email')
         .sort({ lastActivity: -1 })
         .limit(50); // 最新50件まで
@@ -258,7 +271,7 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
       users = await Promise.all(chatsWithUsers.map(async (chat) => {
         const affinity = await AffinityModel.findOne({
           userId: chat.userId._id,
-          characterId
+          characterId: new mongoose.Types.ObjectId(characterId)
         });
         
         return {
@@ -275,7 +288,15 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
     }
 
     // 特定ユーザーまたは全体のチャット情報を取得
-    const chatQuery = userId ? { userId, characterId } : { characterId };
+    // MongoDBのObjectIdとして安全にクエリを構築
+    const chatQuery: any = { 
+      characterId: new mongoose.Types.ObjectId(characterId) 
+    };
+    
+    if (userId) {
+      chatQuery.userId = new mongoose.Types.ObjectId(userId as string);
+    }
+    
     const chat = await ChatModel.findOne(chatQuery).sort({ createdAt: -1 });
     
     // キャッシュ状態を確認
@@ -317,9 +338,14 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
     }
 
     // 最新のトークン使用情報を取得
-    const recentTokenUsageQuery = userId 
-      ? { userId, characterId } 
-      : { characterId };
+    const recentTokenUsageQuery: any = { 
+      characterId: new mongoose.Types.ObjectId(characterId) 
+    };
+    
+    if (userId) {
+      recentTokenUsageQuery.userId = new mongoose.Types.ObjectId(userId as string);
+    }
+    
     const recentTokenUsage = await TokenUsageModel.findOne(recentTokenUsageQuery)
       .sort({ createdAt: -1 });
 
