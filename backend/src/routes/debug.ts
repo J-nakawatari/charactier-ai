@@ -264,14 +264,38 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
       const chatsWithUsers = await ChatModel.find({ 
         characterId: new mongoose.Types.ObjectId(characterId) 
       })
-        .populate('userId', 'name email')
+        .populate({
+          path: 'userId',
+          select: 'name email',
+          model: UserModel
+        })
         .sort({ lastActivityAt: -1 })
         .limit(50); // 最新50件まで
         
-      users = await Promise.all(chatsWithUsers.map(async (chat) => {
+      log.info('Chats with users populated', {
+        characterId,
+        totalChats: chatsWithUsers.length,
+        sampleChat: chatsWithUsers[0] ? {
+          hasUserId: !!chatsWithUsers[0].userId,
+          userIdType: typeof chatsWithUsers[0].userId,
+          hasName: !!(chatsWithUsers[0].userId as any)?.name
+        } : null
+      });
+        
+      // userIdがnullやundefinedのチャットを除外
+      const validChats = chatsWithUsers.filter(chat => chat.userId != null);
+      
+      users = await Promise.all(validChats.map(async (chat) => {
         // populateされたuserIdオブジェクトを安全に扱う
         const userDoc = chat.userId as any;
-        const userIdStr = typeof userDoc === 'string' ? userDoc : (userDoc._id || userDoc);
+        
+        // userIdがnullやundefinedの場合はスキップ
+        if (!userDoc) {
+          log.warn('Chat with null userId found', { chatId: chat._id });
+          return null;
+        }
+        
+        const userIdStr = typeof userDoc === 'string' ? userDoc : (userDoc._id?.toString() || userDoc.toString());
         
         // populateが失敗している場合は手動で取得
         let userName = 'Unknown';
@@ -279,14 +303,18 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
         
         if (typeof userDoc === 'object' && userDoc.name) {
           // populateが成功している場合
-          userName = userDoc.name;
+          userName = userDoc.name || 'Unknown';
           userEmail = userDoc.email || 'Unknown';
         } else {
           // populateが失敗している場合、手動でユーザー情報を取得
-          const userInfo = await UserModel.findById(userIdStr).select('name email');
-          if (userInfo) {
-            userName = userInfo.name || 'Unknown';
-            userEmail = userInfo.email || 'Unknown';
+          try {
+            const userInfo = await UserModel.findById(userIdStr).select('name email');
+            if (userInfo) {
+              userName = userInfo.name || 'Unknown';
+              userEmail = userInfo.email || 'Unknown';
+            }
+          } catch (err) {
+            log.warn('Failed to fetch user info', { userIdStr, error: err });
           }
         }
         
@@ -307,6 +335,9 @@ router.get('/admin/chat-diagnostics/:characterId', generalRateLimit, authenticat
             sum + (msg.tokensUsed || 0), 0) || 0
         };
       }));
+      
+      // nullをフィルタリング
+      users = users.filter(user => user !== null);
     }
 
     // 特定ユーザーまたは全体のチャット情報を取得
