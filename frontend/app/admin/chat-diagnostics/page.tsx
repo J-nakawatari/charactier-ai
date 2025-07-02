@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { adminFetch } from '@/utils/admin-api';
 import { Search, RefreshCw, MessageSquare, Database, Users, Brain } from 'lucide-react';
+import Image from 'next/image';
 
 interface Character {
   _id: string;
@@ -18,11 +19,7 @@ export default function AdminChatDiagnosticsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchCharacters();
-  }, []);
-
-  const fetchCharacters = async () => {
+  const fetchCharacters = useCallback(async () => {
     try {
       setLoading(true);
       const response = await adminFetch('/api/v1/admin/characters?locale=ja&includeInactive=true');
@@ -38,7 +35,11 @@ export default function AdminChatDiagnosticsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    fetchCharacters();
+  }, [fetchCharacters]);
 
   const filteredCharacters = characters.filter(char => {
     const name = typeof char.name === 'string' ? char.name : (char.name?.ja || '');
@@ -109,12 +110,13 @@ export default function AdminChatDiagnosticsPage() {
                   className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg hover:border-purple-300 transition-all cursor-pointer"
                 >
                   <div className="flex items-start space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 relative">
                       {character.imageCharacterSelect ? (
-                        <img
+                        <Image
                           src={character.imageCharacterSelect}
                           alt={character.name?.ja || 'Character'}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                       ) : (
                         <span className="text-white text-sm font-medium">

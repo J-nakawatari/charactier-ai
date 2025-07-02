@@ -79,7 +79,7 @@ export default function CharactersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortMode]);
 
-  const fetchCharacters = async () => {
+  const fetchCharacters = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -104,7 +104,7 @@ export default function CharactersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sortMode]);
 
   // 全キャラクターの統計を更新
   const updateAllCharacterStats = useCallback(async () => {
@@ -130,7 +130,7 @@ export default function CharactersPage() {
     } finally {
       setUpdatingStats(false);
     }
-  }, [success, warning]);
+  }, [success, warning, fetchCharacters]);
 
   // ドラッグ終了時の処理
   const handleDragEnd = async (event: DragEndEvent) => {
