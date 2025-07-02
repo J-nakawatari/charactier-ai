@@ -118,49 +118,49 @@ export const getMoodUIColors = (mood: string) => {
       background: 'bg-orange-50/90',
       border: 'border-orange-200/50',
       accent: 'text-orange-600',
-      button: 'bg-orange-600 hover:bg-orange-700',
+      button: 'bg-orange-600 text-white hover:bg-orange-700',
       progressBar: 'bg-orange-600'
     },
     melancholic: {
       background: 'bg-blue-50/90',
       border: 'border-blue-200/50',
       accent: 'text-blue-600',
-      button: 'bg-blue-600 hover:bg-blue-700',
+      button: 'bg-blue-600 text-white hover:bg-blue-700',
       progressBar: 'bg-blue-600'
     },
     happy: {
       background: 'bg-green-50/90',
       border: 'border-green-200/50',
       accent: 'text-green-600',
-      button: 'bg-green-600 hover:bg-green-700',
+      button: 'bg-green-600 text-white hover:bg-green-700',
       progressBar: 'bg-green-600'
     },
     sad: {
       background: 'bg-gray-50/90',
       border: 'border-gray-200/50',
       accent: 'text-gray-600',
-      button: 'bg-gray-600 hover:bg-gray-700',
+      button: 'bg-gray-600 text-white hover:bg-gray-700',
       progressBar: 'bg-gray-600'
     },
     angry: {
       background: 'bg-red-50/90',
       border: 'border-red-200/50',
       accent: 'text-red-600',
-      button: 'bg-red-600 hover:bg-red-700',
+      button: 'bg-red-600 text-white hover:bg-red-700',
       progressBar: 'bg-red-600'
     },
     neutral: {
       background: 'bg-white/90',
       border: 'border-gray-200/50',
       accent: 'text-purple-600',
-      button: 'bg-purple-600 hover:bg-purple-700',
+      button: 'bg-purple-600 text-white hover:bg-purple-700',
       progressBar: 'bg-purple-600'
     },
     shy: {
       background: 'bg-pink-50/90',
       border: 'border-pink-200/50',
       accent: 'text-pink-600',
-      button: 'bg-pink-600 hover:bg-pink-700',
+      button: 'bg-pink-600 text-white hover:bg-pink-700',
       progressBar: 'bg-pink-600'
     }
   };

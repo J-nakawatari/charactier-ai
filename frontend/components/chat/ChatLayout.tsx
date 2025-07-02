@@ -271,7 +271,6 @@ export const ChatLayout = memo(function ChatLayout({
               lastMessageCost={tokenStatus.lastMessageCost}
               onPurchaseClick={() => setShowPurchaseModal(true)}
               onTokenUpdate={(newTokens) => setCurrentTokens(newTokens)}
-              moodButtonClass={moodUIColors.button}
             />
           </div>
           
@@ -327,7 +326,6 @@ export const ChatLayout = memo(function ChatLayout({
               lastMessageCost={tokenStatus.lastMessageCost}
               onPurchaseClick={() => setShowPurchaseModal(true)}
               onTokenUpdate={(newTokens) => setCurrentTokens(newTokens)}
-              moodButtonClass={moodUIColors.button}
             />
           </div>
         </div>

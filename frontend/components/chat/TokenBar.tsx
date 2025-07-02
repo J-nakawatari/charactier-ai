@@ -9,10 +9,9 @@ interface TokenBarProps {
   lastMessageCost: number;
   onPurchaseClick?: () => void;
   onTokenUpdate?: (newTokens: number) => void;
-  moodButtonClass?: string;
 }
 
-export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate, moodButtonClass }: TokenBarProps) {
+export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate }: TokenBarProps) {
   const t = useTranslations('tokens');
   const [currentTokens, setCurrentTokens] = useState<number | null>(0);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -230,7 +229,7 @@ export function TokenBar({ lastMessageCost, onPurchaseClick, onTokenUpdate, mood
             ? 'bg-red-600 text-white hover:bg-red-700'
             : isLowBalance
               ? 'bg-yellow-600 text-white hover:bg-yellow-700'
-              : moodButtonClass || 'bg-purple-600 text-white hover:bg-purple-700'
+              : 'bg-purple-600 text-white hover:bg-purple-700'
         }`}
         onClick={() => {
           onPurchaseClick?.();
