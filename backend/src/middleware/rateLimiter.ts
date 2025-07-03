@@ -3,6 +3,11 @@ import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible';
 import log from '../utils/logger';
 import { APIErrorModel } from '../models/APIError';
 
+// ホワイトリストIPアドレス（レート制限を適用しない）
+const WHITELIST_IPS = process.env.RATE_LIMIT_WHITELIST_IPS 
+  ? process.env.RATE_LIMIT_WHITELIST_IPS.split(',').map(ip => ip.trim())
+  : [];
+
 // レート制限の設定
 export const rateLimitConfigs = {
   // 一般的なAPI（読み取り系）
@@ -87,6 +92,13 @@ export function createRateLimiter(configName: keyof typeof rateLimitConfigs) {
                  req.headers['x-forwarded-for'] as string || 
                  req.ip || 
                  'unknown';
+      
+      // ホワイトリストIPの場合はスキップ
+      if (WHITELIST_IPS.includes(ip)) {
+        log.info(`Skipping rate limit for whitelisted IP: ${ip}`);
+        next();
+        return;
+      }
       
       // 認証済みユーザーの場合はユーザーIDも考慮
       const userId = (req as any).user?.userId;
@@ -184,6 +196,13 @@ export function createCustomRateLimiter(points: number, duration: number, blockD
                  req.headers['x-forwarded-for'] as string || 
                  req.ip || 
                  'unknown';
+      
+      // ホワイトリストIPの場合はスキップ
+      if (WHITELIST_IPS.includes(ip)) {
+        log.info(`Skipping custom rate limit for whitelisted IP: ${ip}`);
+        next();
+        return;
+      }
       
       const userId = (req as any).user?.userId;
       const key = userId ? `${ip}_${userId}` : ip;
