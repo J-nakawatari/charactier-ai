@@ -25,6 +25,7 @@ import NotificationBell from '@/components/NotificationBell';
 
 interface UserSidebarProps {
   locale?: string;
+  user?: User | null;
 }
 
 interface User {
@@ -36,7 +37,7 @@ interface User {
   isSetupComplete?: boolean;
 }
 
-const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProps) {
+const UserSidebar = memo(function UserSidebar({ locale = 'ja', user: propsUser }: UserSidebarProps) {
   const pathname = usePathname();
   const params = useParams();
   
@@ -58,6 +59,15 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
 
   // ユーザーデータの取得
   useEffect(() => {
+    // propsUserがある場合はそれを使用
+    if (propsUser) {
+      console.log('UserSidebar - propsUser received:', propsUser);
+      console.log('UserSidebar - propsUser.selectedCharacter:', propsUser.selectedCharacter);
+      setUser(propsUser);
+      setLoading(false);
+      return;
+    }
+
     const fetchUserData = async () => {
       try {
         // APIを再度有効化
@@ -83,7 +93,7 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
     };
 
     fetchUserData();
-  }, []); // 初回のみ実行、パス変更での再取得は不要
+  }, [propsUser]); // propsUserが変更された場合も再実行
 
   // ログアウト処理
   const handleLogout = () => {

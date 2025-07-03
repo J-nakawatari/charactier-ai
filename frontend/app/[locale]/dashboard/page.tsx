@@ -66,6 +66,7 @@ export default function DashboardPage() {
         console.log('Affinities length:', data.affinities?.length || 0);
         console.log('Purchase history data:', data.purchaseHistory);
         console.log('Purchase history length:', data.purchaseHistory?.length || 0);
+        console.log('User selectedCharacter:', data.user?.selectedCharacter);
         
         // データ構造の検証
         if (!data || typeof data !== 'object') {
@@ -110,7 +111,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-dvh bg-gray-50 flex">
       {/* サイドバー */}
-      <UserSidebar locale={locale} />
+      <UserSidebar locale={locale} user={dashboardData?.user} />
       
       {/* メインコンテンツ */}
       <div className="flex-1 lg:ml-64">

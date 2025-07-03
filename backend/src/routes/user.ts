@@ -180,7 +180,8 @@ router.get('/dashboard', generalRateLimit, authenticateToken, async (req: AuthRe
         name: user.name,
         email: user.email,
         tokenBalance: user.tokenBalance,
-        isSetupComplete: user.isSetupComplete
+        isSetupComplete: user.isSetupComplete,
+        selectedCharacter: user.selectedCharacter
       },
       tokens: {
         balance: user.tokenBalance || 0,
