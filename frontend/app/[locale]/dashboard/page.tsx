@@ -9,7 +9,6 @@ import AffinitySection from '@/components/user/AffinitySection';
 import TokenStatusCard from '@/components/user/TokenStatusCard';
 import RecentChatHistory from '@/components/user/RecentChatHistory';
 import PurchaseHistorySummary from '@/components/user/PurchaseHistorySummary';
-import AnalyticsCharts from '@/components/user/AnalyticsCharts';
 import { getAuthHeadersSync } from '@/utils/auth';
 // 将来実装用コンポーネント（現在は非表示）
 // import EnhancedAnalyticsSection from '@/components/future-features/EnhancedAnalyticsSection';
@@ -34,7 +33,6 @@ interface DashboardData {
   purchaseHistory: Array<any>;
   loginHistory: Array<any>;
   notifications: Array<any>;
-  analytics: any;
 }
 
 export default function DashboardPage() {
@@ -187,13 +185,6 @@ export default function DashboardPage() {
                 </div>
 
 
-                {/* 統計グラフ */}
-                <div className="md:col-span-2 lg:col-span-3">
-                  <AnalyticsCharts 
-                    analytics={dashboardData.analytics}
-                    locale={locale}
-                  />
-                </div>
 
                 {/* 🎯 AI駆動インサイト - 将来実装用（現在は非表示）
                 <div className="md:col-span-2 lg:col-span-3">
