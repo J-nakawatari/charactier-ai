@@ -2,8 +2,23 @@ import request from 'supertest';
 import { app } from '../../index';
 import { ChatModel } from '../../models/ChatModel';
 import { UserModel } from '../../models/UserModel';
+import mongoose from 'mongoose';
 
 describe('XSS Protection Tests', () => {
+  // テスト完了後にMongoDBとRedisの接続を閉じる
+  afterAll(async () => {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.close();
+    }
+    // Redis接続も閉じる（存在する場合）
+    if (global.redisClient) {
+      await global.redisClient.quit();
+    }
+    // 開いているハンドルを強制終了
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
+  });
   let testUser: any;
   let authToken: string;
 

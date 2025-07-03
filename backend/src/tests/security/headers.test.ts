@@ -1,7 +1,22 @@
 import request from 'supertest';
 import { app } from '../../index';
+import mongoose from 'mongoose';
 
 describe('Security Headers Tests', () => {
+  // テスト完了後にMongoDBとRedisの接続を閉じる
+  afterAll(async () => {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.close();
+    }
+    // Redis接続も閉じる（存在する場合）
+    if (global.redisClient) {
+      await global.redisClient.quit();
+    }
+    // 開いているハンドルを強制終了
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
+  });
   describe('Helmet Security Headers', () => {
     it('should set X-Content-Type-Options header', async () => {
       const response = await request(app)

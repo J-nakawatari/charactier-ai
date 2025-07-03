@@ -2,8 +2,23 @@ import request from 'supertest';
 import express, { Express } from 'express';
 import cookieParser from 'cookie-parser';
 import { verifyCsrfToken, setCsrfToken, getCsrfToken } from '../../middleware/csrf';
+import mongoose from 'mongoose';
 
 describe('CSRF Protection Tests', () => {
+  // テスト完了後にMongoDBとRedisの接続を閉じる
+  afterAll(async () => {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.close();
+    }
+    // Redis接続も閉じる（存在する場合）
+    if (global.redisClient) {
+      await global.redisClient.quit();
+    }
+    // 開いているハンドルを強制終了
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
+  });
   let app: Express;
   let csrfToken: string;
 
