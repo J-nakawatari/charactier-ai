@@ -3,7 +3,7 @@ process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.JWT_REFRESH_SECRET = 'test-jwt-refresh-secret';
 // MongoDB URI はCI環境でのみ設定（ローカルテスト時は不要）
-// process.env.MONGO_URI = 'mongodb://localhost:27017/charactier-test';
+delete process.env.MONGO_URI;
 process.env.STRIPE_SECRET_KEY = 'sk_test_dummy';
 process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_dummy';
 
