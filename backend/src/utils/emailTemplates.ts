@@ -30,8 +30,30 @@ Handlebars.registerHelper('escapeUrl', (url: string) => {
 // JSON を安全に文字列化するヘルパー
 Handlebars.registerHelper('safeJson', (obj: any) => {
   if (!obj) return '{}';
+  
+  // オブジェクトの値を再帰的にサニタイズ
+  const sanitizeValue = (value: any): any => {
+    if (typeof value === 'string') {
+      // JavaScriptプロトコルや危険な文字列を無害化
+      return value
+        .replace(/javascript:/gi, 'sanitized:')
+        .replace(/data:/gi, 'sanitized:')
+        .replace(/vbscript:/gi, 'sanitized:')
+        .replace(/on\w+=/gi, 'sanitized=');
+    } else if (typeof value === 'object' && value !== null) {
+      const sanitized: any = Array.isArray(value) ? [] : {};
+      for (const key in value) {
+        sanitized[key] = sanitizeValue(value[key]);
+      }
+      return sanitized;
+    }
+    return value;
+  };
+  
+  const sanitizedObj = sanitizeValue(obj);
+  
   // JSON.stringify 後、スクリプトタグを無効化
-  const json = JSON.stringify(obj);
+  const json = JSON.stringify(sanitizedObj);
   return json
     .replace(/</g, '\\u003c')
     .replace(/>/g, '\\u003e')
