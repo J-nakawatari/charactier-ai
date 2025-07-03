@@ -239,15 +239,23 @@ export default function SettingsPage() {
         throw new Error(errorData.message || 'Failed to delete account');
       }
 
-      // ローカルストレージをクリア
+      // ローカルストレージをクリア（ユーザー関連のみ）
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       localStorage.removeItem('lastSelectedCharacterId');
       localStorage.removeItem('purchasingCharacterName');
       localStorage.removeItem('purchasingCharacterId');
-      // 念のため、localStorage全体をクリア
-      localStorage.clear();
+      
+      // 他のユーザー関連データもクリア（管理者トークンは除く）
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && !key.startsWith('admin') && key !== 'locale') {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
       
       success(t('success.accountDeleted'));
       router.push(`/${locale}/`);
