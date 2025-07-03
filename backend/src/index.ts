@@ -1617,7 +1617,7 @@ routeRegistry.define('GET', `${API_PREFIX}/user/profile`, authenticateToken, cre
 });
 
 // ユーザープロファイル更新エンドポイント
-routeRegistry.define('PUT', `${API_PREFIX}/user/profile`, authenticateToken, createRateLimiter('general'), validate({ body: authSchemas.updateProfile }), async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('PUT', `${API_PREFIX}/user/profile`, authenticateToken, verifyCsrfToken, createRateLimiter('general'), validate({ body: authSchemas.updateProfile }), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
@@ -2245,7 +2245,7 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
   }
 });
 
-routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authenticateToken, createRateLimiter('chat'), async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authenticateToken, verifyCsrfToken, createRateLimiter('chat'), async (req: AuthRequest, res: Response): Promise<void> => {
   
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
