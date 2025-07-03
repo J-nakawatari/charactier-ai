@@ -368,8 +368,7 @@ export default function HomePage() {
           <div className="text-center mt-8 flex flex-col items-center">
             <button
               onClick={() => router.push(`/${locale}/register`)}
-              className="text-base md:text-lg font-bold mb-1 hover:opacity-80 transition-colors underline cursor-pointer"
-              style={{ color: '#E95295' }}
+              className="text-base md:text-lg font-bold mb-1 hover:opacity-80 transition-colors underline cursor-pointer text-white"
             >
               {t('newUserPromo')}
             </button>
