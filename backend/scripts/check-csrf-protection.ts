@@ -5,6 +5,14 @@ import path from 'path';
 
 // 重要なエンドポイントのリスト（CSRF保護が必須）
 const CRITICAL_ENDPOINTS = [
+  // 認証関連
+  { method: 'POST', path: '/api/v1/auth/register', description: '新規会員登録' },
+  { method: 'POST', path: '/api/v1/auth/login', description: 'ログイン' },
+  { method: 'POST', path: '/api/v1/auth/logout', description: 'ログアウト' },
+  { method: 'POST', path: '/api/v1/auth/admin/logout', description: '管理者ログアウト' },
+  { method: 'POST', path: '/api/v1/auth/user/setup-complete', description: 'セットアップ完了' },
+  { method: 'POST', path: '/api/v1/auth/resend-verification', description: '認証メール再送' },
+  
   // チャット関連（トークン消費）
   { method: 'POST', path: '/api/v1/chats/:characterId/messages', description: 'チャットメッセージ送信' },
   
@@ -40,12 +48,25 @@ function findProtectedEndpoints(filePath: string): Set<string> {
     protectedEndpoints.add(`${method} ${path}`);
   }
   
-  // 通常のrouter.methodパターンも確認
-  const routerPattern = /router\.(post|put|delete|patch)\s*\(\s*[`'"]([^'"]+)['"]\s*,.*verifyCsrfToken/gi;
-  while ((match = routerPattern.exec(content)) !== null) {
-    const method = match[1].toUpperCase();
-    const path = match[2];
-    protectedEndpoints.add(`${method} ${path}`);
+  // 行ごとにrouter + verifyCsrfTokenの組み合わせを検索
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // この行にrouterメソッドとverifyCsrfTokenが含まれているかチェック
+    if (line.includes('verifyCsrfToken')) {
+      // 同じ行またはその前の行でrouterメソッドを探す
+      for (let j = Math.max(0, i - 2); j <= i; j++) {
+        const checkLine = lines[j];
+        const routerMatch = checkLine.match(/router\.(post|put|delete|patch)\s*\(\s*[`'"]([^'"]+)['"]/);
+        if (routerMatch) {
+          const method = routerMatch[1].toUpperCase();
+          const path = routerMatch[2];
+          protectedEndpoints.add(`${method} ${path}`);
+          break;
+        }
+      }
+    }
   }
   
   return protectedEndpoints;
@@ -110,11 +131,38 @@ async function checkCsrfProtection() {
       epPath = epPath.replace(/:[^/]+/g, ':param');
       keyPath = keyPath.replace(/:[^/]+/g, ':param');
       
-      // adminCharactersルートの場合、prefix付きでマッチング
+      // 特別なルートマッチング
       if (epPath === '/:param' && keyPath === '/api/v1/admin/characters/:param') {
         return true;
       }
       
+      // 認証ルートの場合、/auth/プレフィックスを考慮
+      if (keyPath.includes('/api/v1/auth/')) {
+        // /auth/ルートの場合
+        if (epPath.startsWith('/')) {
+          const authPath = '/api/v1/auth' + epPath;
+          if (authPath === keyPath) {
+            return true;
+          }
+        }
+        // プレフィックスなしの場合（例: /logout -> /api/v1/auth/logout）
+        if (!epPath.startsWith('/api/')) {
+          const authPath = '/api/v1/auth/' + epPath.replace(/^\//, '');
+          if (authPath === keyPath) {
+            return true;
+          }
+        }
+      }
+      
+      // adminCharactersルートの場合、プレフィックスを考慮
+      if (keyPath.includes('/api/v1/admin/characters/') && epPath.startsWith('/:')) {
+        const adminCharPath = '/api/v1/admin/characters' + epPath;
+        if (adminCharPath === keyPath) {
+          return true;
+        }
+      }
+      
+      // 直接的な完全一致
       return epPath === keyPath;
     });
     

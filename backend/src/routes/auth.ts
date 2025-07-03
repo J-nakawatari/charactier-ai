@@ -10,6 +10,7 @@ import { sendVerificationEmail, generateVerificationToken, isDisposableEmail } f
 import { registrationRateLimit, consumeRegistrationLimit } from '../middleware/registrationLimit';
 import { createRateLimiter } from '../middleware/rateLimiter';
 import { validate } from '../middleware/validation';
+import { verifyCsrfToken } from '../middleware/csrf';
 import { authSchemas } from '../validation/schemas';
 import log from '../utils/logger';
 import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
@@ -275,6 +276,7 @@ function generateEmailVerificationHTML_DEPRECATED(
 // ユーザー登録（メール認証付き）
 router.post('/register', 
   registrationRateLimit, 
+  verifyCsrfToken,
   validate({ body: authSchemas.register }),
   async (req: Request, res: Response): Promise<void> => {
   try {
@@ -369,6 +371,7 @@ router.post('/register',
 // ユーザーログイン
 router.post('/login', 
   authRateLimit,
+  verifyCsrfToken,
   validate({ body: authSchemas.login }),
   async (req: Request, res: Response): Promise<void> => {
   try {
@@ -658,7 +661,7 @@ router.put('/user/profile',
 });
 
 // 初回セットアップ完了
-router.post('/user/setup-complete', generalRateLimit, authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.post('/user/setup-complete', generalRateLimit, authenticateToken, verifyCsrfToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, selectedCharacterId } = req.body;
 
@@ -848,7 +851,7 @@ router.get('/verify-email', generalRateLimit, async (req: Request, res: Response
 });
 
 // 認証メール再送信
-router.post('/resend-verification', registrationRateLimit, async (req: Request, res: Response): Promise<void> => {
+router.post('/resend-verification', registrationRateLimit, verifyCsrfToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, locale = 'ja' } = req.body;
 
@@ -1055,7 +1058,7 @@ router.get('/verify-token', authRateLimit, authenticateToken, async (req: AuthRe
 });
 
 // ログアウト
-router.post('/logout', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
+router.post('/logout', generalRateLimit, verifyCsrfToken, async (req: Request, res: Response): Promise<void> => {
   try {
     // ユーザー認証関連Cookieのみクリア
     clearUserAuthCookies(res);
@@ -1071,7 +1074,7 @@ router.post('/logout', generalRateLimit, async (req: Request, res: Response): Pr
 });
 
 // 管理者ログアウト
-router.post('/admin/logout', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
+router.post('/admin/logout', generalRateLimit, verifyCsrfToken, async (req: Request, res: Response): Promise<void> => {
   try {
     // 管理者認証関連Cookieのみクリア
     clearAdminAuthCookies(res);
