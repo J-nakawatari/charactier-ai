@@ -35,7 +35,7 @@ export async function getAuthHeaders(): Promise<HeadersInit> {
   if (typeof window !== 'undefined') {
     const csrfToken = document.cookie
       .split('; ')
-      .find(row => row.startsWith('XSRF-TOKEN='))
+      .find(row => row.startsWith('csrf-token='))
       ?.split('=')[1];
     
     if (csrfToken) {
@@ -67,7 +67,7 @@ export function getAuthHeadersSync(): HeadersInit {
   if (typeof window !== 'undefined') {
     const csrfToken = document.cookie
       .split('; ')
-      .find(row => row.startsWith('XSRF-TOKEN='))
+      .find(row => row.startsWith('csrf-token='))
       ?.split('=')[1];
     
     if (csrfToken) {
@@ -96,7 +96,7 @@ export function getAdminAuthHeaders(): HeadersInit {
   if (typeof window !== 'undefined') {
     const csrfToken = document.cookie
       .split('; ')
-      .find(row => row.startsWith('XSRF-TOKEN='))
+      .find(row => row.startsWith('csrf-token='))
       ?.split('=')[1];
     
     if (csrfToken) {
@@ -290,7 +290,7 @@ export async function refreshToken(): Promise<{ success: boolean; error?: string
     if (typeof window !== 'undefined') {
       const csrfToken = document.cookie
         .split('; ')
-        .find(row => row.startsWith('XSRF-TOKEN='))
+        .find(row => row.startsWith('csrf-token='))
         ?.split('=')[1];
       
       if (csrfToken) {

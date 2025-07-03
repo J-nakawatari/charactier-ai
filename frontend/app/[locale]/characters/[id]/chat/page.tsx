@@ -73,7 +73,8 @@ export default function ChatPage() {
         // 実際のAPI呼び出し
         const response = await fetch(`/api/v1/chats/${characterId}?locale=${locale}`, {
           method: 'GET',
-          headers: getAuthHeadersSync()
+          headers: getAuthHeadersSync(),
+          credentials: 'include' // Cookieを送信
         });
         
         if (!response.ok) {
@@ -256,6 +257,7 @@ export default function ChatPage() {
       const response = await fetch(`/api/v1/chats/${characterId}/messages`, {
         method: 'POST',
         headers: getAuthHeadersSync(),
+        credentials: 'include', // Cookieを送信
         body: JSON.stringify({
           message: message,
           sessionId: `session-${Date.now()}`

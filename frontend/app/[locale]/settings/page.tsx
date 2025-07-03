@@ -87,7 +87,8 @@ export default function SettingsPage() {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          }
+          },
+          credentials: 'include' // Cookieを送信
         });
 
         if (!response.ok) {
@@ -129,12 +130,20 @@ export default function SettingsPage() {
       setProfileLoading(true);
       const token = localStorage.getItem('accessToken');
 
+      // CSRFトークンをCookieから取得
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf-token='))
+        ?.split('=')[1];
+
       const response = await fetch('/api/v1/user/profile', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken || ''
         },
+        credentials: 'include', // Cookieを送信
         body: JSON.stringify(profileData)
       });
 
@@ -184,12 +193,20 @@ export default function SettingsPage() {
       setPasswordLoading(true);
       const token = localStorage.getItem('accessToken');
 
+      // CSRFトークンをCookieから取得
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf-token='))
+        ?.split('=')[1];
+
       const response = await fetch('/api/v1/user/change-password', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken || ''
         },
+        credentials: 'include', // Cookieを送信
         body: JSON.stringify({
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword
