@@ -580,6 +580,14 @@ app.post('/webhook/stripe', stripeWebhookRateLimit, express.raw({ type: 'applica
             
             if (!user.purchasedCharacters.includes(characterId)) {
               user.purchasedCharacters.push(characterId);
+              
+              // 新規登録後に初めてキャラクターを購入した場合、selectedCharacterを更新
+              // ただし、既に別のキャラクターが選択されている場合は更新しない
+              if (!user.selectedCharacter) {
+                user.selectedCharacter = characterId;
+                log.info('Auto-selected character for new user', { userId, characterId });
+              }
+              
               await user.save();
             }
             

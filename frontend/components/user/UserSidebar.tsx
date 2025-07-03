@@ -117,6 +117,11 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
 
   // selectedCharacterに基づく動的なチャットリンク
   const getChatHref = () => {
+    // 優先順位:
+    // 1. 現在のURLのキャラクターID（チャット画面にいる場合）
+    // 2. user.selectedCharacter（サーバーから取得した選択中のキャラクター）
+    // 3. キャラクター一覧へ（どちらもない場合）
+    
     const currentCharacterId = getCurrentCharacterId();
     
     // ブラウザ環境でのみログを出力
@@ -125,27 +130,27 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja' }: UserSidebarProp
       console.log('UserSidebar - user.selectedCharacter:', user?.selectedCharacter);
     }
     
-    // localStorageから最後に選択したキャラクターIDも確認
-    const lastCharacterId = typeof window !== 'undefined' ? localStorage.getItem('lastSelectedCharacterId') : null;
-    if (typeof window !== 'undefined') {
-      console.log('UserSidebar - lastSelectedCharacterId from localStorage:', lastCharacterId);
-    }
-    
     if (currentCharacterId) {
       const chatUrl = `/${currentLocale}/characters/${currentCharacterId}/chat`;
       if (typeof window !== 'undefined') {
-        console.log('UserSidebar - using currentCharacterId, chatUrl:', chatUrl);
+        console.log('UserSidebar - using currentCharacterId from URL, chatUrl:', chatUrl);
       }
       return chatUrl;
     }
     
-    // localStorageから取得
-    if (lastCharacterId) {
-      const chatUrl = `/${currentLocale}/characters/${lastCharacterId}/chat`;
-      if (typeof window !== 'undefined') {
-        console.log('UserSidebar - using lastCharacterId from localStorage, chatUrl:', chatUrl);
+    // user.selectedCharacterを優先的に使用（localStorageより信頼性が高い）
+    if (user?.selectedCharacter) {
+      const characterId = typeof user.selectedCharacter === 'string' 
+        ? user.selectedCharacter 
+        : (user.selectedCharacter as any)?._id || (user.selectedCharacter as any)?.id;
+      
+      if (characterId && characterId !== '[object Object]') {
+        const chatUrl = `/${currentLocale}/characters/${characterId}/chat`;
+        if (typeof window !== 'undefined') {
+          console.log('UserSidebar - using user.selectedCharacter, chatUrl:', chatUrl);
+        }
+        return chatUrl;
       }
-      return chatUrl;
     }
     
     // キャラクター未選択の場合は一覧へ
