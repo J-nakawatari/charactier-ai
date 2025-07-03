@@ -243,7 +243,7 @@ router.get('/dashboard', generalRateLimit, authenticateToken, async (req: AuthRe
         };
       }) : [],
       notifications: [], // TODO: 実装が必要
-      badges: [] // TODO: 実装が必要
+      badges: [], // TODO: 実装が必要
       recentChats: recentChats.map(chat => {
         const character = chat.characterId as any;
         if (!character) {
