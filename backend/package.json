@@ -29,7 +29,8 @@
         "setup:jwt-encryption": "ts-node scripts/setup-jwt-encryption.ts",
         "xss:migrate": "ts-node scripts/xss_migrate.ts",
         "xss:migrate:dry-run": "ts-node scripts/xss_migrate.ts --dry-run",
-        "precommit": "npm run lint && npm run type-check && npm run check-api-duplicates"
+        "precommit": "npm run lint && npm run type-check && npm run check-api-duplicates",
+        "set-affinity": "ts-node scripts/set-affinity-100.ts"
     },
     "devDependencies": {
         "@types/express": "^5.0.3",
