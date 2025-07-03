@@ -127,12 +127,20 @@ export default function LoginPage() {
         return;
       }
       
+      // CSRFトークンをCookieから取得
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf-token='))
+        ?.split('=')[1];
+
       // バックエンドのログインAPIを呼び出し
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken || '',
         },
+        credentials: 'include', // Cookieを送信
         body: JSON.stringify({ email, password }),
       });
       

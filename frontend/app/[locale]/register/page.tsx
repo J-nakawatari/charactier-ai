@@ -190,12 +190,20 @@ export default function RegisterPage() {
     try {
       console.log('🔐 新規登録実行中...');
       
+      // CSRFトークンをCookieから取得
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf-token='))
+        ?.split('=')[1];
+
       // バックエンドの登録APIを呼び出し（メール認証付き）
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken || '',
         },
+        credentials: 'include', // Cookieを送信
         body: JSON.stringify({ 
           email, 
           password,

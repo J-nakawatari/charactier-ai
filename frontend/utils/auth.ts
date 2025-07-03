@@ -348,7 +348,27 @@ export async function refreshToken(): Promise<{ success: boolean; error?: string
 /**
  * ログアウト処理
  */
-export function logout(): void {
+export async function logout(): Promise<void> {
+  try {
+    // CSRFトークンをCookieから取得
+    const csrfToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('csrf-token='))
+      ?.split('=')[1];
+
+    // サーバーにログアウトリクエストを送信
+    await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken || '',
+      },
+      credentials: 'include',
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+  }
+  
   // Google Analytics: ユーザーIDをクリア（ログアウトイベントは自動送信される）
   gtag.setUserId(null);
   

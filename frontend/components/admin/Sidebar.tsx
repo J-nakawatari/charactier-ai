@@ -63,12 +63,19 @@ export default function Sidebar() {
 
   const handleLogout = async () => {
     try {
+      // CSRFトークンをCookieから取得
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf-token='))
+        ?.split('=')[1];
+
       // APIを呼び出してクッキーをクリア
       await fetch('/api/v1/auth/admin/logout', {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken || '',
         },
       });
     } catch (error) {

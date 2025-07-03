@@ -96,9 +96,9 @@ const UserSidebar = memo(function UserSidebar({ locale = 'ja', user: propsUser }
   }, [propsUser]); // propsUserが変更された場合も再実行
 
   // ログアウト処理
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (confirm('ログアウトしますか？')) {
-      logout();
+      await logout();
     }
   };
 
