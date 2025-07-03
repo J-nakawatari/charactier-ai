@@ -7,8 +7,10 @@ import { useTranslations } from 'next-intl';
 interface PurchaseHistoryItem {
   type: 'token' | 'character';
   amount: number;
+  price: number;
   date: Date;
   details: string;
+  status?: string;
 }
 
 interface PurchaseHistorySummaryProps {
@@ -21,6 +23,9 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
   const tGeneral = useTranslations('general');
   const [isExpanded, setIsExpanded] = useState(false);
   
+  // デバッグ: 購入履歴データを確認
+  console.log('PurchaseHistorySummary - purchaseHistory:', purchaseHistory);
+  
   // 最新3件を表示（展開時は全件）
   const displayItems = isExpanded ? (purchaseHistory || []) : (purchaseHistory || []).slice(0, 3);
   
@@ -32,11 +37,17 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
     });
   };
 
-  const formatAmount = (amount: number, type: string) => {
-    if (type === 'token') {
-      return t('types.token', { amount: amount.toLocaleString() });
+  const formatAmount = (item: PurchaseHistoryItem) => {
+    // トークン購入の場合は、トークン数と金額の両方を表示
+    if (item.type === 'token') {
+      return (
+        <>
+          <span className="block">{t('types.token', { amount: item.amount.toLocaleString() })}</span>
+          <span className="text-xs text-gray-500">¥{item.price.toLocaleString()}</span>
+        </>
+      );
     } else {
-      return `¥${amount.toLocaleString()}`;
+      return `¥${item.price.toLocaleString()}`;
     }
   };
 
@@ -54,7 +65,7 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
 
   // 統計計算
   const totalSpent = (purchaseHistory || []).reduce((sum, item) => {
-    return sum + (item.type === 'character' ? item.amount : 0);
+    return sum + (item.price || 0);
   }, 0);
   
   const totalTokensPurchased = (purchaseHistory || []).reduce((sum, item) => {
@@ -154,9 +165,9 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
 
               {/* 金額 - SP時は左寄せ、PC時は右寄せ */}
               <div className="text-left sm:text-right flex-shrink-0">
-                <p className="text-sm font-medium text-gray-900">
-                  {formatAmount(item.amount, item.type)}
-                </p>
+                <div className="text-sm font-medium text-gray-900">
+                  {formatAmount(item)}
+                </div>
               </div>
             </div>
           </div>

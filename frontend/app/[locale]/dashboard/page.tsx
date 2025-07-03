@@ -66,6 +66,8 @@ export default function DashboardPage() {
         console.log('Dashboard data received:', data);
         console.log('Affinities data:', data.affinities);
         console.log('Affinities length:', data.affinities?.length || 0);
+        console.log('Purchase history data:', data.purchaseHistory);
+        console.log('Purchase history length:', data.purchaseHistory?.length || 0);
         
         // データ構造の検証
         if (!data || typeof data !== 'object') {

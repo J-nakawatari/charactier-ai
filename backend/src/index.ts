@@ -1218,13 +1218,20 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, c
     let purchaseHistory = [];
     try {
       purchaseHistory = await PurchaseHistoryModel.getUserPurchaseHistory(
-        new mongoose.Types.ObjectId(userId),
+        userId,
         { limit: 20, status: 'completed', sortOrder: 'desc' }
       );
     } catch (error) {
       log.error('Failed to fetch purchase history:', error);
       purchaseHistory = [];
     }
+    
+    // デバッグ: 購入履歴データを確認
+    log.info('Dashboard - Purchase history data:', {
+      userId: userId,
+      purchaseHistoryCount: purchaseHistory.length,
+      purchaseHistory: purchaseHistory.slice(0, 3) // 最初の3件だけログ出力
+    });
     
     // トークン使用状況
     const tokenUsage = await TokenUsage.aggregate([
