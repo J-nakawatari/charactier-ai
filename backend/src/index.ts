@@ -2046,6 +2046,31 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
       return;
     }
 
+    // ユーザー情報を先に取得（購入チェックのため）
+    const user = await UserModel.findById(req.user._id);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // キャラクターへのアクセス権限チェック
+    if (character.characterAccessType !== 'free') {
+      // 無料キャラクター以外は購入確認が必要
+      const hasPurchased = user.purchasedCharacters.some(
+        (purchasedId: any) => purchasedId.toString() === characterId
+      );
+      
+      if (!hasPurchased) {
+        res.status(403).json({ 
+          error: 'Character not purchased',
+          message: 'このキャラクターにはアクセスできません。購入が必要です。',
+          requiresPurchase: true,
+          characterId: characterId
+        });
+        return;
+      }
+    }
+
     let chatData: IChat | null = null;
     
     // MongoDB から会話履歴を取得
@@ -2093,12 +2118,6 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
       return;
     }
 
-    // ユーザー情報を取得
-    const user = await UserModel.findById(req.user._id);
-    if (!user) {
-      res.status(404).json({ error: 'User not found' });
-      return;
-    }
 
     // ユーザーの選択中キャラクターを更新
     if (user.selectedCharacter !== characterId) {

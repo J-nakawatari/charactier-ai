@@ -243,6 +243,11 @@ export default function SettingsPage() {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
+      localStorage.removeItem('lastSelectedCharacterId');
+      localStorage.removeItem('purchasingCharacterName');
+      localStorage.removeItem('purchasingCharacterId');
+      // 念のため、localStorage全体をクリア
+      localStorage.clear();
       
       success(t('success.accountDeleted'));
       router.push(`/${locale}/`);
