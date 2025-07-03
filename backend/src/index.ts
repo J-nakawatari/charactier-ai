@@ -2065,6 +2065,11 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
   const locale = (req.query.locale as string) || 'ja';
 
   try {
+    // characterIdの妥当性チェック
+    if (!mongoose.Types.ObjectId.isValid(characterId)) {
+      res.status(400).json({ error: 'Invalid character ID' });
+      return;
+    }
     // キャラクター情報を取得
     const character = await CharacterModel.findById(characterId);
     if (!character || !character.isActive) {
@@ -2101,8 +2106,9 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
     
     // MongoDB から会話履歴を取得
     try {
+      const userIdString = req.user._id.toString();
       chatData = await ChatModel.findOne({ 
-        userId: req.user._id, 
+        userId: userIdString, 
         characterId: new mongoose.Types.ObjectId(characterId)
       });
       
@@ -2117,7 +2123,7 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
         };
 
         chatData = new ChatModel({
-          userId: req.user._id,
+          userId: userIdString,
           characterId: new mongoose.Types.ObjectId(characterId),
           messages: [welcomeMessage],
           totalTokensUsed: 0,
