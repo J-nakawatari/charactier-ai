@@ -37,7 +37,7 @@ async function setAffinityTo100(userEmail: string, characterId: string) {
         experienceToNext: 0,
         maxExperience: 100,
         emotionalState: 'happy',
-        relationshipType: 'soulmate',
+        relationshipType: 'lover',
         trustLevel: 100,
         intimacyLevel: 100,
         totalConversations: 10,
