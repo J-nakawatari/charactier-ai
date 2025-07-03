@@ -1214,12 +1214,12 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, c
     // UserTokenPackモデルをインポート
     const UserTokenPack = require('../../models/UserTokenPack');
     
-    // 購入履歴を取得（最新20件）
+    // 購入履歴を取得（最新3件）
     let purchaseHistory = [];
     try {
       purchaseHistory = await PurchaseHistoryModel.getUserPurchaseHistory(
         userId,
-        { limit: 20, status: 'completed', sortOrder: 'desc' }
+        { limit: 3, status: 'completed', sortOrder: 'desc' }
       );
     } catch (error) {
       log.error('Failed to fetch purchase history:', error);

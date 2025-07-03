@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ShoppingCart, Coins, Users, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShoppingCart, Coins, Users, Calendar, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 interface PurchaseHistoryItem {
   type: 'token' | 'character';
@@ -21,13 +22,12 @@ interface PurchaseHistorySummaryProps {
 export default function PurchaseHistorySummary({ purchaseHistory, locale }: PurchaseHistorySummaryProps) {
   const t = useTranslations('purchaseHistorySummary');
   const tGeneral = useTranslations('general');
-  const [isExpanded, setIsExpanded] = useState(false);
   
   // デバッグ: 購入履歴データを確認
   console.log('PurchaseHistorySummary - purchaseHistory:', purchaseHistory);
   
-  // 最新3件を表示（展開時は全件）
-  const displayItems = isExpanded ? (purchaseHistory || []) : (purchaseHistory || []).slice(0, 3);
+  // 最新3件のみ表示
+  const displayItems = (purchaseHistory || []).slice(0, 3);
   
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString(locale, {
@@ -101,17 +101,13 @@ export default function PurchaseHistorySummary({ purchaseHistory, locale }: Purc
         </div>
         
         {purchaseHistory.length > 3 && (
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-700 transition-colors"
+          <Link
+            href={`/${locale}/purchase-history`}
+            className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
           >
-            <span>{isExpanded ? tGeneral('close') : tGeneral('viewAll')}</span>
-            {isExpanded ? (
-              <ChevronUp className="w-4 h-4" />
-            ) : (
-              <ChevronDown className="w-4 h-4" />
-            )}
-          </button>
+            <span>{tGeneral('viewAll')}</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         )}
       </div>
 

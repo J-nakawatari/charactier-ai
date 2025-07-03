@@ -82,19 +82,11 @@ export default function RecentChatHistory({ recentChats, locale }: RecentChatHis
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <MessageSquare className="w-5 h-5 text-blue-600" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
+      <div className="flex items-center space-x-2 mb-4">
+        <div className="p-2 bg-blue-100 rounded-lg">
+          <MessageSquare className="w-5 h-5 text-blue-600" />
         </div>
-        <button 
-          onClick={handleNewChatClick}
-          className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
-        >
-{tGeneral('viewAll')}
-        </button>
+        <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
       </div>
 
       {/* チャット履歴リスト */}
