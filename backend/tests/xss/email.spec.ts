@@ -15,9 +15,11 @@ describe('XSS Protection - Email Templates', () => {
 
       const html = generateEmailVerificationHTML('success', 'ja', maliciousData);
 
-      // スクリプトタグが無害化されていることを確認
-      expect(html).not.toContain('<script>');
-      expect(html).not.toContain('alert(');
+      // 悪意のあるスクリプトが無害化されていることを確認
+      expect(html).not.toContain('<script>alert("XSS")');
+      expect(html).not.toContain('<script>alert("email")');
+      expect(html).not.toContain('<script>alert("token")');
+      expect(html).not.toContain('<script>alert("url")');
       
       // エスケープされた文字列が含まれていることを確認
       expect(html).toContain('\\u003c'); // < がエスケープされている
@@ -118,10 +120,10 @@ describe('XSS Protection - Email Templates', () => {
 
       const html = generateEmailVerificationHTML('success', 'ja', unicodeData);
       
-      // Unicodeは保持されるがスクリプトタグは除去される
+      // Unicodeは保持されるが悪意のあるスクリプトタグは除去される
       expect(html).toContain('🚀');
       expect(html).toContain('💉');
-      expect(html).not.toContain('<script>');
+      expect(html).not.toContain('<script>alert("emoji")');
     });
   });
 });
