@@ -6967,7 +6967,12 @@ routeRegistry.define('DELETE', `${API_PREFIX}/user/delete-account`, authenticate
         isActive: false,
         accountStatus: 'deleted',
         email: `deleted_${Date.now()}_${user.email}`, // メールアドレスを無効化
-        deletedAt: new Date()
+        deletedAt: new Date(),
+        // 重要データをリセット
+        purchasedCharacters: [],
+        selectedCharacter: null,
+        affinities: [],
+        tokenBalance: 0
       }
     }, { runValidators: true });
 

@@ -241,6 +241,7 @@ export default function SettingsPage() {
 
       // ローカルストレージをクリア
       localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       
       success(t('success.accountDeleted'));
