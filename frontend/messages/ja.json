@@ -732,14 +732,14 @@
     "intimacyWithRank": "親密度（{rank}）",
     "modalTitle": "親密度詳細",
     "modalSubtitle": "キャラクターとの関係性を詳しく確認",
-    "expGainMethods": "経験値の獲得方法",
-    "expGainMessage": "メッセージ送信: +10 EXP",
-    "expGainLongChat": "長い会話: +20 EXP",
-    "expGainDaily": "連続ログイン: +5 EXP",
-    "expGainEvent": "特別イベント: +50 EXP",
-    "rewardLv20": "Lv.20毎: 新しい話題追加",
-    "rewardLv50": "Lv.50毎: 限定コンテンツ",
-    "rewardLv100": "Lv.100: 専用エンディング"
+    "expGainMethods": "親密度の上げ方",
+    "expGainMessage": "メッセージ送信でレベルアップ",
+    "expGainLongChat": "レベルが上がるほど必要メッセージ数増加",
+    "expGainDaily": "Lv.0-19: 20メッセージで1レベル",
+    "expGainEvent": "Lv.90-100: 200メッセージで1レベル",
+    "rewardLv20": "Lv.10毎: 新しい画像解放",
+    "rewardLv50": "高レベルほどキャラクターの反応が変化",
+    "rewardLv100": "Lv.100: 最高の親密度達成"
   },
   "tokens": {
     "balance": "トークン残高",

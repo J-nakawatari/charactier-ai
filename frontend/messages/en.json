@@ -732,14 +732,14 @@
     "intimacyWithRank": "Intimacy ({rank})",
     "modalTitle": "Intimacy Details",
     "modalSubtitle": "Check detailed relationship with characters",
-    "expGainMethods": "How to Gain Experience",
-    "expGainMessage": "Send message: +10 EXP",
-    "expGainLongChat": "Long conversation: +20 EXP",
-    "expGainDaily": "Daily login: +5 EXP",
-    "expGainEvent": "Special event: +50 EXP",
-    "rewardLv20": "Every Lv.20: New topics added",
-    "rewardLv50": "Every Lv.50: Exclusive content",
-    "rewardLv100": "Lv.100: Special ending"
+    "expGainMethods": "How to Increase Affinity",
+    "expGainMessage": "Level up by sending messages",
+    "expGainLongChat": "Higher levels require more messages",
+    "expGainDaily": "Lv.0-19: 1 level per 20 messages",
+    "expGainEvent": "Lv.90-100: 1 level per 200 messages",
+    "rewardLv20": "Every Lv.10: Unlock new images",
+    "rewardLv50": "Character responses change at higher levels",
+    "rewardLv100": "Lv.100: Maximum affinity achieved"
   },
   "tokens": {
     "balance": "Token Balance",
