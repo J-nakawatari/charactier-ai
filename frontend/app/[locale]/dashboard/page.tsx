@@ -19,6 +19,9 @@ interface DashboardData {
     _id: string;
     name: string;
     email: string;
+    tokenBalance: number;
+    selectedCharacter?: string;
+    isSetupComplete?: boolean;
     createdAt: Date;
     lastLoginAt: Date;
   };
