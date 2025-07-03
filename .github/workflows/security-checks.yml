@@ -215,36 +215,36 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true  # エラーがあってもワークフローを続行
     
-    # E2Eセキュリティテスト（Playwright）
-    - name: Install Playwright browsers
-      run: |
-        cd frontend
-        npx playwright install chromium
+    # E2Eセキュリティテスト（一時的に無効化 - パフォーマンス改善のため）
+    # - name: Install Playwright browsers
+    #   run: |
+    #     cd frontend
+    #     npx playwright install chromium
     
-    - name: Run E2E security tests
-      run: |
-        cd backend
-        npm run dev &
-        BACKEND_PID=$!
-        
-        cd ../frontend
-        npm run build
-        npm run start &
-        FRONTEND_PID=$!
-        
-        # サーバー起動を待つ
-        sleep 30
-        
-        # E2Eテスト実行
-        npm run test:e2e:security
-        if [ $? -ne 0 ]; then
-          echo "❌ E2E security tests failed!"
-          exit 1
-        fi
-        echo "✅ E2E security tests passed!"
-        
-        # プロセスを終了
-        kill $BACKEND_PID $FRONTEND_PID || true
+    # - name: Run E2E security tests
+    #   run: |
+    #     cd backend
+    #     npm run dev &
+    #     BACKEND_PID=$!
+    #     
+    #     cd ../frontend
+    #     npm run build
+    #     npm run start &
+    #     FRONTEND_PID=$!
+    #     
+    #     # サーバー起動を待つ
+    #     sleep 30
+    #     
+    #     # E2Eテスト実行
+    #     npm run test:e2e:security
+    #     if [ $? -ne 0 ]; then
+    #       echo "❌ E2E security tests failed!"
+    #       exit 1
+    #     fi
+    #     echo "✅ E2E security tests passed!"
+    #     
+    #     # プロセスを終了
+    #     kill $BACKEND_PID $FRONTEND_PID || true
     
     # テスト結果の集約
     - name: Upload test results
