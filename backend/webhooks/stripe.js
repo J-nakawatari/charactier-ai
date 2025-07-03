@@ -470,20 +470,25 @@ async function handleCharacterPurchase(userId, characterId, sessionId, purchaseA
     
     // 購入履歴に記録
     const { PurchaseHistoryModel } = require('../src/models/PurchaseHistoryModel');
+    const { CharacterModel } = require('../src/models/CharacterModel');
     
     if (PurchaseHistoryModel) {
       try {
+        // キャラクター名を取得
+        const character = await CharacterModel.findById(characterId);
+        const characterName = character ? (character.name.ja || character.name.en || 'Unknown') : 'Unknown';
+        
         const purchaseRecord = await PurchaseHistoryModel.create({
           userId,
           stripeSessionId: sessionId,
           type: 'character',
-          characterId: characterId,
+          amount: 1, // キャラクター購入は1個
           price: purchaseAmountYen,
           currency: 'jpy',
           status: 'completed',
           paymentMethod: 'card',
-          details: `キャラクター購入`,
-          description: `Stripe経由でのキャラクター購入`,
+          details: `${characterName}を購入`,
+          description: `Stripe経由でのキャラクター購入 - ${characterName}`,
           metadata: {
             characterId: characterId,
             originalAmount: purchaseAmountYen

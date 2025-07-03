@@ -1214,6 +1214,18 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, c
     // UserTokenPackモデルをインポート
     const UserTokenPack = require('../../models/UserTokenPack');
     
+    // 購入履歴を取得（最新20件）
+    let purchaseHistory = [];
+    try {
+      purchaseHistory = await PurchaseHistoryModel.getUserPurchaseHistory(
+        new mongoose.Types.ObjectId(userId),
+        { limit: 20, status: 'completed', sortOrder: 'desc' }
+      );
+    } catch (error) {
+      log.error('Failed to fetch purchase history:', error);
+      purchaseHistory = [];
+    }
+    
     // トークン使用状況
     const tokenUsage = await TokenUsage.aggregate([
       { $match: { userId: new mongoose.Types.ObjectId(userId) } },
@@ -1491,7 +1503,14 @@ routeRegistry.define('GET', `${API_PREFIX}/user/dashboard`, authenticateToken, c
       },
       affinities: validAffinities,
       recentChats: formattedRecentChats,
-      purchaseHistory: [],
+      purchaseHistory: purchaseHistory.map(purchase => ({
+        type: purchase.type,
+        amount: purchase.amount,
+        date: purchase.createdAt,
+        details: purchase.details,
+        price: purchase.price,
+        status: purchase.status
+      })),
       loginHistory: [],
       notifications: [],
       badges: [],

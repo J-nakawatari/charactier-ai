@@ -3,10 +3,12 @@ import { Router, Response } from 'express';
 import { UserModel } from '../models/UserModel';
 import { CharacterModel } from '../models/CharacterModel';
 import { ChatModel } from '../models/ChatModel';
+import { PurchaseHistoryModel } from '../models/PurchaseHistoryModel';
 import { authenticateToken } from '../middleware/auth';
 import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
 import log from '../utils/logger';
 import { createRateLimiter } from '../middleware/rateLimiter';
+import mongoose from 'mongoose';
 
 const router: Router = Router();
 
@@ -105,6 +107,12 @@ router.get('/dashboard', generalRateLimit, authenticateToken, async (req: AuthRe
     const purchasedCharacters = await CharacterModel.find({
       _id: { $in: user.purchasedCharacters || [] }
     }).select('name imageChatAvatar purchasePrice');
+
+    // 購入履歴を取得（最新20件）
+    const purchaseHistory = await PurchaseHistoryModel.getUserPurchaseHistory(
+      new mongoose.Types.ObjectId(userId),
+      { limit: 20, status: 'completed', sortOrder: 'desc' }
+    );
 
     // 最近のチャット取得（最新5件）
     let recentChats = [];
@@ -267,6 +275,14 @@ router.get('/dashboard', generalRateLimit, authenticateToken, async (req: AuthRe
         displayName: char.name,
         profileImage: (char as any).imageChatAvatar,
         price: (char as any).purchasePrice || 0
+      })),
+      purchaseHistory: purchaseHistory.map(purchase => ({
+        type: purchase.type,
+        amount: purchase.amount,
+        date: purchase.createdAt,
+        details: purchase.details,
+        price: purchase.price,
+        status: purchase.status
       }))
     };
 
