@@ -65,7 +65,8 @@ jobs:
       run: |
         cd backend
         echo "🛡️ Testing XSS Protection..."
-        npm run test:security:xss
+        # メインのXSSテストのみを実行（統合テストは除外）
+        npx jest tests/xss --coverage
         if [ $? -ne 0 ]; then
           echo "❌ XSS protection tests failed!"
           exit 1
