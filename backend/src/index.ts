@@ -2105,18 +2105,40 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
     let chatData: IChat | null = null;
     
     // MongoDB から会話履歴を取得
+    let userIdString: string;
     try {
-      const userIdString = req.user._id.toString();
+      userIdString = req.user._id.toString();
+    } catch (err) {
+      log.error('User ID conversion error:', err);
+      res.status(500).json({ 
+        error: 'Internal error',
+        message: 'ユーザーIDの処理に失敗しました'
+      });
+      return;
+    }
+
+    // 既存のチャットを検索
+    try {
       chatData = await ChatModel.findOne({ 
         userId: userIdString, 
-        characterId: new mongoose.Types.ObjectId(characterId)
+        characterId: characterId
+      }).exec();
+    } catch (findError) {
+      log.error('Chat find error:', {
+        error: findError,
+        userId: userIdString,
+        characterId: characterId
       });
-      
-      if (!chatData) {
-        // 初回アクセス時は新しいチャットセッションを作成
-        const welcomeMessage: IMessage = {
+      // エラーが発生しても続行（新規作成を試みる）
+      chatData = null;
+    }
+    
+    // 新規作成が必要な場合
+    if (!chatData) {
+      try {
+        const welcomeMessage = {
           _id: `msg_${Date.now()}_welcome`,
-          role: 'assistant',
+          role: 'assistant' as const,
           content: character.defaultMessage?.[locale as keyof LocalizedString] || character.defaultMessage?.ja || 'こんにちは！',
           timestamp: new Date(),
           tokensUsed: 0
@@ -2124,7 +2146,7 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
 
         chatData = new ChatModel({
           userId: userIdString,
-          characterId: new mongoose.Types.ObjectId(characterId),
+          characterId: characterId,
           messages: [welcomeMessage],
           totalTokensUsed: 0,
           currentAffinity: 0,
@@ -2132,21 +2154,20 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
         });
         
         await chatData.save();
+      } catch (saveError) {
+        log.error('Chat save error:', {
+          error: saveError,
+          userId: userIdString,
+          characterId: characterId,
+          errorMessage: saveError instanceof Error ? saveError.message : 'Unknown error'
+        });
+        res.status(500).json({ 
+          error: 'Database error',
+          message: 'チャットの作成に失敗しました',
+          details: saveError instanceof Error ? saveError.message : 'Unknown error'
+        });
+        return;
       }
-    } catch (dbError) {
-      log.error('Chat data fetch error:', {
-        error: dbError,
-        userId: req.user._id,
-        characterId: characterId,
-        errorMessage: dbError instanceof Error ? dbError.message : 'Unknown error',
-        errorStack: dbError instanceof Error ? dbError.stack : undefined
-      });
-      res.status(500).json({ 
-        error: 'Database error',
-        message: 'チャットデータの取得に失敗しました',
-        details: dbError instanceof Error ? dbError.message : 'Unknown error'
-      });
-      return;
     }
 
 
