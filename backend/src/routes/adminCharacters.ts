@@ -10,6 +10,7 @@ import { characterSchemas } from '../validation/schemas';
 import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../utils/errorResponse';
 import log from '../utils/logger';
 import { createRateLimiter } from '../middleware/rateLimiter';
+import { verifyCsrfToken } from '../middleware/csrf';
 import { escapeRegex } from '../utils/escapeRegex';
 
 const router: Router = Router();
@@ -854,7 +855,7 @@ router.post('/upload/video', adminUploadRateLimit, authenticateToken, uploadVide
 });
 
 // キャラクター削除（管理者用）
-router.delete('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+router.delete('/:id', adminRateLimit, authenticateToken, verifyCsrfToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {

@@ -3891,7 +3891,7 @@ app.post('/admin/users/:userId/reset-tokens', authenticateToken, createRateLimit
 });
 
 // 管理者向けユーザー停止/復活（より具体的なルートを先に定義）
-routeRegistry.define('PUT', `${API_PREFIX}/admin/users/:id/status`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('PUT', `${API_PREFIX}/admin/users/:id/status`, authenticateToken, verifyCsrfToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.admin) {
       res.status(403).json({ error: 'Admin access required' });
@@ -3982,7 +3982,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/admin/users/:id/status`, authenticate
 });
 
 // 管理者向けユーザー削除（論理削除）
-routeRegistry.define('DELETE', `${API_PREFIX}/admin/users/:id`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/admin/users/:id`, authenticateToken, verifyCsrfToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.admin) {
       res.status(403).json({ error: 'Admin access required' });
@@ -4449,7 +4449,7 @@ routeRegistry.define('PUT', `${API_PREFIX}/admin/admins/:id`, authenticateToken,
 });
 
 // 管理者削除API
-routeRegistry.define('DELETE', `${API_PREFIX}/admin/admins/:id`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/admin/admins/:id`, authenticateToken, verifyCsrfToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   // 管理者権限チェック
   if (!req.admin) {
     res.status(403).json({ 
@@ -6536,7 +6536,7 @@ app.post(`${API_PREFIX}/admin/cache/cleanup`, authenticateToken, createRateLimit
 /**
  * 🎯 特定キャラクターのキャッシュ無効化
  */
-routeRegistry.define('DELETE', `${API_PREFIX}/admin/cache/character/:characterId`, authenticateToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('DELETE', `${API_PREFIX}/admin/cache/character/:characterId`, authenticateToken, verifyCsrfToken, createRateLimiter('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Check if user has write permission (only super_admin can delete cache)
     if (!hasWritePermission(req)) {
@@ -6921,7 +6921,7 @@ app.get(`${API_PREFIX}/exchange-rate`, async (req: Request, res: Response): Prom
 // ==================== USER SETTINGS ENDPOINTS ====================
 
 // ユーザーのパスワード変更API
-routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
+routeRegistry.define('PUT', `${API_PREFIX}/user/change-password`, authenticateToken, verifyCsrfToken, createRateLimiter('general'), async (req: AuthRequest, res: Response): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
     return;

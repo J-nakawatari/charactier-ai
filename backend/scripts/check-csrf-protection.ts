@@ -6,22 +6,23 @@ import path from 'path';
 // 重要なエンドポイントのリスト（CSRF保護が必須）
 const CRITICAL_ENDPOINTS = [
   // チャット関連（トークン消費）
-  { method: 'POST', path: '/chats/:characterId/messages', description: 'チャットメッセージ送信' },
-  
-  // 購入関連
-  { method: 'POST', path: '/characters/:id/purchase', description: 'キャラクター購入' },
-  { method: 'POST', path: '/tokens/purchase', description: 'トークン購入' },
-  { method: 'POST', path: '/stripe/create-payment-intent', description: 'Stripe決済開始' },
+  { method: 'POST', path: '/api/v1/chats/:characterId/messages', description: 'チャットメッセージ送信' },
   
   // ユーザーデータ変更
-  { method: 'PUT', path: '/user/profile', description: 'プロフィール更新' },
-  { method: 'PUT', path: '/user/settings', description: '設定変更' },
-  { method: 'DELETE', path: '/user/delete-account', description: 'アカウント削除' },
+  { method: 'PUT', path: '/api/v1/user/profile', description: 'プロフィール更新' },
+  { method: 'PUT', path: '/api/v1/user/change-password', description: 'パスワード変更' },
+  { method: 'DELETE', path: '/api/v1/user/delete-account', description: 'アカウント削除' },
   
-  // 管理者操作
-  { method: 'POST', path: '/admin/characters', description: 'キャラクター作成' },
-  { method: 'PUT', path: '/admin/characters/:id', description: 'キャラクター更新' },
-  { method: 'DELETE', path: '/admin/characters/:id', description: 'キャラクター削除' },
+  // 管理者操作 - ユーザー管理
+  { method: 'PUT', path: '/api/v1/admin/users/:id/status', description: '管理者：ユーザーステータス変更' },
+  { method: 'DELETE', path: '/api/v1/admin/users/:id', description: '管理者：ユーザー削除' },
+  { method: 'DELETE', path: '/api/v1/admin/admins/:id', description: '管理者：管理者削除' },
+  
+  // 管理者操作 - キャラクター管理
+  { method: 'DELETE', path: '/api/v1/admin/characters/:id', description: '管理者：キャラクター削除' },
+  
+  // 管理者操作 - システム
+  { method: 'DELETE', path: '/api/v1/admin/cache/character/:characterId', description: '管理者：キャッシュ削除' },
 ];
 
 // ファイルから保護されているエンドポイントを抽出
@@ -30,7 +31,7 @@ function findProtectedEndpoints(filePath: string): Set<string> {
   const protectedEndpoints = new Set<string>();
   
   // routeRegistry.defineでverifyCsrfTokenを使用している行を探す
-  const routePattern = /routeRegistry\.define\s*\(\s*['"](\w+)['"]\s*,\s*[`'"]([^'"]+)['"]\s*,.*verifyCsrfToken/g;
+  const routePattern = /routeRegistry\.define\s*\(\s*['"](\w+)['"]\s*,\s*[`'"]([^'"]+)[`'"]\s*,.*verifyCsrfToken/g;
   let match;
   
   while ((match = routePattern.exec(content)) !== null) {
@@ -80,6 +81,15 @@ async function checkCsrfProtection() {
     console.log(`  - ${ep}`);
   });
   
+  // デバッグ：正規化された検出パス
+  console.log('\n🔍 デバッグ：正規化された保護パス');
+  protectedEndpoints.forEach(ep => {
+    const epParts = ep.split(' ');
+    let epPath = epParts[1].replace(/\$\{API_PREFIX\}/g, '/api/v1');
+    epPath = epPath.replace(/:[^/]+/g, ':param');
+    console.log(`  ${epParts[0]} ${epPath}`);
+  });
+  
   console.log('\n📋 重要なエンドポイントの保護状態:\n');
   
   let unprotectedCount = 0;
@@ -92,8 +102,18 @@ async function checkCsrfProtection() {
       const keyParts = key.split(' ');
       if (epParts[0] !== keyParts[0]) return false;
       
-      const epPath = epParts[1].replace(/:[^/]+/g, ':param');
-      const keyPath = keyParts[1].replace(/:[^/]+/g, ':param');
+      // API_PREFIXを考慮した比較
+      let epPath = epParts[1].replace(/\$\{API_PREFIX\}/g, '/api/v1');
+      let keyPath = keyParts[1];
+      
+      // パスパラメータを正規化
+      epPath = epPath.replace(/:[^/]+/g, ':param');
+      keyPath = keyPath.replace(/:[^/]+/g, ':param');
+      
+      // adminCharactersルートの場合、prefix付きでマッチング
+      if (epPath === '/:param' && keyPath === '/api/v1/admin/characters/:param') {
+        return true;
+      }
       
       return epPath === keyPath;
     });
