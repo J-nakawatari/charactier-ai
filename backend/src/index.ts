@@ -2100,46 +2100,38 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
     let chatData: IChat | null = null;
     
     // MongoDB から会話履歴を取得
-    if (isMongoConnected) {
-      try {
-        chatData = await ChatModel.findOne({ 
-          userId: req.user._id, 
-          characterId: characterId 
+    try {
+      chatData = await ChatModel.findOne({ 
+        userId: req.user._id, 
+        characterId: characterId 
+      });
+      
+      if (!chatData) {
+        // 初回アクセス時は新しいチャットセッションを作成
+        const welcomeMessage: IMessage = {
+          _id: `msg_${Date.now()}_welcome`,
+          role: 'assistant',
+          content: character.defaultMessage?.[locale as keyof LocalizedString] || character.defaultMessage?.ja || 'こんにちは！',
+          timestamp: new Date(),
+          tokensUsed: 0
+        };
+
+        chatData = new ChatModel({
+          userId: req.user._id,
+          characterId: characterId,
+          messages: [welcomeMessage],
+          totalTokensUsed: 0,
+          currentAffinity: 0,
+          lastActivityAt: new Date()
         });
         
-        if (!chatData) {
-          // 初回アクセス時は新しいチャットセッションを作成
-          const welcomeMessage: IMessage = {
-            _id: `msg_${Date.now()}_welcome`,
-            role: 'assistant',
-            content: character.defaultMessage?.[locale as keyof LocalizedString] || character.defaultMessage?.ja || 'こんにちは！',
-            timestamp: new Date(),
-            tokensUsed: 0
-          };
-
-          chatData = new ChatModel({
-            userId: req.user._id,
-            characterId: characterId,
-            messages: [welcomeMessage],
-            totalTokensUsed: 0,
-            currentAffinity: 0,
-            lastActivityAt: new Date()
-          });
-          
-          await chatData.save();
-        } else {
-        }
-      } catch (dbError) {
-        // フォールバックでモックデータを作成
-        chatData = null;
+        await chatData.save();
       }
-    }
-
-    // MongoDB が利用できない場合はエラー
-    if (!chatData) {
+    } catch (dbError) {
+      log.error('Chat data fetch error:', dbError);
       res.status(500).json({ 
-        error: 'Database connection required',
-        message: 'チャット機能を利用するにはデータベース接続が必要です'
+        error: 'Database error',
+        message: 'チャットデータの取得に失敗しました'
       });
       return;
     }
