@@ -128,7 +128,7 @@ const connectMongoDB = async () => {
 let stripe: Stripe | null = null;
 if (process.env.STRIPE_SECRET_KEY) {
   stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2025-05-28.basil' // Stripe v18.2.1のAPIバージョン
+    apiVersion: '2025-06-30.basil' // 最新のAPIバージョン
   });
 }
 
