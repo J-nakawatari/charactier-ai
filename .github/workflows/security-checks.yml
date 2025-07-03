@@ -64,62 +64,147 @@ jobs:
     - name: Run XSS protection tests
       run: |
         cd backend
-        npm run test:security:xss || true
+        echo "🛡️ Testing XSS Protection..."
+        npm run test:security:xss
+        if [ $? -ne 0 ]; then
+          echo "❌ XSS protection tests failed!"
+          exit 1
+        fi
+        echo "✅ XSS protection tests passed!"
     
     # CSRF保護テスト
     - name: Run CSRF protection tests
       run: |
         cd backend
         echo "🔒 Testing CSRF Protection..."
-        npm run test:security:csrf || true
         
-        # CSRF設定の確認
-        echo "📋 Checking CSRF middleware configuration..."
-        grep -q "verifyCsrfToken" src/index.ts && echo "✅ CSRF middleware is configured" || echo "❌ CSRF middleware not found"
-        grep -q "csrf-token" src/index.ts && echo "✅ CSRF token endpoint exists" || echo "❌ CSRF token endpoint not found"
+        # 1. CSRFミドルウェアの単体テスト
+        echo "1️⃣ Running CSRF middleware tests..."
+        npm run test:security:csrf
+        if [ $? -ne 0 ]; then
+          echo "❌ CSRF middleware tests failed!"
+          exit 1
+        fi
         
-        # Feature Flag の確認
-        echo "🏳️ Checking CSRF Feature Flags..."
-        grep -q "FEATURE_CSRF_SAMESITE_STRICT" .env.example && echo "✅ CSRF SameSite feature flag documented" || echo "⚠️ CSRF feature flag not documented"
+        # 2. 実際のエンドポイントの保護状態をチェック
+        echo "2️⃣ Checking CSRF protection on critical endpoints..."
+        npm run check:csrf-endpoints
+        if [ $? -ne 0 ]; then
+          echo "❌ Critical endpoints are not properly protected!"
+          exit 1
+        fi
+        
+        # 3. CSRF設定の確認
+        echo "3️⃣ Verifying CSRF configuration..."
+        if ! grep -q "verifyCsrfToken" src/index.ts; then
+          echo "❌ CSRF middleware not imported in index.ts"
+          exit 1
+        fi
+        
+        if ! grep -q "csrf-token" src/index.ts; then
+          echo "❌ CSRF token endpoint not found"
+          exit 1
+        fi
+        
+        # 4. Feature Flag の確認
+        echo "4️⃣ Checking CSRF Feature Flags..."
+        if ! grep -q "FEATURE_CSRF_SAMESITE_STRICT" .env.example; then
+          echo "⚠️ CSRF feature flag not documented in .env.example"
+        fi
+        
+        echo "✅ All CSRF protection tests passed!"
     
     # レート制限テスト
     - name: Run rate limiting tests
       run: |
         cd backend
-        npm run test:security:ratelimit || true
+        echo "⏱️ Testing Rate Limiting..."
+        npm run test:security:ratelimit
+        if [ $? -ne 0 ]; then
+          echo "❌ Rate limiting tests failed!"
+          exit 1
+        fi
+        echo "✅ Rate limiting tests passed!"
     
     # 入力検証テスト
     - name: Run input validation tests
       run: |
         cd backend
-        npm run test:security:validation || true
+        echo "🔍 Testing Input Validation..."
+        npm run test:security:validation
+        if [ $? -ne 0 ]; then
+          echo "❌ Input validation tests failed!"
+          exit 1
+        fi
+        echo "✅ Input validation tests passed!"
     
     # Feature Flag検証
     - name: Test Feature Flags
       run: |
         cd backend
-        # Feature Flagが正しく動作するか検証
-        FEATURE_SECURE_COOKIE_AUTH=true npm run test:security:features || true
-        FEATURE_CSRF_SAMESITE_STRICT=true npm run test:security:features || true
-        FEATURE_STRICT_JOI_VALIDATION=true npm run test:security:features || true
-        FEATURE_LOG_UNKNOWN_FIELDS=true npm run test:security:features || true
+        echo "🏳️ Testing Feature Flags..."
+        
+        # 各Feature Flagのテスト
+        echo "Testing FEATURE_SECURE_COOKIE_AUTH..."
+        FEATURE_SECURE_COOKIE_AUTH=true npm run test:security:features
+        if [ $? -ne 0 ]; then
+          echo "❌ FEATURE_SECURE_COOKIE_AUTH test failed!"
+          exit 1
+        fi
+        
+        echo "Testing FEATURE_CSRF_SAMESITE_STRICT..."
+        FEATURE_CSRF_SAMESITE_STRICT=true npm run test:security:features
+        if [ $? -ne 0 ]; then
+          echo "❌ FEATURE_CSRF_SAMESITE_STRICT test failed!"
+          exit 1
+        fi
+        
+        echo "Testing FEATURE_STRICT_JOI_VALIDATION..."
+        FEATURE_STRICT_JOI_VALIDATION=true npm run test:security:features
+        if [ $? -ne 0 ]; then
+          echo "❌ FEATURE_STRICT_JOI_VALIDATION test failed!"
+          exit 1
+        fi
+        
+        echo "✅ All Feature Flag tests passed!"
     
     # セキュリティヘッダーチェック
     - name: Check security headers
       run: |
         cd backend
-        npm run test:security:headers || true
+        echo "🔒 Checking Security Headers..."
+        npm run test:security:headers
+        if [ $? -ne 0 ]; then
+          echo "❌ Security headers check failed!"
+          exit 1
+        fi
+        echo "✅ Security headers check passed!"
     
     # 依存関係の脆弱性チェック
     - name: Run npm audit
       run: |
+        echo "🔍 Checking for vulnerabilities in dependencies..."
+        
         echo "=== Backend Dependencies ==="
         cd backend
-        npm audit --production || true
+        # 高危険度の脆弱性のみでエラーにする
+        npm audit --production --audit-level=high
+        if [ $? -ne 0 ]; then
+          echo "❌ High or Critical vulnerabilities found in backend dependencies!"
+          echo "Please run 'npm audit' to see details and 'npm audit fix' to resolve."
+          exit 1
+        fi
         
         echo "=== Frontend Dependencies ==="
         cd ../frontend
-        npm audit --production || true
+        npm audit --production --audit-level=high
+        if [ $? -ne 0 ]; then
+          echo "❌ High or Critical vulnerabilities found in frontend dependencies!"
+          echo "Please run 'npm audit' to see details and 'npm audit fix' to resolve."
+          exit 1
+        fi
+        
+        echo "✅ No high or critical vulnerabilities found!"
     
     # Gitleaksによる機密情報漏洩チェック
     - name: Run Gitleaks
@@ -151,7 +236,12 @@ jobs:
         sleep 30
         
         # E2Eテスト実行
-        npm run test:e2e:security || true
+        npm run test:e2e:security
+        if [ $? -ne 0 ]; then
+          echo "❌ E2E security tests failed!"
+          exit 1
+        fi
+        echo "✅ E2E security tests passed!"
         
         # プロセスを終了
         kill $BACKEND_PID $FRONTEND_PID || true
@@ -166,6 +256,35 @@ jobs:
           backend/test-results/
           frontend/test-results/
           backend/coverage/
+    
+    # 最終結果サマリー
+    - name: Security Test Summary
+      if: always()
+      run: |
+        echo "========================================="
+        echo "📊 SECURITY TEST SUMMARY"
+        echo "========================================="
+        
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ All security tests passed!"
+          echo ""
+          echo "Checked:"
+          echo "- XSS Protection"
+          echo "- CSRF Protection"
+          echo "- Rate Limiting"
+          echo "- Input Validation"
+          echo "- Security Headers"
+          echo "- Feature Flags"
+          echo "- Dependencies"
+          echo "- Secret Leaks"
+        else
+          echo "❌ Security tests failed!"
+          echo ""
+          echo "Please check the logs above for details."
+          echo "Fix all security issues before merging."
+        fi
+        
+        echo "========================================="
     
     # Slackへの通知（オプション）
     - name: Notify results
