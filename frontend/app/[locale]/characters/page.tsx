@@ -85,14 +85,20 @@ function CharactersPageContent({
         setUserPurchasedCharacters(purchasedIds);
         // localStorageも更新（selectedCharacterをID文字列として保持）
         if (data.user) {
+          // 既存のlocalStorageからselectedCharacterを取得
+          const existingUserStr = localStorage.getItem('user');
+          const existingUser = existingUserStr ? JSON.parse(existingUserStr) : {};
+          
           const userToStore = {
             ...data.user,
-            // selectedCharacterがオブジェクトの場合、IDのみを保存
-            selectedCharacter: data.user.selectedCharacter 
-              ? (typeof data.user.selectedCharacter === 'string' 
-                  ? data.user.selectedCharacter 
-                  : data.user.selectedCharacter._id)
-              : null
+            // selectedCharacterがAPIレスポンスに含まれていない場合は、既存の値を保持
+            selectedCharacter: data.user.selectedCharacter !== undefined
+              ? (data.user.selectedCharacter 
+                  ? (typeof data.user.selectedCharacter === 'string' 
+                      ? data.user.selectedCharacter 
+                      : data.user.selectedCharacter._id)
+                  : null)
+              : existingUser.selectedCharacter // APIレスポンスに含まれていない場合は既存の値を保持
           };
           localStorage.setItem('user', JSON.stringify(userToStore));
         }
