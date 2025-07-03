@@ -21,9 +21,7 @@ import {
   AlertCircle,
   Wrench,
   Star,
-  Gift,
-  Check,
-  CheckCheck
+  Gift
 } from 'lucide-react';
 
 // 型定義
@@ -48,8 +46,6 @@ interface Notification {
   message: LocalizedString;
   type: 'info' | 'warning' | 'success' | 'urgent' | 'maintenance' | 'feature' | 'event';
   isActive: boolean;
-  isRead?: boolean;
-  readAt?: string;
   isPinned: boolean;
   priority: number;
   targetCondition: TargetCondition;
@@ -146,49 +142,6 @@ export default function NotificationsManagementPage() {
     fetchNotifications();
   }, [filters, fetchNotifications]);
 
-  // 通知を既読にする
-  const markAsRead = async (notificationId: string) => {
-    try {
-      const response = await adminPost(`/api/v1/admin/notifications/${notificationId}/read`, {});
-
-      if (response.ok) {
-        // ローカル状態を更新
-        setNotifications(prev => 
-          prev.map(n => 
-            n._id === notificationId 
-              ? { ...n, isRead: true, readAt: new Date().toISOString() } 
-              : n
-          )
-        );
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '既読マークに失敗しました');
-      }
-    } catch (error) {
-      console.error('既読マークエラー:', error);
-      setError('既読マークに失敗しました');
-    }
-  };
-
-  // 一括既読
-  const markAllAsRead = async () => {
-    try {
-      const response = await adminPost('/api/v1/admin/notifications/read-all', {});
-
-      if (response.ok) {
-        // 全ての通知を既読に更新
-        setNotifications(prev => 
-          prev.map(n => ({ ...n, isRead: true, readAt: new Date().toISOString() }))
-        );
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '一括既読に失敗しました');
-      }
-    } catch (error) {
-      console.error('一括既読エラー:', error);
-      setError('一括既読に失敗しました');
-    }
-  };
 
   // タイプアイコン取得
   const getTypeIcon = (type: string) => {
@@ -229,12 +182,6 @@ export default function NotificationsManagementPage() {
     }
   };
 
-  // 既読率計算
-  const getReadRate = (notification: Notification) => {
-    if (notification.totalTargetUsers === 0) return 0;
-    const rate = Math.round((notification.totalReads / notification.totalTargetUsers) * 100);
-    return Math.min(rate, 100); // 100%を超えないように制限
-  };
 
   if (isLoading) {
     return (
@@ -277,24 +224,13 @@ export default function NotificationsManagementPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              {notifications.some(n => !n.isRead) && (
-                <button
-                  onClick={markAllAsRead}
-                  className="flex items-center space-x-2 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  <CheckCheck className="w-5 h-5" />
-                  <span>すべて既読</span>
-                </button>
-              )}
-              <button
-                onClick={() => router.push('/admin/notifications/new')}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                <span>新規作成</span>
-              </button>
-            </div>
+            <button
+              onClick={() => router.push('/admin/notifications/new')}
+              className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+              <span>新規作成</span>
+            </button>
           </div>
         </div>
 
@@ -411,7 +347,7 @@ export default function NotificationsManagementPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {notifications.map((notification) => (
-                    <tr key={notification._id} className={`hover:bg-gray-50 ${notification.isRead ? 'opacity-70' : ''}`}>
+                    <tr key={notification._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="flex items-start space-x-3">
                           <div className="flex-shrink-0">
@@ -425,11 +361,6 @@ export default function NotificationsManagementPage() {
                               {notification.isPinned && (
                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                   重要
-                                </span>
-                              )}
-                              {!notification.isRead && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  未読
                                 </span>
                               )}
                             </div>
@@ -459,14 +390,8 @@ export default function NotificationsManagementPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm">
-                          <div className="flex items-center space-x-4 mb-1">
-                            <span>既読率: {getReadRate(notification)}%</span>
-                          </div>
-                          <div className="text-gray-500">
-                            <div>表示: {notification.totalViews.toLocaleString()}</div>
-                            <div>既読: {notification.totalReads.toLocaleString()}</div>
-                          </div>
+                        <div className="text-sm text-gray-500">
+                          <div>表示回数: {notification.totalViews.toLocaleString()}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -495,22 +420,6 @@ export default function NotificationsManagementPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end space-x-2">
-                          {!notification.isRead && (
-                            <button
-                              onClick={() => markAsRead(notification._id)}
-                              className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
-                              title="既読にする"
-                            >
-                              <Check className="w-4 h-4" />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => router.push(`/admin/notifications/${notification._id}`)}
-                            className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
-                            title="詳細を見る"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
                           <button
                             onClick={() => router.push(`/admin/notifications/${notification._id}/edit`)}
                             className="p-2 text-gray-600 hover:text-green-600 transition-colors"
