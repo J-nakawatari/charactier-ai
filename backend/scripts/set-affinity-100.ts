@@ -72,7 +72,7 @@ async function setAffinityTo100(userEmail: string, characterId: string) {
     } else {
       // 既存を更新
       user.affinities[affinityIndex].level = 100;
-      user.affinities[affinityIndex].relationshipType = 'soulmate';
+      user.affinities[affinityIndex].relationshipType = 'lover';
       user.affinities[affinityIndex].trustLevel = 100;
       user.affinities[affinityIndex].intimacyLevel = 100;
     }
