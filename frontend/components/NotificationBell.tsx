@@ -2,7 +2,7 @@
 
 import { Bell } from 'lucide-react';
 import { useNotificationStream } from '@/hooks/useNotificationStream';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useEffect } from 'react';
 
 interface NotificationBellProps {
@@ -11,7 +11,9 @@ interface NotificationBellProps {
 
 export default function NotificationBell({ className = '' }: NotificationBellProps) {
   const router = useRouter();
+  const params = useParams();
   const { unreadCount, isConnected, requestNotificationPermission } = useNotificationStream();
+  const locale = (params?.locale as string) || 'ja';
 
   useEffect(() => {
     // 通知権限をリクエスト
@@ -19,8 +21,8 @@ export default function NotificationBell({ className = '' }: NotificationBellPro
   }, [requestNotificationPermission]);
 
   const handleClick = () => {
-    // 通知ページに遷移
-    router.push('/notifications');
+    // ダッシュボードに遷移
+    router.push(`/${locale}/dashboard`);
   };
 
   return (

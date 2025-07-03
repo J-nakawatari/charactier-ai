@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Info, AlertTriangle, CheckCircle, X, Eye, EyeOff, AlertCircle, Wrench, Star, Gift } from 'lucide-react';
+import { Bell, Info, AlertTriangle, CheckCircle, AlertCircle, Wrench, Star, Gift } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface LocalizedString {
@@ -16,10 +16,6 @@ interface Notification {
   type: 'info' | 'warning' | 'success' | 'urgent' | 'maintenance' | 'feature' | 'event';
   isPinned: boolean;
   priority: number;
-  isRead: boolean;
-  isViewed: boolean;
-  readAt?: string;
-  viewedAt?: string;
   createdAt: string;
   validFrom: string;
   validUntil?: string;
@@ -31,12 +27,9 @@ interface NotificationSectionProps {
 
 export default function NotificationSection({ locale }: NotificationSectionProps) {
   const t = useTranslations('notifications');
-  const tGeneral = useTranslations('general');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   // お知らせデータ取得
   const fetchNotifications = async () => {
@@ -91,68 +84,8 @@ export default function NotificationSection({ locale }: NotificationSectionProps
     }
   };
 
-  const getNotificationBgColor = (type: string, isRead: boolean, isPinned: boolean) => {
-    const baseClasses = isRead ? 'bg-gray-50' : 'bg-white';
-    const borderClasses = 'border-gray-200';
-    
-    return `${baseClasses} ${borderClasses}`;
-  };
-
-  const markAsRead = async (notificationId: string) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`/api/v1/notifications/${notificationId}/read`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('既読マークに失敗しました');
-      }
-
-      // ローカル状態を更新
-      setNotifications(prev => 
-        prev.map(notification => 
-          notification._id === notificationId 
-            ? { ...notification, isRead: true, readAt: new Date().toISOString() }
-            : notification
-        )
-      );
-    } catch (error) {
-      console.error('既読マークエラー:', error);
-    }
-  };
-
-  const markAllAsRead = async () => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('/api/v1/notifications/read-all', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('一括既読マークに失敗しました');
-      }
-
-      // ローカル状態を更新
-      const now = new Date().toISOString();
-      setNotifications(prev => 
-        prev.map(notification => ({ 
-          ...notification, 
-          isRead: true, 
-          readAt: now 
-        }))
-      );
-    } catch (error) {
-      console.error('一括既読マークエラー:', error);
-    }
+  const getNotificationBgColor = (type: string) => {
+    return 'bg-white border-gray-200';
   };
 
   const formatDate = (dateString: string) => {
@@ -227,35 +160,13 @@ export default function NotificationSection({ locale }: NotificationSectionProps
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <div className="p-2 bg-blue-100 rounded-lg relative">
-            <Bell className="w-5 h-5 text-blue-600" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {unreadCount}
-              </span>
-            )}
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            {t('title')}
-            {unreadCount > 0 && (
-              <span className="ml-2 text-sm text-gray-500">
-                ({unreadCount}{t('unreadCount')})
-              </span>
-            )}
-          </h3>
+      <div className="flex items-center space-x-2 mb-4">
+        <div className="p-2 bg-blue-100 rounded-lg">
+          <Bell className="w-5 h-5 text-blue-600" />
         </div>
-        
-        {unreadCount > 0 && (
-          <button
-            onClick={markAllAsRead}
-            className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
-          >
-            <Eye className="w-4 h-4" />
-            <span>{tGeneral('markAllRead')}</span>
-          </button>
-        )}
+        <h3 className="text-lg font-semibold text-gray-900">
+          {t('title')}
+        </h3>
       </div>
 
       {/* 通知リスト */}
@@ -271,65 +182,34 @@ export default function NotificationSection({ locale }: NotificationSectionProps
             <div
               key={notification._id}
               className={`p-4 rounded-lg border transition-all duration-200 ${
-                getNotificationBgColor(notification.type, notification.isRead, notification.isPinned)
+                getNotificationBgColor(notification.type)
               }`}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-3 flex-1">
-                  {getNotificationIcon(notification.type)}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <h4 className={`font-medium ${
-                        notification.isRead ? 'text-gray-600' : 'text-gray-900'
-                      }`}>
-                        {notification.title[locale as keyof LocalizedString]}
-                      </h4>
-                      {notification.isPinned && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-  {t('important')}
-                        </span>
-                      )}
-                      {!notification.isRead && (
-                        <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
-                      )}
-                    </div>
-                    <p className={`text-sm ${
-                      notification.isRead ? 'text-gray-500' : 'text-gray-700'
-                    }`}>
-                      {notification.message[locale as keyof LocalizedString]}
-                    </p>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-gray-400">
-                        {formatDate(notification.createdAt)}
+              <div className="flex items-start space-x-3">
+                {getNotificationIcon(notification.type)}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <h4 className="font-medium text-gray-900">
+                      {notification.title[locale as keyof LocalizedString]}
+                    </h4>
+                    {notification.isPinned && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        {t('important')}
                       </span>
-                      {!notification.isRead && (
-                        <button
-                          onClick={() => markAsRead(notification._id)}
-                          className="text-xs text-blue-600 hover:text-blue-700 flex items-center space-x-1 transition-colors"
-                        >
-                          <EyeOff className="w-3 h-3" />
-                          <span>{tGeneral('read')}</span>
-                        </button>
-                      )}
-                    </div>
+                    )}
                   </div>
+                  <p className="text-sm text-gray-700">
+                    {notification.message[locale as keyof LocalizedString]}
+                  </p>
+                  <span className="text-xs text-gray-400 mt-2 block">
+                    {formatDate(notification.createdAt)}
+                  </span>
                 </div>
               </div>
             </div>
           ))}
       </div>
 
-      {/* フッター */}
-      {notifications.length > 3 && (
-        <div className="mt-4 pt-4 border-t border-gray-100">
-          <button 
-            onClick={() => {/* TODO: 全お知らせページへの遷移 */}}
-            className="w-full text-center text-sm text-gray-600 hover:text-gray-700 transition-colors"
-          >
-{t('viewAll', { count: notifications.length })}
-          </button>
-        </div>
-      )}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import TokenStatusCard from '@/components/user/TokenStatusCard';
 import RecentChatHistory from '@/components/user/RecentChatHistory';
 import PurchaseHistorySummary from '@/components/user/PurchaseHistorySummary';
 import { getAuthHeadersSync } from '@/utils/auth';
+import { useNotificationStream } from '@/hooks/useNotificationStream';
 // 将来実装用コンポーネント（現在は非表示）
 // import EnhancedAnalyticsSection from '@/components/future-features/EnhancedAnalyticsSection';
 // import AchievementSystem from '@/components/future-features/AchievementSystem';
@@ -43,6 +44,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const locale = (params?.locale as string) || 'ja';
   const t = useTranslations('dashboard');
+  const { resetUnreadCount } = useNotificationStream();
   
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,6 +97,11 @@ export default function DashboardPage() {
 
     fetchDashboardData();
   }, [locale, router]);
+
+  // ダッシュボードに遷移したときに通知バッジをリセット
+  useEffect(() => {
+    resetUnreadCount();
+  }, [resetUnreadCount]);
 
 
   // トークン残高更新ハンドラー

@@ -123,10 +123,16 @@ export function useNotificationStream() {
     return false;
   }, []);
 
+  // 未読カウントをリセット
+  const resetUnreadCount = useCallback(() => {
+    setUnreadCount(0);
+  }, []);
+
   return {
     unreadCount,
     isConnected,
     lastNotification,
-    requestNotificationPermission
+    requestNotificationPermission,
+    resetUnreadCount
   };
 }
