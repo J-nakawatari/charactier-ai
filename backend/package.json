@@ -21,7 +21,7 @@
         "test:security:validation": "jest --testPathPatterns=validation --coverage",
         "test:security:features": "jest --testPathPatterns=features --coverage",
         "test:security:headers": "jest --testPathPatterns=headers --coverage",
-        "test:security:csrf": "jest --testPathPatterns=csrf-test --coverage",
+        "test:security:csrf": "jest --testPathPatterns=csrf --coverage",
         "check:csrf-endpoints": "ts-node scripts/check-csrf-protection.ts",
         "test:load": "ts-node src/tests/load-tests.ts",
         "check-api-duplicates": "node ../scripts/check-api-duplicates.js",
