@@ -2103,7 +2103,7 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
     try {
       chatData = await ChatModel.findOne({ 
         userId: req.user._id, 
-        characterId: characterId 
+        characterId: new mongoose.Types.ObjectId(characterId)
       });
       
       if (!chatData) {
@@ -2118,7 +2118,7 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
 
         chatData = new ChatModel({
           userId: req.user._id,
-          characterId: characterId,
+          characterId: new mongoose.Types.ObjectId(characterId),
           messages: [welcomeMessage],
           totalTokensUsed: 0,
           currentAffinity: 0,
@@ -2128,10 +2128,17 @@ routeRegistry.define('GET', `${API_PREFIX}/chats/:characterId`, authenticateToke
         await chatData.save();
       }
     } catch (dbError) {
-      log.error('Chat data fetch error:', dbError);
+      log.error('Chat data fetch error:', {
+        error: dbError,
+        userId: req.user._id,
+        characterId: characterId,
+        errorMessage: dbError instanceof Error ? dbError.message : 'Unknown error',
+        errorStack: dbError instanceof Error ? dbError.stack : undefined
+      });
       res.status(500).json({ 
         error: 'Database error',
-        message: 'チャットデータの取得に失敗しました'
+        message: 'チャットデータの取得に失敗しました',
+        details: dbError instanceof Error ? dbError.message : 'Unknown error'
       });
       return;
     }
