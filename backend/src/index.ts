@@ -455,9 +455,7 @@ app.use(cors({
     } else {
       log.warn('CORS blocked request', {
         origin,
-        allowedOrigins,
-        userAgent: this.headers?.['user-agent'],
-        ip: this.ip
+        allowedOrigins
       });
       callback(new Error('Not allowed by CORS'));
     }
