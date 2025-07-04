@@ -220,8 +220,13 @@ export default function UserDetailPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ja-JP', {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '未ログイン';
+    
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '未ログイン';
+    
+    return date.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
