@@ -439,12 +439,13 @@ connectMongoDB();
 
 // CORS設定（Webhookの前に設定）
 const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? (process.env.ALLOWED_ORIGINS || 'https://charactier-ai.com,https://www.charactier-ai.com').split(',')
+  ? (process.env.ALLOWED_ORIGINS || 'https://charactier-ai.com,https://www.charactier-ai.com,https://staging.charactier-ai.com').split(',')
   : [
       'http://localhost:3000', 
       'http://localhost:3001',
       'https://charactier-ai.com',
-      'https://www.charactier-ai.com'
+      'https://www.charactier-ai.com',
+      'https://staging.charactier-ai.com'
     ];
 
 app.use(cors({
