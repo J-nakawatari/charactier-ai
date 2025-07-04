@@ -1,0 +1,18 @@
+# 生成されたファイル
+dist/
+build/
+node_modules/
+
+# スクリプトファイル（TypeScriptプロジェクトに含まれない）
+src/scripts/
+
+# テストカバレッジ
+coverage/
+
+# 環境設定
+.env
+.env.*
+
+# その他
+*.log
+npm-debug.log*
