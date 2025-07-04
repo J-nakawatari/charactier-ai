@@ -939,7 +939,7 @@
         },
         "address": {
           "label": "Address",
-          "content": "This service is operated by an individual, and for privacy protection, the address is not publicly disclosed.\nAddress information will be disclosed via email without delay upon request to support@charactier-ai.com."
+          "content": "For privacy protection, the address is not publicly disclosed.\nAddress information will be disclosed via email without delay upon request to support@charactier-ai.com."
         },
         "phone": {
           "label": "Phone Number",
