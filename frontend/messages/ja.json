@@ -170,7 +170,7 @@
     "commercialTransactions": "特定商取引法に基づく表記",
     "termsModal": {
       "title": "利用規約",
-      "lastUpdated": "最終改定日：2025年6月29日",
+      "lastUpdated": "最終改定日：2025年7月5日",
       "close": "閉じる",
       "introduction": "本規約は、Charactier 運営事務局（以下「当事務局」）が提供する「Charactier AI」（以下「本サービス」）の利用条件を定めるものです。登録ユーザー（以下「ユーザー」）は、本規約に同意のうえ本サービスを利用するものとします。",
       "article1": {
@@ -327,7 +327,7 @@
     },
     "privacyModal": {
       "title": "プライバシーポリシー",
-      "lastUpdated": "最終改定日：2025年6月29日",
+      "lastUpdated": "最終改定日：2025年7月5日",
       "close": "閉じる",
       "introduction": "Charactier（以下「当サービス」）は、ユーザーの個人情報を適切に取り扱うため、以下のプライバシーポリシー（以下「本ポリシー」）を定めます。",
       "section1": {
@@ -922,7 +922,7 @@
     "commercialTransaction": "特定商取引法に基づく表記",
     "commercialTransactionModal": {
       "title": "特定商取引法に基づく表記",
-      "lastUpdated": "最終改定日：2025年6月29日",
+      "lastUpdated": "最終改定日：2025年7月5日",
       "close": "閉じる",
       "tableHeaders": {
         "item": "項目",
