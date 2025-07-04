@@ -931,12 +931,11 @@
       "items": {
         "businessName": {
           "label": "事業者名",
-          "content": "Charactier 運営事務局",
-          "note": "（個人事業主）"
+          "content": "中渡 潤"
         },
         "representative": {
           "label": "運営責任者",
-          "content": "※請求があれば遅滞なく電子メールで開示"
+          "content": "中渡 潤"
         },
         "address": {
           "label": "所在地",
@@ -944,8 +943,7 @@
         },
         "phone": {
           "label": "電話番号",
-          "content": "※請求があれば遅滞なく電子メールで開示",
-          "note": "※請求があれば遅滞なく電子メールで開示"
+          "content": "スパム防止のため本ページでは非公開としています。開示をご希望の場合は「電話番号開示請求」と明記のうえ support@charactier-ai.com までご連絡ください。合理的な範囲で速やかに対応いたします。"
         },
         "email": {
           "label": "メールアドレス",

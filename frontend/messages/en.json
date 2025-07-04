@@ -931,12 +931,11 @@
       "items": {
         "businessName": {
           "label": "Business Name",
-          "content": "Charactier Operations Office",
-          "note": "(Sole Proprietor)"
+          "content": "Jun Nakawatari"
         },
         "representative": {
           "label": "Representative",
-          "content": "*Will be disclosed via email without delay upon request"
+          "content": "Jun Nakawatari"
         },
         "address": {
           "label": "Address",
@@ -944,8 +943,7 @@
         },
         "phone": {
           "label": "Phone Number",
-          "content": "*Will be disclosed via email without delay upon request",
-          "note": "*Will be disclosed via email without delay upon request"
+          "content": "To prevent spam, our phone number is not publicly displayed on this page. If you require disclosure, please contact support@charactier-ai.com with 'Phone Number Disclosure Request' in the subject line. We will respond promptly within reasonable limits."
         },
         "email": {
           "label": "Email Address",
