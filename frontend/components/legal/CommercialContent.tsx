@@ -29,7 +29,7 @@ export function CommercialContent() {
           </tr>
           <tr>
             <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.address.label')}</td>
-            <td className="px-6 py-4 text-sm text-gray-700">
+            <td className="px-6 py-4 text-sm text-gray-700 whitespace-pre-wrap">
               {t('items.address.content')}
             </td>
           </tr>
@@ -76,9 +76,9 @@ export function CommercialContent() {
             </td>
           </tr>
           <tr>
-            <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.returns.label')}</td>
-            <td className="px-6 py-4 text-sm text-gray-700">
-              {t('items.returns.content')}
+            <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.returnsAndExchange.label')}</td>
+            <td className="px-6 py-4 text-sm text-gray-700 whitespace-pre-wrap">
+              {t('items.returnsAndExchange.content')}
             </td>
           </tr>
           <tr>
@@ -118,12 +118,6 @@ export function CommercialContent() {
             <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.subscription.label')}</td>
             <td className="px-6 py-4 text-sm text-gray-700">
               {t('items.subscription.content')}
-            </td>
-          </tr>
-          <tr>
-            <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{t('items.refundPolicy.label')}</td>
-            <td className="px-6 py-4 text-sm text-gray-700">
-              {t('items.refundPolicy.content')}
             </td>
           </tr>
           <tr>

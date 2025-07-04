@@ -939,7 +939,7 @@
         },
         "address": {
           "label": "Address",
-          "content": "〒221-0056 Kanagawa-ken, Yokohama-shi, Kanagawa-ku, Kinko-cho 5-14, Quadrifoglio 8F"
+          "content": "This service is operated by an individual, and for privacy protection, the address is not publicly disclosed.\nAddress information will be disclosed via email without delay upon request to support@charactier-ai.com."
         },
         "phone": {
           "label": "Phone Number",
@@ -969,9 +969,9 @@
           "label": "Delivery Time",
           "content": "Tokens and characters are granted immediately after payment completion"
         },
-        "returns": {
-          "label": "Returns/Refunds",
-          "content": "Due to the nature of digital goods, cancellations and refunds after payment are not available"
+        "returnsAndExchange": {
+          "label": "Returns and Exchange Methods",
+          "content": "Due to the nature of digital products, this service does not accept any returns, cancellations, or refunds for customer convenience.\n\nHowever, in cases of payment issues such as duplicate charges caused by us, please contact support@charactier-ai.com. We will verify the details and promptly provide a refund or equivalent token compensation.\n\nDue to the nature of the provided content, there are no physical shipping, return shipping, or shipping costs for returns and exchanges."
         },
         "environment": {
           "label": "Operating Environment",
@@ -997,10 +997,6 @@
         "support": {
           "label": "Handling of Issues",
           "content": "If the service is unavailable, we will respond appropriately based on the Terms of Service and Privacy Policy."
-        },
-        "refundPolicy": {
-          "label": "Refund and Cancellation Policy",
-          "content": "Due to the nature of digital services, we do not accept any refunds or cancellations for customer convenience. However, in cases of payment issues such as duplicate charges caused by us, we will promptly refund or provide equivalent token compensation after investigation."
         },
         "phoneDisclosure": {
           "label": "Phone Number Disclosure Request",
