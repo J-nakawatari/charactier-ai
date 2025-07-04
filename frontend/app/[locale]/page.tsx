@@ -470,7 +470,7 @@ export default function HomePage() {
       {/* Footer with Commercial Transaction Act link */}
       <div className="absolute bottom-4 left-0 right-0 text-center z-20">
         <a
-          href="/commercial-transaction"
+          href={`/${locale}/legal`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-white text-sm hover:opacity-80 transition-opacity underline"

@@ -2495,8 +2495,10 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
         
         // レベル帯別の親密度上昇量を計算
         function calculateAffinityIncrease(currentLevel: number): number {
-          if (currentLevel >= 90) {
-            return 0.05; // レベル90-100: 非常に困難（200回のメッセージで1レベル）
+          if (currentLevel >= 100) {
+            return 0; // レベル100: 最大レベルに到達（これ以上上昇しない）
+          } else if (currentLevel >= 90) {
+            return 0.05; // レベル90-99: 非常に困難（200回のメッセージで1レベル）
           } else if (currentLevel >= 80) {
             return 0.1; // レベル80-89: 困難（100回のメッセージで1レベル）
           } else if (currentLevel >= 60) {
@@ -2527,20 +2529,32 @@ routeRegistry.define('POST', `${API_PREFIX}/chats/:characterId/messages`, authen
         });
         
         try {
+          // レベル100の場合は親密度を増やさず、メッセージ数と最終対話日時のみ更新
+          const updateQuery = affinityIncrease > 0 
+            ? {
+                $inc: { 
+                  'affinities.$.level': affinityIncrease,
+                  'affinities.$.totalMessages': 1
+                },
+                $set: { 
+                  'affinities.$.lastInteraction': new Date()
+                }
+              }
+            : {
+                $inc: { 
+                  'affinities.$.totalMessages': 1
+                },
+                $set: { 
+                  'affinities.$.lastInteraction': new Date()
+                }
+              };
+
           const userAffinityUpdate = await UserModel.findOneAndUpdate(
             { 
               _id: req.user._id,
               'affinities.character': characterId 
             },
-            {
-              $inc: { 
-                'affinities.$.level': affinityIncrease,
-                'affinities.$.totalMessages': 1
-              },
-              $set: { 
-                'affinities.$.lastInteraction': new Date()
-              }
-            },
+            updateQuery,
             { new: true }
           );
 
