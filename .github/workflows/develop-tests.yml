@@ -139,7 +139,7 @@ jobs:
           cd backend && NODE_ENV=test MONGO_URI=mongodb://localhost:27017/charactier_test REDIS_URL=redis://localhost:6379 JWT_SECRET=test-jwt-secret JWT_REFRESH_SECRET=test-jwt-refresh-secret STRIPE_SECRET_KEY=sk_test_dummy OPENAI_API_KEY=sk-test-dummy SENDGRID_API_KEY=SG.test-dummy SENDGRID_FROM_EMAIL=test@example.com FRONTEND_URL=http://localhost:3000 DISABLE_RATE_LIMIT=true npm start &
           BACKEND_PID=$!
           
-          cd ../frontend && NODE_ENV=test NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1 npm start &
+          cd ${{ github.workspace }}/frontend && NODE_ENV=test NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1 npm start &
           FRONTEND_PID=$!
           
           # サーバーの起動を待つ
