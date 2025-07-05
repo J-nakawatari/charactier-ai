@@ -273,6 +273,15 @@ Nginx (SSL終端) →
 2. **パスワードハッシュ**: bcryptからargon2idに移行（互換性維持）
 3. **OpenAI Moderation API**: 不適切なコンテンツのフィルタリング
 4. **JWT暗号化**: JWT秘密鍵の暗号化保管（AES-256-GCM）
+   - 実装: `/backend/src/services/jwtEncryption.ts`
+   - 環境変数: `JWT_SECRET_ENCRYPTED=true`で暗号化モード
+   - 必要な環境変数:
+     - `JWT_SECRET_ENCRYPTED_DATA`: 暗号化されたJWT秘密鍵
+     - `JWT_SECRET_SALT`: Salt値
+     - `JWT_SECRET_IV`: 初期化ベクトル
+     - `JWT_SECRET_TAG`: 認証タグ
+     - `JWT_ENCRYPTION_KEY`: マスター暗号化キー
+   - フォールバック: `JWT_SECRET`が直接設定されていれば使用
 5. **Stripe Idempotency**: 重複請求防止のための冪等性キー実装
 6. **Gitleaks**: pre-commitフックで機密情報漏洩防止
 7. **レート制限**: 全APIエンドポイントに適用

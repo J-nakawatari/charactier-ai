@@ -48,6 +48,7 @@ import { verifyCsrfToken, setCsrfToken, getCsrfToken } from './middleware/csrf';
 import { validateMessage } from './utils/contentFilter';
 import { recordViolation, applySanction, checkChatPermission, getViolationStats } from './utils/sanctionSystem';
 import { ViolationRecordModel } from './models/ViolationRecord';
+import { getDecryptedJwtSecret } from './services/jwtEncryption';
 import TokenUsage from '../models/TokenUsage';
 import CharacterPromptCache from '../models/CharacterPromptCache';
 import {
@@ -427,10 +428,11 @@ ${character.personalityTags?.map(tag => `- ${tag}`).join('\n') || '- 優しく�
 };
 
 // 環境変数チェック
-const requiredEnvVars = ['JWT_SECRET'];
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-
-if (missingEnvVars.length > 0) {
+// JWT_SECRETは暗号化されている可能性があるため、getDecryptedJwtSecretで検証
+try {
+  getDecryptedJwtSecret(); // JWT_SECRETが利用可能か確認
+} catch (error) {
+  console.error('JWT_SECRET validation failed:', error);
   process.exit(1);
 }
 
@@ -4555,7 +4557,7 @@ app.get(`${API_PREFIX}/admin/security/events-stream`, async (req: Request, res: 
     const jwt = require('jsonwebtoken');
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      decoded = jwt.verify(token, getDecryptedJwtSecret());
     } catch (error) {
       res.status(401).json({ error: 'Invalid authentication token' });
       return;
