@@ -57,31 +57,32 @@ router.get('/',
 
     // クエリ構築
     const query: any = {
-      // 削除済みユーザーを除外（deleted_で始まるメールアドレスを除外）
-      email: { $not: /^deleted_/ },
-      // または明示的にaccountStatusで除外
-      accountStatus: { $ne: 'deleted' }
+      // 削除済みユーザーを除外（両方の条件を満たす必要がある）
+      $and: [
+        { email: { $not: /^deleted_/ } },
+        { accountStatus: { $ne: 'deleted' } }
+      ]
     };
 
     if (search) {
       const escapedSearch = escapeRegex(search);
-      query.$and = [
-        {
-          $or: [
-            { name: new RegExp(escapedSearch, 'i') },
-            { email: new RegExp(escapedSearch, 'i') }
-          ]
-        }
-      ];
+      // $andに検索条件を追加（既存の条件を保持）
+      query.$and.push({
+        $or: [
+          { name: new RegExp(escapedSearch, 'i') },
+          { email: new RegExp(escapedSearch, 'i') }
+        ]
+      });
     }
 
     if (status) {
+      // statusフィルタを$and条件に追加（既存の削除フィルタを上書きしない）
       if (status === 'active') {
-        query.accountStatus = 'active';
+        query.$and.push({ accountStatus: 'active' });
       } else if (status === 'inactive') {
-        query.accountStatus = 'inactive';
+        query.$and.push({ accountStatus: 'inactive' });
       } else if (status === 'suspended') {
-        query.accountStatus = { $in: ['suspended', 'account_suspended', 'banned'] };
+        query.$and.push({ accountStatus: { $in: ['suspended', 'account_suspended', 'banned'] } });
       }
     }
 

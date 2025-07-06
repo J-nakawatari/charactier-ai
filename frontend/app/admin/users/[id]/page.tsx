@@ -156,6 +156,12 @@ export default function UserDetailPage() {
     }
     
     try {
+      console.log('Status update request:', {
+        url: `${API_BASE_URL}/api/v1/admin/users/${user.id}/status`,
+        newStatus,
+        userId: user.id
+      });
+      
       const response = await adminFetch(`${API_BASE_URL}/api/v1/admin/users/${user.id}/status`, {
         method: 'PUT',
         headers: {
@@ -168,6 +174,12 @@ export default function UserDetailPage() {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Status update failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText
+        });
         throw new Error('ステータス更新に失敗しました');
       }
 
@@ -203,7 +215,13 @@ export default function UserDetailPage() {
     }
     
     try {
-      const response = await adminDelete(`${API_BASE_URL}/api/v1/admin/users/${user.id}`);
+      const userId = user.id;
+      console.log('Delete user:', { user, userId, url: `${API_BASE_URL}/api/v1/admin/users/${userId}` });
+      
+      if (!userId) {
+        throw new Error('ユーザーIDが見つかりません');
+      }
+      const response = await adminDelete(`${API_BASE_URL}/api/v1/admin/users/${userId}`);
 
       if (!response.ok) {
         throw new Error('ユーザー削除に失敗しました');
@@ -297,10 +315,17 @@ export default function UserDetailPage() {
           </div>
           
           <div className="flex items-center space-x-3">
-            {user && user.status === 'suspended' && (
+            {user && (
               <button
-                onClick={handleDeleteUser}
-                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-600 text-white hover:bg-gray-700 transition-colors"
+                onClick={(e) => {
+                  console.log('Delete button clicked!');
+                  console.log('Event:', e);
+                  console.log('User object:', user);
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDeleteUser();
+                }}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
                 <span className="hidden sm:inline">削除</span>
