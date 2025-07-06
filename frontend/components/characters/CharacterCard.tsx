@@ -43,6 +43,15 @@ export default function CharacterCard({
   const [showAllTags, setShowAllTags] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const t = useTranslations('characters');
+  
+  // デバッグ用ログ
+  console.log('CharacterCard Debug:', {
+    characterName: character.name,
+    characterAccessType: character.characterAccessType,
+    isLocked,
+    price,
+    stripeProductDescription: (character as any).stripeProductDescription
+  });
 
   // 多言語対応のテキスト取得関数
   const getLocalizedText = (text: { ja: string; en: string } | string): string => {

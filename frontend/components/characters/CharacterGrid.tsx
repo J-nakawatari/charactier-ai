@@ -102,6 +102,16 @@ export default function CharacterGrid({
         // purchasePrice フィールドから価格を取得
         const price = (character as any).purchasePrice || undefined;
         
+        // デバッグ用ログ
+        console.log('CharacterGrid Debug:', {
+          characterName: character.name,
+          characterId: character._id,
+          purchasePrice: (character as any).purchasePrice,
+          price,
+          isLocked,
+          characterAccessType: character.characterAccessType
+        });
+        
         return (
           <div
             key={character._id}

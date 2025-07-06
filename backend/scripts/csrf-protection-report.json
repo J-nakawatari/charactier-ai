@@ -1,9 +1,9 @@
 {
-  "generated": "2025-07-06T17:14:10.961Z",
+  "generated": "2025-07-06T17:18:27.009Z",
   "stats": {
     "total": 213,
-    "protected": 18,
-    "unprotected": 98,
+    "protected": 20,
+    "unprotected": 96,
     "byMethod": {
       "POST": {
         "total": 45,
@@ -19,11 +19,11 @@
       },
       "PUT": {
         "total": 15,
-        "protected": 3
+        "protected": 4
       },
       "DELETE": {
         "total": 13,
-        "protected": 5
+        "protected": 6
       },
       "PATCH": {
         "total": 1,
@@ -604,23 +604,7 @@
       "method": "POST",
       "path": "/:userId/reset-tokens",
       "file": "src/routes/adminUsers.ts",
-      "line": 139,
-      "hasCSRF": false,
-      "isExcluded": false
-    },
-    {
-      "method": "PUT",
-      "path": "/:userId/status",
-      "file": "src/routes/adminUsers.ts",
-      "line": 198,
-      "hasCSRF": false,
-      "isExcluded": false
-    },
-    {
-      "method": "DELETE",
-      "path": "/:userId",
-      "file": "src/routes/adminUsers.ts",
-      "line": 326,
+      "line": 140,
       "hasCSRF": false,
       "isExcluded": false
     },
@@ -935,6 +919,22 @@
       "path": "/admin/logout",
       "file": "src/routes/auth.ts",
       "line": 1083,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "/:userId/status",
+      "file": "src/routes/adminUsers.ts",
+      "line": 199,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/:userId",
+      "file": "src/routes/adminUsers.ts",
+      "line": 328,
       "hasCSRF": true,
       "isExcluded": false
     },
