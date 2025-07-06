@@ -87,9 +87,11 @@ function generateEmailVerificationHTML_DEPRECATED(
   };
 
   const config = messages[type];
-  const frontendUrl = userData?.frontendUrl || (process.env.NODE_ENV === 'production' 
-    ? 'https://charactier-ai.com' 
-    : 'http://localhost:3000');
+  const frontendUrl = userData?.frontendUrl || process.env.FRONTEND_URL || (
+    process.env.NODE_ENV === 'production' 
+      ? 'https://charactier-ai.com' 
+      : 'http://localhost:3000'
+  );
 
   const successScript = type === 'success' && userData ? `
     <script>
@@ -775,9 +777,11 @@ router.get('/verify-email', generalRateLimit, async (req: Request, res: Response
     if (user.emailVerified) {
       log.info('Email verification attempt for already verified user', { userId: user._id.toString() });
       // 認証済みの場合はセットアップページへリダイレクト
-      const frontendUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://charactier-ai.com' 
-        : 'http://localhost:3000';
+      const frontendUrl = process.env.FRONTEND_URL || (
+        process.env.NODE_ENV === 'production' 
+          ? 'https://charactier-ai.com' 
+          : 'http://localhost:3000'
+      );
       const safeLocale = getSafeLocale(locale as string);
       res.redirect(`${frontendUrl}/${safeLocale}/setup`);
       return;
@@ -824,9 +828,11 @@ router.get('/verify-email', generalRateLimit, async (req: Request, res: Response
     };
 
     // 成功ページを表示して、自動的にセットアップページへリダイレクト
-    const frontendUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://charactier-ai.com' 
-      : 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || (
+      process.env.NODE_ENV === 'production' 
+        ? 'https://charactier-ai.com' 
+        : 'http://localhost:3000'
+    );
     
     const html = generateEmailVerificationHTML('success', getSafeLocale(locale as string), {
       userInfo,
