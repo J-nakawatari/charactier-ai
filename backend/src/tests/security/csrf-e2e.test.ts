@@ -9,6 +9,9 @@ import { AdminModel } from '../../models/AdminModel';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+// テスト用のJWTシークレット（本番環境では環境変数から取得）
+const TEST_JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-testing';
+
 describe('CSRF E2E Tests - Real World Scenarios', () => {
   let app: Express;
   let mongoServer: MongoMemoryServer;
@@ -60,15 +63,25 @@ describe('CSRF E2E Tests - Real World Scenarios', () => {
 
     // ユーザーログイン（CSRF保護あり）
     app.post('/api/v1/auth/login', verifyCsrfToken, async (req, res) => {
-      const token = jwt.sign({ userId: testUser._id }, 'test-secret');
-      res.cookie('userAccessToken', token, { httpOnly: true });
+      const token = jwt.sign({ userId: testUser._id }, TEST_JWT_SECRET);
+      res.cookie('userAccessToken', token, { 
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 2 * 60 * 60 * 1000 // 2時間
+      });
       res.json({ success: true, user: { id: testUser._id } });
     });
 
     // 管理者ログイン（CSRF保護を追加予定）
     app.post('/api/v1/auth/admin/login', verifyCsrfToken, async (req, res) => {
-      const token = jwt.sign({ adminId: testAdmin._id }, 'test-secret');
-      res.cookie('adminAccessToken', token, { httpOnly: true });
+      const token = jwt.sign({ adminId: testAdmin._id }, TEST_JWT_SECRET);
+      res.cookie('adminAccessToken', token, { 
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 2 * 60 * 60 * 1000 // 2時間
+      });
       res.json({ success: true, user: { id: testAdmin._id } });
     });
 
