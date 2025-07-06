@@ -514,9 +514,9 @@ export default function CharacterEditPage() {
           const duration = await validateVideoDuration(file);
           console.log('動画の長さ:', duration, '秒');
           
-          if (duration < 3 || duration > 5) {
+          if (duration < 3 || duration > 6) {
             // warningからsuccessに変更（warningトーストが利用できないため）
-            success('動画の長さ', '推奨: 3-5秒（現在: ' + duration.toFixed(1) + '秒）');
+            success('動画の長さ', '推奨: 3-6秒（現在: ' + duration.toFixed(1) + '秒）');
             // エラーではなく通知に変更し、アップロードは続行
           }
         } catch (validationError) {

@@ -94,7 +94,7 @@ export interface ICharacter extends Document {
   imageDashboard?: string;
   imageChatBackground?: string;
   imageChatAvatar?: string;
-  videoChatBackground?: string; // 3-5秒のループ動画
+  videoChatBackground?: string; // 3-6秒のループ動画
   sampleVoiceUrl?: string;
   
   // ギャラリー画像（親密度解放）

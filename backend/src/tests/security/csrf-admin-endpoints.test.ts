@@ -3,6 +3,7 @@ import express, { Express } from 'express';
 import cookieParser from 'cookie-parser';
 import { verifyCsrfToken, setCsrfToken, getCsrfToken } from '../../middleware/csrf';
 import jwt from 'jsonwebtoken';
+import { createRateLimiter } from '../../middleware/rateLimiter';
 
 // テスト用のJWTシークレット
 const TEST_JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-testing';
@@ -42,6 +43,10 @@ describe('CSRF保護テスト - 管理者エンドポイント', () => {
     app.use(cookieParser());
     app.use(setCsrfToken); // グローバルCSRFトークン設定
 
+    // レート制限の作成
+    const adminRateLimit = createRateLimiter('admin');
+    const generalRateLimit = createRateLimiter('general');
+
     // CSRFトークン取得エンドポイント
     app.get('/api/v1/csrf-token', getCsrfToken);
 
@@ -63,41 +68,41 @@ describe('CSRF保護テスト - 管理者エンドポイント', () => {
 
     // テスト用エンドポイント（実際のルートを簡略化）
     // キャラクター管理
-    app.post('/api/v1/admin/characters', authenticateAdmin, verifyCsrfToken, async (req, res) => {
+    app.post('/api/v1/admin/characters', adminRateLimit, authenticateAdmin, verifyCsrfToken, async (req, res) => {
       res.json({ success: true, message: 'Character created' });
     });
 
-    app.put('/api/v1/admin/characters/:id', authenticateAdmin, verifyCsrfToken, async (req, res) => {
+    app.put('/api/v1/admin/characters/:id', adminRateLimit, authenticateAdmin, verifyCsrfToken, async (req, res) => {
       res.json({ success: true, message: 'Character updated' });
     });
 
-    app.put('/api/v1/admin/characters/reorder', authenticateAdmin, verifyCsrfToken, async (req, res) => {
+    app.put('/api/v1/admin/characters/reorder', adminRateLimit, authenticateAdmin, verifyCsrfToken, async (req, res) => {
       res.json({ success: true, message: 'Characters reordered' });
     });
 
-    app.patch('/api/v1/admin/characters/:id/toggle-active', authenticateAdmin, verifyCsrfToken, async (req, res) => {
+    app.patch('/api/v1/admin/characters/:id/toggle-active', adminRateLimit, authenticateAdmin, verifyCsrfToken, async (req, res) => {
       res.json({ success: true, message: 'Character toggled' });
     });
 
     // 通知管理
-    app.post('/api/v1/notifications/:id/read', verifyCsrfToken, async (req, res) => {
+    app.post('/api/v1/notifications/:id/read', generalRateLimit, verifyCsrfToken, async (req, res) => {
       res.json({ success: true, message: 'Notification marked as read' });
     });
 
-    app.post('/api/v1/notifications/admin', authenticateAdmin, verifyCsrfToken, async (req, res) => {
+    app.post('/api/v1/notifications/admin', adminRateLimit, authenticateAdmin, verifyCsrfToken, async (req, res) => {
       res.json({ success: true, message: 'Admin notification created' });
     });
 
-    app.delete('/api/v1/notifications/admin/:id', authenticateAdmin, verifyCsrfToken, async (req, res) => {
+    app.delete('/api/v1/notifications/admin/:id', adminRateLimit, authenticateAdmin, verifyCsrfToken, async (req, res) => {
       res.json({ success: true, message: 'Admin notification deleted' });
     });
 
     // セキュリティ管理
-    app.post('/api/v1/admin/security/lift-sanction/:userId', authenticateAdmin, verifyCsrfToken, async (req, res) => {
+    app.post('/api/v1/admin/security/lift-sanction/:userId', adminRateLimit, authenticateAdmin, verifyCsrfToken, async (req, res) => {
       res.json({ success: true, message: 'Sanction lifted' });
     });
 
-    app.delete('/api/v1/admin/security/violations/clear', authenticateAdmin, verifyCsrfToken, async (req, res) => {
+    app.delete('/api/v1/admin/security/violations/clear', adminRateLimit, authenticateAdmin, verifyCsrfToken, async (req, res) => {
       res.json({ success: true, message: 'Violations cleared' });
     });
   });

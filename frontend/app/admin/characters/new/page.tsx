@@ -511,8 +511,8 @@ export default function CharacterNewPage() {
         // 動画の長さを検証
         const duration = await validateVideoDuration(file);
         
-        if (duration < 3 || duration > 5) {
-          error('動画エラー', '動画は3秒から5秒の間にしてください（現在: ' + duration.toFixed(1) + '秒）');
+        if (duration < 3 || duration > 6) {
+          error('動画エラー', '動画は3秒から6秒の間にしてください（現在: ' + duration.toFixed(1) + '秒）');
           e.target.value = '';
           return;
         }
