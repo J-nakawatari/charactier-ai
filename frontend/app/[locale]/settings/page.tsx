@@ -133,7 +133,7 @@ export default function SettingsPage() {
       // CSRFトークンをCookieから取得
       const csrfToken = document.cookie
         .split('; ')
-        .find(row => row.startsWith('csrf-token='))
+        .find(row => row.startsWith('XSRF-TOKEN='))
         ?.split('=')[1];
 
       const response = await fetch('/api/v1/user/profile', {
@@ -196,7 +196,7 @@ export default function SettingsPage() {
       // CSRFトークンをCookieから取得
       const csrfToken = document.cookie
         .split('; ')
-        .find(row => row.startsWith('csrf-token='))
+        .find(row => row.startsWith('XSRF-TOKEN='))
         ?.split('=')[1];
 
       const response = await fetch('/api/v1/user/change-password', {

@@ -49,7 +49,7 @@ export default function ResendVerificationPage({
       // CSRFトークンをCookieから取得
       const csrfToken = document.cookie
         .split('; ')
-        .find(row => row.startsWith('csrf-token='))
+        .find(row => row.startsWith('XSRF-TOKEN='))
         ?.split('=')[1];
 
       const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {

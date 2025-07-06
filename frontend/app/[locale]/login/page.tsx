@@ -130,7 +130,7 @@ export default function LoginPage() {
       // CSRFトークンをCookieから取得
       const csrfToken = document.cookie
         .split('; ')
-        .find(row => row.startsWith('csrf-token='))
+        .find(row => row.startsWith('XSRF-TOKEN='))
         ?.split('=')[1];
 
       // バックエンドのログインAPIを呼び出し
