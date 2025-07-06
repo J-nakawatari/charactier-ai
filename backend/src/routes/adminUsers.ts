@@ -321,4 +321,61 @@ router.get('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (
   }
 });
 
+// ユーザー削除
+router.delete('/:userId', 
+  adminRateLimit,
+  authenticateToken, 
+  authenticateAdmin,
+  validateObjectId('userId'),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { userId } = req.params;
+
+    log.info('User deletion request', { userId, adminId: req.admin?._id });
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'User not found');
+      return;
+    }
+
+    // 削除する代わりに、削除フラグを立てる（論理削除）
+    const timestamp = Date.now();
+    const deletedEmail = `deleted_${timestamp}_${user.email}`;
+    
+    await UserModel.findByIdAndUpdate(
+      userId,
+      { 
+        $set: {
+          email: deletedEmail,
+          accountStatus: 'deleted',
+          isActive: false,
+          deletedAt: new Date(),
+          deletedBy: req.admin?._id
+        }
+      },
+      { new: true }
+    );
+
+    log.info('User marked as deleted', { 
+      userId, 
+      originalEmail: user.email,
+      deletedEmail,
+      adminId: req.admin?._id 
+    });
+
+    res.json({
+      success: true,
+      message: 'ユーザーを削除しました'
+    });
+
+  } catch (error) {
+    log.error('Error deleting user', error, {
+      adminId: req.admin?._id,
+      userId: req.params.userId
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
 export default router;
