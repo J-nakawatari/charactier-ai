@@ -63,7 +63,7 @@ export const config = {
     // all requests that have a locale prefix  
     '/(ja|en)/:path*',
 
-    // Enable redirects that add missing locales, but exclude API routes and admin routes
-    '/((?!_next|_vercel|api|admin|.*\\..*).*)'
+    // Enable redirects that add missing locales, but exclude API routes, admin routes, and webhooks
+    '/((?!_next|_vercel|api|admin|webhooks|.*\\..*).*)'
   ]
 };
