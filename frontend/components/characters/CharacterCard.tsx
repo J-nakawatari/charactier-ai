@@ -305,6 +305,9 @@ export default function CharacterCard({
                   locale={locale} 
                   className="inline text-base font-bold" 
                 />
+                <span className="text-sm font-normal">
+                  {locale === 'en' ? ' (tax included)' : '（税込）'}
+                </span>
               </span>
             </div>
             {/* Stripe商品説明（将来的に追加） */}
