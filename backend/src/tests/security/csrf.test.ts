@@ -14,10 +14,8 @@ describe('CSRF Protection Tests', () => {
     if (global.redisClient) {
       await global.redisClient.quit();
     }
-    // 開いているハンドルを強制終了
-    setTimeout(() => {
-      process.exit(0);
-    }, 100);
+    // 開いているハンドルを適切にクリーンアップ
+    await new Promise(resolve => setTimeout(resolve, 100));
   });
   let app: Express;
   let csrfToken: string;
