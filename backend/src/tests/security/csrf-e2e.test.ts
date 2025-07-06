@@ -18,6 +18,27 @@ describe('CSRF E2E Tests - Real World Scenarios', () => {
   let testUser: any;
   let testAdmin: any;
 
+  // CSRFトークン取得のヘルパー関数
+  const getCsrfTokenAndCookies = async () => {
+    const tokenRes = await request(app)
+      .get('/api/v1/csrf-token')
+      .expect(200);
+
+    const csrfToken = tokenRes.body.csrfToken;
+    const cookiesHeader = tokenRes.headers['set-cookie'];
+    const cookies = Array.isArray(cookiesHeader) ? cookiesHeader : cookiesHeader ? [cookiesHeader] : [];
+    
+    // XSRF-TOKENクッキーから値を抽出
+    const xsrfCookie = cookies.find((c: string) => c.startsWith('XSRF-TOKEN='));
+    const xsrfToken = xsrfCookie?.split(';')[0].split('=')[1];
+
+    return {
+      csrfToken,
+      xsrfToken: xsrfToken || csrfToken,
+      cookieHeader: cookies.join('; ')
+    };
+  };
+
   beforeAll(async () => {
     // MongoDB Memory Server
     mongoServer = await MongoMemoryServer.create();
@@ -37,7 +58,7 @@ describe('CSRF E2E Tests - Real World Scenarios', () => {
       email: 'admin@example.com',
       password: hashedPassword,
       name: 'Test Admin',
-      role: 'admin'
+      role: 'super_admin'
     });
   });
 
@@ -98,19 +119,12 @@ describe('CSRF E2E Tests - Real World Scenarios', () => {
 
   describe('ユーザー認証フロー', () => {
     test('新規登録 - CSRFトークンありで成功', async () => {
-      // 1. CSRFトークンを取得
-      const tokenRes = await request(app)
-        .get('/api/v1/csrf-token')
-        .expect(200);
+      const { xsrfToken, cookieHeader } = await getCsrfTokenAndCookies();
 
-      const csrfToken = tokenRes.body.csrfToken;
-      const cookie = tokenRes.headers['set-cookie'][0];
-
-      // 2. 登録リクエスト
       const response = await request(app)
         .post('/api/v1/auth/register')
-        .set('Cookie', cookie)
-        .set('X-CSRF-Token', csrfToken)
+        .set('Cookie', cookieHeader)
+        .set('X-CSRF-Token', xsrfToken)
         .send({
           email: 'newuser@example.com',
           password: 'password123'
@@ -133,19 +147,12 @@ describe('CSRF E2E Tests - Real World Scenarios', () => {
     });
 
     test('ログイン - CSRFトークンありで成功', async () => {
-      // 1. CSRFトークンを取得
-      const tokenRes = await request(app)
-        .get('/api/v1/csrf-token')
-        .expect(200);
+      const { xsrfToken, cookieHeader } = await getCsrfTokenAndCookies();
 
-      const csrfToken = tokenRes.body.csrfToken;
-      const cookie = tokenRes.headers['set-cookie'][0];
-
-      // 2. ログインリクエスト
       const response = await request(app)
         .post('/api/v1/auth/login')
-        .set('Cookie', cookie)
-        .set('X-CSRF-Token', csrfToken)
+        .set('Cookie', cookieHeader)
+        .set('X-CSRF-Token', xsrfToken)
         .send({
           email: 'test@example.com',
           password: 'password123'
@@ -159,19 +166,12 @@ describe('CSRF E2E Tests - Real World Scenarios', () => {
 
   describe('管理者認証フロー', () => {
     test('管理者ログイン - CSRFトークンありで成功', async () => {
-      // 1. CSRFトークンを取得
-      const tokenRes = await request(app)
-        .get('/api/v1/csrf-token')
-        .expect(200);
+      const { xsrfToken, cookieHeader } = await getCsrfTokenAndCookies();
 
-      const csrfToken = tokenRes.body.csrfToken;
-      const cookie = tokenRes.headers['set-cookie'][0];
-
-      // 2. 管理者ログイン
       const response = await request(app)
         .post('/api/v1/auth/admin/login')
-        .set('Cookie', cookie)
-        .set('X-CSRF-Token', csrfToken)
+        .set('Cookie', cookieHeader)
+        .set('X-CSRF-Token', xsrfToken)
         .send({
           email: 'admin@example.com',
           password: 'password123'
@@ -196,19 +196,13 @@ describe('CSRF E2E Tests - Real World Scenarios', () => {
 
   describe('ファイルアップロード', () => {
     test('画像アップロード - CSRFトークンありで成功', async () => {
-      // 1. CSRFトークンを取得
-      const tokenRes = await request(app)
-        .get('/api/v1/csrf-token')
-        .expect(200);
+      const { xsrfToken, cookieHeader } = await getCsrfTokenAndCookies();
 
-      const csrfToken = tokenRes.body.csrfToken;
-      const cookie = tokenRes.headers['set-cookie'][0];
-
-      // 2. アップロードリクエスト（FormDataをシミュレート）
+      // アップロードリクエスト（FormDataをシミュレート）
       const response = await request(app)
         .post('/api/v1/admin/characters/upload/image')
-        .set('Cookie', cookie)
-        .set('X-CSRF-Token', csrfToken)
+        .set('Cookie', cookieHeader)
+        .set('X-CSRF-Token', xsrfToken)
         .field('name', 'test-image')
         .attach('image', Buffer.from('fake-image-data'), 'test.jpg')
         .expect(200);
@@ -234,13 +228,16 @@ describe('CSRF E2E Tests - Real World Scenarios', () => {
       const agent = request.agent(app); // Cookie永続化のためagent使用
 
       // 1. 初回アクセス（CSRFトークン取得）
-      await agent
+      const tokenRes = await agent
         .get('/api/v1/csrf-token')
         .expect(200);
 
-      // 2. ログイン
+      const csrfToken = tokenRes.body.csrfToken;
+
+      // 2. ログイン (CSRFトークンを含めて送信)
       const loginRes = await agent
         .post('/api/v1/auth/login')
+        .set('X-CSRF-Token', csrfToken)
         .send({
           email: 'test@example.com',
           password: 'password123'
@@ -250,8 +247,10 @@ describe('CSRF E2E Tests - Real World Scenarios', () => {
       expect(loginRes.body.success).toBe(true);
 
       // 3. 認証が必要なAPIを呼び出し（ここでは画像アップロード）
+      // agent使用時はクッキーが自動的に維持されるが、CSRFトークンは再度送信が必要
       const uploadRes = await agent
         .post('/api/v1/admin/characters/upload/image')
+        .set('X-CSRF-Token', csrfToken)
         .field('name', 'test-image')
         .expect(200);
 
