@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Orbitron } from 'next/font/google';
 import Image from 'next/image';
 import { getCurrentUser, authenticatedFetch } from '../../../utils/auth';
-import { API_BASE_URL } from '@/lib/api-config';
+import { getApiBaseUrl } from '@/lib/api-config';
 import { getPersonalityPresetLabel } from '@/lib/characterConstants';
 
 const orbitron = Orbitron({ 
@@ -133,7 +133,7 @@ export default function SetupPage() {
   // キャラクター取得
   const fetchCharacters = useCallback(async () => {
     try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/api/v1/characters?locale=${locale}`);
+      const response = await authenticatedFetch(`${getApiBaseUrl()}/api/v1/characters?locale=${locale}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -184,7 +184,7 @@ export default function SetupPage() {
     setError('');
 
     try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/api/v1/auth/user/setup-complete`, {
+      const response = await authenticatedFetch(`${getApiBaseUrl()}/api/v1/auth/user/setup-complete`, {
         method: 'POST',
         body: JSON.stringify({ 
           name: name.trim(), 

@@ -26,4 +26,10 @@ export const getApiUrl = (): string => {
   return 'http://localhost:5000';
 };
 
-export const API_BASE_URL = getApiUrl();
+// API_BASE_URLを動的に取得する関数
+export const getApiBaseUrl = (): string => {
+  return getApiUrl();
+};
+
+// 後方互換性のため、既存のAPI_BASE_URL変数も残す（ビルド時は空文字列）
+export const API_BASE_URL = '';
