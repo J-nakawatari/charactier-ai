@@ -306,7 +306,7 @@ router.get('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), as
 });
 
 // キャラクターのアクティブ/非アクティブ切り替え
-router.patch('/:id/toggle-active', adminRateLimit, authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+router.patch('/:id/toggle-active', adminRateLimit, authenticateToken, verifyCsrfToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 書き込み権限チェック（super_adminのみ）
     if (!hasWritePermission(req)) {
@@ -350,7 +350,7 @@ router.patch('/:id/toggle-active', adminRateLimit, authenticateToken, validateOb
 });
 
 // キャラクター作成（管理者用）
-router.post('/', adminRateLimit, authenticateToken, validate({ body: characterSchemas.create }), async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/', adminRateLimit, authenticateToken, verifyCsrfToken, validate({ body: characterSchemas.create }), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 書き込み権限チェック（super_adminのみ）
     if (!hasWritePermission(req)) {
@@ -486,6 +486,7 @@ router.post('/', adminRateLimit, authenticateToken, validate({ body: characterSc
 router.put('/reorder', 
   adminRateLimit,
   authenticateToken,
+  verifyCsrfToken,
   async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
@@ -548,7 +549,7 @@ router.put('/reorder',
 });
 
 // キャラクター更新（管理者用）
-router.put('/:id', adminRateLimit, authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:id', adminRateLimit, authenticateToken, verifyCsrfToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 書き込み権限チェック（super_adminのみ）
     if (!hasWritePermission(req)) {
@@ -669,7 +670,7 @@ router.get('/:id/translations', adminRateLimit, authenticateToken, validateObjec
 });
 
 // 翻訳データ保存（管理者用）
-router.put('/:id/translations', adminRateLimit, authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:id/translations', adminRateLimit, authenticateToken, verifyCsrfToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // 管理者権限チェック
     if (!req.admin) {
@@ -904,6 +905,7 @@ router.delete('/:id', adminRateLimit, authenticateToken, verifyCsrfToken, valida
 router.post('/reorder-debug', 
   adminRateLimit,
   authenticateToken,
+  verifyCsrfToken,
   async (req: AuthRequest, res: Response): Promise<void> => {
     const { characterIds } = req.body;
     

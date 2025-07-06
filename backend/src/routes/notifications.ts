@@ -11,6 +11,7 @@ import { getRedisPublisher } from '../../lib/redis';
 import { createRateLimiter } from '../middleware/rateLimiter';
 import { escapeRegex } from '../utils/escapeRegex';
 import log from '../utils/logger';
+import { verifyCsrfToken } from '../middleware/csrf';
 
 const router: Router = Router();
 
@@ -142,7 +143,7 @@ router.get('/unread-count', generalRateLimit, authenticateToken, async (req: Aut
 });
 
 // お知らせ既読マーク
-router.post('/:id/read', generalRateLimit, authenticateToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/:id/read', generalRateLimit, authenticateToken, verifyCsrfToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!._id;
     const notificationId = req.params.id;
@@ -208,7 +209,7 @@ router.post('/:id/read', generalRateLimit, authenticateToken, validateObjectId('
 });
 
 // 全お知らせ既読マーク
-router.post('/read-all', generalRateLimit, authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/read-all', generalRateLimit, authenticateToken, verifyCsrfToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!._id;
 
@@ -435,7 +436,7 @@ router.get('/admin', adminRateLimit, authenticateToken, authenticateAdmin, async
 });
 
 // お知らせ作成
-router.post('/admin', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/admin', adminRateLimit, authenticateToken, authenticateAdmin, verifyCsrfToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
       title,
@@ -550,7 +551,7 @@ router.get('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, a
 });
 
 // お知らせ更新
-router.put('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, verifyCsrfToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
       title,
@@ -598,7 +599,7 @@ router.put('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, v
 });
 
 // お知らせ削除
-router.delete('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
+router.delete('/admin/:id', adminRateLimit, authenticateToken, authenticateAdmin, verifyCsrfToken, validateObjectId('id'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const notification = await NotificationModel.findByIdAndDelete(req.params.id);
 
@@ -697,7 +698,7 @@ router.get('/admin/:id/stats', adminRateLimit, authenticateToken, authenticateAd
 });
 
 // 管理者用通知既読マーク
-router.post('/admin/:id/read', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/admin/:id/read', adminRateLimit, authenticateToken, authenticateAdmin, verifyCsrfToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const notificationId = req.params.id;
     const adminId = req.user?._id;
@@ -732,7 +733,7 @@ router.post('/admin/:id/read', adminRateLimit, authenticateToken, authenticateAd
 });
 
 // 管理者用通知一括既読マーク
-router.post('/admin/read-all', adminRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/admin/read-all', adminRateLimit, authenticateToken, authenticateAdmin, verifyCsrfToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const adminId = req.user?._id;
 
