@@ -133,7 +133,7 @@ export default function SetupPage() {
   // キャラクター取得
   const fetchCharacters = useCallback(async () => {
     try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/api/v1/characters?locale=${locale}`);
+      const response = await authenticatedFetch(`/api/v1/characters?locale=${locale}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -184,7 +184,7 @@ export default function SetupPage() {
     setError('');
 
     try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/api/v1/auth/user/setup-complete`, {
+      const response = await authenticatedFetch(`/api/v1/auth/user/setup-complete`, {
         method: 'POST',
         body: JSON.stringify({ 
           name: name.trim(), 
