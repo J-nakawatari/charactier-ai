@@ -77,8 +77,9 @@ export default function UserDetailPage() {
         const data = await response.json();
         setUser(data);
       } catch (err) {
-        setError('ユーザーデータの読み込みに失敗しました');
         console.error('User fetch error:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        setError(`ユーザーデータの読み込みに失敗しました: ${errorMessage}`);
       } finally {
         setLoading(false);
       }
@@ -317,12 +318,9 @@ export default function UserDetailPage() {
           <div className="flex items-center space-x-3">
             {user && (
               <button
-                onClick={(e) => {
+                onClick={() => {
                   console.log('Delete button clicked!');
-                  console.log('Event:', e);
-                  console.log('User object:', user);
-                  e.preventDefault();
-                  e.stopPropagation();
+                  console.log('User:', user);
                   handleDeleteUser();
                 }}
                 className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
