@@ -18,9 +18,11 @@ export async function sendVerificationEmail(
   locale: 'ja' | 'en' = 'ja'
 ): Promise<void> {
   // バックエンドのAPIエンドポイントを使用（メール認証は直接APIで処理）
-  const baseUrl = process.env.NODE_ENV === 'production' 
-    ? 'https://charactier-ai.com' 
-    : (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const baseUrl = process.env.FRONTEND_URL || (
+    process.env.NODE_ENV === 'production' 
+      ? 'https://charactier-ai.com' 
+      : 'http://localhost:3000'
+  ).replace(/\/$/, '');
   // URLを構築（SendGridのHTMLエンコーディング問題を回避）
   // トークンとロケールは個別にテンプレートに渡し、テンプレート側で組み立てる
   const verifyBaseUrl = `${baseUrl}/api/v1/auth/verify-email`;
