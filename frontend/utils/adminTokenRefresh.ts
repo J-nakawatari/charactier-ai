@@ -249,8 +249,10 @@ export function stopAdminTokenRefresh(): void {
  */
 export async function adminFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const makeRequest = async () => {
+    // FormDataの場合はContent-Typeを設定しない
+    const isFormData = options.body instanceof FormData;
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      ...(!isFormData && { 'Content-Type': 'application/json' }),
       ...(options.headers as Record<string, string> || {}),
     };
 
