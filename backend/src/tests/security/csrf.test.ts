@@ -49,10 +49,10 @@ describe('CSRF Protection Tests', () => {
     expect(response.body.csrfToken).toBeDefined();
     expect(response.body.csrfToken).toHaveLength(64); // 32バイト = 64文字の16進数
     
-    // Set-Cookieヘッダーにcsrf-tokenが含まれることを確認
+    // Set-CookieヘッダーにXSRF-TOKENが含まれることを確認
     const cookies = response.headers['set-cookie'];
     expect(cookies).toBeDefined();
-    expect(cookies[0]).toContain('csrf-token=');
+    expect(cookies[0]).toContain('XSRF-TOKEN=');
     
     csrfToken = response.body.csrfToken;
   });
