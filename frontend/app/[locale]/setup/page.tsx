@@ -44,6 +44,12 @@ export default function SetupPage() {
 
   // 認証チェック
   useEffect(() => {
+    // ステップ2（キャラクター選択）の場合は認証チェックをスキップ
+    if (step === 2) {
+      console.log('🔍 Step 2 - Skipping auth check');
+      return;
+    }
+    
     const user = getCurrentUser();
     console.log('🔍 Setup page - Current user:', user);
     console.log('🔍 Setup page - user.isSetupComplete:', user?.isSetupComplete);
@@ -65,7 +71,7 @@ export default function SetupPage() {
       console.log('⚠️ Setup incomplete, staying on setup page');
       console.log('⚠️ Reason: isSetupComplete =', user.isSetupComplete);
     }
-  }, [locale, router]);
+  }, [locale, router, step]);
 
   // Mobile detection
   useEffect(() => {
@@ -166,6 +172,9 @@ export default function SetupPage() {
       return;
     }
 
+    console.log('📝 Name submitted, moving to step 2');
+    console.log('📝 Current user before step change:', getCurrentUser());
+    
     setError('');
     setStep(2); // キャラ選択画面へ
   };
