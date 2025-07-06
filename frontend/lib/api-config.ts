@@ -15,6 +15,11 @@ export const getApiUrl = (): string => {
     if (url.hostname === 'charactier-ai.com' || url.hostname === 'www.charactier-ai.com') {
       return 'https://charactier-ai.com';
     }
+    
+    // ステージング環境の場合
+    if (url.hostname === 'staging.charactier-ai.com') {
+      return 'https://staging.charactier-ai.com';
+    }
   }
   
   // 開発環境のデフォルト

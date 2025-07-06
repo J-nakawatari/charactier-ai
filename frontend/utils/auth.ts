@@ -398,8 +398,8 @@ export function isDevelopment(): boolean {
 export async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const headers = await getAuthHeaders();
   
-  // 相対URLの場合は API_BASE_URL を付加
-  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  // 相対URLの場合はそのまま使用（Nginxプロキシが処理）
+  const fullUrl = url.startsWith('http') ? url : url;
   
   const response = await fetch(fullUrl, {
     ...options,
@@ -446,8 +446,8 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
 export async function adminAuthenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const headers = getAdminAuthHeaders();
   
-  // 相対URLの場合は API_BASE_URL を付加
-  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  // 相対URLの場合はそのまま使用（Nginxプロキシが処理）
+  const fullUrl = url.startsWith('http') ? url : url;
   
   const response = await fetch(fullUrl, {
     ...options,

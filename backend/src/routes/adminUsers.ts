@@ -57,31 +57,32 @@ router.get('/',
 
     // クエリ構築
     const query: any = {
-      // 削除済みユーザーを除外（deleted_で始まるメールアドレスを除外）
-      email: { $not: /^deleted_/ },
-      // または明示的にaccountStatusで除外
-      accountStatus: { $ne: 'deleted' }
+      // 削除済みユーザーを除外（両方の条件を満たす必要がある）
+      $and: [
+        { email: { $not: /^deleted_/ } },
+        { accountStatus: { $ne: 'deleted' } }
+      ]
     };
 
     if (search) {
       const escapedSearch = escapeRegex(search);
-      query.$and = [
-        {
-          $or: [
-            { name: new RegExp(escapedSearch, 'i') },
-            { email: new RegExp(escapedSearch, 'i') }
-          ]
-        }
-      ];
+      // $andに検索条件を追加（既存の条件を保持）
+      query.$and.push({
+        $or: [
+          { name: new RegExp(escapedSearch, 'i') },
+          { email: new RegExp(escapedSearch, 'i') }
+        ]
+      });
     }
 
     if (status) {
+      // statusフィルタを$and条件に追加（既存の削除フィルタを上書きしない）
       if (status === 'active') {
-        query.accountStatus = 'active';
+        query.$and.push({ accountStatus: 'active' });
       } else if (status === 'inactive') {
-        query.accountStatus = 'inactive';
+        query.$and.push({ accountStatus: 'inactive' });
       } else if (status === 'suspended') {
-        query.accountStatus = { $in: ['suspended', 'account_suspended', 'banned'] };
+        query.$and.push({ accountStatus: { $in: ['suspended', 'account_suspended', 'banned'] } });
       }
     }
 
@@ -316,6 +317,63 @@ router.get('/:id', adminRateLimit, authenticateToken, authenticateAdmin, async (
     log.error('Error fetching user details', error, {
       adminId: req.admin?._id,
       userId: req.params.id
+    });
+    sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
+  }
+});
+
+// ユーザー削除
+router.delete('/:userId', 
+  adminRateLimit,
+  authenticateToken, 
+  authenticateAdmin,
+  validateObjectId('userId'),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { userId } = req.params;
+
+    log.info('User deletion request', { userId, adminId: req.admin?._id });
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      sendErrorResponse(res, 404, ClientErrorCode.NOT_FOUND, 'User not found');
+      return;
+    }
+
+    // 削除する代わりに、削除フラグを立てる（論理削除）
+    const timestamp = Date.now();
+    const deletedEmail = `deleted_${timestamp}_${user.email}`;
+    
+    await UserModel.findByIdAndUpdate(
+      userId,
+      { 
+        $set: {
+          email: deletedEmail,
+          accountStatus: 'deleted',
+          isActive: false,
+          deletedAt: new Date(),
+          deletedBy: req.admin?._id
+        }
+      },
+      { new: true }
+    );
+
+    log.info('User marked as deleted', { 
+      userId, 
+      originalEmail: user.email,
+      deletedEmail,
+      adminId: req.admin?._id 
+    });
+
+    res.json({
+      success: true,
+      message: 'ユーザーを削除しました'
+    });
+
+  } catch (error) {
+    log.error('Error deleting user', error, {
+      adminId: req.admin?._id,
+      userId: req.params.userId
     });
     sendErrorResponse(res, 500, ClientErrorCode.OPERATION_FAILED, error);
   }

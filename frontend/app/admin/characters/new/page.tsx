@@ -298,7 +298,7 @@ export default function CharacterNewPage() {
           decayThreshold: 7,
           levelUpBonuses: []
         },
-        stripeProductId: formData.stripePriceId,
+        ...(formData.characterAccessType === 'purchaseOnly' && formData.stripePriceId ? { stripeProductId: formData.stripePriceId } : {}),
         purchasePrice: formData.displayPrice,
         isActive: formData.isActive,
         // アップロードされた画像URLを追加
