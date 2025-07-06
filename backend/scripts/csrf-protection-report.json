@@ -1,0 +1,1024 @@
+{
+  "generated": "2025-07-06T17:14:10.961Z",
+  "stats": {
+    "total": 213,
+    "protected": 18,
+    "unprotected": 98,
+    "byMethod": {
+      "POST": {
+        "total": 45,
+        "protected": 10
+      },
+      "GET": {
+        "total": 95,
+        "protected": 0
+      },
+      "USE": {
+        "total": 44,
+        "protected": 0
+      },
+      "PUT": {
+        "total": 15,
+        "protected": 3
+      },
+      "DELETE": {
+        "total": 13,
+        "protected": 5
+      },
+      "PATCH": {
+        "total": 1,
+        "protected": 0
+      }
+    }
+  },
+  "unprotected": [
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/auth/login",
+      "file": "src/index.ts",
+      "line": 963,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/auth/register",
+      "file": "src/index.ts",
+      "line": 964,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/auth/forgot-password",
+      "file": "src/index.ts",
+      "line": 966,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/chats/:characterId/messages",
+      "file": "src/index.ts",
+      "line": 969,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/payment",
+      "file": "src/index.ts",
+      "line": 972,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/purchase",
+      "file": "src/index.ts",
+      "line": 973,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/token-packs",
+      "file": "src/index.ts",
+      "line": 974,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/admin",
+      "file": "src/index.ts",
+      "line": 977,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/upload",
+      "file": "src/index.ts",
+      "line": 980,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}",
+      "file": "src/index.ts",
+      "line": 989,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/auth",
+      "file": "src/index.ts",
+      "line": 992,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/user",
+      "file": "src/index.ts",
+      "line": 1003,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/admin/models",
+      "file": "src/index.ts",
+      "line": 1006,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/system-settings",
+      "file": "src/index.ts",
+      "line": 1009,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/admin/system-settings",
+      "file": "src/index.ts",
+      "line": 1012,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/admin/system",
+      "file": "src/index.ts",
+      "line": 1015,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/feature-flags",
+      "file": "src/index.ts",
+      "line": 1019,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/uploads",
+      "file": "src/index.ts",
+      "line": 1035,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/user/setup-complete",
+      "file": "src/index.ts",
+      "line": 1965,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/purchase/create-checkout-session",
+      "file": "src/index.ts",
+      "line": 3119,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/purchase/create-character-checkout-session",
+      "file": "src/index.ts",
+      "line": 3208,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/user/process-session",
+      "file": "src/index.ts",
+      "line": 3530,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/user/add-tokens",
+      "file": "src/index.ts",
+      "line": 3625,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/admin/users/:userId/reset-tokens",
+      "file": "src/index.ts",
+      "line": 3844,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api-docs",
+      "file": "src/index.ts",
+      "line": 4169,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/admin/create-admin",
+      "file": "src/index.ts",
+      "line": 4176,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/admin/resolve-violation/:id",
+      "file": "src/index.ts",
+      "line": 4681,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/admin/errors/test",
+      "file": "src/index.ts",
+      "line": 6046,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/admin/errors/resolve",
+      "file": "src/index.ts",
+      "line": 6197,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/admin/cache/cleanup",
+      "file": "src/index.ts",
+      "line": 6522,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/admin/characters/update-stats",
+      "file": "src/index.ts",
+      "line": 6787,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/test/long-request",
+      "file": "src/index.ts",
+      "line": 7155,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "${API_PREFIX}/user/change-password",
+      "file": "src/index.ts",
+      "line": 1757,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "${API_PREFIX}/user/delete-account",
+      "file": "src/index.ts",
+      "line": 1839,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/user/select-character",
+      "file": "src/index.ts",
+      "line": 1896,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "${API_PREFIX}/admin/admins/:id",
+      "file": "src/index.ts",
+      "line": 4386,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/",
+      "file": "src/scripts/updateToApiPrefix.ts",
+      "line": 12,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1/auth",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 24,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1/user",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 25,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1/admin/models",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 26,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1/system-settings",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 27,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1/admin/system",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 28,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1/debug",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 29,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1/characters",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 30,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1/notifications",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 31,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1/admin",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 32,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1/payment",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 33,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1/purchase",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 34,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1/token-packs",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 35,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1/upload",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 36,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/api/v1",
+      "file": "src/scripts/migrateToV1.ts",
+      "line": 37,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/google-analytics",
+      "file": "src/routes/systemSettings.ts",
+      "line": 33,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/google-analytics",
+      "file": "src/routes/systemSettings.ts",
+      "line": 87,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/:id/read",
+      "file": "src/routes/notifications.ts",
+      "line": 145,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/read-all",
+      "file": "src/routes/notifications.ts",
+      "line": 211,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/admin",
+      "file": "src/routes/notifications.ts",
+      "line": 438,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "/admin/:id",
+      "file": "src/routes/notifications.ts",
+      "line": 553,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/admin/:id",
+      "file": "src/routes/notifications.ts",
+      "line": 601,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/admin/:id/read",
+      "file": "src/routes/notifications.ts",
+      "line": 700,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/admin/read-all",
+      "file": "src/routes/notifications.ts",
+      "line": 735,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/set-model",
+      "file": "src/routes/modelSettings.ts",
+      "line": 113,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/simulate",
+      "file": "src/routes/modelSettings.ts",
+      "line": 148,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/",
+      "file": "src/routes/characters.ts",
+      "line": 22,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "/:id/translations",
+      "file": "src/routes/characters.ts",
+      "line": 358,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "/:id",
+      "file": "src/routes/characters.ts",
+      "line": 484,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/:id",
+      "file": "src/routes/characters.ts",
+      "line": 549,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/upload/image",
+      "file": "src/routes/characters.ts",
+      "line": 583,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/refresh",
+      "file": "src/routes/auth.ts",
+      "line": 508,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "/user/profile",
+      "file": "src/routes/auth.ts",
+      "line": 615,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/create-admin",
+      "file": "src/routes/auth.ts",
+      "line": 1101,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/admin/refresh",
+      "file": "src/routes/auth.ts",
+      "line": 1147,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/:userId/reset-tokens",
+      "file": "src/routes/adminUsers.ts",
+      "line": 139,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "/:userId/status",
+      "file": "src/routes/adminUsers.ts",
+      "line": 198,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/:userId",
+      "file": "src/routes/adminUsers.ts",
+      "line": 326,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/",
+      "file": "src/routes/adminTokenPacks.ts",
+      "line": 96,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "/:id",
+      "file": "src/routes/adminTokenPacks.ts",
+      "line": 158,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/:id",
+      "file": "src/routes/adminTokenPacks.ts",
+      "line": 212,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/lift-sanction/:userId",
+      "file": "src/routes/adminSecurity.ts",
+      "line": 178,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/violations/clear",
+      "file": "src/routes/adminSecurity.ts",
+      "line": 291,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/",
+      "file": "src/routes/adminNotifications.ts",
+      "line": 117,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/:id/read",
+      "file": "src/routes/adminNotifications.ts",
+      "line": 217,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "/:id",
+      "file": "src/routes/adminNotifications.ts",
+      "line": 337,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/:id",
+      "file": "src/routes/adminNotifications.ts",
+      "line": 425,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "PATCH",
+      "path": "/:id/toggle-active",
+      "file": "src/routes/adminCharacters.ts",
+      "line": 309,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/",
+      "file": "src/routes/adminCharacters.ts",
+      "line": 353,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "/reorder",
+      "file": "src/routes/adminCharacters.ts",
+      "line": 486,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "/:id",
+      "file": "src/routes/adminCharacters.ts",
+      "line": 551,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "/:id/translations",
+      "file": "src/routes/adminCharacters.ts",
+      "line": 672,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/reorder-debug",
+      "file": "src/routes/adminCharacters.ts",
+      "line": 904,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/auth",
+      "file": "src/routes/v1/index.ts",
+      "line": 17,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/characters",
+      "file": "src/routes/v1/index.ts",
+      "line": 18,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/admin/models",
+      "file": "src/routes/v1/index.ts",
+      "line": 19,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/notifications",
+      "file": "src/routes/v1/index.ts",
+      "line": 20,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/system-settings",
+      "file": "src/routes/v1/index.ts",
+      "line": 21,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/admin/system-settings",
+      "file": "src/routes/v1/index.ts",
+      "line": 22,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/admin/system",
+      "file": "src/routes/v1/index.ts",
+      "line": 23,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/debug",
+      "file": "src/routes/v1/index.ts",
+      "line": 24,
+      "hasCSRF": false,
+      "isExcluded": false
+    },
+    {
+      "method": "USE",
+      "path": "/user",
+      "file": "src/routes/v1/index.ts",
+      "line": 25,
+      "hasCSRF": false,
+      "isExcluded": false
+    }
+  ],
+  "protected": [
+    {
+      "method": "PUT",
+      "path": "${API_PREFIX}/user/profile",
+      "file": "src/index.ts",
+      "line": 1621,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "${API_PREFIX}/chats/:characterId/messages",
+      "file": "src/index.ts",
+      "line": 2249,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "${API_PREFIX}/admin/users/:id/status",
+      "file": "src/index.ts",
+      "line": 3909,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "${API_PREFIX}/admin/users/:id",
+      "file": "src/index.ts",
+      "line": 4000,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "${API_PREFIX}/admin/admins/:id",
+      "file": "src/index.ts",
+      "line": 4467,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "${API_PREFIX}/admin/cache/character/:characterId",
+      "file": "src/index.ts",
+      "line": 6554,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "PUT",
+      "path": "${API_PREFIX}/user/change-password",
+      "file": "src/index.ts",
+      "line": 6939,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "${API_PREFIX}/user/delete-account",
+      "file": "src/index.ts",
+      "line": 7025,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/register",
+      "file": "src/routes/auth.ts",
+      "line": 279,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/login",
+      "file": "src/routes/auth.ts",
+      "line": 374,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/user/setup-complete",
+      "file": "src/routes/auth.ts",
+      "line": 666,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/resend-verification",
+      "file": "src/routes/auth.ts",
+      "line": 860,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/admin/login",
+      "file": "src/routes/auth.ts",
+      "line": 916,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/logout",
+      "file": "src/routes/auth.ts",
+      "line": 1067,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/admin/logout",
+      "file": "src/routes/auth.ts",
+      "line": 1083,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/upload/image",
+      "file": "src/routes/adminCharacters.ts",
+      "line": 747,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "POST",
+      "path": "/upload/video",
+      "file": "src/routes/adminCharacters.ts",
+      "line": 796,
+      "hasCSRF": true,
+      "isExcluded": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/:id",
+      "file": "src/routes/adminCharacters.ts",
+      "line": 858,
+      "hasCSRF": true,
+      "isExcluded": false
+    }
+  ],
+  "excluded": [
+    {
+      "method": "POST",
+      "path": "/webhook/stripe",
+      "file": "src/index.ts",
+      "line": 489,
+      "hasCSRF": false,
+      "isExcluded": true
+    },
+    {
+      "method": "GET",
+      "path": "${API_PREFIX}/health",
+      "file": "src/index.ts",
+      "line": 949,
+      "hasCSRF": false,
+      "isExcluded": true
+    },
+    {
+      "method": "USE",
+      "path": "${API_PREFIX}/auth/refresh",
+      "file": "src/index.ts",
+      "line": 965,
+      "hasCSRF": false,
+      "isExcluded": true
+    },
+    {
+      "method": "GET",
+      "path": "${API_PREFIX}/csrf-token",
+      "file": "src/index.ts",
+      "line": 986,
+      "hasCSRF": false,
+      "isExcluded": true
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "file": "src/routes/system.ts",
+      "line": 13,
+      "hasCSRF": false,
+      "isExcluded": true
+    },
+    {
+      "method": "GET",
+      "path": "/health/detailed",
+      "file": "src/routes/system.ts",
+      "line": 30,
+      "hasCSRF": false,
+      "isExcluded": true
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "file": "src/routes/health.ts",
+      "line": 5,
+      "hasCSRF": false,
+      "isExcluded": true
+    }
+  ]
+}

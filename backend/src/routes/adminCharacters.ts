@@ -744,7 +744,7 @@ router.put('/:id/translations', adminRateLimit, authenticateToken, validateObjec
 });
 
 // 画像アップロード（管理者用）
-router.post('/upload/image', adminUploadRateLimit, authenticateToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/upload/image', adminUploadRateLimit, authenticateToken, verifyCsrfToken, uploadImage.single('image'), optimizeImage(800, 800, 80), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // デバッグ：認証情報を確認
     log.debug('Image upload request', {
@@ -793,7 +793,7 @@ router.post('/upload/image', adminUploadRateLimit, authenticateToken, uploadImag
 });
 
 // 動画アップロード（管理者用）
-router.post('/upload/video', adminUploadRateLimit, authenticateToken, uploadVideo.single('video'), async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/upload/video', adminUploadRateLimit, authenticateToken, verifyCsrfToken, uploadVideo.single('video'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // デバッグ：認証情報を確認
     log.debug('Video upload request', {
