@@ -226,8 +226,18 @@ router.get('/', generalRateLimit, authenticateToken, async (req: AuthRequest, re
     
     log.debug('Characters fetched', { count: characters.length });
     
+    // purchasePriceを含めた形式に変換（購入済みキャラクターは価格を隠す）
+    const charactersWithPrice = characters.map(char => {
+      const charObj = char.toObject();
+      // 購入済みキャラクターの場合は価格を隠す
+      if (userPurchasedCharacters.includes(char._id.toString())) {
+        delete charObj.purchasePrice;
+      }
+      return charObj;
+    });
+    
     res.json({
-      characters,
+      characters: charactersWithPrice,
       total: characters.length,
       locale,
       filter: { characterType, keyword, sort }
