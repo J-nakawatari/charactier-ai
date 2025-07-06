@@ -44,6 +44,9 @@ export default function SetupPage() {
 
   // 認証チェック
   useEffect(() => {
+    // セットアップ処理中は認証チェックをスキップ
+    if (isLoading) return;
+    
     const user = getCurrentUser();
     console.log('🔍 Setup page - Current user:', user);
     console.log('🔍 Setup page - user.isSetupComplete:', user?.isSetupComplete);
@@ -65,7 +68,7 @@ export default function SetupPage() {
       console.log('⚠️ Setup incomplete, staying on setup page');
       console.log('⚠️ Reason: isSetupComplete =', user.isSetupComplete);
     }
-  }, [locale, router]);
+  }, [locale, router, isLoading]);
 
   // Mobile detection
   useEffect(() => {
@@ -198,8 +201,12 @@ export default function SetupPage() {
         // ユーザー情報をローカルストレージに更新
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        console.log('✅ セットアップ完了');
-        router.push(`/${locale}/characters?newUser=true`);
+        console.log('✅ セットアップ完了', data.user);
+        
+        // 少し待ってから遷移（localStorageの更新を確実にするため）
+        setTimeout(() => {
+          router.push(`/${locale}/characters?newUser=true`);
+        }, 100);
       } else {
         const errorData = await response.json();
         setError(errorData.message || t('errors.setupFailed'));
