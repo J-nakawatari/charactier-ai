@@ -913,7 +913,7 @@ router.post('/resend-verification', registrationRateLimit, verifyCsrfToken, asyn
 });
 
 // 管理者ログイン
-router.post('/admin/login', authRateLimit, async (req: Request, res: Response): Promise<void> => {
+router.post('/admin/login', authRateLimit, verifyCsrfToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 

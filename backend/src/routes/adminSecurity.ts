@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import { sendErrorResponse, ClientErrorCode } from '../utils/errorResponse';
 import log from '../utils/logger';
 import { createRateLimiter } from '../middleware/rateLimiter';
+import { verifyCsrfToken } from '../middleware/csrf';
 
 const router: Router = Router();
 
@@ -175,7 +176,7 @@ router.get('/user/:userId/violations', securityRateLimit, authenticateToken, aut
 });
 
 // 制裁解除
-router.post('/lift-sanction/:userId', securityRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/lift-sanction/:userId', securityRateLimit, authenticateToken, authenticateAdmin, verifyCsrfToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
     
@@ -288,7 +289,7 @@ router.get('/violations/search', securityRateLimit, authenticateToken, authentic
 });
 
 // 違反記録のクリア（管理者のみ）
-router.delete('/violations/clear', securityRateLimit, authenticateToken, authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+router.delete('/violations/clear', securityRateLimit, authenticateToken, authenticateAdmin, verifyCsrfToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { type } = req.query; // 'all' または 'old'
     const { daysOld } = req.query; // 古い記録のみ削除する場合の日数

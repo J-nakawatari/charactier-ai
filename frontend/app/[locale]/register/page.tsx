@@ -193,7 +193,7 @@ export default function RegisterPage() {
       // CSRFトークンをCookieから取得
       const csrfToken = document.cookie
         .split('; ')
-        .find(row => row.startsWith('csrf-token='))
+        .find(row => row.startsWith('XSRF-TOKEN='))
         ?.split('=')[1];
 
       // バックエンドの登録APIを呼び出し（メール認証付き）

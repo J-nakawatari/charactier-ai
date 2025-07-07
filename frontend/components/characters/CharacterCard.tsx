@@ -295,6 +295,30 @@ export default function CharacterCard({
           {getLocalizedText(character.description)}
         </p>
 
+        {/* 価格情報（有料キャラクターかつロックされている場合のみ表示） */}
+        {character.characterAccessType === 'purchaseOnly' && isLocked && price && (
+          <div className="mt-2 p-3 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-200">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-amber-900">
+                <PriceDisplay 
+                  priceJpy={price} 
+                  locale={locale} 
+                  className="inline text-base font-bold" 
+                />
+                <span className="text-sm font-normal">
+                  {locale === 'en' ? ' (tax included)' : '（税込）'}
+                </span>
+              </span>
+            </div>
+            {/* Stripe商品説明（将来的に追加） */}
+            {(character as any).stripeProductDescription && (
+              <p className="mt-1 text-xs text-amber-700">
+                {(character as any).stripeProductDescription}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* 性格タグ */}
         {character.personalityTags && character.personalityTags.length > 0 && (
           <div className="flex flex-wrap gap-1 items-start">
@@ -352,18 +376,7 @@ export default function CharacterCard({
               {character.characterAccessType === 'purchaseOnly' ? (
                 <>
                   <Unlock className="w-4 h-4" />
-                  <span>
-                    {price ? (
-                      <PriceDisplay 
-                        priceJpy={price} 
-                        locale={locale} 
-                        className="inline text-base" 
-                      />
-                    ) : (
-                      t('actions.unlock')
-                    )}
-                    {price && t('actions.unlockWith')}
-                  </span>
+                  <span>{t('actions.unlock')}</span>
                 </>
               ) : (
                 <span>{t('actions.needTokens')}</span>

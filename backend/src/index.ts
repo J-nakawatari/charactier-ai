@@ -48,6 +48,7 @@ import { verifyCsrfToken, setCsrfToken, getCsrfToken } from './middleware/csrf';
 import { validateMessage } from './utils/contentFilter';
 import { recordViolation, applySanction, checkChatPermission, getViolationStats } from './utils/sanctionSystem';
 import { ViolationRecordModel } from './models/ViolationRecord';
+import { getDecryptedJwtSecret } from './services/jwtEncryption';
 import TokenUsage from '../models/TokenUsage';
 import CharacterPromptCache from '../models/CharacterPromptCache';
 import {
@@ -193,6 +194,13 @@ const generateChatResponse = async (characterId: string, userMessage: string, co
         
         // ユーザー名を動的に追加（キャッシュにはユーザー名を含めない）
         if (user && user.name) {
+          // デバッグ: ユーザー名を確認
+          log.info('User name for prompt:', {
+            userId: user._id,
+            userName: user.name,
+            userNameType: typeof user.name
+          });
+          
           const userNameInfo = `
 
 【話し相手について】
@@ -214,7 +222,7 @@ ${userAffinityLevel >= 85 ? '恋人のように甘く親密な口調で話して
   userAffinityLevel >= 60 ? '親友のようにフレンドリーで親しみやすい口調で話してください。冗談を交えたり、タメ口を使ってください。' :
   userAffinityLevel >= 40 ? '時々タメ口を交えた親しみやすい口調で話してください。距離感が縮まってきた感じを表現してください。' :
   userAffinityLevel >= 20 ? '少しだけ砕けた丁寧語で話してください。堅苦しさを減らしつつ、まだ適度な距離感を保ってください。' :
-  '丁寧語で礼儀正しい口調で話してください。初対面の相手に接するような適切な距離感を保ってください。'}`;
+  '初対面の相手に接するような適切な距離感を保ってください。'}`;
         
         // 既存の親密度セクションを置換または追加
         if (systemPrompt.includes('【親密度と口調】')) {
@@ -263,6 +271,14 @@ ${userAffinityLevel >= 85 ? '恋人のように甘く親密な口調で話して
           // ユーザー名を取得
           userName = user.name || '';
           
+          // デバッグ: ユーザー名を確認（新規生成時）
+          log.info('User name for new prompt generation:', {
+            userId: user._id,
+            userName: user.name,
+            userNameType: typeof user.name,
+            hasName: !!user.name
+          });
+          
           const affinity = user.affinities.find(
             aff => aff.character.toString() === characterId
           );
@@ -294,6 +310,13 @@ ${moodToneMap[affinity.emotionalState] || '通常のトーンで'}`;
 【話し相手について】
 あなたが会話している相手の名前は「${userName}」です。会話の中で自然に名前を呼んであげてください。` : '';
     
+    // デバッグ: ユーザー名情報の生成確認
+    log.info('User name info generated:', {
+      userName,
+      hasUserNameInfo: !!userNameInfo,
+      userNameInfoLength: userNameInfo.length
+    });
+    
     // 親密度による口調指示を追加
     const affinityToneInstruction = `
 
@@ -303,7 +326,7 @@ ${userAffinityLevel >= 85 ? '恋人のように甘く親密な口調で話して
   userAffinityLevel >= 60 ? '親友のようにフレンドリーで親しみやすい口調で話してください。冗談を交えたり、タメ口を使ってください。' :
   userAffinityLevel >= 40 ? '時々タメ口を交えた親しみやすい口調で話してください。距離感が縮まってきた感じを表現してください。' :
   userAffinityLevel >= 20 ? '少しだけ砕けた丁寧語で話してください。堅苦しさを減らしつつ、まだ適度な距離感を保ってください。' :
-  '丁寧語で礼儀正しい口調で話してください。初対面の相手に接するような適切な距離感を保ってください。'}`;
+  '初対面の相手に接するような適切な距離感を保ってください。'}`;
 
     // プロンプトを組み立て（合意された形式）
     systemPrompt = `あなたは「${character.name?.ja || character.name}」という名前のAIキャラクターです。
@@ -427,10 +450,11 @@ ${character.personalityTags?.map(tag => `- ${tag}`).join('\n') || '- 優しく�
 };
 
 // 環境変数チェック
-const requiredEnvVars = ['JWT_SECRET'];
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-
-if (missingEnvVars.length > 0) {
+// JWT_SECRETは暗号化されている可能性があるため、getDecryptedJwtSecretで検証
+try {
+  getDecryptedJwtSecret(); // JWT_SECRETが利用可能か確認
+} catch (error) {
+  console.error('JWT_SECRET validation failed:', error);
   process.exit(1);
 }
 
@@ -4555,7 +4579,7 @@ app.get(`${API_PREFIX}/admin/security/events-stream`, async (req: Request, res: 
     const jwt = require('jsonwebtoken');
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      decoded = jwt.verify(token, getDecryptedJwtSecret());
     } catch (error) {
       res.status(401).json({ error: 'Invalid authentication token' });
       return;

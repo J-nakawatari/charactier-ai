@@ -14,10 +14,8 @@ describe('CSRF Protection Tests', () => {
     if (global.redisClient) {
       await global.redisClient.quit();
     }
-    // 開いているハンドルを強制終了
-    setTimeout(() => {
-      process.exit(0);
-    }, 100);
+    // 開いているハンドルを適切にクリーンアップ
+    await new Promise(resolve => setTimeout(resolve, 100));
   });
   let app: Express;
   let csrfToken: string;
@@ -49,10 +47,10 @@ describe('CSRF Protection Tests', () => {
     expect(response.body.csrfToken).toBeDefined();
     expect(response.body.csrfToken).toHaveLength(64); // 32バイト = 64文字の16進数
     
-    // Set-Cookieヘッダーにcsrf-tokenが含まれることを確認
+    // Set-CookieヘッダーにXSRF-TOKENが含まれることを確認
     const cookies = response.headers['set-cookie'];
     expect(cookies).toBeDefined();
-    expect(cookies[0]).toContain('csrf-token=');
+    expect(cookies[0]).toContain('XSRF-TOKEN=');
     
     csrfToken = response.body.csrfToken;
   });

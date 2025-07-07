@@ -9,6 +9,7 @@ import log from '../utils/logger';
 import { sendErrorResponse, ClientErrorCode } from '../utils/errorResponse';
 import { createRateLimiter } from '../middleware/rateLimiter';
 import { escapeRegex } from '../utils/escapeRegex';
+import { verifyCsrfToken } from '../middleware/csrf';
 
 const router: Router = Router();
 
@@ -199,6 +200,7 @@ router.put('/:userId/status',
   adminRateLimit, 
   authenticateToken, 
   authenticateAdmin,
+  verifyCsrfToken,
   validateObjectId('userId'),
   validate({ body: adminSchemas.updateUserStatus }),
   async (req: AuthRequest, res: Response): Promise<void> => {
@@ -327,6 +329,7 @@ router.delete('/:userId',
   adminRateLimit,
   authenticateToken, 
   authenticateAdmin,
+  verifyCsrfToken,
   validateObjectId('userId'),
   async (req: AuthRequest, res: Response): Promise<void> => {
   try {

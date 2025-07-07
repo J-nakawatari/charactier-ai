@@ -11,6 +11,11 @@ import { sendErrorResponse, ClientErrorCode, mapErrorToClientCode } from '../uti
 import log from '../utils/logger';
 import { createRateLimiter } from '../middleware/rateLimiter';
 import { escapeRegex } from '../utils/escapeRegex';
+import Stripe from 'stripe';
+
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2025-06-30.basil'
+}) : null;
 
 const router: Router = Router();
 
@@ -226,8 +231,52 @@ router.get('/', generalRateLimit, authenticateToken, async (req: AuthRequest, re
     
     log.debug('Characters fetched', { count: characters.length });
     
+    // purchasePriceとStripe商品説明を含めた形式に変換
+    const charactersWithPrice = await Promise.all(characters.map(async (char) => {
+      const charObj: any = char.toObject();
+      
+      // 購入済みキャラクターの場合は価格情報を隠す
+      if (userPurchasedCharacters.includes(char._id.toString())) {
+        delete charObj.purchasePrice;
+        delete charObj.stripeProductDescription;
+      } else if (char.stripeProductId && stripe && char.characterAccessType === 'purchaseOnly') {
+        // 有料キャラクターかつ未購入の場合、Stripe商品説明を取得
+        try {
+          let productDescription: string | null = null;
+          
+          if (char.stripeProductId.startsWith('prod_')) {
+            // 商品IDの場合、商品情報を取得
+            const product = await stripe.products.retrieve(char.stripeProductId);
+            if ('description' in product && product.description) {
+              productDescription = product.description;
+            }
+          } else if (char.stripeProductId.startsWith('price_')) {
+            // 価格IDの場合、価格情報から商品を取得
+            const price = await stripe.prices.retrieve(char.stripeProductId, {
+              expand: ['product']
+            });
+            if (price.product && typeof price.product !== 'string' && 'description' in price.product) {
+              productDescription = price.product.description;
+            }
+          }
+          
+          if (productDescription) {
+            charObj.stripeProductDescription = productDescription;
+          }
+        } catch (error) {
+          log.warn('Failed to fetch Stripe product description', { 
+            characterId: char._id, 
+            stripeProductId: char.stripeProductId,
+            error 
+          });
+        }
+      }
+      
+      return charObj;
+    }));
+    
     res.json({
-      characters,
+      characters: charactersWithPrice,
       total: characters.length,
       locale,
       filter: { characterType, keyword, sort }

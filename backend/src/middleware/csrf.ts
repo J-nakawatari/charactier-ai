@@ -7,7 +7,7 @@ export const generateCsrfToken = (): string => {
 };
 
 // CSRFトークンのCookie名
-const CSRF_COOKIE_NAME = 'csrf-token';
+const CSRF_COOKIE_NAME = 'XSRF-TOKEN';  // フロントエンドと統一
 const CSRF_HEADER_NAME = 'x-csrf-token';
 
 // CSRFトークンを検証するミドルウェア（Double Submit Cookie Pattern）

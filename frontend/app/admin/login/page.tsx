@@ -25,11 +25,23 @@ export default function AdminLoginPage() {
       setIsLoading(true);
       setError('');
 
+      // CSRFトークンを取得（初回アクセス時のため）
+      await fetch('/api/v1/csrf-token', { 
+        credentials: 'include' 
+      });
+
+      // CSRFトークンをCookieから取得
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('XSRF-TOKEN='))
+        ?.split('=')[1];
+
       const response = await fetch('/api/v1/auth/admin/login', {
         method: 'POST',
         credentials: 'include', // クッキーを受信
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRF-Token': csrfToken }),
         },
         body: JSON.stringify({ email, password }),
       });

@@ -332,7 +332,9 @@ function CharactersPageContent({
               aiModel: (char as any).aiModel || 'gpt-4o-mini',
               isActive: true,
               createdAt: (char as any).createdAt || new Date().toISOString(),
-              affinityStats: (char as any).affinityStats
+              affinityStats: (char as any).affinityStats,
+              purchasePrice: (char as any).purchasePrice,
+              stripeProductDescription: (char as any).stripeProductDescription
             }))}
             onCharacterClick={(gridChar) => {
               // GridCharacterをCharacterに変換してhandleCharacterClickに渡す
