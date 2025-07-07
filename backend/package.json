@@ -48,7 +48,7 @@
         "eslint": "^9.30.0",
         "eslint-config-prettier": "^10.1.5",
         "glob": "^11.0.3",
-        "jest": "^30.0.3",
+        "jest": "^30.0.4",
         "mongodb-memory-server": "^10.1.4",
         "supertest": "^7.1.1",
         "ts-jest": "^29.4.0",
