@@ -34,6 +34,11 @@ const nextConfig = {
     console.log('🔗 Backend URL:', backendUrl);
     
     return [
+      // Next.js 15 RC のバグ回避: /sitemap.xml を /sitemap にリライト
+      {
+        source: '/sitemap.xml',
+        destination: '/sitemap',
+      },
       // フロントエンドAPIルートを優先（Next.js API routes）
       {
         source: '/api/user/profile',
