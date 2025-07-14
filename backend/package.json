@@ -87,7 +87,7 @@
         "mongodb": "^6.17.0",
         "mongoose": "^8.16.1",
         "multer": "^2.0.1",
-        "node-cron": "^4.1.1",
+        "node-cron": "^4.2.1",
         "openai": "^4.104.0",
         "rate-limiter-flexible": "^7.1.1",
         "redis": "^5.5.6",
