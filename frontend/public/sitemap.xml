@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- ホームページ -->
+  <url>
+    <loc>https://charactier-ai.com/</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://charactier-ai.com/ja/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://charactier-ai.com/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://charactier-ai.com/ja/"/>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
+    <loc>https://charactier-ai.com/ja/</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://charactier-ai.com/ja/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://charactier-ai.com/en/"/>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
+    <loc>https://charactier-ai.com/en/</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://charactier-ai.com/ja/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://charactier-ai.com/en/"/>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- 利用規約 -->
+  <url>
+    <loc>https://charactier-ai.com/ja/terms</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://charactier-ai.com/ja/terms"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://charactier-ai.com/en/terms"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://charactier-ai.com/en/terms</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://charactier-ai.com/ja/terms"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://charactier-ai.com/en/terms"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- プライバシーポリシー -->
+  <url>
+    <loc>https://charactier-ai.com/ja/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://charactier-ai.com/ja/privacy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://charactier-ai.com/en/privacy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://charactier-ai.com/en/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://charactier-ai.com/ja/privacy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://charactier-ai.com/en/privacy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- 特定商取引法に基づく表記 -->
+  <url>
+    <loc>https://charactier-ai.com/ja/legal</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://charactier-ai.com/ja/legal"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://charactier-ai.com/en/legal"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://charactier-ai.com/en/legal</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://charactier-ai.com/ja/legal"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://charactier-ai.com/en/legal"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>
